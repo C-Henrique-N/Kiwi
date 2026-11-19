@@ -11,6 +11,7 @@ from .models import UserProfile, FriendRequest, Message, PrivateMessage
 
 IMAGE_EXTS = {'.png', '.jpg', '.jpeg', '.gif', '.webp'}
 AUDIO_EXTS = {'.mp3', '.wav', '.ogg', '.webm', '.m4a'}
+DOC_EXTS = {'.pdf', '.doc', '.docx', '.txt', '.zip', '.rar', '.csv', '.xls', '.xlsx', '.ppt', '.pptx'}
 MAX_FILE_SIZE = 10 * 1024 * 1024  # 10 MB
 
 
@@ -188,17 +189,18 @@ def get_dm_history(request, username):
         models.Q(sender=other_user, receiver=request.user)
     ).select_related('sender').order_by('timestamp')[:100]
 
-    data = [
-        {
+    data = []
+    for m in msgs:
+        att_field = getattr(m, 'attachment', None) or getattr(m, 'file', None)
+        att_url = request.build_absolute_uri(att_field.url) if att_field else ''
+        data.append({
             'id': m.id,
             'sender': m.sender.username,
             'message': m.content,
-            'attachment_url': request.build_absolute_uri(m.attachment.url) if getattr(m, 'attachment', None) else '',
+            'attachment_url': att_url,
             'attachment_type': getattr(m, 'attachment_type', '') or '',
             'time': m.timestamp.strftime('%H:%M'),
-        }
-        for m in msgs
-    ]
+        })
     return JsonResponse({'status': 'success', 'messages': data})
 
 
@@ -219,8 +221,13 @@ def upload_attachment(request):
         att_type = 'image'
     elif ext in AUDIO_EXTS or content_type.startswith('audio/'):
         att_type = 'audio'
+    elif ext in DOC_EXTS:
+        att_type = 'document'
     else:
-        return JsonResponse({'status': 'error', 'message': 'Formato não suportado (use imagem/GIF ou áudio).'}, status=400)
+        return JsonResponse(
+            {'status': 'error', 'message': 'Formato não suportado (use imagem/GIF, áudio ou documento).'},
+            status=400
+        )
 
     target = request.POST.get('target', 'geral').strip()
     content = request.POST.get('content', '').strip()
@@ -236,21 +243,70 @@ def upload_attachment(request):
         else:
             other_user = get_object_or_404(User, username=target)
             if not are_friends(request.user, other_user):
-                return JsonResponse({'status': 'error', 'message': 'Precisam de ser amigos para enviar anexos em DM.'}, status=403)
+                return JsonResponse(
+                    {'status': 'error', 'message': 'Precisam de ser amigos para enviar anexos em DM.'},
+                    status=403
+                )
 
-            msg = PrivateMessage.objects.create(
-                sender=request.user,
-                receiver=other_user,
-                content=content,
-                attachment=file,
-                attachment_type=att_type,
-            )
+            private_kwargs = {
+                'sender': request.user,
+                'receiver': other_user,
+                'content': content,
+            }
+            private_fields = {f.name for f in PrivateMessage._meta.get_fields()}
+            if 'attachment' in private_fields:
+                private_kwargs['attachment'] = file
+            elif 'file' in private_fields:
+                private_kwargs['file'] = file
+
+            if 'attachment_type' in private_fields:
+                private_kwargs['attachment_type'] = att_type
+
+            msg = PrivateMessage.objects.create(**private_kwargs)
+
+        att_field = getattr(msg, 'attachment', None) or getattr(msg, 'file', None)
+        att_url = request.build_absolute_uri(att_field.url) if att_field else ''
 
         return JsonResponse({
             'status': 'success',
             'id': msg.id,
-            'attachment_url': request.build_absolute_uri(msg.attachment.url),
+            'attachment_url': att_url,
             'attachment_type': att_type,
+            'attachment_name': file.name,
         })
     except Exception as e:
         return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
+
+
+@login_required(login_url='login')
+def profile_page_view(request):
+    username = request.GET.get('user', request.user.username)
+    target_user = get_object_or_404(User, username=username)
+    UserProfile.objects.get_or_create(user=target_user)
+    return render(request, 'chat/profile.html', {
+        'target_username': target_user.username,
+        'is_self': target_user == request.user,
+    })
+
+
+@login_required
+@require_POST
+def remove_friend(request):
+    try:
+        data = json.loads(request.body)
+        target_username = (data.get('username') or '').strip()
+        if not target_username:
+            return JsonResponse({'status': 'error', 'message': 'Utilizador inválido.'}, status=400)
+
+        other_user = get_object_or_404(User, username=target_username)
+        deleted_count, _ = FriendRequest.objects.filter(
+            (models.Q(sender=request.user, receiver=other_user) | models.Q(sender=other_user, receiver=request.user)) &
+            models.Q(status='accepted')
+        ).delete()
+
+        if deleted_count == 0:
+            return JsonResponse({'status': 'error', 'message': 'Vocês não são amigos.'}, status=400)
+
+        return JsonResponse({'status': 'success', 'message': f'Amizade com {other_user.username} removida.'})
+    except Exception as e:
+        return JsonResponse({'status': 'error', 'message': str(e)}, status=400)

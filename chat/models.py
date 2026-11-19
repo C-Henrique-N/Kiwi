@@ -34,7 +34,7 @@ class Message(models.Model):
     room = models.CharField(max_length=255, default='geral')
     content = models.TextField(blank=True)
     attachment = models.FileField(upload_to='chat_attachments/', blank=True, null=True)
-    attachment_type = models.CharField(max_length=20, blank=True)  # 'image' ou 'audio'
+    attachment_type = models.CharField(max_length=20, blank=True)  # 'image', 'audio' ou 'document'
     timestamp = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
@@ -44,7 +44,9 @@ class Message(models.Model):
 class PrivateMessage(models.Model):
     sender = models.ForeignKey(User, on_delete=models.CASCADE, related_name='sent_dm_messages')
     receiver = models.ForeignKey(User, on_delete=models.CASCADE, related_name='received_dm_messages')
-    content = models.TextField()
+    content = models.TextField(blank=True)
+    attachment = models.FileField(upload_to='chat_attachments/', blank=True, null=True)
+    attachment_type = models.CharField(max_length=20, blank=True)  # 'image', 'audio' ou 'document'
     timestamp = models.DateTimeField(auto_now_add=True)
 
     class Meta:

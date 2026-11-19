@@ -1,0 +1,463 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Perfil — AkiiraPW</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700;900&family=Fredoka:wght@600;700&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg-card: #fff4f8;
+      --bg-surface: rgba(255, 255, 255, 0.78);
+      --bg-chip: rgba(255, 255, 255, 0.9);
+      --text-main: #231824;
+      --text-muted: #665369;
+      --border: rgba(35, 24, 36, 0.12);
+      --accent: #ff7ac6;
+      --spotify: #1db954;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      min-height: 100vh;
+      display: grid;
+      place-items: center;
+      padding: 16px;
+      background: #141218;
+      font-family: "Fredoka", system-ui, -apple-system, sans-serif;
+      color: var(--text-main);
+    }
+
+    .profile-card {
+      width: 100%;
+      max-width: 390px;
+      border-radius: 20px;
+      overflow: hidden;
+      position: relative;
+      background: linear-gradient(180deg, #ffe79e 0%, #ffd3c4 48%, #ffc2dc 100%);
+      box-shadow: 0 22px 48px rgba(0, 0, 0, 0.5);
+      border: 2px solid rgba(255, 255, 255, 0.25);
+    }
+
+    .close-btn {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      z-index: 10;
+      width: 30px;
+      height: 30px;
+      border: 0;
+      border-radius: 50%;
+      background: rgba(18, 16, 22, 0.72);
+      color: #fff;
+      font-size: 16px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    .banner {
+      height: 122px;
+      background-color: #2b2330;
+      background-size: cover;
+      background-position: center;
+    }
+
+    .body {
+      padding: 0 16px 16px;
+    }
+
+    .avatar-row {
+      display: flex;
+      align-items: flex-end;
+      gap: 10px;
+      margin-top: -40px;
+      margin-bottom: 10px;
+    }
+
+    .avatar-wrap {
+      position: relative;
+      width: 82px;
+      height: 82px;
+      flex-shrink: 0;
+    }
+
+    .avatar {
+      width: 100%;
+      height: 100%;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 4px solid #fff7e6;
+      background: #2b2230;
+    }
+
+    .online-dot {
+      position: absolute;
+      right: 3px;
+      bottom: 3px;
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      background: #23a55a;
+      border: 4px solid #fff7e6;
+    }
+
+    .bubble {
+      position: relative;
+      background: #fff;
+      color: var(--text-main);
+      padding: 8px 12px;
+      border-radius: 14px;
+      font-size: 12px;
+      line-height: 1.35;
+      box-shadow: 0 6px 14px rgba(0, 0, 0, 0.12);
+      margin-bottom: 12px;
+      flex: 1;
+      word-break: break-word;
+    }
+
+    .bubble::before {
+      content: "";
+      position: absolute;
+      left: -7px;
+      bottom: 10px;
+      width: 12px;
+      height: 12px;
+      background: #fff;
+      transform: rotate(45deg);
+      border-radius: 2px;
+    }
+
+    .profile-name {
+      font-size: 22px;
+      font-weight: 800;
+      line-height: 1.15;
+      color: var(--text-main);
+    }
+
+    /* Fonte especial para AkiiraPW */
+    .profile-name.akiira-special {
+      font-family: "Cinzel Decorative", "Fredoka", serif;
+      font-weight: 900;
+      font-size: 25px;
+      letter-spacing: 0.04em;
+      background: linear-gradient(90deg, #ff3ea5, #7c3aed, #0284c7);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+
+    .pronouns {
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-top: 2px;
+      margin-bottom: 8px;
+    }
+
+    .badges-strip {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: var(--bg-surface);
+      padding: 5px 9px;
+      border-radius: 10px;
+      font-size: 13px;
+      margin-bottom: 10px;
+    }
+
+    .badges-strip .more {
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--text-muted);
+    }
+
+    .box {
+      background: var(--bg-surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 10px 12px;
+      margin-bottom: 10px;
+    }
+
+    .bio {
+      font-size: 13px;
+      line-height: 1.45;
+      white-space: pre-line;
+    }
+
+    .games-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .game-thumbs {
+      display: flex;
+      gap: 5px;
+    }
+
+    .game-thumb {
+      width: 26px;
+      height: 26px;
+      border-radius: 7px;
+      background: #fff;
+      display: grid;
+      place-items: center;
+      font-size: 12px;
+      font-weight: 700;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.08);
+    }
+
+    .spotify-main {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 8px;
+    }
+
+    .spotify-icon {
+      width: 48px;
+      height: 48px;
+      border-radius: 8px;
+      background: #23a55a;
+      color: #fff;
+      display: grid;
+      place-items: center;
+      font-size: 22px;
+      flex-shrink: 0;
+    }
+
+    .spotify-label {
+      font-size: 11px;
+      font-weight: 700;
+      color: #169c46;
+    }
+
+    .song-title {
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    .song-artist {
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+
+    .bar {
+      height: 4px;
+      border-radius: 999px;
+      background: rgba(0, 0, 0, 0.12);
+      overflow: hidden;
+      margin-top: 6px;
+    }
+
+    .bar > i {
+      display: block;
+      width: 38%;
+      height: 100%;
+      background: var(--spotify);
+    }
+
+    .spotify-btn {
+      width: 100%;
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      padding: 7px 12px;
+      background: #fff;
+      color: var(--text-main);
+      font-family: inherit;
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-bottom: 10px;
+    }
+
+    .tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 4px 9px;
+      border-radius: 999px;
+      background: var(--bg-chip);
+      font-size: 11px;
+      font-weight: 600;
+    }
+
+    .tag .dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--accent);
+    }
+
+    .dm-box {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--bg-chip);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 7px 11px;
+      margin-bottom: 10px;
+    }
+
+    .dm-box input {
+      flex: 1;
+      border: 0;
+      background: transparent;
+      font-family: inherit;
+      font-size: 12px;
+      color: var(--text-main);
+      outline: none;
+    }
+
+    .edit-btn {
+      width: 100%;
+      border: 0;
+      border-radius: 10px;
+      padding: 10px;
+      background: #5865f2;
+      color: #fff;
+      font-family: inherit;
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <article class="profile-card">
+    <button type="button" class="close-btn" id="closeProfileBtn" title="Fechar">×</button>
+    <div class="banner" id="profile-banner"></div>
+
+    <div class="body">
+      <div class="avatar-row">
+        <div class="avatar-wrap">
+          <img class="avatar" id="profile-avatar" src="" alt="Avatar" />
+          <span class="online-dot"></span>
+        </div>
+        <div class="bubble" id="profile-status-bubble"></div>
+      </div>
+
+      <h1 class="profile-name" id="profile-username">AkiiraPW</h1>
+      <div class="pronouns" id="profile-pronouns">ele/he</div>
+
+      <div class="badges-strip">
+        <span>✨</span><span>🎮</span><span>🎧</span><span>⚡</span><span>🌸</span>
+        <span class="more">+4</span>
+      </div>
+
+      <div class="box bio" id="profile-bio"></div>
+
+      <div class="box games-row">
+        <span>Coleção de jogos</span>
+        <div class="game-thumbs">
+          <span class="game-thumb">🎮</span>
+          <span class="game-thumb">⚔️</span>
+          <span class="game-thumb">🕹️</span>
+          <span class="game-thumb">+6</span>
+        </div>
+      </div>
+
+      <section class="box">
+        <div class="spotify-main">
+          <div class="spotify-icon">♫</div>
+          <div style="flex: 1; min-width: 0;">
+            <div class="spotify-label">Listening to Spotify</div>
+            <div class="song-title" id="spotify-song-title">rap/trap</div>
+            <div class="song-artist" id="spotify-song-artist">Ado</div>
+            <div class="bar"><i></i></div>
+          </div>
+        </div>
+        <button type="button" class="spotify-btn" id="spotifyOpenBtn">Ouvir no Spotify</button>
+      </section>
+
+      <div class="tags">
+        <span class="tag"><span class="dot"></span>»AkiiraPW«</span>
+        <span class="tag"><span class="dot" style="background:#7c3aed"></span>»Kiwi«</span>
+        <span class="tag"><span class="dot" style="background:#0284c7"></span>+12</span>
+      </div>
+
+      <form class="dm-box" id="quickDmForm">
+        <input type="text" id="quickDmInput" placeholder="Conversar com @AkiiraPW" />
+        <button type="submit" style="border:0;background:transparent;cursor:pointer;">😊</button>
+      </form>
+
+      <button type="button" class="edit-btn" id="editProfileBtn">✏️ Edit Profile</button>
+    </div>
+  </article>
+
+  <script>
+    (function() {
+      const params = new URLSearchParams(window.location.search);
+      const targetUser = params.get("user") || document.getElementById("profile-username").textContent.trim() || "AkiiraPW";
+
+      const nameEl = document.getElementById("profile-username");
+      const bannerEl = document.getElementById("profile-banner");
+      const avatarEl = document.getElementById("profile-avatar");
+      const bubbleEl = document.getElementById("profile-status-bubble");
+      const pronounsEl = document.getElementById("profile-pronouns");
+      const bioEl = document.getElementById("profile-bio");
+      const songEl = document.getElementById("spotify-song-title");
+      const artistEl = document.getElementById("spotify-song-artist");
+      const dmInput = document.getElementById("quickDmInput");
+
+      function applySpecialFont(username) {
+        if ((username || "").trim().toLowerCase() === "akiirapw") {
+          nameEl.classList.add("akiira-special");
+        } else {
+          nameEl.classList.remove("akiira-special");
+        }
+      }
+
+      applySpecialFont(targetUser);
+      dmInput.placeholder = `Conversar com @${targetUser}`;
+
+      fetch(`/api/profile/${encodeURIComponent(targetUser)}/`)
+        .then(r => r.ok ? r.json() : null)
+        .then(data => {
+          if (!data) return;
+          const uname = data.username || targetUser;
+          nameEl.textContent = uname;
+          applySpecialFont(uname);
+          dmInput.placeholder = `Conversar com @${uname}`;
+
+          if (data.bannerUrl) bannerEl.style.backgroundImage = `url('${data.bannerUrl}')`;
+          if (data.avatarUrl) avatarEl.src = data.avatarUrl;
+          if (data.bubble) bubbleEl.textContent = data.bubble;
+          if (data.pronouns) pronounsEl.textContent = data.pronouns;
+          if (data.bio) bioEl.textContent = data.bio.replace(/<br\s*\/?>/gi, "\n");
+          if (data.spotify_song) songEl.textContent = data.spotify_song;
+          if (data.spotify_artist) artistEl.textContent = data.spotify_artist;
+        })
+        .catch(() => {});
+
+      document.getElementById("closeProfileBtn").addEventListener("click", () => {
+        window.parent?.postMessage({ type: "close_profile" }, "*");
+      });
+
+      document.getElementById("editProfileBtn").addEventListener("click", () => {
+        window.parent?.postMessage({ type: "open_edit_profile" }, "*");
+      });
+
+      document.getElementById("quickDmForm").addEventListener("submit", (e) => {
+        e.preventDefault();
+        const text = dmInput.value.trim();
+        if (!text) return;
+        window.parent?.postMessage({ type: "quick_dm", username: nameEl.textContent, text }, "*");
+        dmInput.value = "";
+      });
+    })();
+  </script>
+</body>
+</html>

@@ -17,4 +17,6 @@ urlpatterns = [
     path('accounts/login/', views.login_view, name='accounts_login_fallback'),
     path('api/dm/<str:username>/', views.get_dm_history, name='dm_history'),
     path('api/upload-attachment/', views.upload_attachment, name='upload_attachment'),
+    path('profile/', views.profile_page_view, name='profile_page'),
+    path('api/friends/remove/', views.remove_friend, name='remove_friend'),
 ]

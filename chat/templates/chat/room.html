@@ -3,6 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <title>🥝 Kiwi Chat Estético Completo</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700;900&family=Fredoka:wght@600;700&display=swap" rel="stylesheet">
     <style>
         :root {
             --accent: #e5e7eb;
@@ -27,6 +30,132 @@
             height: 100vh;
             overflow: hidden;
             transition: background 0.3s ease, color 0.3s ease;
+        }
+
+        /* Tela de Inicialização (Splash Screen Kiwi) */
+        #kiwi-splash {
+            position: fixed;
+            inset: 0;
+            z-index: 20000;
+            background: var(--bg-sidebar);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 16px;
+            opacity: 1;
+            transition: opacity 0.55s ease, visibility 0.55s ease;
+        }
+        #kiwi-splash.hide {
+            opacity: 0;
+            visibility: hidden;
+            pointer-events: none;
+        }
+        .kiwi-splash-stage {
+            position: relative;
+            width: 112px;
+            height: 112px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0.12;
+            transform: translateY(-18px) scale(0.9);
+            animation: kiwiDropIn 0.85s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+        }
+        .kiwi-splash-ring {
+            position: absolute;
+            inset: -6px;
+            border-radius: 50%;
+            border: 3px solid var(--border-subtle);
+            border-top-color: #23a55a;
+            animation: kiwiSpin 1.1s linear infinite;
+        }
+        .kiwi-splash-photo {
+            width: 96px;
+            height: 96px;
+            border-radius: 50%;
+            background-color: var(--bg-soft);
+            background-image: var(--auth-artwork);
+            background-size: cover;
+            background-position: center;
+            border: 3px solid var(--bg-card);
+            box-shadow: 0 10px 28px rgba(0, 0, 0, 0.14);
+        }
+        .kiwi-splash-emoji {
+            position: absolute;
+            right: 2px;
+            bottom: 2px;
+            width: 34px;
+            height: 34px;
+            border-radius: 50%;
+            background: var(--bg-card);
+            border: 1px solid var(--border-subtle);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.14);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            animation: kiwiBounce 1.4s ease-in-out infinite;
+        }
+        .kiwi-splash-brand {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 28px;
+            font-weight: 800;
+            letter-spacing: 0.06em;
+            text-transform: lowercase;
+            color: var(--text-main);
+            opacity: 0.15;
+            transform: translateY(8px);
+            animation: kiwiTitleReveal 0.75s ease 0.35s forwards;
+        }
+        .kiwi-splash-sub {
+            font-size: 12px;
+            color: var(--text-muted);
+            opacity: 0;
+            transition: opacity 0.35s ease;
+        }
+        .kiwi-splash-sub.ready {
+            opacity: 1;
+            color: #23a55a;
+            font-weight: 600;
+        }
+        .kiwi-splash-bar {
+            width: 140px;
+            height: 4px;
+            border-radius: 999px;
+            background: var(--border-subtle);
+            overflow: hidden;
+        }
+        .kiwi-splash-bar-fill {
+            width: 0%;
+            height: 100%;
+            border-radius: 999px;
+            background: #23a55a;
+            animation: kiwiLoadBar 1.25s ease forwards;
+        }
+
+        @keyframes kiwiDropIn {
+            0% { opacity: 0.1; transform: translateY(-22px) scale(0.88); }
+            70% { opacity: 0.85; transform: translateY(3px) scale(1.02); }
+            100% { opacity: 1; transform: translateY(0) scale(1); }
+        }
+        @keyframes kiwiTitleReveal {
+            0% { opacity: 0.12; transform: translateY(10px); }
+            100% { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes kiwiBounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-4px); }
+        }
+        @keyframes kiwiSpin {
+            to { transform: rotate(360deg); }
+        }
+        @keyframes kiwiLoadBar {
+            0% { width: 8%; opacity: 0.4; }
+            65% { width: 78%; opacity: 0.9; }
+            100% { width: 100%; opacity: 1; }
         }
 
         .sidebar-left {
@@ -157,6 +286,7 @@
             background: var(--bg-main);
             transition: background 0.3s ease;
             min-width: 0;
+            position: relative;
         }
         .chat-header {
             padding: 12px 20px;
@@ -195,7 +325,7 @@
         }
         .header-dm-avatar.visible { display: flex; }
         .chat-header span.sub { color: var(--text-muted); font-size: 13px; font-weight: normal; }
-        .back-geral-btn {
+        .back-geral-btn, .header-call-btn {
             background: var(--bg-soft);
             color: var(--text-main);
             border: 1px solid var(--border-subtle);
@@ -206,8 +336,65 @@
             cursor: pointer;
             display: none;
         }
-        .back-geral-btn.visible { display: inline-block; }
-        .back-geral-btn:hover { filter: brightness(0.96); }
+        .back-geral-btn.visible, .header-call-btn.visible { display: inline-flex; align-items: center; gap: 5px; }
+        .back-geral-btn:hover, .header-call-btn:hover { filter: brightness(0.96); }
+        .header-call-btn {
+            background: rgba(35, 165, 90, 0.14);
+            color: #1e8e4e;
+            border-color: rgba(35, 165, 90, 0.35);
+        }
+
+        /* Painel Flutuante de Call */
+        .call-bar {
+            display: none;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            padding: 10px 20px;
+            background: var(--bg-darkest);
+            border-bottom: 1px solid var(--border-subtle);
+            font-size: 13px;
+        }
+        .call-bar.active {
+            display: flex;
+        }
+        .call-status-group {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: 600;
+        }
+        .call-dot {
+            width: 9px;
+            height: 9px;
+            border-radius: 50%;
+            background: #23a55a;
+        }
+        .call-actions {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .call-ctrl-btn {
+            border: none;
+            border-radius: 6px;
+            padding: 6px 11px;
+            font-size: 12px;
+            font-weight: 700;
+            cursor: pointer;
+            background: var(--bg-card);
+            color: var(--text-main);
+            border: 1px solid var(--border-subtle);
+        }
+        .call-ctrl-btn.mute-active {
+            background: #f39c12;
+            color: #fff;
+        }
+        .call-ctrl-btn.hangup {
+            background: #e74c3c;
+            color: #fff;
+            border: none;
+        }
 
         .theme-picker-container {
             display: flex;
@@ -238,7 +425,167 @@
             flex-direction: column;
             gap: 16px;
         }
-        .message-group { display: flex; gap: 14px; align-items: flex-start; }
+        .message-group {
+            position: relative;
+            display: flex;
+            gap: 14px;
+            align-items: flex-start;
+            padding: 4px 8px;
+            border-radius: 8px;
+            transition: background 0.15s ease;
+        }
+        .message-group:hover {
+            background: rgba(128, 128, 128, 0.06);
+        }
+        .message-group:hover .msg-hover-toolbar,
+        .message-group.menu-open .msg-hover-toolbar {
+            opacity: 1;
+            pointer-events: auto;
+            transform: translateY(0);
+        }
+
+        .msg-hover-toolbar {
+            position: absolute;
+            top: -14px;
+            right: 12px;
+            display: inline-flex;
+            align-items: center;
+            gap: 2px;
+            background: var(--bg-card);
+            border: 1px solid var(--border-subtle);
+            border-radius: 999px;
+            padding: 3px 6px;
+            box-shadow: 0 6px 18px rgba(0, 0, 0, 0.14);
+            opacity: 0;
+            pointer-events: none;
+            transform: translateY(4px);
+            transition: opacity 0.15s ease, transform 0.15s ease;
+            z-index: 25;
+        }
+        .msg-hover-btn {
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            font-size: 13px;
+            line-height: 1;
+            padding: 5px 6px;
+            border-radius: 999px;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.15s ease, color 0.15s ease, transform 0.15s ease;
+        }
+        .msg-hover-btn:hover {
+            background: var(--bg-soft);
+            color: var(--text-main);
+            transform: scale(1.1);
+        }
+        .msg-hover-divider {
+            width: 1px;
+            height: 14px;
+            background: var(--border-subtle);
+            margin: 0 2px;
+        }
+
+        .msg-more-popover {
+            display: none;
+            position: absolute;
+            top: 26px;
+            right: 12px;
+            background: var(--bg-card);
+            border: 1px solid var(--border-subtle);
+            border-radius: 10px;
+            padding: 5px;
+            min-width: 155px;
+            box-shadow: 0 10px 24px rgba(0, 0, 0, 0.2);
+            z-index: 40;
+            flex-direction: column;
+            gap: 2px;
+        }
+        .msg-more-popover.open {
+            display: flex;
+        }
+        .msg-more-item {
+            background: transparent;
+            border: none;
+            color: var(--text-main);
+            font-size: 12px;
+            font-weight: 500;
+            text-align: left;
+            padding: 7px 10px;
+            border-radius: 7px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .msg-more-item:hover {
+            background: var(--bg-soft);
+        }
+        .msg-more-item.danger {
+            color: #c0392b;
+        }
+
+        .msg-emoji-picker {
+            display: none;
+            position: absolute;
+            top: 26px;
+            right: 54px;
+            background: var(--bg-card);
+            border: 1px solid var(--border-subtle);
+            border-radius: 999px;
+            padding: 4px 8px;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.18);
+            z-index: 40;
+            gap: 4px;
+            align-items: center;
+        }
+        .msg-emoji-picker.open {
+            display: inline-flex;
+        }
+        .msg-emoji-choice {
+            background: transparent;
+            border: none;
+            font-size: 15px;
+            cursor: pointer;
+            padding: 3px 5px;
+            border-radius: 999px;
+            transition: transform 0.15s ease, background 0.15s ease;
+        }
+        .msg-emoji-choice:hover {
+            background: var(--bg-soft);
+            transform: scale(1.2);
+        }
+
+        .msg-reactions-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin-top: 6px;
+        }
+        .msg-reaction-chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            padding: 3px 8px;
+            border-radius: 999px;
+            background: var(--bg-soft);
+            border: 1px solid var(--border-subtle);
+            color: var(--text-main);
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.15s ease, background 0.15s ease, border-color 0.15s ease;
+        }
+        .msg-reaction-chip:hover {
+            transform: scale(1.05);
+        }
+        .msg-reaction-chip.active {
+            background: rgba(88, 101, 242, 0.16);
+            border-color: rgba(88, 101, 242, 0.55);
+        }
+
         .avatar {
             width: 40px;
             height: 40px;
@@ -267,6 +614,11 @@
             margin-top: 6px;
             display: block;
             box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            cursor: zoom-in;
+            transition: transform 0.15s ease;
+        }
+        .msg-attachment-img:hover {
+            transform: scale(1.015);
         }
         .msg-attachment-audio {
             margin-top: 6px;
@@ -274,23 +626,66 @@
             width: 300px;
             display: block;
         }
-        .delete-msg-btn {
-            margin-left: auto;
-            background: transparent;
-            border: none;
-            color: var(--text-muted);
-            cursor: pointer;
-            font-size: 12px;
-            padding: 2px 6px;
-            border-radius: 4px;
-            transition: 0.15s;
+        .msg-attachment-doc {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            margin-top: 6px;
+            padding: 8px 12px;
+            border-radius: 8px;
+            background: var(--bg-soft);
+            border: 1px solid var(--border-subtle);
+            color: var(--text-main);
+            text-decoration: none;
+            font-size: 13px;
+            font-weight: 500;
+            max-width: 100%;
+            transition: filter 0.15s;
         }
-        .delete-msg-btn:hover {
-            background: rgba(231, 76, 60, 0.14);
-            color: #c0392b;
+        .msg-attachment-doc:hover { filter: brightness(0.96); }
+
+        .image-lightbox-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(12, 13, 16, 0.9);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 25000;
+            padding: 24px;
+        }
+        .image-lightbox-overlay.open {
+            display: flex;
+        }
+        .image-lightbox-img {
+            max-width: 92vw;
+            max-height: 88vh;
+            border-radius: 10px;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.55);
+            object-fit: contain;
+        }
+        .image-lightbox-close {
+            position: fixed;
+            top: 18px;
+            right: 22px;
+            width: 38px;
+            height: 38px;
+            border-radius: 50%;
+            border: 1px solid rgba(255, 255, 255, 0.22);
+            background: rgba(255, 255, 255, 0.14);
+            color: #fff;
+            font-size: 20px;
+            font-weight: bold;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .image-lightbox-close:hover {
+            background: rgba(255, 255, 255, 0.26);
         }
 
-        .chat-input-area { padding: 0 20px 20px 20px; }
+        .chat-input-area { padding: 0 20px 20px 20px; position: relative; }
         #attachment-preview-bar {
             display: none;
             align-items: center;
@@ -308,6 +703,18 @@
             border-radius: 6px;
             display: none;
             object-fit: cover;
+        }
+        #attachment-preview-badge {
+            display: none;
+            width: 40px;
+            height: 40px;
+            border-radius: 6px;
+            background: var(--bg-soft);
+            border: 1px solid var(--border-subtle);
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            flex-shrink: 0;
         }
         #attachment-preview-name {
             font-size: 12px;
@@ -328,6 +735,39 @@
             cursor: pointer;
         }
         #clear-attachment-btn:hover { background: rgba(231, 76, 60, 0.25); }
+
+        .attach-menu {
+            display: none;
+            position: absolute;
+            bottom: 72px;
+            left: 20px;
+            background: var(--bg-card);
+            border: 1px solid var(--border-subtle);
+            border-radius: 10px;
+            padding: 6px;
+            box-shadow: 0 8px 22px rgba(0, 0, 0, 0.16);
+            z-index: 60;
+            flex-direction: column;
+            gap: 3px;
+            min-width: 200px;
+        }
+        .attach-menu.open { display: flex; }
+        .attach-menu-item {
+            background: transparent;
+            border: none;
+            color: var(--text-main);
+            padding: 9px 12px;
+            border-radius: 7px;
+            font-size: 13px;
+            font-weight: 500;
+            text-align: left;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: background 0.15s;
+        }
+        .attach-menu-item:hover { background: var(--bg-soft); }
 
         .input-wrapper {
             background: var(--bg-input);
@@ -454,7 +894,7 @@
             margin-bottom: 6px;
             display: flex;
             align-items: center;
-            gap: 8px;
+            gap: 6px;
             color: var(--text-main);
             background: var(--bg-card);
             border: 1px solid var(--border-subtle);
@@ -462,17 +902,23 @@
             transition: 0.2s;
         }
         .social-list-item:hover { filter: brightness(0.97); }
-        .dm-quick-btn {
-            margin-left: auto;
+        .dm-quick-btn, .remove-friend-mini-btn {
             background: #5865f2;
             color: #fff;
             border: none;
             border-radius: 5px;
-            padding: 4px 8px;
+            padding: 4px 7px;
             font-size: 11px;
             font-weight: bold;
             cursor: pointer;
+            flex-shrink: 0;
         }
+        .dm-quick-btn { margin-left: auto; }
+        .remove-friend-mini-btn {
+            background: rgba(231, 76, 60, 0.16);
+            color: #c0392b;
+        }
+        .remove-friend-mini-btn:hover { background: rgba(231, 76, 60, 0.28); }
         .dm-quick-btn:hover { filter: brightness(0.92); }
 
         .modal-overlay {
@@ -495,6 +941,306 @@
             border: 1px solid var(--border-subtle);
             color: var(--text-main);
             position: relative;
+        }
+
+        /* Player estilo widget Spotify */
+        .kiwi-spotify-widget {
+            background: linear-gradient(135deg, #191b1e 0%, #111315 100%);
+            color: #ffffff;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 14px;
+            padding: 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            box-shadow: 0 10px 24px rgba(0, 0, 0, 0.28);
+        }
+        .kiwi-spotify-widget.green-mode {
+            background: linear-gradient(135deg, #25c95d 0%, #14823b 100%);
+            color: #ffffff;
+            border-color: rgba(255, 255, 255, 0.2);
+        }
+        .ksw-top {
+            display: flex;
+            align-items: center;
+            gap: 11px;
+        }
+        .ksw-cover {
+            width: 54px;
+            height: 54px;
+            border-radius: 10px;
+            background: #1db954;
+            background-size: cover;
+            background-position: center;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 22px;
+            flex-shrink: 0;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+            color: #111315;
+            font-weight: 800;
+        }
+        .kiwi-spotify-widget.green-mode .ksw-cover {
+            background: #121417;
+            color: #1db954;
+        }
+        .ksw-meta {
+            min-width: 0;
+            flex: 1;
+        }
+        .ksw-title {
+            font-size: 14px;
+            font-weight: 800;
+            line-height: 1.2;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .ksw-artist {
+            font-size: 12px;
+            opacity: 0.78;
+            margin-top: 2px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .ksw-top-actions {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            flex-shrink: 0;
+        }
+        .ksw-icon-btn {
+            width: 26px;
+            height: 26px;
+            border-radius: 50%;
+            border: 1.5px solid rgba(255, 255, 255, 0.78);
+            background: transparent;
+            color: #ffffff;
+            font-size: 12px;
+            font-weight: 700;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            text-decoration: none;
+            transition: transform 0.15s ease, background 0.15s ease;
+        }
+        .ksw-icon-btn:hover {
+            transform: scale(1.08);
+            background: rgba(255, 255, 255, 0.14);
+        }
+        .ksw-icon-btn.active {
+            background: #1db954;
+            border-color: #1db954;
+            color: #111315;
+        }
+        .ksw-progress-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 10px;
+            font-variant-numeric: tabular-nums;
+            opacity: 0.85;
+        }
+        .ksw-seek-wrap {
+            position: relative;
+            flex: 1;
+            height: 12px;
+            display: flex;
+            align-items: center;
+        }
+        .ksw-track-bg {
+            width: 100%;
+            height: 4px;
+            border-radius: 999px;
+            background: rgba(255, 255, 255, 0.28);
+            overflow: hidden;
+            position: relative;
+        }
+        .ksw-track-fill {
+            height: 100%;
+            width: 32%;
+            border-radius: 999px;
+            background: #1db954;
+            transition: width 0.12s linear;
+        }
+        .kiwi-spotify-widget.green-mode .ksw-track-fill {
+            background: #121417;
+        }
+        .ksw-seek-input {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            opacity: 0;
+            cursor: pointer;
+            margin: 0;
+        }
+        .ksw-controls-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 6px;
+        }
+        .ksw-ctrl-btn {
+            background: transparent;
+            border: none;
+            color: #ffffff;
+            font-size: 14px;
+            cursor: pointer;
+            padding: 4px 6px;
+            border-radius: 6px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0.88;
+            transition: transform 0.15s ease, opacity 0.15s ease, background 0.15s ease;
+        }
+        .ksw-ctrl-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+            background: rgba(255, 255, 255, 0.1);
+        }
+        .ksw-ctrl-btn.active {
+            color: #1db954;
+            opacity: 1;
+        }
+        .kiwi-spotify-widget.green-mode .ksw-ctrl-btn.active {
+            color: #121417;
+        }
+        .ksw-play-circle {
+            width: 38px;
+            height: 38px;
+            border-radius: 50%;
+            border: none;
+            background: #ffffff;
+            color: #121417;
+            font-size: 14px;
+            font-weight: 800;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.28);
+            transition: transform 0.15s ease;
+        }
+        .ksw-play-circle:hover {
+            transform: scale(1.06);
+        }
+
+        .ksw-vol-wrap {
+            position: relative;
+            display: inline-flex;
+            align-items: center;
+        }
+        .ksw-vol-popover {
+            display: none;
+            position: absolute;
+            bottom: 34px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(18, 20, 23, 0.96);
+            border: 1px solid rgba(255, 255, 255, 0.16);
+            border-radius: 10px;
+            padding: 8px 10px;
+            box-shadow: 0 10px 24px rgba(0, 0, 0, 0.45);
+            z-index: 50;
+            align-items: center;
+            gap: 8px;
+            min-width: 124px;
+        }
+        .ksw-vol-popover.open {
+            display: inline-flex;
+        }
+        .ksw-vol-slider {
+            width: 82px;
+            accent-color: #1db954;
+            cursor: pointer;
+        }
+        .ksw-vol-val {
+            font-size: 10px;
+            font-weight: 700;
+            color: #ffffff;
+            min-width: 28px;
+            text-align: right;
+            font-variant-numeric: tabular-nums;
+        }
+
+        /* Badge dourada de ADMIN ao lado do nome */
+        .admin-gold-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 2px 8px;
+            border-radius: 999px;
+            font-family: 'Fredoka', 'Helvetica Neue', sans-serif;
+            font-size: 10px;
+            font-weight: 800;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            color: #fff6cc;
+            background: linear-gradient(135deg, #b8860b 0%, #ffd700 48%, #d4af37 100%);
+            border: 1px solid rgba(255, 236, 153, 0.85);
+            box-shadow: 0 0 12px rgba(255, 215, 0, 0.55), inset 0 1px 1px rgba(255, 255, 255, 0.5);
+            text-shadow: 0 1px 2px rgba(92, 62, 0, 0.75);
+            vertical-align: middle;
+        }
+
+        /* Efeito de brilho no cartão do perfil */
+        .aesthetic-profile-card.akiira-shimmer-card {
+            position: relative;
+            overflow: hidden;
+            border-color: rgba(255, 215, 0, 0.55);
+            box-shadow:
+                0 0 24px rgba(255, 110, 199, 0.28),
+                0 0 38px rgba(255, 215, 0, 0.22),
+                0 18px 44px rgba(0, 0, 0, 0.35);
+            animation: kiwiCardPulseGlow 3.2s ease-in-out infinite;
+        }
+
+        .aesthetic-profile-card.akiira-shimmer-card::after {
+            content: "";
+            position: absolute;
+            top: -30%;
+            left: -130%;
+            width: 65%;
+            height: 160%;
+            background: linear-gradient(
+                115deg,
+                transparent 0%,
+                rgba(255, 255, 255, 0.04) 35%,
+                rgba(255, 245, 190, 0.34) 50%,
+                rgba(255, 255, 255, 0.04) 65%,
+                transparent 100%
+            );
+            transform: skewX(-18deg);
+            pointer-events: none;
+            z-index: 6;
+            animation: kiwiCardSweep 4.5s ease-in-out infinite;
+        }
+
+        @keyframes kiwiCardSweep {
+            0% { left: -130%; opacity: 0; }
+            20% { opacity: 1; }
+            65% { left: 150%; opacity: 1; }
+            100% { left: 150%; opacity: 0; }
+        }
+
+        @keyframes kiwiCardPulseGlow {
+            0%, 100% {
+                box-shadow:
+                    0 0 20px rgba(255, 110, 199, 0.24),
+                    0 0 30px rgba(255, 215, 0, 0.18),
+                    0 18px 44px rgba(0, 0, 0, 0.35);
+            }
+            50% {
+                box-shadow:
+                    0 0 28px rgba(255, 110, 199, 0.38),
+                    0 0 44px rgba(255, 215, 0, 0.34),
+                    0 18px 44px rgba(0, 0, 0, 0.4);
+            }
         }
 
         .close-modal-btn {
@@ -576,6 +1322,17 @@
             align-items: center;
             gap: 6px;
         }
+        /* Fonte especial exclusiva para AkiiraPW */
+        .aesthetic-name.akiira-special-font {
+            font-family: 'Cinzel Decorative', 'Fredoka', cursive, sans-serif;
+            font-weight: 900;
+            font-size: 23px;
+            letter-spacing: 0.04em;
+            background: linear-gradient(90deg, #ff5ec4, #9b6dff, #4ea8de);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
         .aesthetic-details {
             font-size: 12px;
             color: var(--text-muted);
@@ -625,7 +1382,7 @@
             padding: 10px;
             border-radius: 8px;
             font-weight: bold;
-            font-size: 13px;
+            font-size: 12px;
             cursor: pointer;
             transition: 0.2s;
             display: flex;
@@ -633,11 +1390,19 @@
             justify-content: center;
             gap: 6px;
         }
+        .btn-aesthetic-action.call-btn {
+            background: #23a55a;
+        }
+        .btn-aesthetic-action.remove-btn {
+            background: rgba(231, 76, 60, 0.16);
+            color: #c0392b;
+            border: 1px solid rgba(231, 76, 60, 0.35);
+        }
         .btn-aesthetic-edit:hover, .btn-aesthetic-action:hover { filter: brightness(0.95); }
 
         .form-group { margin-bottom: 10px; }
         .form-group label { display: block; font-size: 11px; color: var(--text-muted); margin-bottom: 4px; text-transform: uppercase; font-weight: bold; }
-        .form-group input, .form-group textarea {
+        .form-group input, .form-group textarea, .form-group select {
             width: 100%;
             background: var(--bg-soft);
             border: 1px solid var(--border-subtle);
@@ -648,10 +1413,106 @@
             outline: none;
         }
         .form-group input[type="file"] { padding: 4px; cursor: pointer; background: var(--bg-card); }
-        .form-group input:focus, .form-group textarea:focus { border-color: #5865f2; }
+        .form-group input:focus, .form-group textarea:focus, .form-group select:focus { border-color: #5865f2; }
+
+        .friend-req-card {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: var(--bg-soft);
+            padding: 10px 12px;
+            border-radius: 8px;
+            border: 1px solid var(--border-subtle);
+            transition: opacity 0.35s ease, transform 0.35s ease, max-height 0.35s ease, padding 0.35s ease, margin 0.35s ease, background-color 0.25s ease, border-color 0.25s ease;
+            max-height: 70px;
+            overflow: hidden;
+        }
+        .friend-req-card.accepted {
+            background: rgba(35, 165, 90, 0.16);
+            border-color: rgba(35, 165, 90, 0.45);
+        }
+        .friend-req-status {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 12px;
+            font-weight: 700;
+            color: #23a55a;
+            animation: popIn 0.25s ease;
+        }
+        .friend-req-card.fading-out {
+            opacity: 0;
+            transform: translateX(14px);
+            max-height: 0;
+            padding-top: 0;
+            padding-bottom: 0;
+            margin-bottom: 0;
+            border-width: 0;
+        }
+        @keyframes popIn {
+            0% { opacity: 0; transform: scale(0.92); }
+            100% { opacity: 1; transform: scale(1); }
+        }
+
+        .kiwi-toast {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: var(--bg-card);
+            color: var(--text-main);
+            border: 1px solid var(--border-subtle);
+            box-shadow: 0 10px 26px rgba(0, 0, 0, 0.2);
+            padding: 10px 14px;
+            border-radius: 10px;
+            font-size: 13px;
+            font-weight: 500;
+            z-index: 10000;
+            opacity: 0;
+            transform: translateY(10px);
+            transition: opacity 0.25s ease, transform 0.25s ease;
+            pointer-events: none;
+        }
+        .kiwi-toast.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
     </style>
 </head>
 <body>
+    <div id="kiwi-splash" aria-hidden="true">
+        <div class="kiwi-splash-stage">
+            <div class="kiwi-splash-ring"></div>
+            <div class="kiwi-splash-photo"></div>
+            <div class="kiwi-splash-emoji">🥝</div>
+        </div>
+        <div class="kiwi-splash-brand">
+            <span>🥝</span>
+            <span>kiwi</span>
+        </div>
+        <div class="kiwi-splash-bar">
+            <div class="kiwi-splash-bar-fill"></div>
+        </div>
+        <div class="kiwi-splash-sub" id="kiwi-splash-sub">carregando kiwi...</div>
+    </div>
+
+    <div id="image-lightbox" class="image-lightbox-overlay" role="dialog" aria-modal="true" aria-label="Visualizador de imagem">
+        <button type="button" id="image-lightbox-close" class="image-lightbox-close" title="Fechar (Esc)">×</button>
+        <img id="image-lightbox-img" class="image-lightbox-img" src="" alt="Imagem em tela cheia">
+    </div>
+
+    <div id="kiwi-music-dock" style="display: none; position: fixed; right: 20px; bottom: 68px; width: 220px; background: var(--bg-card); border: 1px solid var(--border-subtle); border-radius: 12px; padding: 8px; box-shadow: 0 12px 28px rgba(0,0,0,0.22); z-index: 9500; flex-direction: column; gap: 6px;">
+        <div style="display: flex; align-items: center; justify-content: space-between; gap: 6px; font-size: 11px; font-weight: 700;">
+            <span style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">🎵 <span id="dock-music-title">Música</span></span>
+            <div style="display: flex; gap: 4px;">
+                <button type="button" id="dock-size-btn" style="background: var(--bg-soft); color: var(--text-main); border: 1px solid var(--border-subtle); border-radius: 5px; padding: 2px 6px; font-size: 10px; cursor: pointer;">+</button>
+                <button type="button" id="dock-disable-btn" title="Desabilitar no layout" style="background: rgba(231,76,60,0.16); color: #c0392b; border: none; border-radius: 5px; padding: 2px 6px; font-size: 10px; font-weight: 700; cursor: pointer;">×</button>
+            </div>
+        </div>
+        <div id="yt-dock-slot" style="width: 100%; border-radius: 8px; overflow: hidden;"></div>
+    </div>
+
+    <audio id="remote-call-audio" autoplay playsinline></audio>
+
     <form id="csrf-helper-form" style="display:none;">{% csrf_token %}</form>
 
     <div class="sidebar-left">
@@ -685,6 +1546,7 @@
                 <div id="header-dm-avatar" class="header-dm-avatar" title="Ver perfil"></div>
                 <div id="header-main-title"># geral</div>
                 <span class="sub" id="header-sub-label">| Chat oficial em tempo real</span>
+                <button type="button" class="header-call-btn" id="header-call-btn" onclick="startVoiceCall(currentDmUser)">📞 Call</button>
                 <button type="button" class="back-geral-btn" id="back-to-geral-btn" onclick="switchToGeral()">← # geral</button>
             </div>
             <div class="theme-picker-container">
@@ -696,6 +1558,17 @@
                 <div class="theme-ball" style="background: #23a55a;" data-color="#23a55a" title="Verde Kiwi"></div>
                 <div class="theme-ball" style="background: #5865f2;" data-color="#5865f2" title="Azul Discord"></div>
                 <div class="theme-ball" style="background: #95a5a6;" data-color="#95a5a6" title="Cinza Elegante"></div>
+            </div>
+        </div>
+
+        <div id="call-bar" class="call-bar">
+            <div class="call-status-group">
+                <span class="call-dot"></span>
+                <span id="call-status-text">Chamada de voz</span>
+            </div>
+            <div class="call-actions">
+                <button type="button" class="call-ctrl-btn" id="call-mute-btn" onclick="toggleMuteCall()">🎙️ Mudo</button>
+                <button type="button" class="call-ctrl-btn hangup" id="call-hangup-btn" onclick="hangupVoiceCall(true)">📵 Desligar</button>
             </div>
         </div>
 
@@ -713,7 +1586,7 @@
 
             {% for msg in messages %}
             {% with msg_profile=msg.user.profile %}
-            <div class="message-group" data-msg-id="{{ msg.id }}">
+            <div class="message-group" data-msg-id="{{ msg.id }}" data-can-delete="{% if msg.user.username == username %}1{% else %}0{% endif %}">
                 {% if msg_profile.avatar %}
                 <div class="avatar" style="background-image: url('{{ msg_profile.avatar.url }}'); background-size: cover; background-position: center; color: transparent;" onclick="openUserProfile('{{ msg.user.username }}')"></div>
                 {% else %}
@@ -724,9 +1597,6 @@
                     <div class="message-header">
                         <span class="username" onclick="openUserProfile('{{ msg.user.username }}')">{{ msg.user.username }}</span>
                         <span class="timestamp">{{ msg.timestamp|date:"H:i" }}</span>
-                        {% if msg.user.username == username %}
-                        <button type="button" class="delete-msg-btn" data-delete-id="{{ msg.id }}" title="Excluir mensagem">🗑️ Excluir</button>
-                        {% endif %}
                     </div>
                     {% if msg.content %}
                     <div class="message-text">{{ msg.content }}</div>
@@ -736,8 +1606,11 @@
                         <img src="{{ msg.attachment.url }}" alt="Anexo" class="msg-attachment-img">
                         {% elif msg.attachment_type == 'audio' %}
                         <audio controls src="{{ msg.attachment.url }}" class="msg-attachment-audio"></audio>
+                        {% else %}
+                        <a href="{{ msg.attachment.url }}" download class="msg-attachment-doc" title="Baixar documento">📄 {{ msg.attachment.name|cut:"chat_attachments/" }}</a>
                         {% endif %}
                     {% endif %}
+                    <div class="msg-reactions-row"></div>
                 </div>
             </div>
             {% endwith %}
@@ -747,12 +1620,23 @@
         <div class="chat-input-area">
             <div id="attachment-preview-bar">
                 <img id="attachment-preview-img" src="" alt="Prévia">
+                <div id="attachment-preview-badge">📄</div>
                 <span id="attachment-preview-name"></span>
                 <button type="button" id="clear-attachment-btn" title="Remover anexo">✕</button>
             </div>
+
+            <div id="attach-menu" class="attach-menu" role="menu">
+                <button type="button" class="attach-menu-item" id="pick-photo-btn">🖼️ Selecionar Foto / GIF</button>
+                <button type="button" class="attach-menu-item" id="pick-audio-btn">🎵 Selecionar Áudio</button>
+                <button type="button" class="attach-menu-item" id="pick-doc-btn">📄 Selecionar Documento</button>
+            </div>
+
             <div class="input-wrapper">
-                <input type="file" id="attachment-file-input" accept="image/*,.gif,audio/*" hidden>
-                <button type="button" class="media-btn" id="upload-media-btn" title="Enviar Foto, GIF ou Áudio">🖼️</button>
+                <input type="file" id="file-photo-input" accept="image/*,.gif" hidden>
+                <input type="file" id="file-audio-input" accept="audio/*" hidden>
+                <input type="file" id="file-doc-input" accept=".pdf,.doc,.docx,.txt,.zip,.rar,.csv,.xls,.xlsx,.ppt,.pptx" hidden>
+
+                <button type="button" class="media-btn" id="clip-menu-btn" title="Anexar foto, áudio ou documento">📎</button>
                 <button type="button" class="media-btn" id="record-audio-btn" title="Gravar Áudio">🎙️</button>
                 <input id="chat-message-input" type="text" placeholder="Conversar em #geral...">
                 <button id="chat-message-submit" type="button">Enviar</button>
@@ -783,20 +1667,58 @@
             </div>
             <div class="aesthetic-body">
                 <div>
-                    <div id="profile-username" class="aesthetic-name">{{ username }}</div>
+                    <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                        <div id="profile-username" class="aesthetic-name">{{ username }}</div>
+                        <span id="profile-admin-badge" class="admin-gold-badge" style="display: none;">👑 ADMIN</span>
+                    </div>
                     <div style="font-size: 11px; color: var(--text-muted);" id="profile-pronouns">he / him • 🎀</div>
                 </div>
                 <div class="aesthetic-details" id="profile-bio">
                     @matsuda 🤍<br>infpt 🎧 zekiah ☁️
                 </div>
-                <div class="spotify-card">
-                    <div class="spotify-album">🎵</div>
-                    <div class="spotify-info">
-                        <div style="font-size: 10px; color: #1db954; font-weight: bold; margin-bottom: 2px;">Listening to Spotify</div>
-                        <div class="spotify-title" id="spotify-song-title">Drama</div>
-                        <div class="spotify-artist" id="spotify-song-artist">Lala Sadii</div>
-                        <div class="spotify-progress"><div class="spotify-progress-bar"></div></div>
+                <div id="profile-yt-player-box" class="kiwi-spotify-widget">
+                    <div class="ksw-top">
+                        <div id="music-cover-thumb" class="ksw-cover">♫</div>
+                        <div class="ksw-meta">
+                            <div id="music-track-title" class="ksw-title">Drama</div>
+                            <div id="music-track-subtitle" class="ksw-artist">Lala Sadii</div>
+                        </div>
+                        <div class="ksw-top-actions">
+                            <button type="button" id="ksw-like-btn" class="ksw-icon-btn" title="Guardar / Curtir faixa">+</button>
+                            <a id="profile-external-music-link" href="#" target="_blank" rel="noopener noreferrer" class="ksw-icon-btn" style="display: none;" title="Abrir link externo">↗</a>
+                        </div>
                     </div>
+
+                    <div class="ksw-progress-row">
+                        <span id="ksw-time-current">0:55</span>
+                        <div class="ksw-seek-wrap">
+                            <div class="ksw-track-bg">
+                                <div id="ksw-progress-fill" class="ksw-track-fill"></div>
+                            </div>
+                            <input type="range" id="ksw-seek-input" class="ksw-seek-input" min="0" max="1000" value="320" aria-label="Progresso da música">
+                        </div>
+                        <span id="ksw-time-remaining">-3:18</span>
+                    </div>
+
+                    <div class="ksw-controls-row">
+                        <button type="button" id="ksw-shuffle-btn" class="ksw-ctrl-btn" title="Aleatório">⇄</button>
+                        <button type="button" id="ksw-prev-btn" class="ksw-ctrl-btn" title="Voltar 10s">⏮</button>
+                        <button type="button" id="yt-play-pause-btn" class="ksw-play-circle" title="Play / Pause">▶</button>
+                        <button type="button" id="ksw-next-btn" class="ksw-ctrl-btn" title="Avançar 10s">⏭</button>
+                        <button type="button" id="ksw-repeat-btn" class="ksw-ctrl-btn" title="Repetir">🔁</button>
+                        <div class="ksw-vol-wrap">
+                            <button type="button" id="ksw-vol-btn" class="ksw-ctrl-btn" title="Volume">🔊</button>
+                            <div id="ksw-vol-popover" class="ksw-vol-popover" role="dialog" aria-label="Controle de volume">
+                                <input type="range" id="ksw-vol-slider" class="ksw-vol-slider" min="0" max="100" value="80" aria-label="Volume">
+                                <span id="ksw-vol-val" class="ksw-vol-val">80%</span>
+                            </div>
+                        </div>
+                        <button type="button" id="yt-toggle-size-btn" class="ksw-ctrl-btn" title="Expandir / Reduzir" style="font-size: 11px; font-weight: 700;">⤢</button>
+                    </div>
+
+                    <audio id="profile-local-audio" preload="metadata" style="display: none;"></audio>
+                    <div id="yt-player-mount" style="display: none; width: 100%; height: 90px; border-radius: 8px; overflow: hidden; background: #000;"></div>
+                    <div id="profile-music-fallback" style="font-size: 11px; opacity: 0.78; line-height: 1.35;"></div>
                 </div>
                 <button class="btn-aesthetic-edit" id="switch-to-edit-btn">✏️ Edit Profile</button>
             </div>
@@ -814,13 +1736,18 @@
             </div>
             <div class="aesthetic-body">
                 <div>
-                    <div id="other-profile-username" class="aesthetic-name">Utilizador</div>
+                    <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                        <div id="other-profile-username" class="aesthetic-name">Utilizador</div>
+                        <span id="other-profile-admin-badge" class="admin-gold-badge" style="display: none;">👑 ADMIN</span>
+                    </div>
                     <div style="font-size: 11px; color: var(--text-muted);" id="other-profile-pronouns">...</div>
                 </div>
                 <div class="aesthetic-details" id="other-profile-bio">...</div>
-                <div style="display: flex; gap: 8px; margin-top: 4px;">
+                <div style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 4px;">
                     <button class="btn-aesthetic-action" id="add-friend-btn">➕ Adicionar Amigo</button>
-                    <button class="btn-aesthetic-action" id="dm-btn" style="background: #5865f2;">💬 Mensagem Privada</button>
+                    <button class="btn-aesthetic-action" id="dm-btn" style="background: #5865f2; flex: 1;">💬 DM</button>
+                    <button class="btn-aesthetic-action call-btn" id="call-friend-btn" style="flex: 1;">📞 Call</button>
+                    <button class="btn-aesthetic-action remove-btn" id="remove-friend-btn">✖ Remover Amizade</button>
                 </div>
             </div>
         </div>
@@ -834,6 +1761,14 @@
                 📬 Caixa de Mensagens & Atualizações
             </h3>
 
+            <div style="margin-bottom: 16px;">
+                <h4 style="font-size: 12px; text-transform: uppercase; color: var(--text-muted); margin-bottom: 8px;">Preferências de Música & Notificações</h4>
+                <label style="display: flex; align-items: center; justify-content: space-between; background: var(--bg-soft); padding: 10px 12px; border-radius: 8px; border: 1px solid var(--border-subtle); font-size: 12px; color: var(--text-main); cursor: pointer;">
+                    <span>Desabilitar música no layout / notificações</span>
+                    <input type="checkbox" id="disable-music-layout-toggle">
+                </label>
+            </div>
+
             <div style="margin-bottom: 20px;">
                 <h4 style="font-size: 12px; text-transform: uppercase; color: var(--text-muted); margin-bottom: 8px;">Pedidos de Amizade</h4>
                 <div id="mailbox-friend-requests" style="display: flex; flex-direction: column; gap: 8px;">
@@ -846,9 +1781,8 @@
             <div>
                 <h4 style="font-size: 12px; text-transform: uppercase; color: var(--text-muted); margin-bottom: 8px;">Notas de Atualizações (Changelog)</h4>
                 <div style="background: var(--bg-soft); padding: 12px; border-radius: 8px; font-size: 12px; line-height: 1.5; color: var(--text-main);">
-                    <div style="font-weight: bold; color: #5865f2; margin-bottom: 4px;">✨ Versão 2.9 - Fotos, GIFs e Áudio</div>
-                    • Envio de fotos, GIFs e ficheiros de áudio no # geral e nas DMs.<br>
-                    • Gravação de voz direta pelo microfone.
+                    <div style="font-weight: bold; color: #5865f2; margin-bottom: 4px;">✨ Versão 3.1 - Música, Brilho e Admin</div>
+                    • Player do YouTube no perfil ou fixo no layout, brilho no cartão e selo dourado de ADMIN.
                 </div>
             </div>
         </div>
@@ -888,6 +1822,37 @@
                     <label>Artista</label>
                     <input type="text" name="spotify_artist" id="edit-spotify-artist" value="Lala Sadii">
                 </div>
+                <div class="form-group">
+                    <label>Link do YouTube ou Spotify (Música)</label>
+                    <input type="url" id="edit-yt-url" placeholder="https://www.youtube.com/watch?v=... ou https://open.spotify.com/...">
+                </div>
+                <div class="form-group">
+                    <label>Ficheiro de Áudio Local (.mp3, .ogg, .wav, .m4a)</label>
+                    <input type="file" id="edit-local-audio-file" accept="audio/*">
+                </div>
+                <div class="form-group">
+                    <label>Ou URL Direto de Áudio Local (/media/... ou /static/...)</label>
+                    <input type="text" id="edit-local-audio-url" placeholder="/media/musica.mp3">
+                </div>
+                <div class="form-group">
+                    <label>Foto da Capa da Música (Arquivo ou Link)</label>
+                    <input type="file" id="edit-music-cover-file" accept="image/*">
+                </div>
+                <div class="form-group">
+                    <label>Ou URL da Foto da Capa</label>
+                    <input type="text" id="edit-music-cover-url" placeholder="https://... ou /media/capa.jpg">
+                </div>
+                <div class="form-group">
+                    <label>Onde exibir a música</label>
+                    <select id="edit-music-mode">
+                        <option value="profile_only">Apenas no perfil</option>
+                        <option value="layout">No layout (fixo na tela)</option>
+                    </select>
+                </div>
+                <div class="form-group" style="display: flex; align-items: center; gap: 8px;">
+                    <input type="checkbox" id="edit-music-disabled" style="width: auto;">
+                    <label for="edit-music-disabled" style="margin: 0; text-transform: none;">Desabilitar música no layout / notificações</label>
+                </div>
                 <div style="display: flex; gap: 10px; margin-top: 15px;">
                     <button type="submit" id="save-profile-btn" style="flex:1; background: #5865f2; color:#fff; border:none; padding:10px; border-radius:6px; font-weight:bold; cursor:pointer;">Guardar</button>
                     <button type="button" id="cancel-edit-btn" style="flex:1; background: var(--bg-soft); color:var(--text-main); border:1px solid var(--border-subtle); padding:10px; border-radius:6px; font-weight:bold; cursor:pointer;">Cancelar</button>
@@ -897,7 +1862,77 @@
     </div>
 
     <script>
+        function dismissKiwiSplash() {
+            const splashEl = document.getElementById('kiwi-splash');
+            const splashSubEl = document.getElementById('kiwi-splash-sub');
+            if (!splashEl) return;
+            if (splashSubEl) {
+                splashSubEl.textContent = 'kiwi pronto';
+                splashSubEl.classList.add('ready');
+            }
+            splashEl.classList.add('hide');
+            setTimeout(() => {
+                if (splashEl && splashEl.parentNode) {
+                    splashEl.remove();
+                }
+            }, 600);
+        }
+
+        // Fallback de segurança fora do DOMContentLoaded para o splash nunca ficar preso
+        setTimeout(() => {
+            const sub = document.getElementById('kiwi-splash-sub');
+            if (sub) {
+                sub.textContent = 'kiwi pronto';
+                sub.classList.add('ready');
+            }
+        }, 900);
+        setTimeout(dismissKiwiSplash, 1400);
+        window.addEventListener('load', () => setTimeout(dismissKiwiSplash, 700));
+
         document.addEventListener("DOMContentLoaded", function() {
+            setTimeout(() => {
+                const splashSubEl = document.getElementById('kiwi-splash-sub');
+                if (splashSubEl) {
+                    splashSubEl.textContent = 'kiwi pronto';
+                    splashSubEl.classList.add('ready');
+                }
+            }, 950);
+            setTimeout(dismissKiwiSplash, 1350);
+
+            const lightboxEl = document.getElementById('image-lightbox');
+            const lightboxImgEl = document.getElementById('image-lightbox-img');
+            const lightboxCloseEl = document.getElementById('image-lightbox-close');
+
+            function openImageLightbox(src, altText = 'Imagem em tela cheia') {
+                if (!src || !lightboxEl || !lightboxImgEl) return;
+                lightboxImgEl.src = src;
+                lightboxImgEl.alt = altText;
+                lightboxEl.classList.add('open');
+            }
+
+            function closeImageLightbox() {
+                if (!lightboxEl || !lightboxImgEl) return;
+                lightboxEl.classList.remove('open');
+                lightboxImgEl.src = '';
+            }
+
+            if (lightboxCloseEl) {
+                lightboxCloseEl.addEventListener('click', closeImageLightbox);
+            }
+            if (lightboxEl) {
+                lightboxEl.addEventListener('click', function(e) {
+                    if (e.target === lightboxEl) {
+                        closeImageLightbox();
+                    }
+                });
+            }
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape') {
+                    closeImageLightbox();
+                }
+            });
+
+            try {
             let activeUsername = "{{ username }}";
             let profileData = {
                 bubble: '🌸 a testar o novo kiwi chat...',
@@ -907,7 +1942,8 @@
                 artist: 'Lala Sadii',
                 accentColor: '#ffffff',
                 avatarUrl: '',
-                bannerUrl: ''
+                bannerUrl: '',
+                is_admin: false
             };
 
             const miniAvatar = document.getElementById('my-mini-avatar');
@@ -931,13 +1967,15 @@
             const cancelEditBtn = document.getElementById('cancel-edit-btn');
             const editProfileForm = document.getElementById('edit-profile-form');
 
+            const profileUsernameEl = document.getElementById('profile-username');
+            const profileAdminBadge = document.getElementById('profile-admin-badge');
+            const otherProfileUsernameEl = document.getElementById('other-profile-username');
+            const otherProfileAdminBadge = document.getElementById('other-profile-admin-badge');
             const profileBubble = document.getElementById('profile-status-bubble');
             const profilePronouns = document.getElementById('profile-pronouns');
             const profileBio = document.getElementById('profile-bio');
             const profileAvatar = document.getElementById('profile-avatar');
             const profileBanner = document.getElementById('profile-banner');
-            const spotifyTitle = document.getElementById('spotify-song-title');
-            const spotifyArtist = document.getElementById('spotify-song-artist');
 
             const editBubble = document.getElementById('edit-bubble');
             const editPronouns = document.getElementById('edit-pronouns');
@@ -948,23 +1986,40 @@
             const chatLog = document.getElementById('chat-log');
             const messageInput = document.getElementById('chat-message-input');
             const submitButton = document.getElementById('chat-message-submit');
-            const attachmentFileInput = document.getElementById('attachment-file-input');
-            const uploadMediaBtn = document.getElementById('upload-media-btn');
+
+            const clipMenuBtn = document.getElementById('clip-menu-btn');
+            const attachMenu = document.getElementById('attach-menu');
+            const pickPhotoBtn = document.getElementById('pick-photo-btn');
+            const pickAudioBtn = document.getElementById('pick-audio-btn');
+            const pickDocBtn = document.getElementById('pick-doc-btn');
+
+            const photoFileInput = document.getElementById('file-photo-input');
+            const audioFileInput = document.getElementById('file-audio-input');
+            const docFileInput = document.getElementById('file-doc-input');
+            const allFileInputs = [photoFileInput, audioFileInput, docFileInput];
+
             const recordAudioBtn = document.getElementById('record-audio-btn');
 
             const previewBar = document.getElementById('attachment-preview-bar');
             const previewImg = document.getElementById('attachment-preview-img');
+            const previewBadge = document.getElementById('attachment-preview-badge');
             const previewName = document.getElementById('attachment-preview-name');
             const clearAttachmentBtn = document.getElementById('clear-attachment-btn');
             let pendingAttachmentFile = null;
+            let pendingAttachmentCategory = 'file';
 
-            const geralSnapshotHTML = chatLog.innerHTML;
             const tabGeralEl = document.getElementById('tab-geral');
             const dmTabsListEl = document.getElementById('dm-tabs-list');
             const headerDmAvatar = document.getElementById('header-dm-avatar');
             const headerMainTitle = document.getElementById('header-main-title');
             const headerSubLabel = document.getElementById('header-sub-label');
+            const headerCallBtn = document.getElementById('header-call-btn');
             const backToGeralBtn = document.getElementById('back-to-geral-btn');
+
+            const callBarEl = document.getElementById('call-bar');
+            const callStatusTextEl = document.getElementById('call-status-text');
+            const callMuteBtn = document.getElementById('call-mute-btn');
+            const remoteAudioEl = document.getElementById('remote-call-audio');
 
             const roomName = "{{ room_name|default:'geral' }}";
             let currentView = 'geral';
@@ -974,6 +2029,14 @@
 
             let mediaRecorder = null;
             let audioChunks = [];
+
+            let peerConnection = null;
+            let localStream = null;
+            let callTargetUser = null;
+            let isCallMuted = false;
+
+            const quickReactions = ['👍', '❤️', '💩'];
+            const extraReactions = ['😂', '🥝', '🔥', '🥺', '✨'];
 
             const themesMap = {
                 '#ffffff': {
@@ -1062,6 +2125,901 @@
                 }
             };
 
+            function applySpecialProfileEffects(cardEl, nameEl, badgeEl, username, isAdminFlag = false) {
+                const cleanName = (username || '').trim().toLowerCase();
+                const isAkiira = cleanName === 'akiirapw';
+                const showAdmin = isAkiira || Boolean(isAdminFlag);
+
+                if (nameEl) {
+                    nameEl.classList.toggle('akiira-special-font', isAkiira);
+                }
+                if (cardEl) {
+                    cardEl.classList.toggle('akiira-shimmer-card', showAdmin);
+                }
+                if (badgeEl) {
+                    badgeEl.style.display = showAdmin ? 'inline-flex' : 'none';
+                }
+            }
+
+            function showKiwiToast(text) {
+                let toast = document.getElementById('kiwi-toast');
+                if (!toast) {
+                    toast = document.createElement('div');
+                    toast.id = 'kiwi-toast';
+                    toast.className = 'kiwi-toast';
+                    document.body.appendChild(toast);
+                }
+                toast.textContent = text;
+                toast.classList.add('show');
+                clearTimeout(toast._hideTimer);
+                toast._hideTimer = setTimeout(() => {
+                    toast.classList.remove('show');
+                }, 2600);
+            }
+
+            // YouTube Music + Modo Perfil/Layout + Desabilitar nas notificações
+            const ytTag = document.createElement('script');
+            ytTag.src = 'https://www.youtube.com/iframe_api';
+            document.head.appendChild(ytTag);
+
+            let ytPlayer = null;
+            let ytApiReady = false;
+            let isYtExpanded = false;
+            let isYtPlaying = false;
+
+            const MUSIC_STORAGE_KEY = 'kiwi_music_settings_v1';
+            const musicSettings = {
+                url: '',
+                audioSrc: '',
+                audioFileName: '',
+                coverUrl: '',
+                mode: 'profile_only',
+                disabledInLayout: false
+            };
+
+            function saveMusicSettingsToStorage() {
+                try {
+                    const safeCover = (musicSettings.coverUrl || '').startsWith('blob:') ? '' : (musicSettings.coverUrl || '');
+                    const safeAudio = (musicSettings.audioSrc || '').startsWith('blob:') ? '' : (musicSettings.audioSrc || '');
+                    const payload = {
+                        url: musicSettings.url || '',
+                        audioSrc: safeAudio,
+                        audioFileName: musicSettings.audioFileName || '',
+                        coverUrl: safeCover,
+                        mode: musicSettings.mode === 'layout' ? 'layout' : 'profile_only',
+                        disabledInLayout: Boolean(musicSettings.disabledInLayout),
+                        song: profileData.song || '',
+                        artist: profileData.artist || ''
+                    };
+                    localStorage.setItem(MUSIC_STORAGE_KEY, JSON.stringify(payload));
+                } catch (err) {
+                    console.warn('Não foi possível salvar música no localStorage:', err);
+                }
+            }
+
+            function loadMusicSettingsFromStorage() {
+                try {
+                    const raw = localStorage.getItem(MUSIC_STORAGE_KEY);
+                    if (!raw) return;
+                    const saved = JSON.parse(raw);
+                    if (!saved || typeof saved !== 'object') return;
+                    if (typeof saved.url === 'string') musicSettings.url = saved.url;
+                    if (typeof saved.audioSrc === 'string') musicSettings.audioSrc = saved.audioSrc;
+                    if (typeof saved.audioFileName === 'string') musicSettings.audioFileName = saved.audioFileName;
+                    if (typeof saved.coverUrl === 'string') musicSettings.coverUrl = saved.coverUrl;
+                    if (saved.mode === 'layout' || saved.mode === 'profile_only') {
+                        musicSettings.mode = saved.mode;
+                    }
+                    musicSettings.disabledInLayout = Boolean(saved.disabledInLayout);
+                    if (typeof saved.song === 'string' && saved.song.trim()) {
+                        profileData.song = saved.song.trim();
+                    }
+                    if (typeof saved.artist === 'string' && saved.artist.trim()) {
+                        profileData.artist = saved.artist.trim();
+                    }
+                } catch (err) {
+                    console.warn('Não foi possível ler música do localStorage:', err);
+                }
+            }
+
+            function readFileAsDataUrl(file) {
+                return new Promise((resolve, reject) => {
+                    const reader = new FileReader();
+                    reader.onload = () => resolve(String(reader.result || ''));
+                    reader.onerror = reject;
+                    reader.readAsDataURL(file);
+                });
+            }
+
+            const profileYtBox = document.getElementById('profile-yt-player-box');
+            const ytPlayerMount = document.getElementById('yt-player-mount');
+            const localAudioEl = document.getElementById('profile-local-audio');
+            const externalMusicLink = document.getElementById('profile-external-music-link');
+            const musicFallbackEl = document.getElementById('profile-music-fallback');
+            const musicCoverThumb = document.getElementById('music-cover-thumb');
+            const musicTrackTitle = document.getElementById('music-track-title');
+            const musicTrackSubtitle = document.getElementById('music-track-subtitle');
+            const kswTimeCurrent = document.getElementById('ksw-time-current');
+            const kswTimeRemaining = document.getElementById('ksw-time-remaining');
+            const kswProgressFill = document.getElementById('ksw-progress-fill');
+            const kswSeekInput = document.getElementById('ksw-seek-input');
+            const kswLikeBtn = document.getElementById('ksw-like-btn');
+            const kswShuffleBtn = document.getElementById('ksw-shuffle-btn');
+            const kswPrevBtn = document.getElementById('ksw-prev-btn');
+            const kswNextBtn = document.getElementById('ksw-next-btn');
+            const kswRepeatBtn = document.getElementById('ksw-repeat-btn');
+            const kswVolBtn = document.getElementById('ksw-vol-btn');
+            const kswVolPopover = document.getElementById('ksw-vol-popover');
+            const kswVolSlider = document.getElementById('ksw-vol-slider');
+            const kswVolVal = document.getElementById('ksw-vol-val');
+            const ytDock = document.getElementById('kiwi-music-dock');
+            const ytDockSlot = document.getElementById('yt-dock-slot');
+            const dockMusicTitle = document.getElementById('dock-music-title');
+            const ytToggleSizeBtn = document.getElementById('yt-toggle-size-btn');
+            const dockSizeBtn = document.getElementById('dock-size-btn');
+            const ytPlayPauseBtn = document.getElementById('yt-play-pause-btn');
+            const dockDisableBtn = document.getElementById('dock-disable-btn');
+            const mailboxDisableToggle = document.getElementById('disable-music-layout-toggle');
+            const editYtUrl = document.getElementById('edit-yt-url');
+            const editLocalAudioFile = document.getElementById('edit-local-audio-file');
+            const editLocalAudioUrl = document.getElementById('edit-local-audio-url');
+            const editMusicCoverFile = document.getElementById('edit-music-cover-file');
+            const editMusicCoverUrl = document.getElementById('edit-music-cover-url');
+            const editMusicMode = document.getElementById('edit-music-mode');
+            const editMusicDisabled = document.getElementById('edit-music-disabled');
+
+            let ytEmbedBlocked = false;
+            let pendingYouTubeId = '';
+
+            function extractYouTubeId(url) {
+                if (!url) return '';
+                const match = url.match(/(?:youtube\.com\/(?:watch\?v=|embed\/|shorts\/)|youtu\.be\/)([A-Za-z0-9_-]{11})/);
+                return match ? match[1] : '';
+            }
+
+            function isExternalMusicLink(url) {
+                if (!url) return false;
+                return /^https?:\/\//i.test(url.trim());
+            }
+
+            function getExternalPlatformLabel(url) {
+                const lower = (url || '').toLowerCase();
+                if (lower.includes('spotify.com')) return '↗ Abrir no Spotify';
+                if (lower.includes('youtube.com') || lower.includes('youtu.be')) return '↗ Abrir no YouTube';
+                return '↗ Abrir link';
+            }
+
+            function mountYouTubePlayer(videoId) {
+                if (!videoId) return;
+                ytEmbedBlocked = false;
+
+                if (!ytApiReady || !window.YT || !window.YT.Player) {
+                    pendingYouTubeId = videoId;
+                    return;
+                }
+                pendingYouTubeId = '';
+
+                if (ytPlayerMount) ytPlayerMount.style.display = 'block';
+
+                if (ytPlayer && typeof ytPlayer.loadVideoById === 'function') {
+                    ytPlayer.loadVideoById(videoId);
+                    return;
+                }
+
+                ytPlayer = new window.YT.Player('yt-player-mount', {
+                    width: '100%',
+                    height: isYtExpanded ? '180' : '90',
+                    videoId: videoId,
+                    playerVars: { rel: 0, modestbranding: 1 },
+                    events: {
+                        onReady: () => {
+                            if (ytPlayerMount) ytPlayerMount.style.display = 'block';
+                        },
+                        onError: () => {
+                            ytEmbedBlocked = true;
+                            if (ytPlayerMount) ytPlayerMount.style.display = 'none';
+                            applyMusicPlacement();
+                        },
+                        onStateChange: (ev) => {
+                            isYtPlaying = ev.data === window.YT.PlayerState.PLAYING;
+                            if (ytPlayPauseBtn) {
+                                ytPlayPauseBtn.textContent = isYtPlaying ? 'Pause' : 'Play';
+                            }
+                        }
+                    }
+                });
+            }
+
+            function applyMusicPlacement() {
+                const rawUrl = (musicSettings.url || '').trim();
+                const videoId = extractYouTubeId(rawUrl);
+                const hasLocalAudio = Boolean((musicSettings.audioSrc || '').trim());
+                const hasExtLink = isExternalMusicLink(rawUrl);
+
+                if (externalMusicLink) {
+                    if (hasExtLink) {
+                        externalMusicLink.href = rawUrl;
+                        externalMusicLink.textContent = getExternalPlatformLabel(rawUrl);
+                        externalMusicLink.style.display = 'inline-flex';
+                    } else {
+                        externalMusicLink.href = '#';
+                        externalMusicLink.style.display = 'none';
+                    }
+                }
+
+                if (localAudioEl) {
+                    if (hasLocalAudio) {
+                        if (localAudioEl.getAttribute('src') !== musicSettings.audioSrc) {
+                            localAudioEl.src = musicSettings.audioSrc;
+                        }
+                        localAudioEl.style.display = 'block';
+                    } else {
+                        localAudioEl.removeAttribute('src');
+                        localAudioEl.style.display = 'none';
+                    }
+                }
+
+                if (ytPlayerMount) {
+                    const showYtMount = Boolean(videoId) && !ytEmbedBlocked && !hasLocalAudio;
+                    ytPlayerMount.style.display = showYtMount ? 'block' : 'none';
+                }
+
+                const displayTrackName = (musicSettings.audioFileName || '').trim()
+                    || (hasLocalAudio ? extractFileNameFromUrl(musicSettings.audioSrc, 'Áudio local') : '')
+                    || (profileData.song || '').trim()
+                    || 'Song Name';
+
+                if (musicTrackTitle) {
+                    musicTrackTitle.textContent = displayTrackName;
+                }
+                if (musicTrackSubtitle) {
+                    if (hasLocalAudio) {
+                        musicTrackSubtitle.textContent = profileData.artist || 'Áudio local';
+                    } else if (videoId) {
+                        musicTrackSubtitle.textContent = profileData.artist || 'YouTube';
+                    } else if (hasExtLink) {
+                        musicTrackSubtitle.textContent = profileData.artist || getExternalPlatformLabel(rawUrl).replace(/^↗\s*/, '');
+                    } else {
+                        musicTrackSubtitle.textContent = profileData.artist || 'Artists Names';
+                    }
+                }
+                if (musicCoverThumb) {
+                    const coverVal = (musicSettings.coverUrl || '').trim();
+                    if (coverVal) {
+                        musicCoverThumb.style.backgroundImage = `url('${coverVal}')`;
+                        musicCoverThumb.textContent = '';
+                    } else {
+                        musicCoverThumb.style.backgroundImage = 'none';
+                        musicCoverThumb.textContent = '♫';
+                    }
+                }
+
+                if (musicFallbackEl) {
+                    if (hasLocalAudio) {
+                        musicFallbackEl.textContent = '';
+                    } else if (videoId && ytEmbedBlocked) {
+                        musicFallbackEl.textContent = 'Vídeo sem embed direto: use ↗ para abrir o link ou escolha um áudio local.';
+                    } else if (hasExtLink && !videoId) {
+                        musicFallbackEl.textContent = 'Link externo configurado: clique em ↗ para abrir.';
+                    } else {
+                        musicFallbackEl.textContent = '';
+                    }
+                }
+
+                const isProfileOnly = musicSettings.mode === 'profile_only';
+                const shouldShowInLayout = !isProfileOnly && (Boolean(videoId && !ytEmbedBlocked) || hasLocalAudio) && musicSettings.mode === 'layout' && !musicSettings.disabledInLayout;
+
+                if (mailboxDisableToggle) {
+                    mailboxDisableToggle.checked = musicSettings.disabledInLayout;
+                }
+                if (dockMusicTitle) {
+                    dockMusicTitle.textContent = profileData.song || 'Música';
+                }
+
+                if (shouldShowInLayout && ytDock && ytDockSlot) {
+                    ytDock.style.display = 'flex';
+                    ytDock.style.width = isYtExpanded ? '320px' : '220px';
+                    const activeMediaEl = hasLocalAudio ? localAudioEl : ytPlayerMount;
+                    if (activeMediaEl && activeMediaEl.parentElement !== ytDockSlot) {
+                        ytDockSlot.appendChild(activeMediaEl);
+                    }
+                } else if (ytDock && profileYtBox) {
+                    ytDock.style.display = 'none';
+                    if (ytPlayerMount && ytPlayerMount.parentElement !== profileYtBox) {
+                        profileYtBox.appendChild(ytPlayerMount);
+                    }
+                    if (localAudioEl && localAudioEl.parentElement !== profileYtBox) {
+                        profileYtBox.appendChild(localAudioEl);
+                    }
+                    if (isProfileOnly && ytPlayer && typeof ytPlayer.pauseVideo === 'function') {
+                        try { ytPlayer.pauseVideo(); } catch (_) {}
+                    }
+                }
+
+                if (ytPlayer && typeof ytPlayer.setSize === 'function') {
+                    const w = isYtExpanded ? 300 : 200;
+                    const h = isYtExpanded ? 175 : 90;
+                    ytPlayer.setSize(w, h);
+                }
+
+                if (ytToggleSizeBtn) {
+                    ytToggleSizeBtn.textContent = isYtExpanded ? 'Diminuir' : 'Aumentar';
+                }
+                if (dockSizeBtn) {
+                    dockSizeBtn.textContent = isYtExpanded ? '-' : '+';
+                }
+            }
+
+            window.onYouTubeIframeAPIReady = function() {
+                ytApiReady = true;
+                const vid = extractYouTubeId(musicSettings.url) || pendingYouTubeId;
+                if (vid && !(musicSettings.audioSrc || '').trim()) mountYouTubePlayer(vid);
+                applyMusicPlacement();
+            };
+
+            function toggleMusicSize() {
+                isYtExpanded = !isYtExpanded;
+                applyMusicPlacement();
+            }
+
+            if (ytToggleSizeBtn) ytToggleSizeBtn.addEventListener('click', toggleMusicSize);
+            if (dockSizeBtn) dockSizeBtn.addEventListener('click', toggleMusicSize);
+
+            let demoProgressRatio = 0.22;
+            const demoTotalSeconds = 253; // 4:13 total como na referência (0:55 e -3:18)
+
+            function formatClock(sec) {
+                const s = Math.max(0, Math.floor(sec || 0));
+                const mins = Math.floor(s / 60);
+                const rem = s % 60;
+                return `${mins}:${rem < 10 ? '0' : ''}${rem}`;
+            }
+
+            function syncProgressUi(ratio, currentSec, durationSec) {
+                const clamped = Math.max(0, Math.min(1, ratio || 0));
+                if (kswProgressFill) {
+                    kswProgressFill.style.width = `${(clamped * 100).toFixed(1)}%`;
+                }
+                if (kswSeekInput) {
+                    kswSeekInput.value = String(Math.round(clamped * 1000));
+                }
+                if (kswTimeCurrent) {
+                    kswTimeCurrent.textContent = formatClock(currentSec);
+                }
+                if (kswTimeRemaining) {
+                    const rem = Math.max(0, (durationSec || demoTotalSeconds) - (currentSec || 0));
+                    kswTimeRemaining.textContent = `-${formatClock(rem)}`;
+                }
+            }
+
+            loadMusicSettingsFromStorage();
+            syncProgressUi(demoProgressRatio, Math.round(demoTotalSeconds * demoProgressRatio), demoTotalSeconds);
+            applyMusicPlacement();
+
+            setInterval(() => {
+                if ((musicSettings.audioSrc || '').trim() && localAudioEl) {
+                    if (!localAudioEl.paused && isFinite(localAudioEl.duration) && localAudioEl.duration > 0) {
+                        const r = localAudioEl.currentTime / localAudioEl.duration;
+                        syncProgressUi(r, localAudioEl.currentTime, localAudioEl.duration);
+                    }
+                    return;
+                }
+                if (ytPlayer && typeof ytPlayer.getCurrentTime === 'function' && typeof ytPlayer.getDuration === 'function' && isYtPlaying) {
+                    const dur = ytPlayer.getDuration();
+                    const cur = ytPlayer.getCurrentTime();
+                    if (dur > 0) {
+                        syncProgressUi(cur / dur, cur, dur);
+                        return;
+                    }
+                }
+                if (isYtPlaying) {
+                    demoProgressRatio += 1 / demoTotalSeconds;
+                    if (demoProgressRatio >= 1) {
+                        demoProgressRatio = localAudioEl && localAudioEl.loop ? 0 : 1;
+                    }
+                    syncProgressUi(demoProgressRatio, demoProgressRatio * demoTotalSeconds, demoTotalSeconds);
+                }
+            }, 400);
+
+            if (kswSeekInput) {
+                kswSeekInput.addEventListener('input', () => {
+                    const r = Number(kswSeekInput.value || 0) / 1000;
+                    demoProgressRatio = r;
+                    if ((musicSettings.audioSrc || '').trim() && localAudioEl && isFinite(localAudioEl.duration) && localAudioEl.duration > 0) {
+                        localAudioEl.currentTime = r * localAudioEl.duration;
+                        syncProgressUi(r, localAudioEl.currentTime, localAudioEl.duration);
+                    } else if (ytPlayer && typeof ytPlayer.getDuration === 'function' && typeof ytPlayer.seekTo === 'function') {
+                        const dur = ytPlayer.getDuration();
+                        if (dur > 0) {
+                            ytPlayer.seekTo(r * dur, true);
+                            syncProgressUi(r, r * dur, dur);
+                        }
+                    } else {
+                        syncProgressUi(r, r * demoTotalSeconds, demoTotalSeconds);
+                    }
+                });
+            }
+
+            if (kswPrevBtn) {
+                kswPrevBtn.addEventListener('click', () => {
+                    if ((musicSettings.audioSrc || '').trim() && localAudioEl) {
+                        localAudioEl.currentTime = Math.max(0, localAudioEl.currentTime - 10);
+                    } else if (ytPlayer && typeof ytPlayer.getCurrentTime === 'function' && typeof ytPlayer.seekTo === 'function') {
+                        ytPlayer.seekTo(Math.max(0, ytPlayer.getCurrentTime() - 10), true);
+                    } else {
+                        demoProgressRatio = Math.max(0, demoProgressRatio - 10 / demoTotalSeconds);
+                        syncProgressUi(demoProgressRatio, demoProgressRatio * demoTotalSeconds, demoTotalSeconds);
+                    }
+                });
+            }
+
+            if (kswNextBtn) {
+                kswNextBtn.addEventListener('click', () => {
+                    if ((musicSettings.audioSrc || '').trim() && localAudioEl) {
+                        localAudioEl.currentTime = Math.min(localAudioEl.duration || localAudioEl.currentTime + 10, localAudioEl.currentTime + 10);
+                    } else if (ytPlayer && typeof ytPlayer.getCurrentTime === 'function' && typeof ytPlayer.seekTo === 'function') {
+                        ytPlayer.seekTo(ytPlayer.getCurrentTime() + 10, true);
+                    } else {
+                        demoProgressRatio = Math.min(1, demoProgressRatio + 10 / demoTotalSeconds);
+                        syncProgressUi(demoProgressRatio, demoProgressRatio * demoTotalSeconds, demoTotalSeconds);
+                    }
+                });
+            }
+
+            if (kswShuffleBtn) {
+                kswShuffleBtn.addEventListener('click', () => {
+                    kswShuffleBtn.classList.toggle('active');
+                });
+            }
+
+            if (kswRepeatBtn) {
+                kswRepeatBtn.addEventListener('click', () => {
+                    const active = kswRepeatBtn.classList.toggle('active');
+                    if (localAudioEl) localAudioEl.loop = active;
+                });
+            }
+
+            function applyPlayerVolume(volPercent) {
+                const clamped = Math.max(0, Math.min(100, Number(volPercent)));
+                if (kswVolSlider) kswVolSlider.value = String(clamped);
+                if (kswVolVal) kswVolVal.textContent = `${clamped}%`;
+                if (kswVolBtn) {
+                    if (clamped === 0) kswVolBtn.textContent = '🔇';
+                    else if (clamped < 50) kswVolBtn.textContent = '🔉';
+                    else kswVolBtn.textContent = '🔊';
+                }
+                if (localAudioEl) {
+                    localAudioEl.volume = clamped / 100;
+                    localAudioEl.muted = clamped === 0;
+                }
+                if (ytPlayer && typeof ytPlayer.setVolume === 'function') {
+                    ytPlayer.setVolume(clamped);
+                    if (clamped === 0 && typeof ytPlayer.mute === 'function') {
+                        ytPlayer.mute();
+                    } else if (typeof ytPlayer.unMute === 'function') {
+                        ytPlayer.unMute();
+                    }
+                }
+            }
+
+            applyPlayerVolume(80);
+
+            if (kswVolBtn && kswVolPopover) {
+                kswVolBtn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    kswVolPopover.classList.toggle('open');
+                });
+                document.addEventListener('click', (e) => {
+                    if (!kswVolPopover.contains(e.target) && e.target !== kswVolBtn) {
+                        kswVolPopover.classList.remove('open');
+                    }
+                });
+            }
+
+            if (kswVolSlider) {
+                kswVolSlider.addEventListener('input', () => {
+                    applyPlayerVolume(kswVolSlider.value);
+                });
+            }
+
+            if (kswLikeBtn) {
+                kswLikeBtn.addEventListener('click', () => {
+                    const liked = kswLikeBtn.classList.toggle('active');
+                    kswLikeBtn.textContent = liked ? '✓' : '+';
+                    showKiwiToast(liked ? 'Faixa guardada!' : 'Removida das guardadas.');
+                });
+            }
+
+            if (localAudioEl) {
+                localAudioEl.addEventListener('play', () => {
+                    isYtPlaying = true;
+                    if (ytPlayPauseBtn) ytPlayPauseBtn.textContent = '⏸';
+                });
+                localAudioEl.addEventListener('pause', () => {
+                    isYtPlaying = false;
+                    if (ytPlayPauseBtn) ytPlayPauseBtn.textContent = '▶';
+                });
+            }
+
+            if (ytPlayPauseBtn) {
+                ytPlayPauseBtn.addEventListener('click', () => {
+                    if ((musicSettings.audioSrc || '').trim() && localAudioEl) {
+                        if (localAudioEl.paused) {
+                            localAudioEl.play().catch(() => {});
+                        } else {
+                            localAudioEl.pause();
+                        }
+                        return;
+                    }
+                    if (ytPlayer && !ytEmbedBlocked && typeof ytPlayer.playVideo === 'function') {
+                        if (isYtPlaying) {
+                            ytPlayer.pauseVideo();
+                        } else {
+                            ytPlayer.playVideo();
+                        }
+                        return;
+                    }
+                    isYtPlaying = !isYtPlaying;
+                    ytPlayPauseBtn.textContent = isYtPlaying ? '⏸' : '▶';
+                });
+            }
+
+            if (dockDisableBtn) {
+                dockDisableBtn.addEventListener('click', () => {
+                    musicSettings.disabledInLayout = true;
+                    saveMusicSettingsToStorage();
+                    applyMusicPlacement();
+                    showKiwiToast('Música desabilitada no layout.');
+                });
+            }
+
+            if (mailboxDisableToggle) {
+                mailboxDisableToggle.addEventListener('change', (e) => {
+                    musicSettings.disabledInLayout = Boolean(e.target.checked);
+                    saveMusicSettingsToStorage();
+                    applyMusicPlacement();
+                });
+            }
+
+            async function createPeerConnection() {
+                const pc = new RTCPeerConnection({
+                    iceServers: [{ urls: 'stun:stun.l.google.com:19302' }]
+                });
+
+                pc.onicecandidate = (event) => {
+                    if (event.candidate && dmSocket && dmSocket.readyState === WebSocket.OPEN) {
+                        dmSocket.send(JSON.stringify({
+                            type: 'call_signal',
+                            signal: { candidate: event.candidate }
+                        }));
+                    }
+                };
+
+                pc.ontrack = (event) => {
+                    if (remoteAudioEl && event.streams && event.streams[0]) {
+                        remoteAudioEl.srcObject = event.streams[0];
+                    }
+                };
+
+                if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+                    throw new Error('Microfone não suportado neste navegador.');
+                }
+
+                localStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
+                localStream.getTracks().forEach(track => pc.addTrack(track, localStream));
+                return pc;
+            }
+
+            window.startVoiceCall = async function(targetUsername) {
+                const peerName = targetUsername || currentDmUser;
+                if (!peerName || peerName === activeUsername) {
+                    showKiwiToast("Abra uma DM com um amigo para iniciar a call.");
+                    return;
+                }
+
+                if (currentView !== 'dm' || currentDmUser !== peerName) {
+                    openPrivateChat(peerName);
+                    showKiwiToast(`Abrindo conversa com ${peerName} para iniciar a call...`);
+                    return;
+                }
+
+                if (!dmSocket || dmSocket.readyState !== WebSocket.OPEN) {
+                    showKiwiToast("Conectando à DM... tente clicar em Call novamente.");
+                    return;
+                }
+
+                try {
+                    callTargetUser = peerName;
+                    isCallMuted = false;
+                    callMuteBtn.classList.remove('mute-active');
+                    callMuteBtn.textContent = '🎙️ Mudo';
+                    callBarEl.classList.add('active');
+                    callStatusTextEl.textContent = `A chamar ${peerName}...`;
+
+                    peerConnection = await createPeerConnection();
+                    const offer = await peerConnection.createOffer();
+                    await peerConnection.setLocalDescription(offer);
+
+                    dmSocket.send(JSON.stringify({
+                        type: 'call_signal',
+                        signal: { offer: offer }
+                    }));
+                } catch (err) {
+                    console.error("Erro ao iniciar call:", err);
+                    showKiwiToast("Não foi possível iniciar a chamada.");
+                    hangupVoiceCall(false);
+                }
+            };
+
+            async function handleIncomingCallSignal(sender, signal) {
+                if (!signal) return;
+
+                if (signal.offer) {
+                    try {
+                        callTargetUser = sender || currentDmUser;
+                        callBarEl.classList.add('active');
+                        callStatusTextEl.textContent = `Em chamada com ${callTargetUser}`;
+
+                        if (!peerConnection) {
+                            peerConnection = await createPeerConnection();
+                        }
+                        await peerConnection.setRemoteDescription(new RTCSessionDescription(signal.offer));
+                        const answer = await peerConnection.createAnswer();
+                        await peerConnection.setLocalDescription(answer);
+
+                        if (dmSocket && dmSocket.readyState === WebSocket.OPEN) {
+                            dmSocket.send(JSON.stringify({
+                                type: 'call_signal',
+                                signal: { answer: answer }
+                            }));
+                        }
+                    } catch (err) {
+                        console.error("Erro ao atender call:", err);
+                        hangupVoiceCall(false);
+                    }
+                    return;
+                }
+
+                if (signal.answer && peerConnection) {
+                    await peerConnection.setRemoteDescription(new RTCSessionDescription(signal.answer));
+                    callStatusTextEl.textContent = `Em chamada com ${callTargetUser || currentDmUser}`;
+                    return;
+                }
+
+                if (signal.candidate && peerConnection) {
+                    try {
+                        await peerConnection.addIceCandidate(new RTCIceCandidate(signal.candidate));
+                    } catch (_) {}
+                }
+            }
+
+            window.toggleMuteCall = function() {
+                if (!localStream) return;
+                isCallMuted = !isCallMuted;
+                localStream.getAudioTracks().forEach(track => {
+                    track.enabled = !isCallMuted;
+                });
+                callMuteBtn.classList.toggle('mute-active', isCallMuted);
+                callMuteBtn.textContent = isCallMuted ? '🔇 Sem som' : '🎙️ Mudo';
+            };
+
+            window.hangupVoiceCall = function(notifyPeer = true) {
+                if (notifyPeer && dmSocket && dmSocket.readyState === WebSocket.OPEN && callTargetUser) {
+                    dmSocket.send(JSON.stringify({ type: 'call_hangup' }));
+                }
+                if (peerConnection) {
+                    peerConnection.close();
+                    peerConnection = null;
+                }
+                if (localStream) {
+                    localStream.getTracks().forEach(t => t.stop());
+                    localStream = null;
+                }
+                if (remoteAudioEl) {
+                    remoteAudioEl.srcObject = null;
+                }
+                callTargetUser = null;
+                isCallMuted = false;
+                callMuteBtn.classList.remove('mute-active');
+                callMuteBtn.textContent = '🎙️ Mudo';
+                callBarEl.classList.remove('active');
+            };
+
+            window.removeFriend = function(targetUsername) {
+                if (!targetUsername) return;
+                fetch('/api/friends/remove/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': getCookie('csrftoken')
+                    },
+                    body: JSON.stringify({ username: targetUsername })
+                })
+                .then(res => res.json().then(resp => ({ ok: res.ok, resp })))
+                .then(({ ok, resp }) => {
+                    if (!ok || resp.status === 'error') {
+                        showKiwiToast(resp.message || "Não foi possível remover a amizade.");
+                        return;
+                    }
+                    showKiwiToast(resp.message || `Amizade com ${targetUsername} removida.`);
+                    otherProfileModal.classList.remove('open');
+
+                    if (openDmTabs.has(targetUsername)) {
+                        openDmTabs.delete(targetUsername);
+                        if (currentView === 'dm' && currentDmUser === targetUsername) {
+                            switchToGeral();
+                        } else {
+                            renderDmTabs();
+                        }
+                    }
+
+                    const amigosTab = document.querySelector('.social-tab[data-tab="amigos"]');
+                    if (amigosTab && amigosTab.classList.contains('active')) {
+                        fetchFriendsList();
+                    }
+                })
+                .catch(err => {
+                    console.error("Erro ao remover amizade:", err);
+                    showKiwiToast("Erro ao remover amizade.");
+                });
+            };
+
+            function closeAllMessagePopovers() {
+                chatLog.querySelectorAll('.msg-emoji-picker.open, .msg-more-popover.open').forEach(el => {
+                    el.classList.remove('open');
+                });
+                chatLog.querySelectorAll('.message-group.menu-open').forEach(el => {
+                    el.classList.remove('menu-open');
+                });
+            }
+
+            function enhanceMessageGroup(group, options = {}) {
+                if (!group || group.querySelector('.msg-hover-toolbar')) return;
+                const content = group.querySelector('.message-content');
+                if (!content) return;
+
+                const isSystem = Boolean(options.isSystem);
+                const msgId = group.getAttribute('data-msg-id') || '';
+                const dmId = group.getAttribute('data-dm-id') || '';
+                const canDelete = group.getAttribute('data-can-delete') === '1';
+
+                let reactionsRow = content.querySelector('.msg-reactions-row');
+                if (!reactionsRow) {
+                    reactionsRow = document.createElement('div');
+                    reactionsRow.className = 'msg-reactions-row';
+                    content.appendChild(reactionsRow);
+                }
+
+                if (isSystem) return;
+
+                const toolbar = document.createElement('div');
+                toolbar.className = 'msg-hover-toolbar';
+
+                quickReactions.forEach(emoji => {
+                    const btn = document.createElement('button');
+                    btn.type = 'button';
+                    btn.className = 'msg-hover-btn';
+                    btn.title = `Reagir com ${emoji}`;
+                    btn.textContent = emoji;
+                    btn.setAttribute('data-react-emoji', emoji);
+                    toolbar.appendChild(btn);
+                });
+
+                const divider = document.createElement('span');
+                divider.className = 'msg-hover-divider';
+                toolbar.appendChild(divider);
+
+                const moreEmojiBtn = document.createElement('button');
+                moreEmojiBtn.type = 'button';
+                moreEmojiBtn.className = 'msg-hover-btn';
+                moreEmojiBtn.title = 'Mais reações';
+                moreEmojiBtn.textContent = '😊';
+                moreEmojiBtn.setAttribute('data-toggle-picker', '1');
+                toolbar.appendChild(moreEmojiBtn);
+
+                const replyBtn = document.createElement('button');
+                replyBtn.type = 'button';
+                replyBtn.className = 'msg-hover-btn';
+                replyBtn.title = 'Responder';
+                replyBtn.textContent = '↩️';
+                replyBtn.setAttribute('data-reply-msg', '1');
+                toolbar.appendChild(replyBtn);
+
+                const threeDotsBtn = document.createElement('button');
+                threeDotsBtn.type = 'button';
+                threeDotsBtn.className = 'msg-hover-btn';
+                threeDotsBtn.title = 'Mais opções';
+                threeDotsBtn.textContent = '•••';
+                threeDotsBtn.setAttribute('data-toggle-more', '1');
+                toolbar.appendChild(threeDotsBtn);
+
+                const picker = document.createElement('div');
+                picker.className = 'msg-emoji-picker';
+                extraReactions.forEach(emoji => {
+                    const eBtn = document.createElement('button');
+                    eBtn.type = 'button';
+                    eBtn.className = 'msg-emoji-choice';
+                    eBtn.textContent = emoji;
+                    eBtn.setAttribute('data-react-emoji', emoji);
+                    picker.appendChild(eBtn);
+                });
+
+                const popover = document.createElement('div');
+                popover.className = 'msg-more-popover';
+
+                const copyBtn = document.createElement('button');
+                copyBtn.type = 'button';
+                copyBtn.className = 'msg-more-item';
+                copyBtn.textContent = '📋 Copiar texto';
+                copyBtn.setAttribute('data-copy-msg', '1');
+                popover.appendChild(copyBtn);
+
+                if (canDelete && (msgId || dmId)) {
+                    const delBtn = document.createElement('button');
+                    delBtn.type = 'button';
+                    delBtn.className = 'msg-more-item danger';
+                    delBtn.textContent = '🗑️ Excluir';
+                    if (msgId) delBtn.setAttribute('data-delete-id', msgId);
+                    if (dmId) delBtn.setAttribute('data-delete-dm-id', dmId);
+                    popover.appendChild(delBtn);
+                }
+
+                group.appendChild(toolbar);
+                group.appendChild(picker);
+                group.appendChild(popover);
+            }
+
+            function toggleMessageReaction(group, emoji) {
+                if (!group || !emoji) return;
+                const reactionsRow = group.querySelector('.msg-reactions-row');
+                if (!reactionsRow) return;
+
+                let chip = Array.from(reactionsRow.querySelectorAll('.msg-reaction-chip')).find(
+                    el => el.getAttribute('data-emoji') === emoji
+                );
+
+                if (!chip) {
+                    chip = document.createElement('button');
+                    chip.type = 'button';
+                    chip.className = 'msg-reaction-chip active';
+                    chip.setAttribute('data-emoji', emoji);
+                    chip.setAttribute('data-count', '1');
+                    chip.innerHTML = `<span>${emoji}</span><span class="reaction-count">1</span>`;
+                    reactionsRow.appendChild(chip);
+                    return;
+                }
+
+                const isActive = chip.classList.contains('active');
+                let count = Number(chip.getAttribute('data-count') || '1');
+
+                if (isActive) {
+                    count -= 1;
+                    if (count <= 0) {
+                        chip.remove();
+                    } else {
+                        chip.classList.remove('active');
+                        chip.setAttribute('data-count', String(count));
+                        chip.querySelector('.reaction-count').textContent = String(count);
+                    }
+                } else {
+                    count += 1;
+                    chip.classList.add('active');
+                    chip.setAttribute('data-count', String(count));
+                    chip.querySelector('.reaction-count').textContent = String(count);
+                }
+            }
+
+            function enhanceExistingMessagesInLog() {
+                const groups = chatLog.querySelectorAll('.message-group');
+                groups.forEach((grp, idx) => {
+                    const isSys = idx === 0 && !grp.hasAttribute('data-msg-id') && !grp.hasAttribute('data-dm-id');
+                    enhanceMessageGroup(grp, { isSystem: isSys });
+                });
+            }
+
+            enhanceExistingMessagesInLog();
+            let geralSnapshotHTML = chatLog.innerHTML;
+
             function applyTheme(colorKey) {
                 const t = themesMap[colorKey] || themesMap['#ffffff'];
                 document.documentElement.style.setProperty('--accent', t.accent);
@@ -1094,11 +3052,13 @@
                 fetch('/api/profile/' + activeUsername + '/')
                 .then(res => res.json())
                 .then(data => {
+                    activeUsername = data.username || activeUsername;
                     profileData.bubble = data.bubble || profileData.bubble;
                     profileData.pronouns = data.pronouns || profileData.pronouns;
                     profileData.bio = data.bio || profileData.bio;
                     profileData.song = data.spotify_song || profileData.song;
                     profileData.artist = data.spotify_artist || profileData.artist;
+                    profileData.is_admin = Boolean(data.is_admin || data.is_staff || data.is_superuser);
                     if (data.accent_color && themesMap[data.accent_color]) {
                         profileData.accentColor = data.accent_color;
                     }
@@ -1109,6 +3069,13 @@
                 .catch(err => console.error("Erro ao carregar perfil:", err));
             }
             applyTheme(profileData.accentColor);
+            applySpecialProfileEffects(
+                aestheticModal ? aestheticModal.querySelector('.aesthetic-profile-card') : null,
+                profileUsernameEl,
+                profileAdminBadge,
+                activeUsername,
+                profileData.is_admin
+            );
             loadMyProfile();
 
             function updateUI() {
@@ -1120,6 +3087,17 @@
                         ball.classList.remove('active');
                     }
                 });
+
+                if (profileUsernameEl) {
+                    profileUsernameEl.textContent = activeUsername;
+                }
+                applySpecialProfileEffects(
+                    aestheticModal ? aestheticModal.querySelector('.aesthetic-profile-card') : null,
+                    profileUsernameEl,
+                    profileAdminBadge,
+                    activeUsername,
+                    profileData.is_admin
+                );
 
                 setAvatarStyle(miniAvatar, profileData.avatarUrl, activeUsername);
                 setAvatarStyle(profileAvatar, profileData.avatarUrl, activeUsername);
@@ -1136,8 +3114,9 @@
                 profileBubble.textContent = profileData.bubble;
                 profilePronouns.textContent = profileData.pronouns;
                 profileBio.innerHTML = profileData.bio;
-                spotifyTitle.textContent = profileData.song;
-                spotifyArtist.textContent = profileData.artist;
+                if (dockMusicTitle) {
+                    dockMusicTitle.textContent = profileData.song || 'YouTube';
+                }
             }
 
             themeBalls.forEach(ball => {
@@ -1148,19 +3127,29 @@
             });
 
             if (openTrigger && aestheticModal) {
-                openTrigger.addEventListener('click', () => aestheticModal.classList.add('open'));
+                openTrigger.addEventListener('click', () => {
+                    applyMusicPlacement();
+                    aestheticModal.classList.add('open');
+                });
             }
             if (settingsBtn && aestheticModal) {
-                settingsBtn.addEventListener('click', () => aestheticModal.classList.add('open'));
+                settingsBtn.addEventListener('click', () => {
+                    applyMusicPlacement();
+                    aestheticModal.classList.add('open');
+                });
             }
             if (mailboxBtn && mailboxModal) {
                 mailboxBtn.addEventListener('click', () => {
+                    if (mailboxDisableToggle) mailboxDisableToggle.checked = musicSettings.disabledInLayout;
                     mailboxModal.classList.add('open');
                     fetchFriendRequests();
                 });
             }
 
-            closeAestheticBtn.addEventListener('click', () => aestheticModal.classList.remove('open'));
+            closeAestheticBtn.addEventListener('click', () => {
+                aestheticModal.classList.remove('open');
+                applyMusicPlacement();
+            });
             closeEditBtn.addEventListener('click', () => editModal.classList.remove('open'));
             closeOtherBtn.addEventListener('click', () => otherProfileModal.classList.remove('open'));
             closeMailboxBtn.addEventListener('click', () => mailboxModal.classList.remove('open'));
@@ -1173,11 +3162,81 @@
                 editBio.value = profileData.bio.replace(/<br>/g, '\n');
                 editSong.value = profileData.song;
                 editArtist.value = profileData.artist;
+                if (editYtUrl) editYtUrl.value = musicSettings.url;
+                if (editLocalAudioUrl) editLocalAudioUrl.value = musicSettings.audioSrc && !musicSettings.audioSrc.startsWith('blob:') ? musicSettings.audioSrc : '';
+                if (editLocalAudioFile) editLocalAudioFile.value = '';
+                if (editMusicCoverUrl) editMusicCoverUrl.value = musicSettings.coverUrl && !musicSettings.coverUrl.startsWith('blob:') ? musicSettings.coverUrl : '';
+                if (editMusicCoverFile) editMusicCoverFile.value = '';
+                if (editMusicMode) editMusicMode.value = musicSettings.mode;
+                if (editMusicDisabled) editMusicDisabled.checked = musicSettings.disabledInLayout;
                 editModal.classList.add('open');
             });
 
-            editProfileForm.addEventListener('submit', function(e) {
+            editProfileForm.addEventListener('submit', async function(e) {
                 e.preventDefault();
+                if (editSong && editSong.value.trim()) profileData.song = editSong.value.trim();
+                if (editArtist && editArtist.value.trim()) profileData.artist = editArtist.value.trim();
+                if (editYtUrl) musicSettings.url = editYtUrl.value.trim();
+                if (editMusicMode) {
+                    musicSettings.mode = editMusicMode.value === 'layout' ? 'layout' : 'profile_only';
+                }
+                if (editMusicDisabled) musicSettings.disabledInLayout = Boolean(editMusicDisabled.checked);
+
+                const pickedAudioFile = editLocalAudioFile && editLocalAudioFile.files && editLocalAudioFile.files[0];
+                const typedAudioUrl = editLocalAudioUrl ? editLocalAudioUrl.value.trim() : '';
+
+                if (pickedAudioFile) {
+                    if (musicSettings.audioSrc && musicSettings.audioSrc.startsWith('blob:')) {
+                        URL.revokeObjectURL(musicSettings.audioSrc);
+                    }
+                    musicSettings.audioFileName = pickedAudioFile.name;
+                    if (pickedAudioFile.size <= 3 * 1024 * 1024) {
+                        try {
+                            musicSettings.audioSrc = await readFileAsDataUrl(pickedAudioFile);
+                        } catch (_) {
+                            musicSettings.audioSrc = URL.createObjectURL(pickedAudioFile);
+                        }
+                    } else {
+                        musicSettings.audioSrc = URL.createObjectURL(pickedAudioFile);
+                    }
+                } else if (typedAudioUrl) {
+                    musicSettings.audioSrc = typedAudioUrl;
+                    musicSettings.audioFileName = extractFileNameFromUrl(typedAudioUrl, 'Áudio local');
+                } else if (!typedAudioUrl && (!musicSettings.audioSrc || !musicSettings.audioSrc.startsWith('blob:'))) {
+                    musicSettings.audioSrc = '';
+                    musicSettings.audioFileName = '';
+                }
+
+                const pickedCoverFile = editMusicCoverFile && editMusicCoverFile.files && editMusicCoverFile.files[0];
+                const typedCoverUrl = editMusicCoverUrl ? editMusicCoverUrl.value.trim() : '';
+
+                if (pickedCoverFile) {
+                    if (musicSettings.coverUrl && musicSettings.coverUrl.startsWith('blob:')) {
+                        URL.revokeObjectURL(musicSettings.coverUrl);
+                    }
+                    if (pickedCoverFile.size <= 2 * 1024 * 1024) {
+                        try {
+                            musicSettings.coverUrl = await readFileAsDataUrl(pickedCoverFile);
+                        } catch (_) {
+                            musicSettings.coverUrl = URL.createObjectURL(pickedCoverFile);
+                        }
+                    } else {
+                        musicSettings.coverUrl = URL.createObjectURL(pickedCoverFile);
+                    }
+                } else if (typedCoverUrl) {
+                    musicSettings.coverUrl = typedCoverUrl;
+                } else if (!typedCoverUrl && (!musicSettings.coverUrl || !musicSettings.coverUrl.startsWith('blob:'))) {
+                    musicSettings.coverUrl = '';
+                }
+
+                saveMusicSettingsToStorage();
+
+                const vid = extractYouTubeId(musicSettings.url);
+                if (vid && !musicSettings.audioSrc) {
+                    mountYouTubePlayer(vid);
+                }
+                applyMusicPlacement();
+
                 const formData = new FormData(editProfileForm);
                 formData.append('accent_color', profileData.accentColor);
 
@@ -1193,15 +3252,20 @@
                     if (resp.status === 'success') {
                         editModal.classList.remove('open');
                         loadMyProfile();
+                        showKiwiToast("Perfil atualizado!");
                     } else {
-                        alert("Erro ao atualizar perfil: " + resp.message);
+                        showKiwiToast("Erro ao atualizar perfil: " + resp.message);
                     }
                 })
                 .catch(err => {
                     console.error("Erro:", err);
-                    alert("Não foi possível ligar ao servidor.");
+                    showKiwiToast("Não foi possível ligar ao servidor.");
                 });
             });
+
+            function renderEmptyFriendRequests(container) {
+                container.innerHTML = `<div style="font-size: 12px; color: var(--text-muted); background: var(--bg-soft); padding: 10px; border-radius: 8px; text-align: center;">Sem novos pedidos de amizade.</div>`;
+            }
 
             function fetchFriendRequests() {
                 const container = document.getElementById('mailbox-friend-requests');
@@ -1210,23 +3274,29 @@
                 .then(data => {
                     if (data.requests && data.requests.length > 0) {
                         container.innerHTML = data.requests.map(req => `
-                            <div style="display: flex; align-items: center; justify-content: space-between; background: var(--bg-soft); padding: 10px; border-radius: 8px; border: 1px solid var(--border-subtle);">
-                                <span style="font-weight: bold; font-size: 13px;">${req.sender}</span>
-                                <div style="display: flex; gap: 6px;">
-                                    <button onclick="acceptRequest(${req.id})" style="background: #23a55a; color: #fff; border: none; padding: 6px 10px; border-radius: 4px; font-size: 11px; font-weight: bold; cursor: pointer;">Aceitar</button>
+                            <div class="friend-req-card" id="friend-req-card-${req.id}">
+                                <span class="friend-req-name" style="font-weight: bold; font-size: 13px;">${req.sender}</span>
+                                <div class="friend-req-actions" style="display: flex; gap: 6px;">
+                                    <button type="button" onclick="acceptRequest(${req.id}, this)" style="background: #23a55a; color: #fff; border: none; padding: 6px 10px; border-radius: 4px; font-size: 11px; font-weight: bold; cursor: pointer;">Aceitar</button>
                                 </div>
                             </div>
                         `).join('');
                     } else {
-                        container.innerHTML = `<div style="font-size: 12px; color: var(--text-muted); background: var(--bg-soft); padding: 10px; border-radius: 8px; text-align: center;">Sem novos pedidos de amizade.</div>`;
+                        renderEmptyFriendRequests(container);
                     }
                 })
                 .catch(() => {
-                    container.innerHTML = `<div style="font-size: 12px; color: var(--text-muted); background: var(--bg-soft); padding: 10px; border-radius: 8px; text-align: center;">Sem novos pedidos de amizade.</div>`;
+                    renderEmptyFriendRequests(container);
                 });
             }
 
-            window.acceptRequest = function(requestId) {
+            window.acceptRequest = function(requestId, btnEl) {
+                const card = document.getElementById(`friend-req-card-${requestId}`) || (btnEl ? btnEl.closest('.friend-req-card') : null);
+                if (btnEl) {
+                    btnEl.disabled = true;
+                    btnEl.style.opacity = '0.7';
+                }
+
                 fetch('/api/friend-request/accept/', {
                     method: 'POST',
                     headers: {
@@ -1235,14 +3305,49 @@
                     },
                     body: JSON.stringify({ request_id: requestId })
                 })
-                .then(res => res.json())
-                .then(resp => {
-                    alert(resp.message || "Amizade aceite!");
-                    fetchFriendRequests();
+                .then(res => res.json().then(resp => ({ ok: res.ok, resp })))
+                .then(({ ok, resp }) => {
+                    if (!ok || resp.status === 'error') {
+                        if (btnEl) {
+                            btnEl.disabled = false;
+                            btnEl.style.opacity = '1';
+                        }
+                        showKiwiToast(resp.message || "Não foi possível aceitar o pedido.");
+                        return;
+                    }
+
+                    if (card) {
+                        card.classList.add('accepted');
+                        const actionsEl = card.querySelector('.friend-req-actions');
+                        if (actionsEl) {
+                            actionsEl.innerHTML = `<span class="friend-req-status">✓ Pedido aceito</span>`;
+                        }
+
+                        setTimeout(() => {
+                            card.classList.add('fading-out');
+                            setTimeout(() => {
+                                card.remove();
+                                const container = document.getElementById('mailbox-friend-requests');
+                                if (container && container.querySelectorAll('.friend-req-card').length === 0) {
+                                    renderEmptyFriendRequests(container);
+                                }
+                                const amigosTab = document.querySelector('.social-tab[data-tab="amigos"]');
+                                if (amigosTab && amigosTab.classList.contains('active') && typeof fetchFriendsList === 'function') {
+                                    fetchFriendsList();
+                                }
+                            }, 360);
+                        }, 1050);
+                    } else {
+                        fetchFriendRequests();
+                    }
                 })
                 .catch(err => {
                     console.error("Erro ao aceitar pedido:", err);
-                    alert("Não foi possível aceitar o pedido.");
+                    if (btnEl) {
+                        btnEl.disabled = false;
+                        btnEl.style.opacity = '1';
+                    }
+                    showKiwiToast("Não foi possível aceitar o pedido.");
                 });
             };
 
@@ -1298,21 +3403,35 @@
                 headerDmAvatar.onclick = null;
                 headerMainTitle.textContent = '# geral';
                 headerSubLabel.textContent = '| Chat oficial em tempo real';
+                headerCallBtn.classList.remove('visible');
                 backToGeralBtn.classList.remove('visible');
                 messageInput.placeholder = 'Conversar em #geral...';
 
                 chatLog.innerHTML = geralSnapshotHTML;
+                enhanceExistingMessagesInLog();
                 chatLog.scrollTop = chatLog.scrollHeight;
             };
+
+            function extractFileNameFromUrl(url, fallbackName = 'Documento') {
+                if (!url) return fallbackName;
+                try {
+                    const cleanUrl = url.split('?')[0];
+                    const parts = cleanUrl.split('/');
+                    return decodeURIComponent(parts[parts.length - 1] || fallbackName);
+                } catch (_) {
+                    return fallbackName;
+                }
+            }
 
             function appendMessageElement(data, options = {}) {
                 const isDm = Boolean(options.isDm);
                 const msgUsername = data.sender || data.username || 'Anônimo';
+                const canDelete = msgUsername === activeUsername;
                 const avatarSrc =
                     options.avatarUrl ||
                     data.avatar ||
                     data.avatarUrl ||
-                    (msgUsername === activeUsername ? profileData.avatarUrl : '') ||
+                    (canDelete ? profileData.avatarUrl : '') ||
                     '';
                 const avatarInitial = msgUsername.charAt(0).toUpperCase() || 'K';
                 const timeText = data.time || 'Agora';
@@ -1324,6 +3443,7 @@
 
                 const group = document.createElement('div');
                 group.className = 'message-group';
+                group.setAttribute('data-can-delete', canDelete ? '1' : '0');
                 if (data.id) {
                     group.setAttribute(isDm ? 'data-dm-id' : 'data-msg-id', data.id);
                 }
@@ -1350,17 +3470,6 @@
 
                 header.appendChild(userSpan);
                 header.appendChild(timeSpan);
-
-                if (msgUsername === activeUsername && data.id) {
-                    const delBtn = document.createElement('button');
-                    delBtn.type = 'button';
-                    delBtn.className = 'delete-msg-btn';
-                    delBtn.setAttribute(isDm ? 'data-delete-dm-id' : 'data-delete-id', data.id);
-                    delBtn.title = 'Excluir mensagem';
-                    delBtn.textContent = '🗑️ Excluir';
-                    header.appendChild(delBtn);
-                }
-
                 content.appendChild(header);
 
                 if (data.message) {
@@ -1383,13 +3492,27 @@
                         audio.src = data.attachment_url;
                         audio.className = 'msg-attachment-audio';
                         content.appendChild(audio);
+                    } else {
+                        const docLink = document.createElement('a');
+                        docLink.href = data.attachment_url;
+                        docLink.className = 'msg-attachment-doc';
+                        docLink.setAttribute('download', '');
+                        docLink.target = '_blank';
+                        docLink.rel = 'noopener noreferrer';
+                        const docName = data.attachment_name || extractFileNameFromUrl(data.attachment_url);
+                        docLink.textContent = `📄 ${docName}`;
+                        content.appendChild(docLink);
                     }
                 }
 
                 group.appendChild(avatar);
                 group.appendChild(content);
+                enhanceMessageGroup(group, { isSystem: false });
 
                 chatLog.appendChild(group);
+                if (!isDm && currentView === 'geral') {
+                    geralSnapshotHTML = chatLog.innerHTML;
+                }
                 chatLog.scrollTop = chatLog.scrollHeight;
             }
 
@@ -1400,7 +3523,7 @@
                 .then(res => res.json().then(data => ({ ok: res.ok, data })))
                 .then(({ ok, data }) => {
                     if (!ok || data.status === 'error') {
-                        alert(data.message || "Precisam de ser amigos para abrir DM.");
+                        showKiwiToast(data.message || "Precisam de ser amigos para abrir DM.");
                         return;
                     }
 
@@ -1414,6 +3537,7 @@
 
                         headerMainTitle.textContent = targetUsername;
                         headerSubLabel.textContent = '| Conversa privada';
+                        headerCallBtn.classList.add('visible');
                         backToGeralBtn.classList.add('visible');
                         messageInput.placeholder = `Conversar em privado com ${targetUsername}...`;
 
@@ -1439,6 +3563,17 @@
                             const payload = JSON.parse(e.data);
                             if (currentView !== 'dm' || currentDmUser !== targetUsername) return;
 
+                            if (payload.type === 'call_signal') {
+                                handleIncomingCallSignal(payload.sender || targetUsername, payload.signal);
+                                return;
+                            }
+
+                            if (payload.type === 'call_hangup') {
+                                showKiwiToast(`${targetUsername} desligou a chamada.`);
+                                hangupVoiceCall(false);
+                                return;
+                            }
+
                             if (payload.type === 'dm_deleted') {
                                 const el = chatLog.querySelector(`.message-group[data-dm-id="${payload.message_id}"]`);
                                 if (el) el.remove();
@@ -1453,6 +3588,7 @@
                                     message: payload.message || '',
                                     attachment_url: payload.attachment_url || '',
                                     attachment_type: payload.attachment_type || '',
+                                    attachment_name: payload.attachment_name || '',
                                     time: 'Agora'
                                 }, { isDm: true, avatarUrl: senderAvatar });
                             }
@@ -1470,12 +3606,20 @@
                 })
                 .catch(err => {
                     console.error("Erro ao abrir DM:", err);
-                    alert("Não foi possível abrir o chat privado.");
+                    showKiwiToast("Não foi possível abrir o chat privado.");
                 });
             };
 
             window.openUserProfile = function(username) {
                 if (username === activeUsername) {
+                    applySpecialProfileEffects(
+                        aestheticModal ? aestheticModal.querySelector('.aesthetic-profile-card') : null,
+                        profileUsernameEl,
+                        profileAdminBadge,
+                        activeUsername,
+                        profileData.is_admin
+                    );
+                    applyMusicPlacement();
                     aestheticModal.classList.add('open');
                     return;
                 }
@@ -1483,7 +3627,15 @@
                 fetch('/api/profile/' + username + '/')
                 .then(res => res.json())
                 .then(otherData => {
-                    document.getElementById('other-profile-username').textContent = otherData.username;
+                    const resolvedName = otherData.username || username;
+                    otherProfileUsernameEl.textContent = resolvedName;
+                    applySpecialProfileEffects(
+                        otherProfileModal ? otherProfileModal.querySelector('.aesthetic-profile-card') : null,
+                        otherProfileUsernameEl,
+                        otherProfileAdminBadge,
+                        resolvedName,
+                        Boolean(otherData.is_admin || otherData.is_staff || otherData.is_superuser)
+                    );
                     document.getElementById('other-profile-status-bubble').textContent = otherData.bubble || '🌸 Olá, estou no Kiwi Chat!';
                     document.getElementById('other-profile-pronouns').textContent = otherData.pronouns || 'utilizador • 🥝';
                     document.getElementById('other-profile-bio').innerHTML = otherData.bio || 'Perfil estético ativo.';
@@ -1503,6 +3655,7 @@
                     }
 
                     const addFriendBtn = document.getElementById('add-friend-btn');
+                    addFriendBtn.style.display = otherData.is_friend ? 'none' : 'flex';
                     addFriendBtn.onclick = function() {
                         fetch('/api/friend-request/send/', {
                             method: 'POST',
@@ -1514,12 +3667,12 @@
                         })
                         .then(r => r.json())
                         .then(resp => {
-                            alert(resp.message || "Pedido de amizade enviado!");
+                            showKiwiToast(resp.message || "Pedido de amizade enviado!");
                             otherProfileModal.classList.remove('open');
                         })
                         .catch(err => {
                             console.error("Erro ao enviar pedido:", err);
-                            alert("Não foi possível enviar o pedido de amizade.");
+                            showKiwiToast("Não foi possível enviar o pedido de amizade.");
                         });
                     };
 
@@ -1530,11 +3683,25 @@
                         openPrivateChat(username, otherData.avatarUrl || '');
                     };
 
+                    const callFriendBtn = document.getElementById('call-friend-btn');
+                    callFriendBtn.style.display = otherData.is_friend ? 'flex' : 'none';
+                    callFriendBtn.onclick = function() {
+                        otherProfileModal.classList.remove('open');
+                        openPrivateChat(username, otherData.avatarUrl || '');
+                        setTimeout(() => startVoiceCall(username), 250);
+                    };
+
+                    const removeFriendBtn = document.getElementById('remove-friend-btn');
+                    removeFriendBtn.style.display = otherData.is_friend ? 'flex' : 'none';
+                    removeFriendBtn.onclick = function() {
+                        removeFriend(username);
+                    };
+
                     otherProfileModal.classList.add('open');
                 })
                 .catch(err => {
                     console.error("Erro ao carregar perfil de terceiros:", err);
-                    alert("Não foi possível carregar o perfil do utilizador.");
+                    showKiwiToast("Não foi possível carregar o perfil do utilizador.");
                 });
             };
 
@@ -1578,6 +3745,7 @@
 
             function fetchFriendsList() {
                 const container = document.getElementById('friends-list-container');
+                if (!container) return;
                 fetch('/api/friends/list/')
                 .then(res => res.json())
                 .then(data => {
@@ -1593,11 +3761,12 @@
                                     return `
                                         <div class="social-list-item" onclick="openUserProfile('${friend.username}')">
                                             <div class="mini-avatar" style="width:28px; height:28px; font-size:12px; ${avatarStyle}">${avatarText}</div>
-                                            <div>
-                                                <div style="font-size:13px; font-weight:600;">${friend.username}</div>
+                                            <div style="min-width: 0; overflow: hidden;">
+                                                <div style="font-size:13px; font-weight:600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${friend.username}</div>
                                                 <div style="font-size:10px; color:#23a55a;">● Amigo</div>
                                             </div>
                                             <button type="button" class="dm-quick-btn" title="Mensagem Privada" onclick="event.stopPropagation(); openPrivateChat('${friend.username}', decodeURIComponent('${safeAvatar}'))">💬</button>
+                                            <button type="button" class="remove-friend-mini-btn" title="Remover amizade" onclick="event.stopPropagation(); removeFriend('${friend.username}')">✕</button>
                                         </div>
                                     `;
                                 }).join('')}
@@ -1644,7 +3813,87 @@
                 wsScheme + window.location.host + "/ws/chat/" + roomName + "/"
             );
 
+            document.addEventListener('click', function(e) {
+                if (!e.target.closest('.message-group')) {
+                    closeAllMessagePopovers();
+                }
+            });
+
             chatLog.addEventListener('click', function(e) {
+                const imgEl = e.target.closest('img.msg-attachment-img');
+                if (imgEl) {
+                    openImageLightbox(imgEl.currentSrc || imgEl.src, imgEl.alt || 'Imagem em tela cheia');
+                    return;
+                }
+
+                const reactionChip = e.target.closest('.msg-reaction-chip');
+                if (reactionChip) {
+                    const group = reactionChip.closest('.message-group');
+                    toggleMessageReaction(group, reactionChip.getAttribute('data-emoji'));
+                    return;
+                }
+
+                const reactBtn = e.target.closest('[data-react-emoji]');
+                if (reactBtn) {
+                    const group = reactBtn.closest('.message-group');
+                    toggleMessageReaction(group, reactBtn.getAttribute('data-react-emoji'));
+                    closeAllMessagePopovers();
+                    return;
+                }
+
+                const togglePickerBtn = e.target.closest('[data-toggle-picker]');
+                if (togglePickerBtn) {
+                    e.stopPropagation();
+                    const group = togglePickerBtn.closest('.message-group');
+                    const picker = group ? group.querySelector('.msg-emoji-picker') : null;
+                    const wasOpen = picker && picker.classList.contains('open');
+                    closeAllMessagePopovers();
+                    if (picker && !wasOpen) {
+                        picker.classList.add('open');
+                        group.classList.add('menu-open');
+                    }
+                    return;
+                }
+
+                const toggleMoreBtn = e.target.closest('[data-toggle-more]');
+                if (toggleMoreBtn) {
+                    e.stopPropagation();
+                    const group = toggleMoreBtn.closest('.message-group');
+                    const popover = group ? group.querySelector('.msg-more-popover') : null;
+                    const wasOpen = popover && popover.classList.contains('open');
+                    closeAllMessagePopovers();
+                    if (popover && !wasOpen) {
+                        popover.classList.add('open');
+                        group.classList.add('menu-open');
+                    }
+                    return;
+                }
+
+                const replyBtn = e.target.closest('[data-reply-msg]');
+                if (replyBtn) {
+                    const group = replyBtn.closest('.message-group');
+                    const senderName = group ? group.querySelector('.username')?.textContent?.trim() : '';
+                    if (senderName) {
+                        messageInput.value = `@${senderName} ${messageInput.value}`.trimStart();
+                        messageInput.focus();
+                    }
+                    closeAllMessagePopovers();
+                    return;
+                }
+
+                const copyBtn = e.target.closest('[data-copy-msg]');
+                if (copyBtn) {
+                    const group = copyBtn.closest('.message-group');
+                    const textContent = group ? group.querySelector('.message-text')?.textContent?.trim() : '';
+                    if (textContent && navigator.clipboard) {
+                        navigator.clipboard.writeText(textContent).then(() => {
+                            showKiwiToast("Texto copiado!");
+                        }).catch(() => {});
+                    }
+                    closeAllMessagePopovers();
+                    return;
+                }
+
                 const delGeralBtn = e.target.closest('[data-delete-id]');
                 if (delGeralBtn) {
                     const msgId = delGeralBtn.getAttribute('data-delete-id');
@@ -1655,6 +3904,7 @@
                             'username': activeUsername
                         }));
                     }
+                    closeAllMessagePopovers();
                     return;
                 }
 
@@ -1667,6 +3917,7 @@
                             'message_id': Number(dmId)
                         }));
                     }
+                    closeAllMessagePopovers();
                 }
             });
 
@@ -1677,6 +3928,9 @@
                     const msgEl = chatLog.querySelector(`.message-group[data-msg-id="${data.message_id}"]`);
                     if (msgEl) {
                         msgEl.remove();
+                        if (currentView === 'geral') {
+                            geralSnapshotHTML = chatLog.innerHTML;
+                        }
                     }
                     return;
                 }
@@ -1695,19 +3949,90 @@
                 }
             };
 
+            function closeAttachMenu() {
+                attachMenu.classList.remove('open');
+            }
+
+            clipMenuBtn.addEventListener('click', function(e) {
+                e.stopPropagation();
+                attachMenu.classList.toggle('open');
+            });
+
+            document.addEventListener('click', function(e) {
+                if (!attachMenu.contains(e.target) && e.target !== clipMenuBtn) {
+                    closeAttachMenu();
+                }
+            });
+
+            pickPhotoBtn.addEventListener('click', () => {
+                closeAttachMenu();
+                photoFileInput.value = '';
+                photoFileInput.click();
+            });
+
+            pickAudioBtn.addEventListener('click', () => {
+                closeAttachMenu();
+                audioFileInput.value = '';
+                audioFileInput.click();
+            });
+
+            pickDocBtn.addEventListener('click', () => {
+                closeAttachMenu();
+                docFileInput.value = '';
+                docFileInput.click();
+            });
+
             function clearPendingAttachment() {
                 pendingAttachmentFile = null;
-                attachmentFileInput.value = '';
+                pendingAttachmentCategory = 'file';
+                allFileInputs.forEach(input => { input.value = ''; });
                 if (previewImg.src && previewImg.src.startsWith('blob:')) {
                     URL.revokeObjectURL(previewImg.src);
                 }
                 previewImg.src = '';
                 previewImg.style.display = 'none';
+                previewBadge.style.display = 'none';
                 previewName.textContent = '';
                 previewBar.style.display = 'none';
             }
 
-            async function uploadAndBroadcastAttachment(file) {
+            function handleFileSelected(file, category) {
+                if (!file) return;
+
+                clearPendingAttachment();
+                pendingAttachmentFile = file;
+                pendingAttachmentCategory = category;
+                previewName.textContent = file.name;
+                previewBar.style.display = 'flex';
+
+                const isImg = category === 'image' || file.type.startsWith('image/') || /\.(png|jpe?g|gif|webp)$/i.test(file.name);
+                if (isImg) {
+                    previewImg.src = URL.createObjectURL(file);
+                    previewImg.style.display = 'block';
+                } else if (category === 'audio' || file.type.startsWith('audio/')) {
+                    previewBadge.textContent = '🎵';
+                    previewBadge.style.display = 'flex';
+                } else {
+                    previewBadge.textContent = '📄';
+                    previewBadge.style.display = 'flex';
+                }
+            }
+
+            photoFileInput.addEventListener('change', function() {
+                handleFileSelected(this.files && this.files[0], 'image');
+            });
+
+            audioFileInput.addEventListener('change', function() {
+                handleFileSelected(this.files && this.files[0], 'audio');
+            });
+
+            docFileInput.addEventListener('change', function() {
+                handleFileSelected(this.files && this.files[0], 'document');
+            });
+
+            clearAttachmentBtn.addEventListener('click', clearPendingAttachment);
+
+            async function uploadAndBroadcastAttachment(file, categoryHint = 'file') {
                 const textVal = messageInput.value.trim();
                 const targetVal = (currentView === 'dm' && currentDmUser) ? currentDmUser : 'geral';
                 const csrfToken = getCookie('csrftoken') || document.querySelector('[name=csrfmiddlewaretoken]')?.value || '';
@@ -1736,11 +4061,13 @@
                     }
 
                     if (!res.ok || resp.status !== 'success') {
-                        alert(resp.message || `Falha ao enviar anexo (HTTP ${res.status}).`);
+                        showKiwiToast(resp.message || `Falha ao enviar anexo (HTTP ${res.status}).`);
                         return;
                     }
 
                     messageInput.value = '';
+                    const resolvedType = resp.attachment_type || categoryHint || 'file';
+                    const resolvedName = resp.attachment_name || file.name;
 
                     if (targetVal === 'geral') {
                         if (chatSocket && chatSocket.readyState === WebSocket.OPEN) {
@@ -1748,7 +4075,8 @@
                                 'id': resp.id,
                                 'message': textVal,
                                 'attachment_url': resp.attachment_url,
-                                'attachment_type': resp.attachment_type,
+                                'attachment_type': resolvedType,
+                                'attachment_name': resolvedName,
                                 'username': activeUsername,
                                 'avatar': profileData.avatarUrl || '',
                                 'avatarUrl': profileData.avatarUrl || ''
@@ -1759,7 +4087,8 @@
                                 sender: activeUsername,
                                 message: textVal,
                                 attachment_url: resp.attachment_url,
-                                attachment_type: resp.attachment_type,
+                                attachment_type: resolvedType,
+                                attachment_name: resolvedName,
                                 avatar: profileData.avatarUrl || '',
                                 avatarUrl: profileData.avatarUrl || '',
                                 time: 'Agora'
@@ -1771,7 +4100,8 @@
                                 'id': resp.id,
                                 'message': textVal,
                                 'attachment_url': resp.attachment_url,
-                                'attachment_type': resp.attachment_type
+                                'attachment_type': resolvedType,
+                                'attachment_name': resolvedName
                             }));
                         } else {
                             appendMessageElement({
@@ -1779,38 +4109,17 @@
                                 sender: activeUsername,
                                 message: textVal,
                                 attachment_url: resp.attachment_url,
-                                attachment_type: resp.attachment_type,
+                                attachment_type: resolvedType,
+                                attachment_name: resolvedName,
                                 time: 'Agora'
                             }, { isDm: true, avatarUrl: profileData.avatarUrl || '' });
                         }
                     }
                 } catch (err) {
                     console.error('Erro ao enviar anexo:', err);
-                    alert('Erro ao enviar o ficheiro: ' + (err.message || err));
+                    showKiwiToast('Erro ao enviar o ficheiro: ' + (err.message || err));
                 }
             }
-
-            uploadMediaBtn.addEventListener('click', () => {
-                attachmentFileInput.value = '';
-                attachmentFileInput.click();
-            });
-
-            attachmentFileInput.addEventListener('change', function() {
-                const file = this.files && this.files[0];
-                if (!file) return;
-
-                clearPendingAttachment();
-                pendingAttachmentFile = file;
-                previewName.textContent = file.name;
-                previewBar.style.display = 'flex';
-
-                if (file.type.startsWith('image/') || /\.(png|jpe?g|gif|webp)$/i.test(file.name)) {
-                    previewImg.src = URL.createObjectURL(file);
-                    previewImg.style.display = 'block';
-                }
-            });
-
-            clearAttachmentBtn.addEventListener('click', clearPendingAttachment);
 
             recordAudioBtn.addEventListener('click', async function() {
                 if (mediaRecorder && mediaRecorder.state === 'recording') {
@@ -1819,7 +4128,7 @@
                 }
 
                 if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-                    alert('O teu navegador não suporta gravação de áudio.');
+                    showKiwiToast('O teu navegador não suporta gravação de áudio.');
                     return;
                 }
 
@@ -1843,7 +4152,7 @@
                         if (audioChunks.length > 0) {
                             const blob = new Blob(audioChunks, { type: 'audio/webm' });
                             const file = new File([blob], `voz_${Date.now()}.webm`, { type: 'audio/webm' });
-                            await uploadAndBroadcastAttachment(file);
+                            await uploadAndBroadcastAttachment(file, 'audio');
                         }
                     };
 
@@ -1853,15 +4162,16 @@
                     recordAudioBtn.title = 'Parar e Enviar Áudio';
                 } catch (err) {
                     console.error('Erro no microfone:', err);
-                    alert('Não foi possível aceder ao microfone.');
+                    showKiwiToast('Não foi possível aceder ao microfone.');
                 }
             });
 
             async function sendMessage() {
                 if (pendingAttachmentFile) {
                     const fileToSend = pendingAttachmentFile;
+                    const categoryToSend = pendingAttachmentCategory;
                     clearPendingAttachment();
-                    await uploadAndBroadcastAttachment(fileToSend);
+                    await uploadAndBroadcastAttachment(fileToSend, categoryToSend);
                     return;
                 }
 
@@ -1870,7 +4180,7 @@
 
                 if (currentView === 'dm') {
                     if (!dmSocket || dmSocket.readyState !== WebSocket.OPEN || !currentDmUser) {
-                        alert("A ligação da conversa privada está fechada. Abra a DM novamente.");
+                        showKiwiToast("A ligação da conversa privada está fechada. Abra a DM novamente.");
                         return;
                     }
                     dmSocket.send(JSON.stringify({
@@ -1881,7 +4191,7 @@
                 }
 
                 if (chatSocket.readyState !== WebSocket.OPEN) {
-                    alert("A ligação WebSocket está fechada. Atualize a página.");
+                    showKiwiToast("A ligação WebSocket está fechada. Atualize a página.");
                     return;
                 }
 
@@ -1901,6 +4211,10 @@
                     sendMessage();
                 }
             });
+            } catch (fatalErr) {
+                console.error("Erro na inicialização do Kiwi:", fatalErr);
+                dismissKiwiSplash();
+            }
         });
     </script>
 </body>
