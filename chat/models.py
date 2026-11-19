@@ -30,17 +30,31 @@ class FriendRequest(models.Model):
 
 
 class Message(models.Model):
+<<<<<<< HEAD
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='messages')
     room = models.CharField(max_length=255, default='geral')
     content = models.TextField(blank=True)
     attachment = models.FileField(upload_to='chat_attachments/', blank=True, null=True)
     attachment_type = models.CharField(max_length=20, blank=True)  # 'image' ou 'audio'
+=======
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    room = models.CharField(max_length=255, default='geral')
+    content = models.TextField()
+>>>>>>> 0a02da30b4fb9654f824c2d920e14401d16d7a38
     timestamp = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
         return f'{self.user.username}: {self.content[:30]}'
 
 
+<<<<<<< HEAD
+=======
+@receiver(post_save, sender=User)
+def create_user_profile(sender, instance, created, **kwargs):
+    if created:
+        UserProfile.objects.create(user=instance)
+        
+>>>>>>> 0a02da30b4fb9654f824c2d920e14401d16d7a38
 class PrivateMessage(models.Model):
     sender = models.ForeignKey(User, on_delete=models.CASCADE, related_name='sent_dm_messages')
     receiver = models.ForeignKey(User, on_delete=models.CASCADE, related_name='received_dm_messages')
@@ -52,9 +66,19 @@ class PrivateMessage(models.Model):
 
     def __str__(self):
         return f'DM {self.sender.username} -> {self.receiver.username}: {self.content[:30]}'
+<<<<<<< HEAD
 
 
 @receiver(post_save, sender=User)
 def create_user_profile(sender, instance, created, **kwargs):
     if created:
         UserProfile.objects.create(user=instance)
+=======
+    
+class Message(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='messages')
+    content = models.TextField(blank=True)
+    attachment = models.FileField(upload_to='chat_attachments/', blank=True, null=True)
+    attachment_type = models.CharField(max_length=20, blank=True)  # 'image' ou 'audio'
+    timestamp = models.DateTimeField(auto_now_add=True)
+>>>>>>> 0a02da30b4fb9654f824c2d920e14401d16d7a38
