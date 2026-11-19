@@ -5,7 +5,6 @@
     <title>🥝 Kiwi Chat Estético Completo</title>
     <style>
         :root {
-<<<<<<< HEAD
             --accent: #e5e7eb;
             --bg-darkest: #eceef2;
             --bg-sidebar: #f5f6f8;
@@ -16,15 +15,6 @@
             --text-main: #1f2328;
             --text-muted: #57606a;
             --border-subtle: rgba(0, 0, 0, 0.08);
-=======
-            --accent: #ff9de2;
-            --bg-darkest: #e092c7;
-            --bg-sidebar: #ebadd5;
-            --bg-main: #f7c9e8;
-            --bg-input: #ffffff;
-            --text-main: #3d2535;
-            --text-muted: #735065;
->>>>>>> 0a02da30b4fb9654f824c2d920e14401d16d7a38
             --auth-artwork: url('https://i.pinimg.com/736x/cb/a2/98/cba29832d5a423e62dc7ed952df60762.jpg');
         }
 
@@ -36,11 +26,7 @@
             display: flex;
             height: 100vh;
             overflow: hidden;
-<<<<<<< HEAD
             transition: background 0.3s ease, color 0.3s ease;
-=======
-            transition: background 0.3s ease;
->>>>>>> 0a02da30b4fb9654f824c2d920e14401d16d7a38
         }
 
         .sidebar-left {
@@ -48,28 +34,17 @@
             background: var(--bg-sidebar);
             display: flex;
             flex-direction: column;
-<<<<<<< HEAD
             border-right: 1px solid var(--border-subtle);
-=======
-            border-right: 1px solid rgba(0,0,0,0.08);
->>>>>>> 0a02da30b4fb9654f824c2d920e14401d16d7a38
             transition: background 0.3s ease;
         }
         .server-header {
             padding: 18px 20px;
             font-size: 16px;
             font-weight: bold;
-<<<<<<< HEAD
             color: var(--text-main);
             background: var(--bg-darkest);
             border-bottom: 2px solid var(--border-subtle);
             transition: background 0.3s ease, color 0.3s ease;
-=======
-            color: #2b1724;
-            background: var(--bg-darkest);
-            border-bottom: 2px solid rgba(0,0,0,0.08);
-            transition: background 0.3s ease;
->>>>>>> 0a02da30b4fb9654f824c2d920e14401d16d7a38
         }
         .channels-list { padding: 15px 10px; flex: 1; overflow-y: auto; }
         .section-label {
@@ -82,13 +57,8 @@
         .channel-item {
             padding: 8px 12px;
             border-radius: 5px;
-<<<<<<< HEAD
             background: rgba(128, 128, 128, 0.12);
             color: var(--text-main);
-=======
-            background: rgba(255, 255, 255, 0.35);
-            color: #2b1724;
->>>>>>> 0a02da30b4fb9654f824c2d920e14401d16d7a38
             font-weight: 500;
             margin-bottom: 4px;
             border-left: 3px solid transparent;
@@ -98,15 +68,9 @@
             gap: 8px;
             transition: 0.15s;
         }
-<<<<<<< HEAD
         .channel-item:hover { background: rgba(128, 128, 128, 0.2); }
         .channel-item.active {
             background: rgba(128, 128, 128, 0.26);
-=======
-        .channel-item:hover { background: rgba(255, 255, 255, 0.55); }
-        .channel-item.active {
-            background: rgba(255, 255, 255, 0.78);
->>>>>>> 0a02da30b4fb9654f824c2d920e14401d16d7a38
             border-left-color: var(--accent);
             font-weight: 600;
         }
@@ -135,11 +99,7 @@
             padding: 0 4px;
             border-radius: 4px;
         }
-<<<<<<< HEAD
         .dm-close-tab:hover { color: var(--text-main); background: rgba(128, 128, 128, 0.2); }
-=======
-        .dm-close-tab:hover { color: #2b1724; background: rgba(0,0,0,0.08); }
->>>>>>> 0a02da30b4fb9654f824c2d920e14401d16d7a38
 
         .my-user-panel {
             padding: 10px 12px;
@@ -147,10 +107,7 @@
             display: flex;
             align-items: center;
             justify-content: space-between;
-<<<<<<< HEAD
             border-top: 1px solid var(--border-subtle);
-=======
->>>>>>> 0a02da30b4fb9654f824c2d920e14401d16d7a38
             transition: background 0.3s ease;
         }
         .my-user-info {
@@ -191,11 +148,7 @@
             border-radius: 4px;
             position: relative;
         }
-<<<<<<< HEAD
         .icon-btn:hover { background: rgba(128, 128, 128, 0.16); color: var(--text-main); }
-=======
-        .icon-btn:hover { background: rgba(0,0,0,0.06); color: #2b1724; }
->>>>>>> 0a02da30b4fb9654f824c2d920e14401d16d7a38
 
         .chat-area {
             flex: 1;
@@ -208,26 +161,15 @@
         .chat-header {
             padding: 12px 20px;
             background: var(--bg-main);
-<<<<<<< HEAD
             border-bottom: 1px solid var(--border-subtle);
             font-size: 16px;
             font-weight: bold;
             color: var(--text-main);
-=======
-            border-bottom: 1px solid rgba(0,0,0,0.08);
-            font-size: 16px;
-            font-weight: bold;
-            color: #2b1724;
->>>>>>> 0a02da30b4fb9654f824c2d920e14401d16d7a38
             display: flex;
             align-items: center;
             justify-content: space-between;
             gap: 12px;
-<<<<<<< HEAD
             transition: background 0.3s ease, color 0.3s ease;
-=======
-            transition: background 0.3s ease;
->>>>>>> 0a02da30b4fb9654f824c2d920e14401d16d7a38
         }
         .header-title-group {
             display: flex;
@@ -254,15 +196,9 @@
         .header-dm-avatar.visible { display: flex; }
         .chat-header span.sub { color: var(--text-muted); font-size: 13px; font-weight: normal; }
         .back-geral-btn {
-<<<<<<< HEAD
             background: var(--bg-soft);
             color: var(--text-main);
             border: 1px solid var(--border-subtle);
-=======
-            background: rgba(255,255,255,0.65);
-            color: #2b1724;
-            border: 1px solid rgba(0,0,0,0.1);
->>>>>>> 0a02da30b4fb9654f824c2d920e14401d16d7a38
             padding: 5px 10px;
             border-radius: 6px;
             font-size: 12px;
@@ -271,11 +207,7 @@
             display: none;
         }
         .back-geral-btn.visible { display: inline-block; }
-<<<<<<< HEAD
         .back-geral-btn:hover { filter: brightness(0.96); }
-=======
-        .back-geral-btn:hover { background: rgba(255,255,255,0.9); }
->>>>>>> 0a02da30b4fb9654f824c2d920e14401d16d7a38
 
         .theme-picker-container {
             display: flex;
@@ -288,7 +220,6 @@
             height: 22px;
             border-radius: 50%;
             cursor: pointer;
-<<<<<<< HEAD
             border: 2px solid rgba(0, 0, 0, 0.25);
             transition: 0.2s;
         }
@@ -298,13 +229,6 @@
             box-shadow: 0 0 0 2px var(--bg-main), 0 0 0 4px var(--text-main);
             transform: scale(1.1);
         }
-=======
-            border: 2px solid rgba(0,0,0,0.15);
-            transition: 0.2s;
-        }
-        .theme-ball:hover { transform: scale(1.15); }
-        .theme-ball.active { border-color: #2b1724; transform: scale(1.1); }
->>>>>>> 0a02da30b4fb9654f824c2d920e14401d16d7a38
 
         #chat-log {
             flex: 1;
@@ -332,11 +256,7 @@
         }
         .message-content { flex: 1; min-width: 0; }
         .message-header { display: flex; align-items: baseline; gap: 8px; margin-bottom: 4px; }
-<<<<<<< HEAD
         .username { font-weight: 600; color: var(--text-main); font-size: 15px; cursor: pointer; }
-=======
-        .username { font-weight: 600; color: #2b1724; font-size: 15px; cursor: pointer; }
->>>>>>> 0a02da30b4fb9654f824c2d920e14401d16d7a38
         .username:hover { text-decoration: underline; }
         .timestamp { font-size: 11px; color: var(--text-muted); }
         .message-text { color: var(--text-main); font-size: 14px; line-height: 1.45; word-break: break-word; }
@@ -375,12 +295,8 @@
             display: none;
             align-items: center;
             gap: 10px;
-<<<<<<< HEAD
             background: var(--bg-card);
             border: 1px solid var(--border-subtle);
-=======
-            background: rgba(255, 255, 255, 0.88);
->>>>>>> 0a02da30b4fb9654f824c2d920e14401d16d7a38
             padding: 8px 12px;
             border-radius: 8px;
             margin-bottom: 8px;
@@ -395,11 +311,7 @@
         }
         #attachment-preview-name {
             font-size: 12px;
-<<<<<<< HEAD
             color: var(--text-main);
-=======
-            color: #2b1724;
->>>>>>> 0a02da30b4fb9654f824c2d920e14401d16d7a38
             flex: 1;
             overflow: hidden;
             text-overflow: ellipsis;
@@ -407,11 +319,7 @@
         }
         #clear-attachment-btn {
             background: rgba(231, 76, 60, 0.15);
-<<<<<<< HEAD
             color: #e74c3c;
-=======
-            color: #c0392b;
->>>>>>> 0a02da30b4fb9654f824c2d920e14401d16d7a38
             border: none;
             border-radius: 5px;
             padding: 4px 8px;
@@ -423,10 +331,7 @@
 
         .input-wrapper {
             background: var(--bg-input);
-<<<<<<< HEAD
             border: 1px solid var(--border-subtle);
-=======
->>>>>>> 0a02da30b4fb9654f824c2d920e14401d16d7a38
             border-radius: 8px;
             padding: 10px 16px;
             display: flex;
@@ -436,15 +341,9 @@
             transition: background 0.3s ease;
         }
         .media-btn {
-<<<<<<< HEAD
             background: rgba(128, 128, 128, 0.12);
             border: none;
             color: var(--text-main);
-=======
-            background: rgba(0,0,0,0.05);
-            border: none;
-            color: #2b1724;
->>>>>>> 0a02da30b4fb9654f824c2d920e14401d16d7a38
             font-size: 16px;
             width: 34px;
             height: 34px;
@@ -456,11 +355,7 @@
             transition: 0.15s;
             flex-shrink: 0;
         }
-<<<<<<< HEAD
         .media-btn:hover { background: rgba(128, 128, 128, 0.22); }
-=======
-        .media-btn:hover { background: rgba(0,0,0,0.1); }
->>>>>>> 0a02da30b4fb9654f824c2d920e14401d16d7a38
         .media-btn.recording {
             background: #e74c3c;
             color: #fff;
@@ -474,28 +369,16 @@
             flex: 1;
             background: transparent;
             border: none;
-<<<<<<< HEAD
             color: var(--text-main);
-=======
-            color: #2b1724;
->>>>>>> 0a02da30b4fb9654f824c2d920e14401d16d7a38
             font-size: 15px;
             outline: none;
             min-width: 0;
         }
-<<<<<<< HEAD
         #chat-message-input::placeholder { color: var(--text-muted); }
         #chat-message-submit {
             background: var(--accent);
             color: #1f2328;
             border: 1px solid var(--border-subtle);
-=======
-        #chat-message-input::placeholder { color: #9e768e; }
-        #chat-message-submit {
-            background: var(--accent);
-            color: #2b1724;
-            border: none;
->>>>>>> 0a02da30b4fb9654f824c2d920e14401d16d7a38
             padding: 8px 18px;
             border-radius: 5px;
             font-weight: bold;
@@ -508,22 +391,14 @@
         .sidebar-right {
             width: 260px;
             background: var(--bg-sidebar);
-<<<<<<< HEAD
             border-left: 1px solid var(--border-subtle);
-=======
-            border-left: 1px solid rgba(0,0,0,0.08);
->>>>>>> 0a02da30b4fb9654f824c2d920e14401d16d7a38
             display: flex;
             flex-direction: column;
             transition: background 0.3s ease;
         }
         .social-tabs {
             display: flex;
-<<<<<<< HEAD
             border-bottom: 1px solid var(--border-subtle);
-=======
-            border-bottom: 1px solid rgba(0,0,0,0.08);
->>>>>>> 0a02da30b4fb9654f824c2d920e14401d16d7a38
             background: var(--bg-darkest);
             transition: background 0.3s ease;
         }
@@ -538,13 +413,8 @@
             border-bottom: 2px solid transparent;
             transition: 0.2s;
         }
-<<<<<<< HEAD
         .social-tab:hover { color: var(--text-main); background: rgba(128, 128, 128, 0.08); }
         .social-tab.active { color: var(--text-main); border-bottom-color: var(--accent); }
-=======
-        .social-tab:hover { color: #2b1724; background: rgba(0,0,0,0.03); }
-        .social-tab.active { color: #2b1724; border-bottom-color: var(--accent); }
->>>>>>> 0a02da30b4fb9654f824c2d920e14401d16d7a38
 
         .social-content-area {
             padding: 15px;
@@ -563,11 +433,7 @@
             background-position: center;
             position: relative;
             overflow: hidden;
-<<<<<<< HEAD
             border: 1px solid var(--border-subtle);
-=======
-            border: 1px solid rgba(0,0,0,0.1);
->>>>>>> 0a02da30b4fb9654f824c2d920e14401d16d7a38
             box-shadow: 0 3px 10px rgba(0,0,0,0.08);
             flex-shrink: 0;
         }
@@ -589,7 +455,6 @@
             display: flex;
             align-items: center;
             gap: 8px;
-<<<<<<< HEAD
             color: var(--text-main);
             background: var(--bg-card);
             border: 1px solid var(--border-subtle);
@@ -597,14 +462,6 @@
             transition: 0.2s;
         }
         .social-list-item:hover { filter: brightness(0.97); }
-=======
-            color: #2b1724;
-            background: rgba(255,255,255,0.6);
-            cursor: pointer;
-            transition: 0.2s;
-        }
-        .social-list-item:hover { background: rgba(255,255,255,0.9); }
->>>>>>> 0a02da30b4fb9654f824c2d920e14401d16d7a38
         .dm-quick-btn {
             margin-left: auto;
             background: #5865f2;
@@ -621,11 +478,7 @@
         .modal-overlay {
             position: fixed;
             inset: 0;
-<<<<<<< HEAD
             background: rgba(0,0,0,0.55);
-=======
-            background: rgba(0,0,0,0.45);
->>>>>>> 0a02da30b4fb9654f824c2d920e14401d16d7a38
             display: none;
             align-items: center;
             justify-content: center;
@@ -635,21 +488,12 @@
 
         .aesthetic-profile-card {
             width: 380px;
-<<<<<<< HEAD
             background: var(--bg-card);
             border-radius: 16px;
             overflow: hidden;
             box-shadow: 0 16px 40px rgba(0,0,0,0.25);
             border: 1px solid var(--border-subtle);
             color: var(--text-main);
-=======
-            background: #fff;
-            border-radius: 16px;
-            overflow: hidden;
-            box-shadow: 0 16px 40px rgba(0,0,0,0.18);
-            border: 1px solid rgba(0,0,0,0.08);
-            color: #2b1724;
->>>>>>> 0a02da30b4fb9654f824c2d920e14401d16d7a38
             position: relative;
         }
 
@@ -657,11 +501,7 @@
             position: absolute;
             top: 10px;
             right: 12px;
-<<<<<<< HEAD
             background: rgba(0, 0, 0, 0.45);
-=======
-            background: rgba(0, 0, 0, 0.4);
->>>>>>> 0a02da30b4fb9654f824c2d920e14401d16d7a38
             color: #fff;
             border: none;
             width: 28px;
@@ -676,11 +516,7 @@
             z-index: 10;
             transition: 0.2s;
         }
-<<<<<<< HEAD
         .close-modal-btn:hover { background: rgba(255, 0, 0, 0.65); }
-=======
-        .close-modal-btn:hover { background: rgba(255, 0, 0, 0.6); }
->>>>>>> 0a02da30b4fb9654f824c2d920e14401d16d7a38
 
         .aesthetic-banner {
             height: 110px;
@@ -702,11 +538,7 @@
             width: 74px;
             height: 74px;
             border-radius: 50%;
-<<<<<<< HEAD
             border: 5px solid var(--bg-card);
-=======
-            border: 5px solid #fff;
->>>>>>> 0a02da30b4fb9654f824c2d920e14401d16d7a38
             background: #5865f2;
             background-size: cover;
             background-position: center;
@@ -719,7 +551,6 @@
             flex-shrink: 0;
         }
         .aesthetic-status-bubble {
-<<<<<<< HEAD
             background: var(--bg-soft);
             border: 1px solid var(--border-subtle);
             padding: 8px 12px;
@@ -729,17 +560,6 @@
             flex: 1;
             margin-bottom: 6px;
             box-shadow: 0 2px 8px rgba(0,0,0,0.06);
-=======
-            background: #fff5fb;
-            border: 1px solid rgba(0,0,0,0.06);
-            padding: 8px 12px;
-            border-radius: 14px;
-            font-size: 12px;
-            color: #3d2535;
-            flex: 1;
-            margin-bottom: 6px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
->>>>>>> 0a02da30b4fb9654f824c2d920e14401d16d7a38
             word-break: break-word;
         }
         .aesthetic-body {
@@ -751,11 +571,7 @@
         .aesthetic-name {
             font-size: 18px;
             font-weight: bold;
-<<<<<<< HEAD
             color: var(--text-main);
-=======
-            color: #2b1724;
->>>>>>> 0a02da30b4fb9654f824c2d920e14401d16d7a38
             display: flex;
             align-items: center;
             gap: 6px;
@@ -764,30 +580,18 @@
             font-size: 12px;
             color: var(--text-muted);
             line-height: 1.5;
-<<<<<<< HEAD
             background: var(--bg-soft);
-=======
-            background: #fcf0f8;
->>>>>>> 0a02da30b4fb9654f824c2d920e14401d16d7a38
             padding: 10px;
             border-radius: 8px;
         }
         .spotify-card {
-<<<<<<< HEAD
             background: var(--bg-soft);
-=======
-            background: #fcf0f8;
->>>>>>> 0a02da30b4fb9654f824c2d920e14401d16d7a38
             border-radius: 10px;
             padding: 10px;
             display: flex;
             align-items: center;
             gap: 12px;
-<<<<<<< HEAD
             border: 1px solid var(--border-subtle);
-=======
-            border: 1px solid rgba(0,0,0,0.05);
->>>>>>> 0a02da30b4fb9654f824c2d920e14401d16d7a38
         }
         .spotify-album {
             width: 48px;
@@ -801,20 +605,12 @@
             flex-shrink: 0;
         }
         .spotify-info { flex: 1; min-width: 0; }
-<<<<<<< HEAD
         .spotify-title { font-size: 13px; font-weight: bold; color: var(--text-main); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-=======
-        .spotify-title { font-size: 13px; font-weight: bold; color: #2b1724; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
->>>>>>> 0a02da30b4fb9654f824c2d920e14401d16d7a38
         .spotify-artist { font-size: 11px; color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         .spotify-progress {
             width: 100%;
             height: 4px;
-<<<<<<< HEAD
             background: rgba(128, 128, 128, 0.25);
-=======
-            background: rgba(0,0,0,0.1);
->>>>>>> 0a02da30b4fb9654f824c2d920e14401d16d7a38
             border-radius: 2px;
             margin-top: 6px;
             overflow: hidden;
@@ -823,11 +619,7 @@
 
         .btn-aesthetic-edit, .btn-aesthetic-action {
             width: 100%;
-<<<<<<< HEAD
             background: #5865f2;
-=======
-            background: var(--bg-darkest);
->>>>>>> 0a02da30b4fb9654f824c2d920e14401d16d7a38
             color: #fff;
             border: none;
             padding: 10px;
@@ -847,27 +639,16 @@
         .form-group label { display: block; font-size: 11px; color: var(--text-muted); margin-bottom: 4px; text-transform: uppercase; font-weight: bold; }
         .form-group input, .form-group textarea {
             width: 100%;
-<<<<<<< HEAD
             background: var(--bg-soft);
             border: 1px solid var(--border-subtle);
             color: var(--text-main);
-=======
-            background: #fff5fb;
-            border: 1px solid rgba(0,0,0,0.1);
-            color: #2b1724;
->>>>>>> 0a02da30b4fb9654f824c2d920e14401d16d7a38
             padding: 8px;
             border-radius: 6px;
             font-size: 13px;
             outline: none;
         }
-<<<<<<< HEAD
         .form-group input[type="file"] { padding: 4px; cursor: pointer; background: var(--bg-card); }
         .form-group input:focus, .form-group textarea:focus { border-color: #5865f2; }
-=======
-        .form-group input[type="file"] { padding: 4px; cursor: pointer; background: #fff; }
-        .form-group input:focus, .form-group textarea:focus { border-color: var(--accent); }
->>>>>>> 0a02da30b4fb9654f824c2d920e14401d16d7a38
     </style>
 </head>
 <body>
@@ -886,11 +667,7 @@
             <div class="my-user-info" id="open-profile-trigger">
                 <div id="my-mini-avatar" class="mini-avatar">M</div>
                 <div style="min-width: 0;">
-<<<<<<< HEAD
                     <div id="my-name-label" style="font-size: 14px; font-weight: 600; color: var(--text-main); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{{ username }}</div>
-=======
-                    <div id="my-name-label" style="font-size: 14px; font-weight: 600; color: #2b1724; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{{ username }}</div>
->>>>>>> 0a02da30b4fb9654f824c2d920e14401d16d7a38
                     <div style="font-size: 11px; color: #23a55a;">● Online</div>
                 </div>
             </div>
@@ -912,11 +689,8 @@
             </div>
             <div class="theme-picker-container">
                 <span style="font-size: 12px; color: var(--text-muted); margin-right: 4px;">Tema:</span>
-<<<<<<< HEAD
                 <div class="theme-ball active" style="background: #ffffff;" data-color="#ffffff" title="Branco Padrão"></div>
                 <div class="theme-ball" style="background: #2b2d31;" data-color="#2b2d31" title="Cinza Escuro"></div>
-=======
->>>>>>> 0a02da30b4fb9654f824c2d920e14401d16d7a38
                 <div class="theme-ball" style="background: #ff9de2;" data-color="#ff9de2" title="Rosa Vivo Pastel"></div>
                 <div class="theme-ball" style="background: #e74c3c;" data-color="#e74c3c" title="Vermelho Vibrante"></div>
                 <div class="theme-ball" style="background: #23a55a;" data-color="#23a55a" title="Verde Kiwi"></div>
@@ -1056,22 +830,14 @@
     <div id="mailbox-modal" class="modal-overlay">
         <div class="aesthetic-profile-card" style="padding: 20px; width: 420px; max-height: 85vh; overflow-y: auto;">
             <button class="close-modal-btn" id="close-mailbox-btn">×</button>
-<<<<<<< HEAD
             <h3 style="color: var(--text-main); margin-bottom: 14px; font-size: 16px; display: flex; align-items: center; gap: 8px;">
-=======
-            <h3 style="color: #2b1724; margin-bottom: 14px; font-size: 16px; display: flex; align-items: center; gap: 8px;">
->>>>>>> 0a02da30b4fb9654f824c2d920e14401d16d7a38
                 📬 Caixa de Mensagens & Atualizações
             </h3>
 
             <div style="margin-bottom: 20px;">
                 <h4 style="font-size: 12px; text-transform: uppercase; color: var(--text-muted); margin-bottom: 8px;">Pedidos de Amizade</h4>
                 <div id="mailbox-friend-requests" style="display: flex; flex-direction: column; gap: 8px;">
-<<<<<<< HEAD
                     <div style="font-size: 12px; color: var(--text-muted); background: var(--bg-soft); padding: 10px; border-radius: 8px; text-align: center;">
-=======
-                    <div style="font-size: 12px; color: var(--text-muted); background: #fcf0f8; padding: 10px; border-radius: 8px; text-align: center;">
->>>>>>> 0a02da30b4fb9654f824c2d920e14401d16d7a38
                         Sem novos pedidos de amizade.
                     </div>
                 </div>
@@ -1079,13 +845,8 @@
 
             <div>
                 <h4 style="font-size: 12px; text-transform: uppercase; color: var(--text-muted); margin-bottom: 8px;">Notas de Atualizações (Changelog)</h4>
-<<<<<<< HEAD
                 <div style="background: var(--bg-soft); padding: 12px; border-radius: 8px; font-size: 12px; line-height: 1.5; color: var(--text-main);">
                     <div style="font-weight: bold; color: #5865f2; margin-bottom: 4px;">✨ Versão 2.9 - Fotos, GIFs e Áudio</div>
-=======
-                <div style="background: #fcf0f8; padding: 12px; border-radius: 8px; font-size: 12px; line-height: 1.5; color: var(--text-main);">
-                    <div style="font-weight: bold; color: var(--accent); margin-bottom: 4px;">✨ Versão 2.9 - Fotos, GIFs e Áudio</div>
->>>>>>> 0a02da30b4fb9654f824c2d920e14401d16d7a38
                     • Envio de fotos, GIFs e ficheiros de áudio no # geral e nas DMs.<br>
                     • Gravação de voz direta pelo microfone.
                 </div>
@@ -1097,11 +858,7 @@
     <div id="edit-modal" class="modal-overlay">
         <div class="aesthetic-profile-card" style="padding: 20px; max-height: 90vh; overflow-y: auto;">
             <button class="close-modal-btn" id="close-edit-btn">×</button>
-<<<<<<< HEAD
             <h3 style="color: var(--text-main); margin-bottom: 14px; font-size: 16px;">Editar Perfil Estético</h3>
-=======
-            <h3 style="color: #2b1724; margin-bottom: 14px; font-size: 16px;">Editar Perfil Estético</h3>
->>>>>>> 0a02da30b4fb9654f824c2d920e14401d16d7a38
             <form id="edit-profile-form" enctype="multipart/form-data">
                 <div class="form-group">
                     <label>Selecionar Foto de Perfil</label>
@@ -1132,13 +889,8 @@
                     <input type="text" name="spotify_artist" id="edit-spotify-artist" value="Lala Sadii">
                 </div>
                 <div style="display: flex; gap: 10px; margin-top: 15px;">
-<<<<<<< HEAD
                     <button type="submit" id="save-profile-btn" style="flex:1; background: #5865f2; color:#fff; border:none; padding:10px; border-radius:6px; font-weight:bold; cursor:pointer;">Guardar</button>
                     <button type="button" id="cancel-edit-btn" style="flex:1; background: var(--bg-soft); color:var(--text-main); border:1px solid var(--border-subtle); padding:10px; border-radius:6px; font-weight:bold; cursor:pointer;">Cancelar</button>
-=======
-                    <button type="submit" id="save-profile-btn" style="flex:1; background: var(--accent); color:#2b1724; border:none; padding:10px; border-radius:6px; font-weight:bold; cursor:pointer;">Guardar</button>
-                    <button type="button" id="cancel-edit-btn" style="flex:1; background: rgba(0,0,0,0.08); color:#2b1724; border:none; padding:10px; border-radius:6px; font-weight:bold; cursor:pointer;">Cancelar</button>
->>>>>>> 0a02da30b4fb9654f824c2d920e14401d16d7a38
                 </div>
             </form>
         </div>
@@ -1153,11 +905,7 @@
                 bio: '@matsuda 🤍<br>infpt 🎧 zekiah ☁️',
                 song: 'Drama',
                 artist: 'Lala Sadii',
-<<<<<<< HEAD
                 accentColor: '#ffffff',
-=======
-                accentColor: '#ff9de2',
->>>>>>> 0a02da30b4fb9654f824c2d920e14401d16d7a38
                 avatarUrl: '',
                 bannerUrl: ''
             };
@@ -1228,7 +976,6 @@
             let audioChunks = [];
 
             const themesMap = {
-<<<<<<< HEAD
                 '#ffffff': {
                     accent: '#e5e7eb',
                     main: '#ffffff',
@@ -1318,30 +1065,15 @@
             function applyTheme(colorKey) {
                 const t = themesMap[colorKey] || themesMap['#ffffff'];
                 document.documentElement.style.setProperty('--accent', t.accent);
-=======
-                '#ff9de2': { main: '#f7c9e8', sidebar: '#ebadd5', darkest: '#e092c7', input: '#ffffff' },
-                '#e74c3c': { main: '#fadbd8', sidebar: '#f5b7b1', darkest: '#ec7063', input: '#ffffff' },
-                '#23a55a': { main: '#d4efdf', sidebar: '#a9dfbf', darkest: '#58d68d', input: '#ffffff' },
-                '#5865f2': { main: '#ebedef', sidebar: '#d4e6f1', darkest: '#5499c7', input: '#ffffff' },
-                '#95a5a6': { main: '#eaeded', sidebar: '#d5dbdb', darkest: '#909497', input: '#ffffff' }
-            };
-
-            function applyTheme(hexColor) {
-                document.documentElement.style.setProperty('--accent', hexColor);
-                let t = themesMap[hexColor] || themesMap['#ff9de2'];
->>>>>>> 0a02da30b4fb9654f824c2d920e14401d16d7a38
                 document.documentElement.style.setProperty('--bg-main', t.main);
                 document.documentElement.style.setProperty('--bg-sidebar', t.sidebar);
                 document.documentElement.style.setProperty('--bg-darkest', t.darkest);
                 document.documentElement.style.setProperty('--bg-input', t.input);
-<<<<<<< HEAD
                 document.documentElement.style.setProperty('--bg-card', t.card);
                 document.documentElement.style.setProperty('--bg-soft', t.soft);
                 document.documentElement.style.setProperty('--text-main', t.textMain);
                 document.documentElement.style.setProperty('--text-muted', t.textMuted);
                 document.documentElement.style.setProperty('--border-subtle', t.border);
-=======
->>>>>>> 0a02da30b4fb9654f824c2d920e14401d16d7a38
             }
 
             function setAvatarStyle(el, avatarUrl, fallbackLetter) {
@@ -1367,23 +1099,16 @@
                     profileData.bio = data.bio || profileData.bio;
                     profileData.song = data.spotify_song || profileData.song;
                     profileData.artist = data.spotify_artist || profileData.artist;
-<<<<<<< HEAD
                     if (data.accent_color && themesMap[data.accent_color]) {
                         profileData.accentColor = data.accent_color;
                     }
-=======
-                    profileData.accentColor = data.accent_color || profileData.accentColor;
->>>>>>> 0a02da30b4fb9654f824c2d920e14401d16d7a38
                     profileData.avatarUrl = data.avatarUrl || '';
                     profileData.bannerUrl = data.bannerUrl || '';
                     updateUI();
                 })
                 .catch(err => console.error("Erro ao carregar perfil:", err));
             }
-<<<<<<< HEAD
             applyTheme(profileData.accentColor);
-=======
->>>>>>> 0a02da30b4fb9654f824c2d920e14401d16d7a38
             loadMyProfile();
 
             function updateUI() {
@@ -1485,11 +1210,7 @@
                 .then(data => {
                     if (data.requests && data.requests.length > 0) {
                         container.innerHTML = data.requests.map(req => `
-<<<<<<< HEAD
                             <div style="display: flex; align-items: center; justify-content: space-between; background: var(--bg-soft); padding: 10px; border-radius: 8px; border: 1px solid var(--border-subtle);">
-=======
-                            <div style="display: flex; align-items: center; justify-content: space-between; background: #fff; padding: 10px; border-radius: 8px; border: 1px solid rgba(0,0,0,0.06);">
->>>>>>> 0a02da30b4fb9654f824c2d920e14401d16d7a38
                                 <span style="font-weight: bold; font-size: 13px;">${req.sender}</span>
                                 <div style="display: flex; gap: 6px;">
                                     <button onclick="acceptRequest(${req.id})" style="background: #23a55a; color: #fff; border: none; padding: 6px 10px; border-radius: 4px; font-size: 11px; font-weight: bold; cursor: pointer;">Aceitar</button>
@@ -1497,19 +1218,11 @@
                             </div>
                         `).join('');
                     } else {
-<<<<<<< HEAD
                         container.innerHTML = `<div style="font-size: 12px; color: var(--text-muted); background: var(--bg-soft); padding: 10px; border-radius: 8px; text-align: center;">Sem novos pedidos de amizade.</div>`;
                     }
                 })
                 .catch(() => {
                     container.innerHTML = `<div style="font-size: 12px; color: var(--text-muted); background: var(--bg-soft); padding: 10px; border-radius: 8px; text-align: center;">Sem novos pedidos de amizade.</div>`;
-=======
-                        container.innerHTML = `<div style="font-size: 12px; color: var(--text-muted); background: #fcf0f8; padding: 10px; border-radius: 8px; text-align: center;">Sem novos pedidos de amizade.</div>`;
-                    }
-                })
-                .catch(() => {
-                    container.innerHTML = `<div style="font-size: 12px; color: var(--text-muted); background: #fcf0f8; padding: 10px; border-radius: 8px; text-align: center;">Sem novos pedidos de amizade.</div>`;
->>>>>>> 0a02da30b4fb9654f824c2d920e14401d16d7a38
                 });
             }
 
@@ -1595,16 +1308,12 @@
             function appendMessageElement(data, options = {}) {
                 const isDm = Boolean(options.isDm);
                 const msgUsername = data.sender || data.username || 'Anônimo';
-<<<<<<< HEAD
                 const avatarSrc =
                     options.avatarUrl ||
                     data.avatar ||
                     data.avatarUrl ||
                     (msgUsername === activeUsername ? profileData.avatarUrl : '') ||
                     '';
-=======
-                const avatarSrc = options.avatarUrl || data.avatar || '';
->>>>>>> 0a02da30b4fb9654f824c2d920e14401d16d7a38
                 const avatarInitial = msgUsername.charAt(0).toUpperCase() || 'K';
                 const timeText = data.time || 'Agora';
 
@@ -1973,7 +1682,6 @@
                 }
 
                 if (currentView === 'geral') {
-<<<<<<< HEAD
                     const msgUser = data.sender || data.username || 'Anônimo';
                     const resolvedAvatar =
                         data.avatar ||
@@ -1984,9 +1692,6 @@
                         isDm: false,
                         avatarUrl: resolvedAvatar
                     });
-=======
-                    appendMessageElement(data, { isDm: false });
->>>>>>> 0a02da30b4fb9654f824c2d920e14401d16d7a38
                 }
             };
 
@@ -2045,12 +1750,8 @@
                                 'attachment_url': resp.attachment_url,
                                 'attachment_type': resp.attachment_type,
                                 'username': activeUsername,
-<<<<<<< HEAD
                                 'avatar': profileData.avatarUrl || '',
                                 'avatarUrl': profileData.avatarUrl || ''
-=======
-                                'avatar': profileData.avatarUrl || ''
->>>>>>> 0a02da30b4fb9654f824c2d920e14401d16d7a38
                             }));
                         } else {
                             appendMessageElement({
@@ -2060,14 +1761,9 @@
                                 attachment_url: resp.attachment_url,
                                 attachment_type: resp.attachment_type,
                                 avatar: profileData.avatarUrl || '',
-<<<<<<< HEAD
                                 avatarUrl: profileData.avatarUrl || '',
                                 time: 'Agora'
                             }, { isDm: false, avatarUrl: profileData.avatarUrl || '' });
-=======
-                                time: 'Agora'
-                            }, { isDm: false });
->>>>>>> 0a02da30b4fb9654f824c2d920e14401d16d7a38
                         }
                     } else {
                         if (dmSocket && dmSocket.readyState === WebSocket.OPEN) {
@@ -2192,12 +1888,8 @@
                 chatSocket.send(JSON.stringify({
                     'message': message,
                     'username': activeUsername,
-<<<<<<< HEAD
                     'avatar': profileData.avatarUrl || '',
                     'avatarUrl': profileData.avatarUrl || ''
-=======
-                    'avatar': profileData.avatarUrl || ''
->>>>>>> 0a02da30b4fb9654f824c2d920e14401d16d7a38
                 }));
 
                 messageInput.value = '';
