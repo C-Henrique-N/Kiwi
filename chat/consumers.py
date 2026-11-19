@@ -42,7 +42,6 @@ class ChatConsumer(AsyncWebsocketConsumer):
                 )
             return
 
-<<<<<<< HEAD
         scope_user = self.scope.get('user')
         default_username = scope_user.username if scope_user and scope_user.is_authenticated else ''
         username = data.get('username') or default_username
@@ -69,15 +68,6 @@ class ChatConsumer(AsyncWebsocketConsumer):
         if not message:
             return
 
-=======
-        message = data.get('message', '').strip()
-        if not message:
-            return
-
-        username = data.get('username', '')
-        avatar = data.get('avatar', '')
-
->>>>>>> 0a02da30b4fb9654f824c2d920e14401d16d7a38
         msg = await self.save_message(username, self.room_name, message)
         if not msg:
             return
@@ -89,32 +79,21 @@ class ChatConsumer(AsyncWebsocketConsumer):
                 'id': msg.id,
                 'message': msg.content,
                 'username': username,
-<<<<<<< HEAD
                 'avatarUrl': avatar_url,
                 'attachment_url': '',
                 'attachment_type': '',
-=======
-                'avatar': avatar,
->>>>>>> 0a02da30b4fb9654f824c2d920e14401d16d7a38
             }
         )
 
     async def chat_message(self, event):
         await self.send(text_data=json.dumps({
             'type': 'chat_message',
-<<<<<<< HEAD
             'id': event.get('id'),
             'message': event.get('message', ''),
             'username': event.get('username', ''),
             'avatarUrl': event.get('avatarUrl', ''),
             'attachment_url': event.get('attachment_url', ''),
             'attachment_type': event.get('attachment_type', ''),
-=======
-            'id': event['id'],
-            'message': event['message'],
-            'username': event['username'],
-            'avatar': event['avatar'],
->>>>>>> 0a02da30b4fb9654f824c2d920e14401d16d7a38
         }))
 
     async def message_deleted(self, event):
@@ -196,7 +175,6 @@ class DMConsumer(AsyncWebsocketConsumer):
                 )
             return
 
-<<<<<<< HEAD
         attachment_url = data.get('attachment_url', '')
         attachment_type = data.get('attachment_type', '')
         message = data.get('message', '').strip()
@@ -215,9 +193,6 @@ class DMConsumer(AsyncWebsocketConsumer):
             )
             return
 
-=======
-        message = data.get('message', '').strip()
->>>>>>> 0a02da30b4fb9654f824c2d920e14401d16d7a38
         if not message:
             return
 
@@ -230,28 +205,19 @@ class DMConsumer(AsyncWebsocketConsumer):
                 'id': msg.id,
                 'message': msg.content,
                 'sender': self.user.username,
-<<<<<<< HEAD
                 'attachment_url': '',
                 'attachment_type': '',
-=======
->>>>>>> 0a02da30b4fb9654f824c2d920e14401d16d7a38
             }
         )
 
     async def dm_message(self, event):
         await self.send(text_data=json.dumps({
             'type': 'dm_message',
-<<<<<<< HEAD
             'id': event.get('id'),
             'message': event.get('message', ''),
             'sender': event.get('sender', ''),
             'attachment_url': event.get('attachment_url', ''),
             'attachment_type': event.get('attachment_type', ''),
-=======
-            'id': event['id'],
-            'message': event['message'],
-            'sender': event['sender'],
->>>>>>> 0a02da30b4fb9654f824c2d920e14401d16d7a38
         }))
 
     async def dm_deleted(self, event):
