@@ -10,11 +10,22 @@ class ChatConsumer(AsyncWebsocketConsumer):
     async def connect(self):
         self.room_name = self.scope['url_route']['kwargs']['room_name']
         self.room_group_name = f'chat_{self.room_name}'
+        self.user = self.scope.get('user')
+        self.user_group_name = (
+            f'user_{self.user.id}'
+            if self.user and self.user.is_authenticated
+            else None
+        )
 
         await self.channel_layer.group_add(
             self.room_group_name,
             self.channel_name
         )
+        if self.user_group_name:
+            await self.channel_layer.group_add(
+                self.user_group_name,
+                self.channel_name
+            )
         await self.accept()
 
     async def disconnect(self, close_code):
@@ -22,6 +33,18 @@ class ChatConsumer(AsyncWebsocketConsumer):
             self.room_group_name,
             self.channel_name
         )
+        if getattr(self, 'user_group_name', None):
+            await self.channel_layer.group_discard(
+                self.user_group_name,
+                self.channel_name
+            )
+
+    async def incoming_call(self, event):
+        await self.send(text_data=json.dumps({
+            'type': 'incoming_call',
+            'caller': event.get('caller', ''),
+            'signal': event.get('signal'),
+        }))
 
     async def receive(self, text_data):
         data = json.loads(text_data)
@@ -161,7 +184,39 @@ class DMConsumer(AsyncWebsocketConsumer):
 
     async def receive(self, text_data):
         data = json.loads(text_data)
+        msg_type = data.get('type')
         action = data.get('action')
+
+        if msg_type == 'call_signal':
+            signal = data.get('signal') or {}
+            await self.channel_layer.group_send(
+                self.room_group_name,
+                {
+                    'type': 'call_signal',
+                    'sender': self.user.username,
+                    'signal': signal,
+                }
+            )
+            if signal.get('offer'):
+                await self.channel_layer.group_send(
+                    f'user_{self.other_user.id}',
+                    {
+                        'type': 'incoming_call',
+                        'caller': self.user.username,
+                        'signal': signal,
+                    }
+                )
+            return
+
+        if msg_type == 'call_hangup':
+            await self.channel_layer.group_send(
+                self.room_group_name,
+                {
+                    'type': 'call_hangup',
+                    'sender': self.user.username,
+                }
+            )
+            return
 
         if action == 'delete_dm':
             msg_id = data.get('message_id')
@@ -209,6 +264,19 @@ class DMConsumer(AsyncWebsocketConsumer):
                 'attachment_type': '',
             }
         )
+
+    async def call_signal(self, event):
+        await self.send(text_data=json.dumps({
+            'type': 'call_signal',
+            'sender': event.get('sender', ''),
+            'signal': event.get('signal'),
+        }))
+
+    async def call_hangup(self, event):
+        await self.send(text_data=json.dumps({
+            'type': 'call_hangup',
+            'sender': event.get('sender', ''),
+        }))
 
     async def dm_message(self, event):
         await self.send(text_data=json.dumps({

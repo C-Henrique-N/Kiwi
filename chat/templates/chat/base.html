@@ -4,11 +4,23 @@
     <meta charset="UTF-8">
     <title>{% block title %}Kiwi Chat{% endblock %}</title>
     {% load static %}
-    <link rel="stylesheet" href="{% static 'chat/css/style.css' %}">
+    <meta name="theme-color" content="#111318">
+    <link rel="manifest" href="{% static 'manifest.json' %}">
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
     {% block extra_css %}{% endblock %}
 </head>
 <body>
     {% block content %}{% endblock %}
     {% block extra_js %}{% endblock %}
+
+    <script>
+      if ("serviceWorker" in navigator) {
+        window.addEventListener("load", () => {
+          navigator.serviceWorker.register("/static/service-worker.js").catch((err) => {
+            console.error("Erro ao registar Service Worker:", err);
+          });
+        });
+      }
+    </script>
 </body>
 </html>
