@@ -1,0 +1,51 @@
+:root {
+    --accent: #ffb6c1; /* Rosa suave padrão */
+    --bg-darkest: #1e1f22;
+    --bg-sidebar: #2b2d31;
+    --bg-main: #313338;
+    --bg-input: #383a40;
+    --text-main: #dbdee1;
+    --text-muted: #949ba4;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+    font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    background: var(--bg-main);
+    color: var(--text-main);
+    display: flex;
+    height: 100vh;
+    overflow: hidden;
+}
+
+.sidebar-left {
+    width: 240px;
+    background: var(--bg-sidebar);
+    display: flex;
+    flex-direction: column;
+    border-right: 1px solid var(--bg-darkest);
+}
+.server-header {
+    padding: 18px 20px;
+    font-size: 16px;
+    font-weight: bold;
+    color: #fff;
+    background: #232428;
+    border-bottom: 2px solid var(--bg-darkest);
+}
+.channels-list { padding: 15px 10px; flex: 1; }
+.channel-item {
+    padding: 8px 12px;
+    border-radius: 5px;
+    background: rgba(255, 255, 255, 0.08);
+    color: #fff;
+    font-weight: 500;
+    margin-bottom: 4px;
+    border-left: 3px solid var(--accent);
+}
+
+.my-user-panel {
+    padding: 10px 12px;
+    background: #232428;
+    display: flex;
+    align-items

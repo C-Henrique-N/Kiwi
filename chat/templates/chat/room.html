@@ -1,0 +1,1907 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <title>🥝 Kiwi Chat Estético Completo</title>
+    <style>
+        :root {
+            --accent: #e5e7eb;
+            --bg-darkest: #eceef2;
+            --bg-sidebar: #f5f6f8;
+            --bg-main: #ffffff;
+            --bg-input: #f8f9fa;
+            --bg-card: #ffffff;
+            --bg-soft: #f3f4f6;
+            --text-main: #1f2328;
+            --text-muted: #57606a;
+            --border-subtle: rgba(0, 0, 0, 0.08);
+            --auth-artwork: url('https://i.pinimg.com/736x/cb/a2/98/cba29832d5a423e62dc7ed952df60762.jpg');
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+            background: var(--bg-main);
+            color: var(--text-main);
+            display: flex;
+            height: 100vh;
+            overflow: hidden;
+            transition: background 0.3s ease, color 0.3s ease;
+        }
+
+        .sidebar-left {
+            width: 240px;
+            background: var(--bg-sidebar);
+            display: flex;
+            flex-direction: column;
+            border-right: 1px solid var(--border-subtle);
+            transition: background 0.3s ease;
+        }
+        .server-header {
+            padding: 18px 20px;
+            font-size: 16px;
+            font-weight: bold;
+            color: var(--text-main);
+            background: var(--bg-darkest);
+            border-bottom: 2px solid var(--border-subtle);
+            transition: background 0.3s ease, color 0.3s ease;
+        }
+        .channels-list { padding: 15px 10px; flex: 1; overflow-y: auto; }
+        .section-label {
+            font-size: 11px;
+            font-weight: 700;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            margin: 10px 0 8px 0;
+        }
+        .channel-item {
+            padding: 8px 12px;
+            border-radius: 5px;
+            background: rgba(128, 128, 128, 0.12);
+            color: var(--text-main);
+            font-weight: 500;
+            margin-bottom: 4px;
+            border-left: 3px solid transparent;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: 0.15s;
+        }
+        .channel-item:hover { background: rgba(128, 128, 128, 0.2); }
+        .channel-item.active {
+            background: rgba(128, 128, 128, 0.26);
+            border-left-color: var(--accent);
+            font-weight: 600;
+        }
+        .dm-channel-avatar {
+            width: 22px;
+            height: 22px;
+            border-radius: 50%;
+            background: #5865f2;
+            color: #fff;
+            font-size: 11px;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-size: cover;
+            background-position: center;
+            flex-shrink: 0;
+        }
+        .dm-close-tab {
+            margin-left: auto;
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            font-size: 14px;
+            cursor: pointer;
+            padding: 0 4px;
+            border-radius: 4px;
+        }
+        .dm-close-tab:hover { color: var(--text-main); background: rgba(128, 128, 128, 0.2); }
+
+        .my-user-panel {
+            padding: 10px 12px;
+            background: var(--bg-darkest);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-top: 1px solid var(--border-subtle);
+            transition: background 0.3s ease;
+        }
+        .my-user-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            cursor: pointer;
+            overflow: hidden;
+            flex: 1;
+            min-width: 0;
+        }
+        .mini-avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: #5865f2;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            color: #fff;
+            background-size: cover;
+            background-position: center;
+            flex-shrink: 0;
+        }
+        .user-panel-actions {
+            display: flex;
+            align-items: center;
+            gap: 2px;
+        }
+        .icon-btn {
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            font-size: 16px;
+            cursor: pointer;
+            padding: 5px;
+            border-radius: 4px;
+            position: relative;
+        }
+        .icon-btn:hover { background: rgba(128, 128, 128, 0.16); color: var(--text-main); }
+
+        .chat-area {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background: var(--bg-main);
+            transition: background 0.3s ease;
+            min-width: 0;
+        }
+        .chat-header {
+            padding: 12px 20px;
+            background: var(--bg-main);
+            border-bottom: 1px solid var(--border-subtle);
+            font-size: 16px;
+            font-weight: bold;
+            color: var(--text-main);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            transition: background 0.3s ease, color 0.3s ease;
+        }
+        .header-title-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            min-width: 0;
+        }
+        .header-dm-avatar {
+            width: 34px;
+            height: 34px;
+            border-radius: 50%;
+            background: #5865f2;
+            color: #fff;
+            font-size: 14px;
+            font-weight: bold;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            background-size: cover;
+            background-position: center;
+            flex-shrink: 0;
+            cursor: pointer;
+        }
+        .header-dm-avatar.visible { display: flex; }
+        .chat-header span.sub { color: var(--text-muted); font-size: 13px; font-weight: normal; }
+        .back-geral-btn {
+            background: var(--bg-soft);
+            color: var(--text-main);
+            border: 1px solid var(--border-subtle);
+            padding: 5px 10px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            display: none;
+        }
+        .back-geral-btn.visible { display: inline-block; }
+        .back-geral-btn:hover { filter: brightness(0.96); }
+
+        .theme-picker-container {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-shrink: 0;
+        }
+        .theme-ball {
+            width: 22px;
+            height: 22px;
+            border-radius: 50%;
+            cursor: pointer;
+            border: 2px solid rgba(0, 0, 0, 0.25);
+            transition: 0.2s;
+        }
+        .theme-ball:hover { transform: scale(1.15); }
+        .theme-ball.active {
+            border-color: var(--text-main);
+            box-shadow: 0 0 0 2px var(--bg-main), 0 0 0 4px var(--text-main);
+            transform: scale(1.1);
+        }
+
+        #chat-log {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+        .message-group { display: flex; gap: 14px; align-items: flex-start; }
+        .avatar {
+            width: 40px;
+            height: 40px;
+            background: #5865f2;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            color: #fff;
+            background-size: cover;
+            background-position: center;
+            flex-shrink: 0;
+            cursor: pointer;
+        }
+        .message-content { flex: 1; min-width: 0; }
+        .message-header { display: flex; align-items: baseline; gap: 8px; margin-bottom: 4px; }
+        .username { font-weight: 600; color: var(--text-main); font-size: 15px; cursor: pointer; }
+        .username:hover { text-decoration: underline; }
+        .timestamp { font-size: 11px; color: var(--text-muted); }
+        .message-text { color: var(--text-main); font-size: 14px; line-height: 1.45; word-break: break-word; }
+        .msg-attachment-img {
+            max-width: 280px;
+            max-height: 280px;
+            border-radius: 8px;
+            margin-top: 6px;
+            display: block;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        }
+        .msg-attachment-audio {
+            margin-top: 6px;
+            max-width: 100%;
+            width: 300px;
+            display: block;
+        }
+        .delete-msg-btn {
+            margin-left: auto;
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            cursor: pointer;
+            font-size: 12px;
+            padding: 2px 6px;
+            border-radius: 4px;
+            transition: 0.15s;
+        }
+        .delete-msg-btn:hover {
+            background: rgba(231, 76, 60, 0.14);
+            color: #c0392b;
+        }
+
+        .chat-input-area { padding: 0 20px 20px 20px; }
+        #attachment-preview-bar {
+            display: none;
+            align-items: center;
+            gap: 10px;
+            background: var(--bg-card);
+            border: 1px solid var(--border-subtle);
+            padding: 8px 12px;
+            border-radius: 8px;
+            margin-bottom: 8px;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+        }
+        #attachment-preview-img {
+            max-height: 64px;
+            max-width: 64px;
+            border-radius: 6px;
+            display: none;
+            object-fit: cover;
+        }
+        #attachment-preview-name {
+            font-size: 12px;
+            color: var(--text-main);
+            flex: 1;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        #clear-attachment-btn {
+            background: rgba(231, 76, 60, 0.15);
+            color: #e74c3c;
+            border: none;
+            border-radius: 5px;
+            padding: 4px 8px;
+            font-size: 12px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        #clear-attachment-btn:hover { background: rgba(231, 76, 60, 0.25); }
+
+        .input-wrapper {
+            background: var(--bg-input);
+            border: 1px solid var(--border-subtle);
+            border-radius: 8px;
+            padding: 10px 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            box-shadow: 0 3px 8px rgba(0,0,0,0.06);
+            transition: background 0.3s ease;
+        }
+        .media-btn {
+            background: rgba(128, 128, 128, 0.12);
+            border: none;
+            color: var(--text-main);
+            font-size: 16px;
+            width: 34px;
+            height: 34px;
+            border-radius: 6px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: 0.15s;
+            flex-shrink: 0;
+        }
+        .media-btn:hover { background: rgba(128, 128, 128, 0.22); }
+        .media-btn.recording {
+            background: #e74c3c;
+            color: #fff;
+            animation: pulse 1s infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.07); }
+        }
+        #chat-message-input {
+            flex: 1;
+            background: transparent;
+            border: none;
+            color: var(--text-main);
+            font-size: 15px;
+            outline: none;
+            min-width: 0;
+        }
+        #chat-message-input::placeholder { color: var(--text-muted); }
+        #chat-message-submit {
+            background: var(--accent);
+            color: #1f2328;
+            border: 1px solid var(--border-subtle);
+            padding: 8px 18px;
+            border-radius: 5px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background 0.3s ease;
+            flex-shrink: 0;
+        }
+        #chat-message-submit:hover { filter: brightness(0.95); }
+
+        .sidebar-right {
+            width: 260px;
+            background: var(--bg-sidebar);
+            border-left: 1px solid var(--border-subtle);
+            display: flex;
+            flex-direction: column;
+            transition: background 0.3s ease;
+        }
+        .social-tabs {
+            display: flex;
+            border-bottom: 1px solid var(--border-subtle);
+            background: var(--bg-darkest);
+            transition: background 0.3s ease;
+        }
+        .social-tab {
+            flex: 1;
+            padding: 14px 4px;
+            text-align: center;
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--text-muted);
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+            transition: 0.2s;
+        }
+        .social-tab:hover { color: var(--text-main); background: rgba(128, 128, 128, 0.08); }
+        .social-tab.active { color: var(--text-main); border-bottom-color: var(--accent); }
+
+        .social-content-area {
+            padding: 15px;
+            overflow-y: auto;
+            flex: 1;
+            font-size: 13px;
+            color: var(--text-muted);
+        }
+        .sidebar-artwork-card {
+            margin: 12px 15px 15px 15px;
+            height: 112px;
+            border-radius: 10px;
+            background-color: #85586F;
+            background-image: var(--auth-artwork);
+            background-size: cover;
+            background-position: center;
+            position: relative;
+            overflow: hidden;
+            border: 1px solid var(--border-subtle);
+            box-shadow: 0 3px 10px rgba(0,0,0,0.08);
+            flex-shrink: 0;
+        }
+        .sidebar-artwork-badge {
+            position: absolute;
+            left: 8px;
+            bottom: 8px;
+            background: rgba(30, 31, 34, 0.78);
+            color: #fff;
+            font-size: 10px;
+            font-weight: 600;
+            padding: 3px 8px;
+            border-radius: 999px;
+        }
+        .social-list-item {
+            padding: 8px;
+            border-radius: 6px;
+            margin-bottom: 6px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--text-main);
+            background: var(--bg-card);
+            border: 1px solid var(--border-subtle);
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        .social-list-item:hover { filter: brightness(0.97); }
+        .dm-quick-btn {
+            margin-left: auto;
+            background: #5865f2;
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            padding: 4px 8px;
+            font-size: 11px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        .dm-quick-btn:hover { filter: brightness(0.92); }
+
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.55);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+        }
+        .modal-overlay.open { display: flex; }
+
+        .aesthetic-profile-card {
+            width: 380px;
+            background: var(--bg-card);
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 16px 40px rgba(0,0,0,0.25);
+            border: 1px solid var(--border-subtle);
+            color: var(--text-main);
+            position: relative;
+        }
+
+        .close-modal-btn {
+            position: absolute;
+            top: 10px;
+            right: 12px;
+            background: rgba(0, 0, 0, 0.45);
+            color: #fff;
+            border: none;
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            font-size: 16px;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            z-index: 10;
+            transition: 0.2s;
+        }
+        .close-modal-btn:hover { background: rgba(255, 0, 0, 0.65); }
+
+        .aesthetic-banner {
+            height: 110px;
+            background-color: var(--accent);
+            background-image: var(--auth-artwork);
+            background-size: cover;
+            background-position: center;
+            position: relative;
+        }
+        .aesthetic-header-row {
+            padding: 0 16px;
+            margin-top: -36px;
+            display: flex;
+            align-items: flex-end;
+            gap: 12px;
+            position: relative;
+        }
+        .aesthetic-avatar {
+            width: 74px;
+            height: 74px;
+            border-radius: 50%;
+            border: 5px solid var(--bg-card);
+            background: #5865f2;
+            background-size: cover;
+            background-position: center;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 28px;
+            font-weight: bold;
+            color: #fff;
+            flex-shrink: 0;
+        }
+        .aesthetic-status-bubble {
+            background: var(--bg-soft);
+            border: 1px solid var(--border-subtle);
+            padding: 8px 12px;
+            border-radius: 14px;
+            font-size: 12px;
+            color: var(--text-main);
+            flex: 1;
+            margin-bottom: 6px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+            word-break: break-word;
+        }
+        .aesthetic-body {
+            padding: 14px 16px 20px 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        .aesthetic-name {
+            font-size: 18px;
+            font-weight: bold;
+            color: var(--text-main);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .aesthetic-details {
+            font-size: 12px;
+            color: var(--text-muted);
+            line-height: 1.5;
+            background: var(--bg-soft);
+            padding: 10px;
+            border-radius: 8px;
+        }
+        .spotify-card {
+            background: var(--bg-soft);
+            border-radius: 10px;
+            padding: 10px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            border: 1px solid var(--border-subtle);
+        }
+        .spotify-album {
+            width: 48px;
+            height: 48px;
+            border-radius: 6px;
+            background: #1db954;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            flex-shrink: 0;
+        }
+        .spotify-info { flex: 1; min-width: 0; }
+        .spotify-title { font-size: 13px; font-weight: bold; color: var(--text-main); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .spotify-artist { font-size: 11px; color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .spotify-progress {
+            width: 100%;
+            height: 4px;
+            background: rgba(128, 128, 128, 0.25);
+            border-radius: 2px;
+            margin-top: 6px;
+            overflow: hidden;
+        }
+        .spotify-progress-bar { width: 30%; height: 100%; background: #1db954; }
+
+        .btn-aesthetic-edit, .btn-aesthetic-action {
+            width: 100%;
+            background: #5865f2;
+            color: #fff;
+            border: none;
+            padding: 10px;
+            border-radius: 8px;
+            font-weight: bold;
+            font-size: 13px;
+            cursor: pointer;
+            transition: 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+        }
+        .btn-aesthetic-edit:hover, .btn-aesthetic-action:hover { filter: brightness(0.95); }
+
+        .form-group { margin-bottom: 10px; }
+        .form-group label { display: block; font-size: 11px; color: var(--text-muted); margin-bottom: 4px; text-transform: uppercase; font-weight: bold; }
+        .form-group input, .form-group textarea {
+            width: 100%;
+            background: var(--bg-soft);
+            border: 1px solid var(--border-subtle);
+            color: var(--text-main);
+            padding: 8px;
+            border-radius: 6px;
+            font-size: 13px;
+            outline: none;
+        }
+        .form-group input[type="file"] { padding: 4px; cursor: pointer; background: var(--bg-card); }
+        .form-group input:focus, .form-group textarea:focus { border-color: #5865f2; }
+    </style>
+</head>
+<body>
+    <form id="csrf-helper-form" style="display:none;">{% csrf_token %}</form>
+
+    <div class="sidebar-left">
+        <div class="server-header">🥝 Kiwi Server</div>
+        <div class="channels-list">
+            <div class="section-label">Canais de Texto</div>
+            <div class="channel-item active" id="tab-geral" onclick="switchToGeral()"># geral</div>
+
+            <div class="section-label">Mensagens Privadas</div>
+            <div id="dm-tabs-list"></div>
+        </div>
+        <div class="my-user-panel">
+            <div class="my-user-info" id="open-profile-trigger">
+                <div id="my-mini-avatar" class="mini-avatar">M</div>
+                <div style="min-width: 0;">
+                    <div id="my-name-label" style="font-size: 14px; font-weight: 600; color: var(--text-main); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{{ username }}</div>
+                    <div style="font-size: 11px; color: #23a55a;">● Online</div>
+                </div>
+            </div>
+            <div class="user-panel-actions">
+                <button class="icon-btn" id="mailbox-btn" title="Caixa de Mensagens & Atualizações">📬</button>
+                <button class="icon-btn" id="settings-btn" title="Perfil Estético">⚙️</button>
+                <a href="{% url 'logout' %}" class="icon-btn" title="Terminar Sessão" style="text-decoration: none; display: flex; align-items: center; justify-content: center;">🚪</a>
+            </div>
+        </div>
+    </div>
+
+    <div class="chat-area">
+        <div class="chat-header">
+            <div class="header-title-group">
+                <div id="header-dm-avatar" class="header-dm-avatar" title="Ver perfil"></div>
+                <div id="header-main-title"># geral</div>
+                <span class="sub" id="header-sub-label">| Chat oficial em tempo real</span>
+                <button type="button" class="back-geral-btn" id="back-to-geral-btn" onclick="switchToGeral()">← # geral</button>
+            </div>
+            <div class="theme-picker-container">
+                <span style="font-size: 12px; color: var(--text-muted); margin-right: 4px;">Tema:</span>
+                <div class="theme-ball active" style="background: #ffffff;" data-color="#ffffff" title="Branco Padrão"></div>
+                <div class="theme-ball" style="background: #2b2d31;" data-color="#2b2d31" title="Cinza Escuro"></div>
+                <div class="theme-ball" style="background: #ff9de2;" data-color="#ff9de2" title="Rosa Vivo Pastel"></div>
+                <div class="theme-ball" style="background: #e74c3c;" data-color="#e74c3c" title="Vermelho Vibrante"></div>
+                <div class="theme-ball" style="background: #23a55a;" data-color="#23a55a" title="Verde Kiwi"></div>
+                <div class="theme-ball" style="background: #5865f2;" data-color="#5865f2" title="Azul Discord"></div>
+                <div class="theme-ball" style="background: #95a5a6;" data-color="#95a5a6" title="Cinza Elegante"></div>
+            </div>
+        </div>
+
+        <div id="chat-log">
+            <div class="message-group">
+                <div class="avatar" style="background: #232428;">🥝</div>
+                <div class="message-content">
+                    <div class="message-header">
+                        <span class="username" style="color: #23a55a;">Sistema Kiwi</span>
+                        <span class="timestamp">Hoje</span>
+                    </div>
+                    <div class="message-text">Chat em tempo real e perfis a funcionar perfeitamente!</div>
+                </div>
+            </div>
+
+            {% for msg in messages %}
+            {% with msg_profile=msg.user.profile %}
+            <div class="message-group" data-msg-id="{{ msg.id }}">
+                {% if msg_profile.avatar %}
+                <div class="avatar" style="background-image: url('{{ msg_profile.avatar.url }}'); background-size: cover; background-position: center; color: transparent;" onclick="openUserProfile('{{ msg.user.username }}')"></div>
+                {% else %}
+                <div class="avatar" style="background: #5865f2;" onclick="openUserProfile('{{ msg.user.username }}')">{{ msg.user.username|slice:":1"|upper }}</div>
+                {% endif %}
+
+                <div class="message-content">
+                    <div class="message-header">
+                        <span class="username" onclick="openUserProfile('{{ msg.user.username }}')">{{ msg.user.username }}</span>
+                        <span class="timestamp">{{ msg.timestamp|date:"H:i" }}</span>
+                        {% if msg.user.username == username %}
+                        <button type="button" class="delete-msg-btn" data-delete-id="{{ msg.id }}" title="Excluir mensagem">🗑️ Excluir</button>
+                        {% endif %}
+                    </div>
+                    {% if msg.content %}
+                    <div class="message-text">{{ msg.content }}</div>
+                    {% endif %}
+                    {% if msg.attachment %}
+                        {% if msg.attachment_type == 'image' %}
+                        <img src="{{ msg.attachment.url }}" alt="Anexo" class="msg-attachment-img">
+                        {% elif msg.attachment_type == 'audio' %}
+                        <audio controls src="{{ msg.attachment.url }}" class="msg-attachment-audio"></audio>
+                        {% endif %}
+                    {% endif %}
+                </div>
+            </div>
+            {% endwith %}
+            {% endfor %}
+        </div>
+
+        <div class="chat-input-area">
+            <div id="attachment-preview-bar">
+                <img id="attachment-preview-img" src="" alt="Prévia">
+                <span id="attachment-preview-name"></span>
+                <button type="button" id="clear-attachment-btn" title="Remover anexo">✕</button>
+            </div>
+            <div class="input-wrapper">
+                <input type="file" id="attachment-file-input" accept="image/*,.gif,audio/*" hidden>
+                <button type="button" class="media-btn" id="upload-media-btn" title="Enviar Foto, GIF ou Áudio">🖼️</button>
+                <button type="button" class="media-btn" id="record-audio-btn" title="Gravar Áudio">🎙️</button>
+                <input id="chat-message-input" type="text" placeholder="Conversar em #geral...">
+                <button id="chat-message-submit" type="button">Enviar</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="sidebar-right">
+        <div class="social-tabs">
+            <div class="social-tab active" data-tab="online">Online</div>
+            <div class="social-tab" data-tab="amigos">Amigos</div>
+            <div class="social-tab" data-tab="seguidores">Seguidores</div>
+        </div>
+        <div class="social-content-area" id="social-content-container"></div>
+        <div class="sidebar-artwork-card" title="Capa oficial Kiwi Chat">
+            <span class="sidebar-artwork-badge">🥝 Kiwi Aesthetic</span>
+        </div>
+    </div>
+
+    <!-- Modal do PRÓPRIO Perfil -->
+    <div id="aesthetic-modal" class="modal-overlay">
+        <div class="aesthetic-profile-card">
+            <button class="close-modal-btn" id="close-aesthetic-btn">×</button>
+            <div id="profile-banner" class="aesthetic-banner"></div>
+            <div class="aesthetic-header-row">
+                <div id="profile-avatar" class="aesthetic-avatar">M</div>
+                <div id="profile-status-bubble" class="aesthetic-status-bubble">🌸 a testar o novo kiwi chat...</div>
+            </div>
+            <div class="aesthetic-body">
+                <div>
+                    <div id="profile-username" class="aesthetic-name">{{ username }}</div>
+                    <div style="font-size: 11px; color: var(--text-muted);" id="profile-pronouns">he / him • 🎀</div>
+                </div>
+                <div class="aesthetic-details" id="profile-bio">
+                    @matsuda 🤍<br>infpt 🎧 zekiah ☁️
+                </div>
+                <div class="spotify-card">
+                    <div class="spotify-album">🎵</div>
+                    <div class="spotify-info">
+                        <div style="font-size: 10px; color: #1db954; font-weight: bold; margin-bottom: 2px;">Listening to Spotify</div>
+                        <div class="spotify-title" id="spotify-song-title">Drama</div>
+                        <div class="spotify-artist" id="spotify-song-artist">Lala Sadii</div>
+                        <div class="spotify-progress"><div class="spotify-progress-bar"></div></div>
+                    </div>
+                </div>
+                <button class="btn-aesthetic-edit" id="switch-to-edit-btn">✏️ Edit Profile</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de PERFIL DE TERCEIROS -->
+    <div id="other-profile-modal" class="modal-overlay">
+        <div class="aesthetic-profile-card">
+            <button class="close-modal-btn" id="close-other-btn">×</button>
+            <div id="other-profile-banner" class="aesthetic-banner"></div>
+            <div class="aesthetic-header-row">
+                <div id="other-profile-avatar" class="aesthetic-avatar">?</div>
+                <div id="other-profile-status-bubble" class="aesthetic-status-bubble">...</div>
+            </div>
+            <div class="aesthetic-body">
+                <div>
+                    <div id="other-profile-username" class="aesthetic-name">Utilizador</div>
+                    <div style="font-size: 11px; color: var(--text-muted);" id="other-profile-pronouns">...</div>
+                </div>
+                <div class="aesthetic-details" id="other-profile-bio">...</div>
+                <div style="display: flex; gap: 8px; margin-top: 4px;">
+                    <button class="btn-aesthetic-action" id="add-friend-btn">➕ Adicionar Amigo</button>
+                    <button class="btn-aesthetic-action" id="dm-btn" style="background: #5865f2;">💬 Mensagem Privada</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL DA CAIXA DE MENSAGENS (ENVELOPE 📬) -->
+    <div id="mailbox-modal" class="modal-overlay">
+        <div class="aesthetic-profile-card" style="padding: 20px; width: 420px; max-height: 85vh; overflow-y: auto;">
+            <button class="close-modal-btn" id="close-mailbox-btn">×</button>
+            <h3 style="color: var(--text-main); margin-bottom: 14px; font-size: 16px; display: flex; align-items: center; gap: 8px;">
+                📬 Caixa de Mensagens & Atualizações
+            </h3>
+
+            <div style="margin-bottom: 20px;">
+                <h4 style="font-size: 12px; text-transform: uppercase; color: var(--text-muted); margin-bottom: 8px;">Pedidos de Amizade</h4>
+                <div id="mailbox-friend-requests" style="display: flex; flex-direction: column; gap: 8px;">
+                    <div style="font-size: 12px; color: var(--text-muted); background: var(--bg-soft); padding: 10px; border-radius: 8px; text-align: center;">
+                        Sem novos pedidos de amizade.
+                    </div>
+                </div>
+            </div>
+
+            <div>
+                <h4 style="font-size: 12px; text-transform: uppercase; color: var(--text-muted); margin-bottom: 8px;">Notas de Atualizações (Changelog)</h4>
+                <div style="background: var(--bg-soft); padding: 12px; border-radius: 8px; font-size: 12px; line-height: 1.5; color: var(--text-main);">
+                    <div style="font-weight: bold; color: #5865f2; margin-bottom: 4px;">✨ Versão 2.9 - Fotos, GIFs e Áudio</div>
+                    • Envio de fotos, GIFs e ficheiros de áudio no # geral e nas DMs.<br>
+                    • Gravação de voz direta pelo microfone.
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de EDIÇÃO de Perfil -->
+    <div id="edit-modal" class="modal-overlay">
+        <div class="aesthetic-profile-card" style="padding: 20px; max-height: 90vh; overflow-y: auto;">
+            <button class="close-modal-btn" id="close-edit-btn">×</button>
+            <h3 style="color: var(--text-main); margin-bottom: 14px; font-size: 16px;">Editar Perfil Estético</h3>
+            <form id="edit-profile-form" enctype="multipart/form-data">
+                <div class="form-group">
+                    <label>Selecionar Foto de Perfil</label>
+                    <input type="file" name="avatar" id="edit-avatar-file" accept="image/*">
+                </div>
+                <div class="form-group">
+                    <label>Selecionar Banner</label>
+                    <input type="file" name="banner" id="edit-banner-file" accept="image/*">
+                </div>
+                <div class="form-group">
+                    <label>Frase do Balão (Status)</label>
+                    <input type="text" name="bubble" id="edit-bubble" value="🌸 a testar o novo kiwi chat...">
+                </div>
+                <div class="form-group">
+                    <label>Pronomes / Tags</label>
+                    <input type="text" name="pronouns" id="edit-pronouns" value="he / him • 🎀">
+                </div>
+                <div class="form-group">
+                    <label>Biografia Detalhada</label>
+                    <textarea name="bio" id="edit-bio" rows="3">@matsuda 🤍 infpt 🎧 zekiah ☁️</textarea>
+                </div>
+                <div class="form-group">
+                    <label>Música a Ouvir (Spotify)</label>
+                    <input type="text" name="spotify_song" id="edit-spotify-song" value="Drama">
+                </div>
+                <div class="form-group">
+                    <label>Artista</label>
+                    <input type="text" name="spotify_artist" id="edit-spotify-artist" value="Lala Sadii">
+                </div>
+                <div style="display: flex; gap: 10px; margin-top: 15px;">
+                    <button type="submit" id="save-profile-btn" style="flex:1; background: #5865f2; color:#fff; border:none; padding:10px; border-radius:6px; font-weight:bold; cursor:pointer;">Guardar</button>
+                    <button type="button" id="cancel-edit-btn" style="flex:1; background: var(--bg-soft); color:var(--text-main); border:1px solid var(--border-subtle); padding:10px; border-radius:6px; font-weight:bold; cursor:pointer;">Cancelar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            let activeUsername = "{{ username }}";
+            let profileData = {
+                bubble: '🌸 a testar o novo kiwi chat...',
+                pronouns: 'he / him • 🎀',
+                bio: '@matsuda 🤍<br>infpt 🎧 zekiah ☁️',
+                song: 'Drama',
+                artist: 'Lala Sadii',
+                accentColor: '#ffffff',
+                avatarUrl: '',
+                bannerUrl: ''
+            };
+
+            const miniAvatar = document.getElementById('my-mini-avatar');
+            const themeBalls = document.querySelectorAll('.theme-ball');
+
+            const aestheticModal = document.getElementById('aesthetic-modal');
+            const editModal = document.getElementById('edit-modal');
+            const otherProfileModal = document.getElementById('other-profile-modal');
+            const mailboxModal = document.getElementById('mailbox-modal');
+
+            const openTrigger = document.getElementById('open-profile-trigger');
+            const settingsBtn = document.getElementById('settings-btn');
+            const mailboxBtn = document.getElementById('mailbox-btn');
+
+            const closeAestheticBtn = document.getElementById('close-aesthetic-btn');
+            const closeEditBtn = document.getElementById('close-edit-btn');
+            const closeOtherBtn = document.getElementById('close-other-btn');
+            const closeMailboxBtn = document.getElementById('close-mailbox-btn');
+
+            const switchToEditBtn = document.getElementById('switch-to-edit-btn');
+            const cancelEditBtn = document.getElementById('cancel-edit-btn');
+            const editProfileForm = document.getElementById('edit-profile-form');
+
+            const profileBubble = document.getElementById('profile-status-bubble');
+            const profilePronouns = document.getElementById('profile-pronouns');
+            const profileBio = document.getElementById('profile-bio');
+            const profileAvatar = document.getElementById('profile-avatar');
+            const profileBanner = document.getElementById('profile-banner');
+            const spotifyTitle = document.getElementById('spotify-song-title');
+            const spotifyArtist = document.getElementById('spotify-song-artist');
+
+            const editBubble = document.getElementById('edit-bubble');
+            const editPronouns = document.getElementById('edit-pronouns');
+            const editBio = document.getElementById('edit-bio');
+            const editSong = document.getElementById('edit-spotify-song');
+            const editArtist = document.getElementById('edit-spotify-artist');
+
+            const chatLog = document.getElementById('chat-log');
+            const messageInput = document.getElementById('chat-message-input');
+            const submitButton = document.getElementById('chat-message-submit');
+            const attachmentFileInput = document.getElementById('attachment-file-input');
+            const uploadMediaBtn = document.getElementById('upload-media-btn');
+            const recordAudioBtn = document.getElementById('record-audio-btn');
+
+            const previewBar = document.getElementById('attachment-preview-bar');
+            const previewImg = document.getElementById('attachment-preview-img');
+            const previewName = document.getElementById('attachment-preview-name');
+            const clearAttachmentBtn = document.getElementById('clear-attachment-btn');
+            let pendingAttachmentFile = null;
+
+            const geralSnapshotHTML = chatLog.innerHTML;
+            const tabGeralEl = document.getElementById('tab-geral');
+            const dmTabsListEl = document.getElementById('dm-tabs-list');
+            const headerDmAvatar = document.getElementById('header-dm-avatar');
+            const headerMainTitle = document.getElementById('header-main-title');
+            const headerSubLabel = document.getElementById('header-sub-label');
+            const backToGeralBtn = document.getElementById('back-to-geral-btn');
+
+            const roomName = "{{ room_name|default:'geral' }}";
+            let currentView = 'geral';
+            let currentDmUser = null;
+            let dmSocket = null;
+            const openDmTabs = new Map();
+
+            let mediaRecorder = null;
+            let audioChunks = [];
+
+            const themesMap = {
+                '#ffffff': {
+                    accent: '#e5e7eb',
+                    main: '#ffffff',
+                    sidebar: '#f5f6f8',
+                    darkest: '#eceef2',
+                    input: '#f8f9fa',
+                    card: '#ffffff',
+                    soft: '#f3f4f6',
+                    textMain: '#1f2328',
+                    textMuted: '#57606a',
+                    border: 'rgba(0, 0, 0, 0.08)'
+                },
+                '#2b2d31': {
+                    accent: '#4e5058',
+                    main: '#313338',
+                    sidebar: '#2b2d31',
+                    darkest: '#1e1f22',
+                    input: '#383a40',
+                    card: '#2b2d31',
+                    soft: '#232428',
+                    textMain: '#f2f3f5',
+                    textMuted: '#b5bac1',
+                    border: 'rgba(255, 255, 255, 0.08)'
+                },
+                '#ff9de2': {
+                    accent: '#ff9de2',
+                    main: '#f7c9e8',
+                    sidebar: '#ebadd5',
+                    darkest: '#e092c7',
+                    input: '#ffffff',
+                    card: '#ffffff',
+                    soft: '#fcf0f8',
+                    textMain: '#3d2535',
+                    textMuted: '#735065',
+                    border: 'rgba(0, 0, 0, 0.08)'
+                },
+                '#e74c3c': {
+                    accent: '#e74c3c',
+                    main: '#fadbd8',
+                    sidebar: '#f5b7b1',
+                    darkest: '#ec7063',
+                    input: '#ffffff',
+                    card: '#ffffff',
+                    soft: '#fdedec',
+                    textMain: '#3d2020',
+                    textMuted: '#784242',
+                    border: 'rgba(0, 0, 0, 0.08)'
+                },
+                '#23a55a': {
+                    accent: '#23a55a',
+                    main: '#d4efdf',
+                    sidebar: '#a9dfbf',
+                    darkest: '#58d68d',
+                    input: '#ffffff',
+                    card: '#ffffff',
+                    soft: '#eafaf1',
+                    textMain: '#183626',
+                    textMuted: '#3b6e52',
+                    border: 'rgba(0, 0, 0, 0.08)'
+                },
+                '#5865f2': {
+                    accent: '#5865f2',
+                    main: '#ebedef',
+                    sidebar: '#d4e6f1',
+                    darkest: '#5499c7',
+                    input: '#ffffff',
+                    card: '#ffffff',
+                    soft: '#eef2ff',
+                    textMain: '#1e2433',
+                    textMuted: '#4b5563',
+                    border: 'rgba(0, 0, 0, 0.08)'
+                },
+                '#95a5a6': {
+                    accent: '#95a5a6',
+                    main: '#eaeded',
+                    sidebar: '#d5dbdb',
+                    darkest: '#909497',
+                    input: '#ffffff',
+                    card: '#ffffff',
+                    soft: '#f2f4f4',
+                    textMain: '#27292b',
+                    textMuted: '#5d6266',
+                    border: 'rgba(0, 0, 0, 0.08)'
+                }
+            };
+
+            function applyTheme(colorKey) {
+                const t = themesMap[colorKey] || themesMap['#ffffff'];
+                document.documentElement.style.setProperty('--accent', t.accent);
+                document.documentElement.style.setProperty('--bg-main', t.main);
+                document.documentElement.style.setProperty('--bg-sidebar', t.sidebar);
+                document.documentElement.style.setProperty('--bg-darkest', t.darkest);
+                document.documentElement.style.setProperty('--bg-input', t.input);
+                document.documentElement.style.setProperty('--bg-card', t.card);
+                document.documentElement.style.setProperty('--bg-soft', t.soft);
+                document.documentElement.style.setProperty('--text-main', t.textMain);
+                document.documentElement.style.setProperty('--text-muted', t.textMuted);
+                document.documentElement.style.setProperty('--border-subtle', t.border);
+            }
+
+            function setAvatarStyle(el, avatarUrl, fallbackLetter) {
+                if (avatarUrl && avatarUrl.trim() !== '') {
+                    el.style.backgroundImage = `url('${avatarUrl}')`;
+                    el.style.backgroundSize = 'cover';
+                    el.style.backgroundPosition = 'center';
+                    el.style.color = 'transparent';
+                    el.textContent = '';
+                } else {
+                    el.style.backgroundImage = 'none';
+                    el.style.color = '#fff';
+                    el.textContent = (fallbackLetter || '?').charAt(0).toUpperCase();
+                }
+            }
+
+            function loadMyProfile() {
+                fetch('/api/profile/' + activeUsername + '/')
+                .then(res => res.json())
+                .then(data => {
+                    profileData.bubble = data.bubble || profileData.bubble;
+                    profileData.pronouns = data.pronouns || profileData.pronouns;
+                    profileData.bio = data.bio || profileData.bio;
+                    profileData.song = data.spotify_song || profileData.song;
+                    profileData.artist = data.spotify_artist || profileData.artist;
+                    if (data.accent_color && themesMap[data.accent_color]) {
+                        profileData.accentColor = data.accent_color;
+                    }
+                    profileData.avatarUrl = data.avatarUrl || '';
+                    profileData.bannerUrl = data.bannerUrl || '';
+                    updateUI();
+                })
+                .catch(err => console.error("Erro ao carregar perfil:", err));
+            }
+            applyTheme(profileData.accentColor);
+            loadMyProfile();
+
+            function updateUI() {
+                applyTheme(profileData.accentColor);
+                themeBalls.forEach(ball => {
+                    if (ball.getAttribute('data-color') === profileData.accentColor) {
+                        ball.classList.add('active');
+                    } else {
+                        ball.classList.remove('active');
+                    }
+                });
+
+                setAvatarStyle(miniAvatar, profileData.avatarUrl, activeUsername);
+                setAvatarStyle(profileAvatar, profileData.avatarUrl, activeUsername);
+
+                if (profileData.bannerUrl && profileData.bannerUrl.trim() !== '') {
+                    profileBanner.style.backgroundImage = `url('${profileData.bannerUrl}')`;
+                    profileBanner.style.backgroundSize = 'cover';
+                    profileBanner.style.backgroundPosition = 'center';
+                } else {
+                    profileBanner.style.backgroundImage = 'var(--auth-artwork)';
+                    profileBanner.style.backgroundColor = profileData.accentColor;
+                }
+
+                profileBubble.textContent = profileData.bubble;
+                profilePronouns.textContent = profileData.pronouns;
+                profileBio.innerHTML = profileData.bio;
+                spotifyTitle.textContent = profileData.song;
+                spotifyArtist.textContent = profileData.artist;
+            }
+
+            themeBalls.forEach(ball => {
+                ball.addEventListener('click', () => {
+                    profileData.accentColor = ball.getAttribute('data-color');
+                    updateUI();
+                });
+            });
+
+            if (openTrigger && aestheticModal) {
+                openTrigger.addEventListener('click', () => aestheticModal.classList.add('open'));
+            }
+            if (settingsBtn && aestheticModal) {
+                settingsBtn.addEventListener('click', () => aestheticModal.classList.add('open'));
+            }
+            if (mailboxBtn && mailboxModal) {
+                mailboxBtn.addEventListener('click', () => {
+                    mailboxModal.classList.add('open');
+                    fetchFriendRequests();
+                });
+            }
+
+            closeAestheticBtn.addEventListener('click', () => aestheticModal.classList.remove('open'));
+            closeEditBtn.addEventListener('click', () => editModal.classList.remove('open'));
+            closeOtherBtn.addEventListener('click', () => otherProfileModal.classList.remove('open'));
+            closeMailboxBtn.addEventListener('click', () => mailboxModal.classList.remove('open'));
+            cancelEditBtn.addEventListener('click', () => editModal.classList.remove('open'));
+
+            switchToEditBtn.addEventListener('click', () => {
+                aestheticModal.classList.remove('open');
+                editBubble.value = profileData.bubble;
+                editPronouns.value = profileData.pronouns;
+                editBio.value = profileData.bio.replace(/<br>/g, '\n');
+                editSong.value = profileData.song;
+                editArtist.value = profileData.artist;
+                editModal.classList.add('open');
+            });
+
+            editProfileForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                const formData = new FormData(editProfileForm);
+                formData.append('accent_color', profileData.accentColor);
+
+                fetch('/api/profile/update/', {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': getCookie('csrftoken')
+                    },
+                    body: formData
+                })
+                .then(res => res.json())
+                .then(resp => {
+                    if (resp.status === 'success') {
+                        editModal.classList.remove('open');
+                        loadMyProfile();
+                    } else {
+                        alert("Erro ao atualizar perfil: " + resp.message);
+                    }
+                })
+                .catch(err => {
+                    console.error("Erro:", err);
+                    alert("Não foi possível ligar ao servidor.");
+                });
+            });
+
+            function fetchFriendRequests() {
+                const container = document.getElementById('mailbox-friend-requests');
+                fetch('/api/friend-requests/list/')
+                .then(res => res.json())
+                .then(data => {
+                    if (data.requests && data.requests.length > 0) {
+                        container.innerHTML = data.requests.map(req => `
+                            <div style="display: flex; align-items: center; justify-content: space-between; background: var(--bg-soft); padding: 10px; border-radius: 8px; border: 1px solid var(--border-subtle);">
+                                <span style="font-weight: bold; font-size: 13px;">${req.sender}</span>
+                                <div style="display: flex; gap: 6px;">
+                                    <button onclick="acceptRequest(${req.id})" style="background: #23a55a; color: #fff; border: none; padding: 6px 10px; border-radius: 4px; font-size: 11px; font-weight: bold; cursor: pointer;">Aceitar</button>
+                                </div>
+                            </div>
+                        `).join('');
+                    } else {
+                        container.innerHTML = `<div style="font-size: 12px; color: var(--text-muted); background: var(--bg-soft); padding: 10px; border-radius: 8px; text-align: center;">Sem novos pedidos de amizade.</div>`;
+                    }
+                })
+                .catch(() => {
+                    container.innerHTML = `<div style="font-size: 12px; color: var(--text-muted); background: var(--bg-soft); padding: 10px; border-radius: 8px; text-align: center;">Sem novos pedidos de amizade.</div>`;
+                });
+            }
+
+            window.acceptRequest = function(requestId) {
+                fetch('/api/friend-request/accept/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': getCookie('csrftoken')
+                    },
+                    body: JSON.stringify({ request_id: requestId })
+                })
+                .then(res => res.json())
+                .then(resp => {
+                    alert(resp.message || "Amizade aceite!");
+                    fetchFriendRequests();
+                })
+                .catch(err => {
+                    console.error("Erro ao aceitar pedido:", err);
+                    alert("Não foi possível aceitar o pedido.");
+                });
+            };
+
+            function renderDmTabs() {
+                dmTabsListEl.innerHTML = '';
+                openDmTabs.forEach((info, uname) => {
+                    const item = document.createElement('div');
+                    item.className = `channel-item ${(currentView === 'dm' && currentDmUser === uname) ? 'active' : ''}`;
+                    item.onclick = () => openPrivateChat(uname, info.avatarUrl);
+
+                    const av = document.createElement('div');
+                    av.className = 'dm-channel-avatar';
+                    setAvatarStyle(av, info.avatarUrl, uname);
+
+                    const label = document.createElement('span');
+                    label.textContent = uname;
+                    label.style.cssText = 'overflow: hidden; text-overflow: ellipsis; white-space: nowrap;';
+
+                    const closeBtn = document.createElement('button');
+                    closeBtn.type = 'button';
+                    closeBtn.className = 'dm-close-tab';
+                    closeBtn.title = 'Fechar conversa';
+                    closeBtn.textContent = '×';
+                    closeBtn.onclick = function(e) {
+                        e.stopPropagation();
+                        openDmTabs.delete(uname);
+                        if (currentView === 'dm' && currentDmUser === uname) {
+                            switchToGeral();
+                        } else {
+                            renderDmTabs();
+                        }
+                    };
+
+                    item.appendChild(av);
+                    item.appendChild(label);
+                    item.appendChild(closeBtn);
+                    dmTabsListEl.appendChild(item);
+                });
+            }
+
+            window.switchToGeral = function() {
+                currentView = 'geral';
+                currentDmUser = null;
+                if (dmSocket) {
+                    dmSocket.close();
+                    dmSocket = null;
+                }
+
+                tabGeralEl.classList.add('active');
+                renderDmTabs();
+
+                headerDmAvatar.classList.remove('visible');
+                headerDmAvatar.onclick = null;
+                headerMainTitle.textContent = '# geral';
+                headerSubLabel.textContent = '| Chat oficial em tempo real';
+                backToGeralBtn.classList.remove('visible');
+                messageInput.placeholder = 'Conversar em #geral...';
+
+                chatLog.innerHTML = geralSnapshotHTML;
+                chatLog.scrollTop = chatLog.scrollHeight;
+            };
+
+            function appendMessageElement(data, options = {}) {
+                const isDm = Boolean(options.isDm);
+                const msgUsername = data.sender || data.username || 'Anônimo';
+                const avatarSrc =
+                    options.avatarUrl ||
+                    data.avatar ||
+                    data.avatarUrl ||
+                    (msgUsername === activeUsername ? profileData.avatarUrl : '') ||
+                    '';
+                const avatarInitial = msgUsername.charAt(0).toUpperCase() || 'K';
+                const timeText = data.time || 'Agora';
+
+                if (data.id) {
+                    const selector = isDm ? `.message-group[data-dm-id="${data.id}"]` : `.message-group[data-msg-id="${data.id}"]`;
+                    if (chatLog.querySelector(selector)) return;
+                }
+
+                const group = document.createElement('div');
+                group.className = 'message-group';
+                if (data.id) {
+                    group.setAttribute(isDm ? 'data-dm-id' : 'data-msg-id', data.id);
+                }
+
+                const avatar = document.createElement('div');
+                avatar.className = 'avatar';
+                setAvatarStyle(avatar, avatarSrc, avatarInitial);
+                avatar.onclick = () => openUserProfile(msgUsername);
+
+                const content = document.createElement('div');
+                content.className = 'message-content';
+
+                const header = document.createElement('div');
+                header.className = 'message-header';
+
+                const userSpan = document.createElement('span');
+                userSpan.className = 'username';
+                userSpan.textContent = msgUsername;
+                userSpan.onclick = () => openUserProfile(msgUsername);
+
+                const timeSpan = document.createElement('span');
+                timeSpan.className = 'timestamp';
+                timeSpan.textContent = timeText;
+
+                header.appendChild(userSpan);
+                header.appendChild(timeSpan);
+
+                if (msgUsername === activeUsername && data.id) {
+                    const delBtn = document.createElement('button');
+                    delBtn.type = 'button';
+                    delBtn.className = 'delete-msg-btn';
+                    delBtn.setAttribute(isDm ? 'data-delete-dm-id' : 'data-delete-id', data.id);
+                    delBtn.title = 'Excluir mensagem';
+                    delBtn.textContent = '🗑️ Excluir';
+                    header.appendChild(delBtn);
+                }
+
+                content.appendChild(header);
+
+                if (data.message) {
+                    const textDiv = document.createElement('div');
+                    textDiv.className = 'message-text';
+                    textDiv.textContent = data.message;
+                    content.appendChild(textDiv);
+                }
+
+                if (data.attachment_url) {
+                    if (data.attachment_type === 'image') {
+                        const img = document.createElement('img');
+                        img.src = data.attachment_url;
+                        img.alt = 'Anexo';
+                        img.className = 'msg-attachment-img';
+                        content.appendChild(img);
+                    } else if (data.attachment_type === 'audio') {
+                        const audio = document.createElement('audio');
+                        audio.controls = true;
+                        audio.src = data.attachment_url;
+                        audio.className = 'msg-attachment-audio';
+                        content.appendChild(audio);
+                    }
+                }
+
+                group.appendChild(avatar);
+                group.appendChild(content);
+
+                chatLog.appendChild(group);
+                chatLog.scrollTop = chatLog.scrollHeight;
+            }
+
+            window.openPrivateChat = function(targetUsername, knownAvatarUrl = '') {
+                if (!targetUsername || targetUsername === activeUsername) return;
+
+                fetch('/api/dm/' + encodeURIComponent(targetUsername) + '/')
+                .then(res => res.json().then(data => ({ ok: res.ok, data })))
+                .then(({ ok, data }) => {
+                    if (!ok || data.status === 'error') {
+                        alert(data.message || "Precisam de ser amigos para abrir DM.");
+                        return;
+                    }
+
+                    const applyDmHeaderAndMessages = (friendAvatar) => {
+                        openDmTabs.set(targetUsername, { username: targetUsername, avatarUrl: friendAvatar });
+                        currentView = 'dm';
+                        currentDmUser = targetUsername;
+
+                        tabGeralEl.classList.remove('active');
+                        renderDmTabs();
+
+                        headerMainTitle.textContent = targetUsername;
+                        headerSubLabel.textContent = '| Conversa privada';
+                        backToGeralBtn.classList.add('visible');
+                        messageInput.placeholder = `Conversar em privado com ${targetUsername}...`;
+
+                        setAvatarStyle(headerDmAvatar, friendAvatar, targetUsername);
+                        headerDmAvatar.classList.add('visible');
+                        headerDmAvatar.onclick = () => openUserProfile(targetUsername);
+
+                        chatLog.innerHTML = '';
+                        (data.messages || []).forEach(m => {
+                            const msgAvatar = (m.sender === activeUsername) ? profileData.avatarUrl : friendAvatar;
+                            appendMessageElement(m, { isDm: true, avatarUrl: msgAvatar });
+                        });
+
+                        if (dmSocket) {
+                            dmSocket.close();
+                            dmSocket = null;
+                        }
+
+                        const scheme = window.location.protocol === 'https:' ? 'wss://' : 'ws://';
+                        dmSocket = new WebSocket(`${scheme}${window.location.host}/ws/dm/${encodeURIComponent(targetUsername)}/`);
+
+                        dmSocket.onmessage = function(e) {
+                            const payload = JSON.parse(e.data);
+                            if (currentView !== 'dm' || currentDmUser !== targetUsername) return;
+
+                            if (payload.type === 'dm_deleted') {
+                                const el = chatLog.querySelector(`.message-group[data-dm-id="${payload.message_id}"]`);
+                                if (el) el.remove();
+                                return;
+                            }
+
+                            if (payload.type === 'dm_message' || payload.message || payload.attachment_url) {
+                                const senderAvatar = (payload.sender === activeUsername) ? profileData.avatarUrl : friendAvatar;
+                                appendMessageElement({
+                                    id: payload.id,
+                                    sender: payload.sender,
+                                    message: payload.message || '',
+                                    attachment_url: payload.attachment_url || '',
+                                    attachment_type: payload.attachment_type || '',
+                                    time: 'Agora'
+                                }, { isDm: true, avatarUrl: senderAvatar });
+                            }
+                        };
+                    };
+
+                    if (knownAvatarUrl) {
+                        applyDmHeaderAndMessages(knownAvatarUrl);
+                    } else {
+                        fetch('/api/profile/' + encodeURIComponent(targetUsername) + '/')
+                        .then(r => r.json())
+                        .then(p => applyDmHeaderAndMessages(p.avatarUrl || ''))
+                        .catch(() => applyDmHeaderAndMessages(''));
+                    }
+                })
+                .catch(err => {
+                    console.error("Erro ao abrir DM:", err);
+                    alert("Não foi possível abrir o chat privado.");
+                });
+            };
+
+            window.openUserProfile = function(username) {
+                if (username === activeUsername) {
+                    aestheticModal.classList.add('open');
+                    return;
+                }
+
+                fetch('/api/profile/' + username + '/')
+                .then(res => res.json())
+                .then(otherData => {
+                    document.getElementById('other-profile-username').textContent = otherData.username;
+                    document.getElementById('other-profile-status-bubble').textContent = otherData.bubble || '🌸 Olá, estou no Kiwi Chat!';
+                    document.getElementById('other-profile-pronouns').textContent = otherData.pronouns || 'utilizador • 🥝';
+                    document.getElementById('other-profile-bio').innerHTML = otherData.bio || 'Perfil estético ativo.';
+
+                    const oAvatar = document.getElementById('other-profile-avatar');
+                    const oBanner = document.getElementById('other-profile-banner');
+
+                    setAvatarStyle(oAvatar, otherData.avatarUrl, username);
+
+                    if (otherData.bannerUrl && otherData.bannerUrl.trim() !== '') {
+                        oBanner.style.backgroundImage = `url('${otherData.bannerUrl}')`;
+                        oBanner.style.backgroundSize = 'cover';
+                        oBanner.style.backgroundPosition = 'center';
+                    } else {
+                        oBanner.style.backgroundImage = 'var(--auth-artwork)';
+                        oBanner.style.backgroundColor = otherData.accent_color || '#ff9de2';
+                    }
+
+                    const addFriendBtn = document.getElementById('add-friend-btn');
+                    addFriendBtn.onclick = function() {
+                        fetch('/api/friend-request/send/', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-CSRFToken': getCookie('csrftoken')
+                            },
+                            body: JSON.stringify({ username: username })
+                        })
+                        .then(r => r.json())
+                        .then(resp => {
+                            alert(resp.message || "Pedido de amizade enviado!");
+                            otherProfileModal.classList.remove('open');
+                        })
+                        .catch(err => {
+                            console.error("Erro ao enviar pedido:", err);
+                            alert("Não foi possível enviar o pedido de amizade.");
+                        });
+                    };
+
+                    const dmBtn = document.getElementById('dm-btn');
+                    dmBtn.style.display = otherData.is_friend ? 'flex' : 'none';
+                    dmBtn.onclick = function() {
+                        otherProfileModal.classList.remove('open');
+                        openPrivateChat(username, otherData.avatarUrl || '');
+                    };
+
+                    otherProfileModal.classList.add('open');
+                })
+                .catch(err => {
+                    console.error("Erro ao carregar perfil de terceiros:", err);
+                    alert("Não foi possível carregar o perfil do utilizador.");
+                });
+            };
+
+            function getCookie(name) {
+                let cookieValue = null;
+                if (document.cookie && document.cookie !== '') {
+                    const cookies = document.cookie.split(';');
+                    for (let i = 0; i < cookies.length; i++) {
+                        const cookie = cookies[i].trim();
+                        if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                            cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                            break;
+                        }
+                    }
+                }
+                if (!cookieValue && name === 'csrftoken') {
+                    const inputEl = document.querySelector('#csrf-helper-form input[name="csrfmiddlewaretoken"]');
+                    if (inputEl) cookieValue = inputEl.value;
+                }
+                return cookieValue || '';
+            }
+
+            const tabs = document.querySelectorAll('.social-tab');
+            const socialContentContainer = document.getElementById('social-content-container');
+
+            function getOnlineContent() {
+                let avatarStyleHtml = profileData.avatarUrl ? `background-image: url('${profileData.avatarUrl}'); background-size: cover; background-position: center; color: transparent;` : '';
+                let avatarText = profileData.avatarUrl ? '' : activeUsername.charAt(0).toUpperCase();
+
+                return `
+                    <div style="font-size: 11px; font-weight: bold; text-transform: uppercase; margin-bottom: 10px;">Online — 1</div>
+                    <div class="social-list-item" onclick="openUserProfile('${activeUsername}')">
+                        <div class="mini-avatar" style="width:28px; height:28px; font-size:12px; ${avatarStyleHtml}">${avatarText}</div>
+                        <div>
+                            <div style="font-size:13px; font-weight:600;">${activeUsername}</div>
+                            <div style="font-size:10px; color:#23a55a;">● Online</div>
+                        </div>
+                    </div>
+                `;
+            }
+
+            function fetchFriendsList() {
+                const container = document.getElementById('friends-list-container');
+                fetch('/api/friends/list/')
+                .then(res => res.json())
+                .then(data => {
+                    if (data.friends && data.friends.length > 0) {
+                        container.innerHTML = `
+                            <div style="font-size: 11px; font-weight: bold; text-transform: uppercase; margin-bottom: 10px;">A tua lista de amigos</div>
+                            <div style="display: flex; flex-direction: column; gap: 6px;">
+                                ${data.friends.map(friend => {
+                                    let avatarStyle = friend.avatarUrl ? `background-image: url('${friend.avatarUrl}'); background-size: cover; background-position: center; color: transparent;` : '';
+                                    let avatarText = friend.avatarUrl ? '' : friend.username.charAt(0).toUpperCase();
+                                    const safeAvatar = encodeURIComponent(friend.avatarUrl || '');
+
+                                    return `
+                                        <div class="social-list-item" onclick="openUserProfile('${friend.username}')">
+                                            <div class="mini-avatar" style="width:28px; height:28px; font-size:12px; ${avatarStyle}">${avatarText}</div>
+                                            <div>
+                                                <div style="font-size:13px; font-weight:600;">${friend.username}</div>
+                                                <div style="font-size:10px; color:#23a55a;">● Amigo</div>
+                                            </div>
+                                            <button type="button" class="dm-quick-btn" title="Mensagem Privada" onclick="event.stopPropagation(); openPrivateChat('${friend.username}', decodeURIComponent('${safeAvatar}'))">💬</button>
+                                        </div>
+                                    `;
+                                }).join('')}
+                            </div>
+                        `;
+                    } else {
+                        container.innerHTML = `<div style="font-size:12px; color:var(--text-muted); text-align:center; margin-top:20px;">Ainda não tens amigos adicionados no Kiwi.</div>`;
+                    }
+                })
+                .catch(() => {
+                    container.innerHTML = `<div style="font-size:12px; color:var(--text-muted); text-align:center; margin-top:20px;">Erro ao carregar amigos.</div>`;
+                });
+            }
+
+            const tabContents = {
+                'online': getOnlineContent(),
+                'amigos': `<div id="friends-list-container" style="font-size:12px; color:var(--text-muted); text-align:center; margin-top:20px;">A carregar amigos...</div>`,
+                'seguidores': `
+                    <div style="font-size: 11px; font-weight: bold; text-transform: uppercase; margin-bottom: 10px;">Seguidores recentes</div>
+                    <div style="font-size:12px; color:var(--text-muted); text-align:center; margin-top:20px;">Nenhum seguidor por enquanto.</div>
+                `
+            };
+
+            socialContentContainer.innerHTML = tabContents['online'];
+
+            tabs.forEach(tab => {
+                tab.addEventListener('click', () => {
+                    tabs.forEach(t => t.classList.remove('active'));
+                    tab.classList.add('active');
+                    let target = tab.getAttribute('data-tab');
+                    if (target === 'online') {
+                        socialContentContainer.innerHTML = getOnlineContent();
+                    } else if (target === 'amigos') {
+                        socialContentContainer.innerHTML = tabContents['amigos'];
+                        fetchFriendsList();
+                    } else {
+                        socialContentContainer.innerHTML = tabContents[target];
+                    }
+                });
+            });
+
+            const wsScheme = window.location.protocol === "https:" ? "wss://" : "ws://";
+            const chatSocket = new WebSocket(
+                wsScheme + window.location.host + "/ws/chat/" + roomName + "/"
+            );
+
+            chatLog.addEventListener('click', function(e) {
+                const delGeralBtn = e.target.closest('[data-delete-id]');
+                if (delGeralBtn) {
+                    const msgId = delGeralBtn.getAttribute('data-delete-id');
+                    if (msgId && chatSocket.readyState === WebSocket.OPEN) {
+                        chatSocket.send(JSON.stringify({
+                            'action': 'delete_message',
+                            'message_id': Number(msgId),
+                            'username': activeUsername
+                        }));
+                    }
+                    return;
+                }
+
+                const delDmBtn = e.target.closest('[data-delete-dm-id]');
+                if (delDmBtn) {
+                    const dmId = delDmBtn.getAttribute('data-delete-dm-id');
+                    if (dmId && dmSocket && dmSocket.readyState === WebSocket.OPEN) {
+                        dmSocket.send(JSON.stringify({
+                            'action': 'delete_dm',
+                            'message_id': Number(dmId)
+                        }));
+                    }
+                }
+            });
+
+            chatSocket.onmessage = function(e) {
+                const data = JSON.parse(e.data);
+
+                if (data.type === 'message_deleted') {
+                    const msgEl = chatLog.querySelector(`.message-group[data-msg-id="${data.message_id}"]`);
+                    if (msgEl) {
+                        msgEl.remove();
+                    }
+                    return;
+                }
+
+                if (currentView === 'geral') {
+                    const msgUser = data.sender || data.username || 'Anônimo';
+                    const resolvedAvatar =
+                        data.avatar ||
+                        data.avatarUrl ||
+                        (msgUser === activeUsername ? profileData.avatarUrl : '');
+
+                    appendMessageElement(data, {
+                        isDm: false,
+                        avatarUrl: resolvedAvatar
+                    });
+                }
+            };
+
+            function clearPendingAttachment() {
+                pendingAttachmentFile = null;
+                attachmentFileInput.value = '';
+                if (previewImg.src && previewImg.src.startsWith('blob:')) {
+                    URL.revokeObjectURL(previewImg.src);
+                }
+                previewImg.src = '';
+                previewImg.style.display = 'none';
+                previewName.textContent = '';
+                previewBar.style.display = 'none';
+            }
+
+            async function uploadAndBroadcastAttachment(file) {
+                const textVal = messageInput.value.trim();
+                const targetVal = (currentView === 'dm' && currentDmUser) ? currentDmUser : 'geral';
+                const csrfToken = getCookie('csrftoken') || document.querySelector('[name=csrfmiddlewaretoken]')?.value || '';
+
+                const formData = new FormData();
+                formData.append('file', file);
+                formData.append('target', targetVal);
+                formData.append('room', roomName);
+                formData.append('content', textVal);
+
+                try {
+                    const res = await fetch('/api/upload-attachment/', {
+                        method: 'POST',
+                        headers: {
+                            'X-CSRFToken': csrfToken
+                        },
+                        body: formData
+                    });
+
+                    const rawText = await res.text();
+                    let resp = {};
+                    try {
+                        resp = JSON.parse(rawText);
+                    } catch (_) {
+                        throw new Error(`HTTP ${res.status} ao contactar /api/upload-attachment/`);
+                    }
+
+                    if (!res.ok || resp.status !== 'success') {
+                        alert(resp.message || `Falha ao enviar anexo (HTTP ${res.status}).`);
+                        return;
+                    }
+
+                    messageInput.value = '';
+
+                    if (targetVal === 'geral') {
+                        if (chatSocket && chatSocket.readyState === WebSocket.OPEN) {
+                            chatSocket.send(JSON.stringify({
+                                'id': resp.id,
+                                'message': textVal,
+                                'attachment_url': resp.attachment_url,
+                                'attachment_type': resp.attachment_type,
+                                'username': activeUsername,
+                                'avatar': profileData.avatarUrl || '',
+                                'avatarUrl': profileData.avatarUrl || ''
+                            }));
+                        } else {
+                            appendMessageElement({
+                                id: resp.id,
+                                sender: activeUsername,
+                                message: textVal,
+                                attachment_url: resp.attachment_url,
+                                attachment_type: resp.attachment_type,
+                                avatar: profileData.avatarUrl || '',
+                                avatarUrl: profileData.avatarUrl || '',
+                                time: 'Agora'
+                            }, { isDm: false, avatarUrl: profileData.avatarUrl || '' });
+                        }
+                    } else {
+                        if (dmSocket && dmSocket.readyState === WebSocket.OPEN) {
+                            dmSocket.send(JSON.stringify({
+                                'id': resp.id,
+                                'message': textVal,
+                                'attachment_url': resp.attachment_url,
+                                'attachment_type': resp.attachment_type
+                            }));
+                        } else {
+                            appendMessageElement({
+                                id: resp.id,
+                                sender: activeUsername,
+                                message: textVal,
+                                attachment_url: resp.attachment_url,
+                                attachment_type: resp.attachment_type,
+                                time: 'Agora'
+                            }, { isDm: true, avatarUrl: profileData.avatarUrl || '' });
+                        }
+                    }
+                } catch (err) {
+                    console.error('Erro ao enviar anexo:', err);
+                    alert('Erro ao enviar o ficheiro: ' + (err.message || err));
+                }
+            }
+
+            uploadMediaBtn.addEventListener('click', () => {
+                attachmentFileInput.value = '';
+                attachmentFileInput.click();
+            });
+
+            attachmentFileInput.addEventListener('change', function() {
+                const file = this.files && this.files[0];
+                if (!file) return;
+
+                clearPendingAttachment();
+                pendingAttachmentFile = file;
+                previewName.textContent = file.name;
+                previewBar.style.display = 'flex';
+
+                if (file.type.startsWith('image/') || /\.(png|jpe?g|gif|webp)$/i.test(file.name)) {
+                    previewImg.src = URL.createObjectURL(file);
+                    previewImg.style.display = 'block';
+                }
+            });
+
+            clearAttachmentBtn.addEventListener('click', clearPendingAttachment);
+
+            recordAudioBtn.addEventListener('click', async function() {
+                if (mediaRecorder && mediaRecorder.state === 'recording') {
+                    mediaRecorder.stop();
+                    return;
+                }
+
+                if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+                    alert('O teu navegador não suporta gravação de áudio.');
+                    return;
+                }
+
+                try {
+                    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                    audioChunks = [];
+                    mediaRecorder = new MediaRecorder(stream);
+
+                    mediaRecorder.ondataavailable = (e) => {
+                        if (e.data && e.data.size > 0) {
+                            audioChunks.push(e.data);
+                        }
+                    };
+
+                    mediaRecorder.onstop = async () => {
+                        stream.getTracks().forEach(track => track.stop());
+                        recordAudioBtn.classList.remove('recording');
+                        recordAudioBtn.textContent = '🎙️';
+                        recordAudioBtn.title = 'Gravar Áudio';
+
+                        if (audioChunks.length > 0) {
+                            const blob = new Blob(audioChunks, { type: 'audio/webm' });
+                            const file = new File([blob], `voz_${Date.now()}.webm`, { type: 'audio/webm' });
+                            await uploadAndBroadcastAttachment(file);
+                        }
+                    };
+
+                    mediaRecorder.start();
+                    recordAudioBtn.classList.add('recording');
+                    recordAudioBtn.textContent = '⏹️';
+                    recordAudioBtn.title = 'Parar e Enviar Áudio';
+                } catch (err) {
+                    console.error('Erro no microfone:', err);
+                    alert('Não foi possível aceder ao microfone.');
+                }
+            });
+
+            async function sendMessage() {
+                if (pendingAttachmentFile) {
+                    const fileToSend = pendingAttachmentFile;
+                    clearPendingAttachment();
+                    await uploadAndBroadcastAttachment(fileToSend);
+                    return;
+                }
+
+                const message = messageInput.value.trim();
+                if (!message) return;
+
+                if (currentView === 'dm') {
+                    if (!dmSocket || dmSocket.readyState !== WebSocket.OPEN || !currentDmUser) {
+                        alert("A ligação da conversa privada está fechada. Abra a DM novamente.");
+                        return;
+                    }
+                    dmSocket.send(JSON.stringify({
+                        'message': message
+                    }));
+                    messageInput.value = '';
+                    return;
+                }
+
+                if (chatSocket.readyState !== WebSocket.OPEN) {
+                    alert("A ligação WebSocket está fechada. Atualize a página.");
+                    return;
+                }
+
+                chatSocket.send(JSON.stringify({
+                    'message': message,
+                    'username': activeUsername,
+                    'avatar': profileData.avatarUrl || '',
+                    'avatarUrl': profileData.avatarUrl || ''
+                }));
+
+                messageInput.value = '';
+            }
+
+            submitButton.addEventListener('click', sendMessage);
+            messageInput.addEventListener('keyup', function(e) {
+                if (e.key === 'Enter') {
+                    sendMessage();
+                }
+            });
+        });
+    </script>
+</body>
+</html>
