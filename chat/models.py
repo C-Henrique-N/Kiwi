@@ -127,6 +127,10 @@ class FriendRequest(models.Model):
     class Meta:
         unique_together = ('sender', 'receiver')
         ordering = ['-updated_at', '-created_at']
+        indexes = [
+            models.Index(fields=['sender', 'status']),
+            models.Index(fields=['receiver', 'status']),
+        ]
 
     @staticmethod
     def are_friends(user_a, user_b):
@@ -180,12 +184,15 @@ class Message(models.Model):
     )
     content = models.TextField(blank=True)
     attachment = models.FileField(upload_to='chat_attachments/', blank=True, null=True)
-    attachment_type = models.CharField(max_length=20, blank=True)  # 'image', 'audio' ou 'document'
+    attachment_type = models.CharField(max_length=20, blank=True)
     client_id = models.CharField(max_length=100, blank=True, default='', db_index=True)
     timestamp = models.DateTimeField(auto_now_add=True)
 
     class Meta:
         ordering = ['timestamp', 'id']
+        indexes = [
+            models.Index(fields=['channel', 'timestamp']),
+        ]
 
     def to_dict(self):
         return {
@@ -221,12 +228,15 @@ class PrivateMessage(models.Model):
     )
     content = models.TextField(blank=True)
     attachment = models.FileField(upload_to='chat_attachments/', blank=True, null=True)
-    attachment_type = models.CharField(max_length=20, blank=True)  # 'image', 'audio' ou 'document'
+    attachment_type = models.CharField(max_length=20, blank=True)
     client_id = models.CharField(max_length=100, blank=True, default='', db_index=True)
     timestamp = models.DateTimeField(auto_now_add=True)
 
     class Meta:
         ordering = ['timestamp', 'id']
+        indexes = [
+            models.Index(fields=['sender', 'receiver', 'timestamp']),
+        ]
 
     def to_dict(self):
         return {

@@ -1,5 +1,6 @@
 import json
 import os
+from urllib.parse import urlparse
 from asgiref.sync import async_to_sync
 from channels.layers import get_channel_layer
 from django.contrib import messages
@@ -78,6 +79,18 @@ def is_akiira_admin(user):
 
 def are_friends(user1, user2):
     return FriendRequest.are_friends(user1, user2)
+
+
+def _sanitize_external_url(raw_url):
+    val = (raw_url or '').strip()
+    if not val:
+        return ''
+    if val.startswith('/media/'):
+        return val
+    parsed = urlparse(val)
+    if parsed.scheme in {'http', 'https'} and parsed.netloc:
+        return val
+    return ''
 
 
 def _sanitize_accent_color(color_value, user, fallback='#ff9de2'):
@@ -343,7 +356,7 @@ def update_profile(request):
             profile.name_style = ''
 
     if 'music_url' in request.POST:
-        profile.music_url = (request.POST.get('music_url') or '').strip()
+        profile.music_url = _sanitize_external_url(request.POST.get('music_url'))
 
     audio_uploaded = 'music_audio' in request.FILES
     cover_uploaded = 'music_cover' in request.FILES
@@ -357,8 +370,9 @@ def update_profile(request):
             profile.music_audio_url = ''
             profile.music_audio_file = None
         else:
-            profile.music_audio_url = audio_val
-            if not audio_val.startswith('/media/'):
+            safe_audio = _sanitize_external_url(audio_val)
+            profile.music_audio_url = safe_audio
+            if not safe_audio.startswith('/media/'):
                 profile.music_audio_file = None
 
     if cover_uploaded:
@@ -370,8 +384,9 @@ def update_profile(request):
             profile.music_cover_url = ''
             profile.music_cover_file = None
         else:
-            profile.music_cover_url = cover_val
-            if not cover_val.startswith('/media/'):
+            safe_cover = _sanitize_external_url(cover_val)
+            profile.music_cover_url = safe_cover
+            if not safe_cover.startswith('/media/'):
                 profile.music_cover_file = None
 
     if 'avatar' in request.FILES:
@@ -511,9 +526,9 @@ def list_saved_musics(request):
 def create_saved_music(request):
     title = (request.POST.get('title') or '').strip()
     artist = (request.POST.get('artist') or '').strip()
-    music_url = (request.POST.get('music_url') or '').strip()
-    audio_url = (request.POST.get('audio_url') or '').strip()
-    cover_url = (request.POST.get('cover_url') or '').strip()
+    music_url = _sanitize_external_url(request.POST.get('music_url'))
+    audio_url = _sanitize_external_url(request.POST.get('audio_url'))
+    cover_url = _sanitize_external_url(request.POST.get('cover_url'))
     audio_file = request.FILES.get('audio_file')
     cover_file = request.FILES.get('cover_file')
 
@@ -558,7 +573,7 @@ def delete_saved_music(request, music_id):
 
 def register_view(request):
     if request.user.is_authenticated:
-        return redirect('room')
+        return redirect('room_home')
 
     if request.method == 'POST':
         username = (request.POST.get('username') or '').strip()
@@ -577,14 +592,14 @@ def register_view(request):
             user = User.objects.create_user(username=username, password=password)
             UserProfile.objects.get_or_create(user=user)
             login(request, user)
-            return redirect('room')
+            return redirect('room_home')
 
     return render(request, 'chat/register.html')
 
 
 def login_view(request):
     if request.user.is_authenticated:
-        return redirect('room')
+        return redirect('room_home')
 
     next_url = request.POST.get('next') or request.GET.get('next') or ''
 
@@ -596,7 +611,7 @@ def login_view(request):
             login(request, user)
             if next_url and url_has_allowed_host_and_scheme(next_url, allowed_hosts={request.get_host()}):
                 return redirect(next_url)
-            return redirect('room')
+            return redirect('room_home')
         messages.error(request, 'Utilizador ou senha inválidos.')
 
     return render(request, 'chat/login.html', {'next': next_url})
@@ -791,7 +806,7 @@ def delete_message(request, message_id):
             f'chat_{channel_id}',
             {
                 'type': 'message_deleted',
-                'id': message_id,
+                'message_id': message_id,
             },
         )
 
@@ -815,8 +830,8 @@ def delete_dm_message(request, message_id):
         async_to_sync(channel_layer.group_send)(
             f'dm_{ids[0]}_{ids[1]}',
             {
-                'type': 'dm_message_deleted',
-                'id': message_id,
+                'type': 'dm_deleted',
+                'message_id': message_id,
             },
         )
 
@@ -972,6 +987,12 @@ def remove_friend(request):
 
         if deleted_count == 0:
             return JsonResponse({'status': 'error', 'message': 'Vocês não são amigos.'}, status=400)
+
+        _notify_user_group(
+            other_user.id,
+            'friend_removed',
+            {'username': request.user.username},
+        )
 
         return JsonResponse({'status': 'success', 'message': f'Amizade com {other_user.username} removida.'})
     except Http404:
