@@ -1641,7 +1641,7 @@
             </div>
             <div class="user-panel-actions">
                 <button class="icon-btn" id="mailbox-btn" title="Caixa de Mensagens & Atualizações">📬</button>
-                <button class="icon-btn" id="settings-btn" title="Perfil Estético">⚙️</button>
+                <button class="icon-btn" id="settings-btn" title="Definições e Cores">⚙️</button>
                 <a href="{% url 'logout' %}" class="icon-btn" title="Terminar Sessão" style="text-decoration: none; display: flex; align-items: center; justify-content: center;">🚪</a>
             </div>
         </div>
@@ -1656,16 +1656,6 @@
                 <span class="sub" id="header-sub-label">| Chat oficial em tempo real</span>
                 <button type="button" class="header-call-btn" id="header-call-btn">📞 Call</button>
                 <button type="button" class="back-geral-btn" id="back-to-geral-btn" onclick="switchToGeral()">← # geral</button>
-            </div>
-            <div class="theme-picker-container">
-                <span style="font-size: 12px; color: var(--text-muted); margin-right: 4px;">Tema:</span>
-                <div class="theme-ball active" style="background: #ffffff;" data-color="#ffffff" title="Branco Padrão"></div>
-                <div class="theme-ball" style="background: #2b2d31;" data-color="#2b2d31" title="Cinza Escuro"></div>
-                <div class="theme-ball" style="background: #ff9de2;" data-color="#ff9de2" title="Rosa Vivo Pastel"></div>
-                <div class="theme-ball" style="background: #e74c3c;" data-color="#e74c3c" title="Vermelho Vibrante"></div>
-                <div class="theme-ball" style="background: #23a55a;" data-color="#23a55a" title="Verde Kiwi"></div>
-                <div class="theme-ball" style="background: #5865f2;" data-color="#5865f2" title="Azul Discord"></div>
-                <div class="theme-ball" style="background: #95a5a6;" data-color="#95a5a6" title="Cinza Elegante"></div>
             </div>
         </div>
 
@@ -1775,6 +1765,41 @@
         <div class="social-content-area" id="social-content-container"></div>
         <div class="sidebar-artwork-card" title="Capa oficial Kiwi Chat">
             <span class="sidebar-artwork-badge">🥝 Kiwi Aesthetic</span>
+        </div>
+    </div>
+
+    <!-- PAINEL DE DEFINIÇÕES DE APARÊNCIA & CORES -->
+    <div id="settings-colors-modal" class="modal-overlay">
+        <div class="aesthetic-profile-card" style="padding: 20px; width: 410px; max-height: 88vh; overflow-y: auto;">
+            <button class="close-modal-btn" id="close-settings-colors-btn">×</button>
+            <h3 style="color: var(--text-main); margin-bottom: 14px; font-size: 16px; display: flex; align-items: center; gap: 8px;">
+                ⚙️ Definições — Aparência &amp; Cores
+            </h3>
+
+            <div style="background: var(--bg-soft); border: 1px solid var(--border-subtle); border-radius: 12px; padding: 12px; margin-bottom: 14px;">
+                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px;">
+                    <span style="font-size: 12px; font-weight: 700; color: var(--text-muted); text-transform: uppercase;">Tema:</span>
+                    <span id="settings-active-color-name" style="font-size: 11px; font-weight: 600; color: var(--text-main);">Branco Padrão</span>
+                </div>
+                <div class="theme-picker-container" style="justify-content: space-between; flex-wrap: wrap; gap: 8px;">
+                    <div class="theme-ball active" style="background: #ffffff;" data-color="#ffffff" data-label="Branco Padrão" title="Branco Padrão"></div>
+                    <div class="theme-ball" style="background: #2b2d31;" data-color="#2b2d31" data-label="Cinza Escuro" title="Cinza Escuro"></div>
+                    <div class="theme-ball" style="background: #ff9de2;" data-color="#ff9de2" data-label="Rosa Vivo Pastel" title="Rosa Vivo Pastel"></div>
+                    <div class="theme-ball" style="background: #e74c3c;" data-color="#e74c3c" data-label="Vermelho Vibrante" title="Vermelho Vibrante"></div>
+                    <div class="theme-ball" style="background: #23a55a;" data-color="#23a55a" data-label="Verde Kiwi" title="Verde Kiwi"></div>
+                    <div class="theme-ball" style="background: #5865f2;" data-color="#5865f2" data-label="Azul Discord" title="Azul Discord"></div>
+                    <div class="theme-ball" style="background: #95a5a6;" data-color="#95a5a6" data-label="Cinza Elegante" title="Cinza Elegante"></div>
+                </div>
+            </div>
+
+            <div style="display: flex; flex-direction: column; gap: 8px;">
+                <button type="button" id="open-profile-from-settings-btn" class="btn-aesthetic-edit" style="background: var(--bg-soft); color: var(--text-main); border: 1px solid var(--border-subtle);">
+                    👤 Abrir Perfil Estético
+                </button>
+                <button type="button" id="open-edit-from-settings-btn" class="btn-aesthetic-edit">
+                    ✏️ Editar Perfil
+                </button>
+            </div>
         </div>
     </div>
 
@@ -1904,8 +1929,8 @@
             <div>
                 <h4 style="font-size: 12px; text-transform: uppercase; color: var(--text-muted); margin-bottom: 8px;">Notas de Atualizações (Changelog)</h4>
                 <div style="background: var(--bg-soft); padding: 12px; border-radius: 8px; font-size: 12px; line-height: 1.5; color: var(--text-main);">
-                    <div style="font-weight: bold; color: #5865f2; margin-bottom: 4px;">✨ Versão 3.1 - Música, Brilho e Admin</div>
-                    • Player do YouTube no perfil ou fixo no layout, brilho no cartão e selo dourado de ADMIN.
+                    <div style="font-weight: bold; color: #5865f2; margin-bottom: 4px;">✨ Versão 3.2 - Definições de Cores</div>
+                    • Seletor de cores do tema integrado no menu de Definições (⚙️).
                 </div>
             </div>
         </div>
@@ -2047,7 +2072,9 @@
 
             function formatSafeBioHtml(rawBio) {
                 const escaped = escapeHtmlText(rawBio || '');
-                return escaped.replace(/\r?\n|<br\s*\/?>/gi, '<br>');
+                return escaped.replace(/
+?
+|<br\s*\/?>/gi, '<br>');
             }
 
             function isSafeAssetUrl(url) {
@@ -3615,11 +3642,20 @@
                 }
             }
 
+            const settingsColorsModal = document.getElementById('settings-colors-modal');
+            const closeSettingsColorsBtn = document.getElementById('close-settings-colors-btn');
+            const openProfileFromSettingsBtn = document.getElementById('open-profile-from-settings-btn');
+            const openEditFromSettingsBtn = document.getElementById('open-edit-from-settings-btn');
+            const settingsActiveColorName = document.getElementById('settings-active-color-name');
+
             themeBalls.forEach(ball => {
                 ball.addEventListener('click', () => {
                     const chosenColor = ball.getAttribute('data-color');
                     if (!chosenColor || !themesMap[chosenColor]) return;
                     profileData.accentColor = chosenColor;
+                    if (settingsActiveColorName) {
+                        settingsActiveColorName.textContent = ball.getAttribute('data-label') || chosenColor;
+                    }
                     updateUI();
                     persistThemePreference(chosenColor);
                 });
@@ -3631,10 +3667,27 @@
                     aestheticModal.classList.add('open');
                 });
             }
-            if (settingsBtn && aestheticModal) {
+            if (settingsBtn && settingsColorsModal) {
                 settingsBtn.addEventListener('click', () => {
+                    settingsColorsModal.classList.add('open');
+                });
+            }
+            if (closeSettingsColorsBtn && settingsColorsModal) {
+                closeSettingsColorsBtn.addEventListener('click', () => {
+                    settingsColorsModal.classList.remove('open');
+                });
+            }
+            if (openProfileFromSettingsBtn && settingsColorsModal && aestheticModal) {
+                openProfileFromSettingsBtn.addEventListener('click', () => {
+                    settingsColorsModal.classList.remove('open');
                     applyMusicPlacement();
                     aestheticModal.classList.add('open');
+                });
+            }
+            if (openEditFromSettingsBtn && settingsColorsModal && editModal) {
+                openEditFromSettingsBtn.addEventListener('click', () => {
+                    settingsColorsModal.classList.remove('open');
+                    switchToEditBtn.click();
                 });
             }
             if (mailboxBtn && mailboxModal) {
@@ -3658,7 +3711,8 @@
                 aestheticModal.classList.remove('open');
                 editBubble.value = profileData.bubble;
                 editPronouns.value = profileData.pronouns;
-                editBio.value = profileData.bio.replace(/<br\s*\/?>/gi, '\n');
+                editBio.value = profileData.bio.replace(/<br\s*\/?>/gi, '
+');
                 editSong.value = profileData.song;
                 editArtist.value = profileData.artist;
                 if (editYtUrl) editYtUrl.value = musicSettings.url;
