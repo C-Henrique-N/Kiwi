@@ -2020,6 +2020,7 @@
         }, 900);
         setTimeout(dismissKiwiSplash, 1400);
         window.addEventListener('load', () => setTimeout(dismissKiwiSplash, 700));
+        setTimeout(dismissKiwiSplash, 3000);
 
         document.addEventListener("DOMContentLoaded", function() {
             setTimeout(() => {
@@ -2046,9 +2047,7 @@
 
             function formatSafeBioHtml(rawBio) {
                 const escaped = escapeHtmlText(rawBio || '');
-                return escaped.replace(/
-?
-|<br\s*\/?>/gi, '<br>');
+                return escaped.replace(/\r?\n|<br\s*\/?>/gi, '<br>');
             }
 
             function isSafeAssetUrl(url) {
@@ -3659,8 +3658,7 @@
                 aestheticModal.classList.remove('open');
                 editBubble.value = profileData.bubble;
                 editPronouns.value = profileData.pronouns;
-                editBio.value = profileData.bio.replace(/<br\s*\/?>/gi, '
-');
+                editBio.value = profileData.bio.replace(/<br\s*\/?>/gi, '\n');
                 editSong.value = profileData.song;
                 editArtist.value = profileData.artist;
                 if (editYtUrl) editYtUrl.value = musicSettings.url;
