@@ -98,10 +98,11 @@ class FriendRequest(models.Model):
     receiver = models.ForeignKey(User, on_delete=models.CASCADE, related_name='received_friend_requests')
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
     created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
         unique_together = ('sender', 'receiver')
-        ordering = ['-created_at']
+        ordering = ['-updated_at', '-created_at']
 
     @staticmethod
     def are_friends(user_a, user_b):
@@ -112,6 +113,26 @@ class FriendRequest(models.Model):
         ).filter(
             Q(sender=user_a, receiver=user_b) | Q(sender=user_b, receiver=user_a)
         ).exists()
+
+    @staticmethod
+    def get_friends_for_user(user):
+        if not user or not user.pk:
+            return []
+        qs = FriendRequest.objects.filter(status='accepted').filter(
+            Q(sender=user) | Q(receiver=user)
+        ).select_related('sender', 'receiver')
+        friends = []
+        seen_ids = set()
+        for req in qs:
+            peer = req.receiver if req.sender_id == user.pk else req.sender
+            if peer.id not in seen_ids:
+                seen_ids.add(peer.id)
+                friends.append({
+                    'id': peer.id,
+                    'username': peer.username,
+                    'friendship_id': req.id,
+                })
+        return friends
 
     def __str__(self):
         return f'{self.sender} -> {self.receiver} ({self.status})'
@@ -126,13 +147,38 @@ class Message(models.Model):
         null=True,
         blank=True,
     )
+    reply_to = models.ForeignKey(
+        'self',
+        on_delete=models.SET_NULL,
+        related_name='replies',
+        null=True,
+        blank=True,
+    )
     content = models.TextField(blank=True)
     attachment = models.FileField(upload_to='chat_attachments/', blank=True, null=True)
     attachment_type = models.CharField(max_length=20, blank=True)  # 'image', 'audio' ou 'document'
+    client_id = models.CharField(max_length=100, blank=True, default='', db_index=True)
     timestamp = models.DateTimeField(auto_now_add=True)
 
     class Meta:
-        ordering = ['timestamp']
+        ordering = ['timestamp', 'id']
+
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'client_id': self.client_id,
+            'kind': 'channel',
+            'channel_id': self.channel_id,
+            'server_id': self.channel.server_id if self.channel else None,
+            'author_id': self.user_id,
+            'author': self.user.username,
+            'reply_to': self.reply_to_id,
+            'content': self.content,
+            'attachment_url': self.attachment.url if self.attachment else '',
+            'attachment_name': self.attachment.name.split('/')[-1] if self.attachment else '',
+            'attachment_type': self.attachment_type,
+            'timestamp': self.timestamp.isoformat(),
+        }
 
     def __str__(self):
         target = self.channel.name if self.channel else 'sem-canal'
@@ -142,13 +188,38 @@ class Message(models.Model):
 class PrivateMessage(models.Model):
     sender = models.ForeignKey(User, on_delete=models.CASCADE, related_name='sent_dm_messages')
     receiver = models.ForeignKey(User, on_delete=models.CASCADE, related_name='received_dm_messages')
+    reply_to = models.ForeignKey(
+        'self',
+        on_delete=models.SET_NULL,
+        related_name='dm_replies',
+        null=True,
+        blank=True,
+    )
     content = models.TextField(blank=True)
     attachment = models.FileField(upload_to='chat_attachments/', blank=True, null=True)
     attachment_type = models.CharField(max_length=20, blank=True)  # 'image', 'audio' ou 'document'
+    client_id = models.CharField(max_length=100, blank=True, default='', db_index=True)
     timestamp = models.DateTimeField(auto_now_add=True)
 
     class Meta:
-        ordering = ['timestamp']
+        ordering = ['timestamp', 'id']
+
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'client_id': self.client_id,
+            'kind': 'dm',
+            'author_id': self.sender_id,
+            'author': self.sender.username,
+            'recipient_id': self.receiver_id,
+            'recipient': self.receiver.username,
+            'reply_to': self.reply_to_id,
+            'content': self.content,
+            'attachment_url': self.attachment.url if self.attachment else '',
+            'attachment_name': self.attachment.name.split('/')[-1] if self.attachment else '',
+            'attachment_type': self.attachment_type,
+            'timestamp': self.timestamp.isoformat(),
+        }
 
     def __str__(self):
         return f'DM {self.sender.username} -> {self.receiver.username}: {self.content[:30]}'

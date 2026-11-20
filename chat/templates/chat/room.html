@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="pt">
+<html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -5444,51 +5444,46 @@
             if (createServerForm) {
                 createServerForm.addEventListener('submit', (e) => {
                     e.preventDefault();
-                    const nameInput = document.getElementById('new-server-name');
-                    const channelsInput = document.getElementById('new-server-channels');
-                    const sName = ((nameInput && nameInput.value) || '').trim();
+                    const sName = (document.getElementById('new-server-name')?.value || '').trim();
                     if (!sName) return;
+                    const chRaw = (document.getElementById('new-server-channels')?.value || 'geral, música').trim();
+                    const chNames = chRaw.split(',').map(s => s.trim()).filter(Boolean);
+                    if (!chNames.length) chNames.push('geral');
 
                     const rail = document.querySelector('.server-rail');
-                    if (rail) {
-                        const btn = document.createElement('button');
-                        btn.type = 'button';
-                        btn.className = 'server-rail-btn active';
-                        btn.title = sName;
-                        btn.textContent = sName.charAt(0).toUpperCase();
+                    const addBtn = document.getElementById('open-create-server-btn');
+                    const btn = document.createElement('button');
+                    btn.type = 'button';
+                    btn.className = 'server-rail-btn active';
+                    btn.title = sName;
+                    btn.textContent = sName.charAt(0).toUpperCase();
+
+                    const bindServerSelect = () => {
                         document.querySelectorAll('.server-rail-btn').forEach(b => b.classList.remove('active'));
-                        rail.insertBefore(btn, openCreateServerBtn);
-                        btn.addEventListener('click', () => {
-                            document.querySelectorAll('.server-rail-btn').forEach(b => b.classList.remove('active'));
-                            btn.classList.add('active');
-                            if (sidebarServerTitle) sidebarServerTitle.textContent = `🥝 ${sName}`;
-                            window.switchToGeral('geral', 'text');
-                        });
-                    }
+                        btn.classList.add('active');
+                        if (sidebarServerTitle) sidebarServerTitle.textContent = `🥝 ${sName}`;
+                        const chList = document.getElementById('server-channels-list');
+                        if (chList) {
+                            chList.innerHTML = '';
+                            chNames.forEach((cn, idx) => {
+                                const item = document.createElement('div');
+                                const isAudio = cn.toLowerCase().includes('mús') || cn.toLowerCase().includes('mus') || cn.toLowerCase().includes('voz');
+                                item.className = `channel-item ${idx === 0 ? 'active' : ''}`;
+                                item.setAttribute('data-channel-name', cn);
+                                item.setAttribute('data-channel-type', isAudio ? 'audio' : 'text');
+                                item.innerHTML = `<span>${isAudio ? '🎵' : '#'}</span><span style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${escapeHtmlText(cn)}</span>`;
+                                item.addEventListener('click', () => window.switchToGeral(cn, isAudio ? 'audio' : 'text'));
+                                chList.appendChild(item);
+                            });
+                        }
+                        window.switchToGeral(chNames[0], 'text');
+                    };
 
-                    if (sidebarServerTitle) sidebarServerTitle.textContent = `🥝 ${sName}`;
-
-                    const channelsListEl = document.getElementById('server-channels-list');
-                    if (channelsListEl) {
-                        const rawChans = ((channelsInput && channelsInput.value) || 'geral, música')
-                            .split(',').map(c => c.trim()).filter(Boolean);
-                        const finalChans = rawChans.length ? rawChans : ['geral'];
-                        channelsListEl.innerHTML = '';
-                        finalChans.forEach((chName, idx) => {
-                            const isAudio = chName.toLowerCase().includes('músic') || chName.toLowerCase().includes('music') || chName.toLowerCase().includes('voz');
-                            const item = document.createElement('div');
-                            item.className = `channel-item ${idx === 0 ? 'active' : ''}`;
-                            item.setAttribute('data-channel-name', chName);
-                            item.setAttribute('data-channel-type', isAudio ? 'audio' : 'text');
-                            item.innerHTML = `<span>${isAudio ? '🎵' : '#'}</span><span style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${escapeHtmlText(chName)}</span>`;
-                            item.addEventListener('click', () => window.switchToGeral(chName, isAudio ? 'audio' : 'text'));
-                            channelsListEl.appendChild(item);
-                        });
-                    }
-
-                    if (nameInput) nameInput.value = '';
+                    btn.addEventListener('click', bindServerSelect);
+                    if (rail && addBtn) rail.insertBefore(btn, addBtn);
+                    bindServerSelect();
+                    createServerForm.reset();
                     closeModalAnimated(createServerModal);
-                    window.switchToGeral('geral', 'text');
                     showKiwiToast(`Servidor "${sName}" criado!`);
                 });
             }
@@ -5505,35 +5500,24 @@
             if (createChannelForm) {
                 createChannelForm.addEventListener('submit', (e) => {
                     e.preventDefault();
-                    const chNameEl = document.getElementById('new-channel-name');
-                    const chTypeEl = document.getElementById('new-channel-type');
-                    const chName = ((chNameEl && chNameEl.value) || '').trim();
-                    const chType = (chTypeEl && chTypeEl.value) || 'text';
-                    if (!chName) return;
+                    const cName = (document.getElementById('new-channel-name')?.value || '').trim();
+                    const cType = document.getElementById('new-channel-type')?.value || 'text';
+                    if (!cName) return;
 
-                    const channelsListEl = document.getElementById('server-channels-list');
-                    if (channelsListEl) {
+                    const chList = document.getElementById('server-channels-list');
+                    if (chList) {
                         const item = document.createElement('div');
                         item.className = 'channel-item';
-                        item.setAttribute('data-channel-name', chName);
-                        item.setAttribute('data-channel-type', chType);
-                        item.innerHTML = `<span>${chType === 'audio' ? '🎵' : '#'}</span><span style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${escapeHtmlText(chName)}</span>`;
-                        item.addEventListener('click', () => window.switchToGeral(chName, chType));
-                        channelsListEl.appendChild(item);
+                        item.setAttribute('data-channel-name', cName);
+                        item.setAttribute('data-channel-type', cType);
+                        item.innerHTML = `<span>${cType === 'audio' ? '🎵' : '#'}</span><span style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${escapeHtmlText(cName)}</span>`;
+                        item.addEventListener('click', () => window.switchToGeral(cName, cType));
+                        chList.appendChild(item);
+                        window.switchToGeral(cName, cType);
                     }
-
-                    if (chNameEl) chNameEl.value = '';
+                    createChannelForm.reset();
                     closeModalAnimated(createChannelModal);
-                    window.switchToGeral(chName, chType);
-                    showKiwiToast(`Canal "${chName}" criado!`);
-                });
-            }
-
-            if (headerCallBtn) {
-                headerCallBtn.addEventListener('click', () => {
-                    if (currentView === 'dm' && currentDmUser) {
-                        window.startVoiceCall(currentDmUser);
-                    }
+                    showKiwiToast(`Canal "${cName}" criado!`);
                 });
             }
 
@@ -5541,33 +5525,33 @@
             const mobNavSearch = document.getElementById('mob-nav-search');
             const mobNavMusic = document.getElementById('mob-nav-music');
             const mobNavProfile = document.getElementById('mob-nav-profile');
-            const allMobNavBtns = [mobNavFriends, mobNavSearch, mobNavMusic, mobNavProfile].filter(Boolean);
 
-            function setActiveMobNav(activeBtn) {
-                allMobNavBtns.forEach(b => b.classList.toggle('active', b === activeBtn));
+            function setMobileNavActive(btnEl) {
+                document.querySelectorAll('.mobile-nav-btn').forEach(b => b.classList.remove('active'));
+                if (btnEl) btnEl.classList.add('active');
             }
 
             if (mobNavFriends) {
                 mobNavFriends.addEventListener('click', () => {
-                    setActiveMobNav(mobNavFriends);
                     window.closeMobileChatView();
+                    setMobileNavActive(mobNavFriends);
                 });
             }
             if (mobNavSearch) {
                 mobNavSearch.addEventListener('click', () => {
-                    setActiveMobNav(mobNavSearch);
+                    setMobileNavActive(mobNavSearch);
                     openFriendSearchModal();
                 });
             }
             if (mobNavMusic) {
                 mobNavMusic.addEventListener('click', () => {
-                    setActiveMobNav(mobNavMusic);
+                    setMobileNavActive(mobNavMusic);
                     window.switchToGeral('música', 'audio');
                 });
             }
             if (mobNavProfile) {
                 mobNavProfile.addEventListener('click', () => {
-                    setActiveMobNav(mobNavProfile);
+                    setMobileNavActive(mobNavProfile);
                     openUserProfile(activeUsername);
                 });
             }

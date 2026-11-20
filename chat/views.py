@@ -1,5 +1,7 @@
 import json
 import os
+from asgiref.sync import async_to_sync
+from channels.layers import get_channel_layer
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
@@ -46,6 +48,20 @@ def _get_accepted_friend_users(user):
             UserProfile.objects.get_or_create(user=friend)
             friends.append(friend)
     return friends
+
+
+def _notify_user_group(user_id, event_type, payload):
+    channel_layer = get_channel_layer()
+    if not channel_layer:
+        return
+    async_to_sync(channel_layer.group_send)(
+        f'user_{int(user_id)}',
+        {
+            'type': 'friend_event',
+            'event': event_type,
+            'payload': payload,
+        },
+    )
 
 
 @login_required(login_url='login')
@@ -104,12 +120,10 @@ def create_server(request):
 
     server = Server.objects.create(name=name, icon=icon, owner=request.user)
 
-    # Adiciona automaticamente todos os amigos atuais do admin como membros do servidor
     friends = _get_accepted_friend_users(request.user)
     if friends:
         server.members.add(*friends)
 
-    # Cria canais iniciais (ex.: separados por vírgula) ou pelo menos 1 canal padrão
     channel_names = [c.strip().lstrip('#').lower().replace(' ', '-') for c in raw_channels.split(',') if c.strip()]
     if not channel_names:
         channel_names = ['chat', 'musica']
@@ -423,10 +437,10 @@ def search_users(request):
     if not query:
         return JsonResponse({'status': 'success', 'users': []})
 
-    matches = User.objects.filter(username__icontains=query).exclude(id=request.user.id)[:15]
+    matches = User.objects.filter(username__icontains=query).exclude(id=request.user.id).select_related('profile')[:15]
     results = []
     for candidate in matches:
-        profile, _ = UserProfile.objects.get_or_create(user=candidate)
+        profile = getattr(candidate, 'profile', None)
         already_friends = are_friends(request.user, candidate)
         pending_sent = FriendRequest.objects.filter(
             sender=request.user, receiver=candidate, status='pending'
@@ -437,8 +451,8 @@ def search_users(request):
 
         results.append({
             'username': candidate.username,
-            'avatarUrl': request.build_absolute_uri(profile.avatar.url) if profile.avatar else '',
-            'bubble': profile.bubble or '',
+            'avatarUrl': request.build_absolute_uri(profile.avatar.url) if (profile and profile.avatar) else '',
+            'bubble': (profile.bubble if profile else '') or '',
             'is_friend': already_friends,
             'pending_sent': pending_sent,
             'pending_received': pending_received,
@@ -468,9 +482,21 @@ def send_friend_request(request):
         if are_friends(request.user, receiver):
             return JsonResponse({'status': 'error', 'message': f'{receiver.username} já é teu amigo.'}, status=400)
 
-        existing = FriendRequest.objects.filter(sender=request.user, receiver=receiver, status='pending').exists()
-        if not existing:
-            FriendRequest.objects.create(sender=request.user, receiver=receiver)
+        existing = FriendRequest.objects.filter(sender=request.user, receiver=receiver).first()
+        if existing:
+            if existing.status == 'pending':
+                return JsonResponse({'status': 'success', 'message': f'Pedido de amizade já enviado para {receiver.username}.'})
+            existing.status = 'pending'
+            existing.save(update_fields=['status', 'updated_at'])
+            req_obj = existing
+        else:
+            req_obj = FriendRequest.objects.create(sender=request.user, receiver=receiver, status='pending')
+
+        _notify_user_group(
+            receiver.id,
+            'friend_request_received',
+            {'id': req_obj.id, 'sender': request.user.username},
+        )
 
         return JsonResponse({'status': 'success', 'message': f'Pedido de amizade enviado para {receiver.username}!'})
     except Exception as e:
@@ -496,13 +522,18 @@ def accept_friend_request(request):
 
         friend_req = get_object_or_404(FriendRequest, id=request_id, receiver=request.user)
         friend_req.status = 'accepted'
-        friend_req.save()
+        friend_req.save(update_fields=['status', 'updated_at'])
 
-        # Se o usuário que aceitou for admin, adiciona o novo amigo nos servidores que ele administra
         if is_admin_user(request.user):
             owned = Server.objects.filter(owner=request.user)
             for srv in owned:
                 srv.members.add(friend_req.sender)
+
+        _notify_user_group(
+            friend_req.sender.id,
+            'friend_request_accepted',
+            {'id': friend_req.id, 'accepter': request.user.username},
+        )
 
         return JsonResponse({'status': 'success', 'message': 'Amizade aceite com sucesso!'})
     except Exception as e:
@@ -582,8 +613,10 @@ def upload_attachment(request):
     target = (request.POST.get('target') or '').strip()
     channel_id = request.POST.get('channel_id')
     content = (request.POST.get('content') or '').strip()
+    avatar_url = (request.POST.get('avatarUrl') or '').strip()
 
     try:
+        channel_layer = get_channel_layer()
         if channel_id:
             channel = get_object_or_404(Channel, id=channel_id, server__members=request.user)
             msg = Message.objects.create(
@@ -593,6 +626,20 @@ def upload_attachment(request):
                 attachment=file,
                 attachment_type=att_type,
             )
+            att_url = request.build_absolute_uri(msg.attachment.url) if msg.attachment else ''
+            if channel_layer:
+                async_to_sync(channel_layer.group_send)(
+                    f'chat_{channel.id}',
+                    {
+                        'type': 'chat_message',
+                        'id': msg.id,
+                        'message': msg.content,
+                        'username': request.user.username,
+                        'avatarUrl': avatar_url,
+                        'attachment_url': att_url,
+                        'attachment_type': att_type,
+                    },
+                )
         elif target:
             other_user = get_object_or_404(User, username=target)
             if not are_friends(request.user, other_user):
@@ -616,11 +663,23 @@ def upload_attachment(request):
                 private_kwargs['attachment_type'] = att_type
 
             msg = PrivateMessage.objects.create(**private_kwargs)
+            att_field = getattr(msg, 'attachment', None) or getattr(msg, 'file', None)
+            att_url = request.build_absolute_uri(att_field.url) if att_field else ''
+            if channel_layer:
+                ids = sorted([request.user.id, other_user.id])
+                async_to_sync(channel_layer.group_send)(
+                    f'dm_{ids[0]}_{ids[1]}',
+                    {
+                        'type': 'dm_message',
+                        'id': msg.id,
+                        'message': msg.content,
+                        'sender': request.user.username,
+                        'attachment_url': att_url,
+                        'attachment_type': att_type,
+                    },
+                )
         else:
             return JsonResponse({'status': 'error', 'message': 'Selecione um amigo ou canal.'}, status=400)
-
-        att_field = getattr(msg, 'attachment', None) or getattr(msg, 'file', None)
-        att_url = request.build_absolute_uri(att_field.url) if att_field else ''
 
         return JsonResponse({
             'status': 'success',

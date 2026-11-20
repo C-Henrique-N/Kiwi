@@ -18,12 +18,12 @@ class ChatConsumer(AsyncWebsocketConsumer):
         )
 
         if not self.user or not self.user.is_authenticated:
-            await self.close()
+            await self.close(code=4401)
             return
 
         self.channel_obj = await self.get_allowed_channel(self.user, self.room_name)
         if not self.channel_obj:
-            await self.close()
+            await self.close(code=4403)
             return
 
         await self.channel_layer.group_add(
@@ -56,6 +56,13 @@ class ChatConsumer(AsyncWebsocketConsumer):
             'signal': event.get('signal'),
         }))
 
+    async def friend_event(self, event):
+        await self.send(text_data=json.dumps({
+            'type': 'friend_event',
+            'event': event.get('event', ''),
+            'payload': event.get('payload') or {},
+        }))
+
     async def receive(self, text_data):
         try:
             data = json.loads(text_data)
@@ -67,7 +74,6 @@ class ChatConsumer(AsyncWebsocketConsumer):
         if action == 'delete_message':
             message_id = data.get('message_id')
             deleted = await self.delete_message(message_id)
-
             if deleted:
                 await self.channel_layer.group_send(
                     self.room_group_name,
@@ -78,31 +84,35 @@ class ChatConsumer(AsyncWebsocketConsumer):
                 )
             return
 
+        if action == 'friend_notify':
+            target_user_id = data.get('target_user_id')
+            if target_user_id:
+                await self.channel_layer.group_send(
+                    f'user_{int(target_user_id)}',
+                    {
+                        'type': 'friend_event',
+                        'event': data.get('event', 'friend_update'),
+                        'payload': data.get('payload') or {},
+                    }
+                )
+            return
+
         username = self.user.username
         avatar_url = data.get('avatarUrl') or data.get('avatar') or ''
-        attachment_url = data.get('attachment_url', '')
-        attachment_type = data.get('attachment_type', '')
+        attachment_url = (data.get('attachment_url') or '').strip()
+        attachment_type = (data.get('attachment_type') or '').strip()
         message = (data.get('message') or '').strip()
 
-        if attachment_url:
-            await self.channel_layer.group_send(
-                self.room_group_name,
-                {
-                    'type': 'chat_message',
-                    'id': data.get('id'),
-                    'message': message,
-                    'username': username,
-                    'avatarUrl': avatar_url,
-                    'attachment_url': attachment_url,
-                    'attachment_type': attachment_type,
-                }
-            )
+        if not message and not attachment_url:
             return
 
-        if not message:
-            return
-
-        msg = await self.save_message(self.user, self.channel_obj, message)
+        msg = await self.save_message(
+            self.user,
+            self.channel_obj,
+            message,
+            attachment_url=attachment_url,
+            attachment_type=attachment_type,
+        )
         if not msg:
             return
 
@@ -114,8 +124,8 @@ class ChatConsumer(AsyncWebsocketConsumer):
                 'message': msg.content,
                 'username': username,
                 'avatarUrl': avatar_url,
-                'attachment_url': '',
-                'attachment_type': '',
+                'attachment_url': attachment_url,
+                'attachment_type': attachment_type,
             }
         )
 
@@ -146,17 +156,29 @@ class ChatConsumer(AsyncWebsocketConsumer):
         return None
 
     @database_sync_to_async
-    def save_message(self, user, channel_obj, message):
+    def save_message(self, user, channel_obj, message, attachment_url='', attachment_type=''):
         if not user or not channel_obj:
             return None
-        return Message.objects.create(user=user, channel=channel_obj, content=message)
+        kwargs = {
+            'user': user,
+            'channel': channel_obj,
+            'content': message,
+            'attachment_type': attachment_type[:20] if attachment_type else '',
+        }
+        if attachment_url:
+            kwargs['attachment'] = attachment_url
+        return Message.objects.create(**kwargs)
 
     @database_sync_to_async
     def delete_message(self, message_id):
         if not message_id:
             return False
+        try:
+            msg_id = int(message_id)
+        except (TypeError, ValueError):
+            return False
 
-        msg = Message.objects.filter(id=message_id, channel=self.channel_obj).first()
+        msg = Message.objects.filter(id=msg_id, channel=self.channel_obj).first()
         if not msg:
             return False
 
@@ -173,12 +195,12 @@ class DMConsumer(AsyncWebsocketConsumer):
         self.other_username = self.scope['url_route']['kwargs']['username']
 
         if not self.user or not self.user.is_authenticated:
-            await self.close()
+            await self.close(code=4401)
             return
 
         self.other_user = await self.get_other_if_friend(self.user, self.other_username)
         if not self.other_user:
-            await self.close()
+            await self.close(code=4403)
             return
 
         ids = sorted([self.user.id, self.other_user.id])
@@ -263,28 +285,22 @@ class DMConsumer(AsyncWebsocketConsumer):
                 )
             return
 
-        attachment_url = data.get('attachment_url', '')
-        attachment_type = data.get('attachment_type', '')
+        attachment_url = (data.get('attachment_url') or '').strip()
+        attachment_type = (data.get('attachment_type') or '').strip()
         message = (data.get('message') or '').strip()
 
-        if attachment_url:
-            await self.channel_layer.group_send(
-                self.room_group_name,
-                {
-                    'type': 'dm_message',
-                    'id': data.get('id'),
-                    'message': message,
-                    'sender': self.user.username,
-                    'attachment_url': attachment_url,
-                    'attachment_type': attachment_type,
-                }
-            )
+        if not message and not attachment_url:
             return
 
-        if not message:
+        msg = await self.save_dm(
+            self.user,
+            self.other_user,
+            message,
+            attachment_url=attachment_url,
+            attachment_type=attachment_type,
+        )
+        if not msg:
             return
-
-        msg = await self.save_dm(self.user, self.other_user, message)
 
         await self.channel_layer.group_send(
             self.room_group_name,
@@ -293,8 +309,8 @@ class DMConsumer(AsyncWebsocketConsumer):
                 'id': msg.id,
                 'message': msg.content,
                 'sender': self.user.username,
-                'attachment_url': '',
-                'attachment_type': '',
+                'attachment_url': attachment_url,
+                'attachment_type': attachment_type,
             }
         )
 
@@ -353,18 +369,26 @@ class DMConsumer(AsyncWebsocketConsumer):
         return other if is_friend else None
 
     @database_sync_to_async
-    def save_dm(self, sender, receiver, content):
-        return PrivateMessage.objects.create(
-            sender=sender,
-            receiver=receiver,
-            content=content
-        )
+    def save_dm(self, sender, receiver, content, attachment_url='', attachment_type=''):
+        kwargs = {
+            'sender': sender,
+            'receiver': receiver,
+            'content': content,
+            'attachment_type': attachment_type[:20] if attachment_type else '',
+        }
+        if attachment_url:
+            kwargs['attachment'] = attachment_url
+        return PrivateMessage.objects.create(**kwargs)
 
     @database_sync_to_async
     def delete_dm(self, msg_id):
         if not msg_id:
             return False
-        msg = PrivateMessage.objects.filter(id=msg_id, sender=self.user).first()
+        try:
+            clean_id = int(msg_id)
+        except (TypeError, ValueError):
+            return False
+        msg = PrivateMessage.objects.filter(id=clean_id, sender=self.user).first()
         if not msg:
             return False
         msg.delete()
