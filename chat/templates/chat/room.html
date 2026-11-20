@@ -2,6 +2,7 @@
 <html lang="pt">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     {% load static %}
     <meta name="theme-color" content="#111318">
     <link rel="manifest" href="{% static 'manifest.json' %}">
@@ -364,7 +365,6 @@
             text-align: center;
         }
 
-        /* Painel Flutuante de Call */
         .call-bar {
             display: none;
             align-items: center;
@@ -963,7 +963,6 @@
             position: relative;
         }
 
-        /* Player estilo widget Spotify */
         .kiwi-spotify-widget {
             background: linear-gradient(135deg, #191b1e 0%, #111315 100%);
             color: #ffffff;
@@ -1188,7 +1187,6 @@
             font-variant-numeric: tabular-nums;
         }
 
-        /* Badge dourada de ADMIN ao lado do nome */
         .admin-gold-badge {
             display: inline-flex;
             align-items: center;
@@ -1208,7 +1206,6 @@
             vertical-align: middle;
         }
 
-        /* Efeito de brilho no cartão do perfil */
         .aesthetic-profile-card.akiira-shimmer-card {
             position: relative;
             overflow: hidden;
@@ -1342,7 +1339,6 @@
             align-items: center;
             gap: 6px;
         }
-        /* Fonte especial exclusiva para AkiiraPW */
         .aesthetic-name.akiira-special-font {
             font-family: 'Cinzel Decorative', 'Fredoka', cursive, sans-serif;
             font-weight: 900;
@@ -1496,6 +1492,88 @@
             opacity: 1;
             transform: translateY(0);
         }
+
+        /* Layout Responsivo Mobile (<= 768px) */
+        @media (max-width: 768px) {
+            body {
+                height: 100dvh;
+                width: 100%;
+                overflow: hidden;
+                position: relative;
+            }
+
+            .sidebar-right {
+                display: none;
+            }
+
+            .sidebar-left {
+                width: 100%;
+                max-width: 100%;
+                height: 100dvh;
+                border-right: none;
+            }
+
+            .chat-area {
+                display: none;
+                width: 100%;
+                height: 100dvh;
+            }
+
+            body.mobile-chat-open .sidebar-left {
+                display: none;
+            }
+
+            body.mobile-chat-open .chat-area {
+                display: flex;
+            }
+
+            .back-geral-btn {
+                display: inline-flex;
+                align-items: center;
+                gap: 4px;
+            }
+
+            .chat-header {
+                padding: 10px 12px;
+                gap: 8px;
+                flex-wrap: wrap;
+            }
+
+            .theme-picker-container {
+                gap: 5px;
+            }
+
+            .theme-ball {
+                width: 18px;
+                height: 18px;
+            }
+
+            #chat-log {
+                padding: 12px;
+                gap: 12px;
+            }
+
+            .chat-input-area {
+                padding: 0 10px 12px 10px;
+            }
+
+            .input-wrapper {
+                padding: 8px 10px;
+                gap: 6px;
+            }
+
+            #chat-message-submit {
+                padding: 8px 12px;
+                font-size: 13px;
+            }
+
+            .aesthetic-profile-card {
+                width: calc(100vw - 24px);
+                max-width: 390px;
+                max-height: 90dvh;
+                overflow-y: auto;
+            }
+        }
     </style>
 </head>
 <body>
@@ -1563,6 +1641,7 @@
     <div class="chat-area">
         <div class="chat-header">
             <div class="header-title-group">
+                <button type="button" class="back-geral-btn visible" id="mobile-back-list-btn" onclick="closeMobileChatView()" title="Voltar à lista de canais">☰ Canais</button>
                 <div id="header-dm-avatar" class="header-dm-avatar" title="Ver perfil"></div>
                 <div id="header-main-title"># geral</div>
                 <span class="sub" id="header-sub-label">| Chat oficial em tempo real</span>
@@ -1897,6 +1976,16 @@
     </div>
 
     <script>
+        window.closeMobileChatView = function() {
+            document.body.classList.remove('mobile-chat-open');
+        };
+
+        window.openMobileChatView = function() {
+            if (window.innerWidth <= 768) {
+                document.body.classList.add('mobile-chat-open');
+            }
+        };
+
         function dismissKiwiSplash() {
             const splashEl = document.getElementById('kiwi-splash');
             const splashSubEl = document.getElementById('kiwi-splash-sub');
@@ -1913,7 +2002,6 @@
             }, 600);
         }
 
-        // Fallback de segurança fora do DOMContentLoaded para o splash nunca ficar preso
         setTimeout(() => {
             const sub = document.getElementById('kiwi-splash-sub');
             if (sub) {
@@ -2473,7 +2561,6 @@
                 }, 2600);
             }
 
-            // YouTube Music + Modo Perfil/Layout + Desabilitar nas notificações
             const ytTag = document.createElement('script');
             ytTag.src = 'https://www.youtube.com/iframe_api';
             document.head.appendChild(ytTag);
@@ -2782,7 +2869,7 @@
             if (dockSizeBtn) dockSizeBtn.addEventListener('click', toggleMusicSize);
 
             let demoProgressRatio = 0.22;
-            const demoTotalSeconds = 253; // 4:13 total como na referência (0:55 e -3:18)
+            const demoTotalSeconds = 253;
 
             function formatClock(sec) {
                 const s = Math.max(0, Math.floor(sec || 0));
@@ -3495,7 +3582,8 @@
                 aestheticModal.classList.remove('open');
                 editBubble.value = profileData.bubble;
                 editPronouns.value = profileData.pronouns;
-                editBio.value = profileData.bio.replace(/<br>/g, '\n');
+                editBio.value = profileData.bio.replace(/<br>/g, '
+');
                 editSong.value = profileData.song;
                 editArtist.value = profileData.artist;
                 if (editYtUrl) editYtUrl.value = musicSettings.url;
@@ -3746,6 +3834,7 @@
                 chatLog.innerHTML = geralSnapshotHTML;
                 enhanceExistingMessagesInLog();
                 chatLog.scrollTop = chatLog.scrollHeight;
+                window.openMobileChatView();
             };
 
             function extractFileNameFromUrl(url, fallbackName = 'Documento') {
@@ -3886,6 +3975,8 @@
                             const msgAvatar = (m.sender === activeUsername) ? profileData.avatarUrl : friendAvatar;
                             appendMessageElement(m, { isDm: true, avatarUrl: msgAvatar });
                         });
+
+                        window.openMobileChatView();
 
                         if (dmSocket) {
                             dmSocket.close();

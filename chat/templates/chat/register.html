@@ -2,6 +2,7 @@
 <html lang="pt">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title> Kris - Criar Conta</title>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -13,12 +14,14 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            height: 100vh;
+            min-height: 100dvh;
+            padding: 16px;
         }
 
         .auth-container {
             width: 780px;
-            height: 460px;
+            max-width: 100%;
+            min-height: 460px;
             background: #2b2d31;
             border-radius: 16px;
             box-shadow: 0 16px 40px rgba(0,0,0,0.6);
@@ -34,6 +37,7 @@
             background-position: center;
             background-image: url('https://i.pinimg.com/736x/cb/a2/98/cba29832d5a423e62dc7ed952df60762.jpg');
             position: relative;
+            flex-shrink: 0;
         }
         .auth-image-side::after {
             content: '';
@@ -80,7 +84,7 @@
 
         button {
             width: 100%;
-            background: #8a63d2; /* Botão Roxo */
+            background: #8a63d2;
             color: #fff;
             border: none;
             padding: 10px;
@@ -101,6 +105,24 @@
         }
         .auth-footer a { color: #a482eb; text-decoration: none; font-weight: 500; }
         .auth-footer a:hover { text-decoration: underline; }
+
+        @media (max-width: 768px) {
+            .auth-container {
+                width: 100%;
+                max-width: 420px;
+                min-height: auto;
+                flex-direction: column;
+            }
+
+            .auth-image-side {
+                width: 100%;
+                height: 160px;
+            }
+
+            .auth-form-side {
+                padding: 24px 20px;
+            }
+        }
     </style>
 </head>
 <body>
