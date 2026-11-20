@@ -2922,7 +2922,6 @@
             let savedUsername = '';
             try { savedUsername = (localStorage.getItem(USERNAME_STORAGE_KEY) || '').trim(); } catch (_) {}
 
-            // Prioridade: usuário injetado pelo Django -> usuário salvo no navegador -> "Usuário" (nunca força "KiwiUser" nem nomes fictícios)
             let activeUsername = (
                 (typeof injectedUser === 'string' && injectedUser.trim()) ||
                 savedUsername ||
@@ -4205,8 +4204,7 @@
                 if (editUsernameInput) editUsernameInput.value = activeUsername || myProfileData.username || '';
                 editBubble.value = myProfileData.bubble || '';
                 editPronouns.value = myProfileData.pronouns || '';
-                editBio.value = (myProfileData.bio || '').replace(/<br\s*\/?>/gi, '
-');
+                editBio.value = (myProfileData.bio || '').replace(/<br\s*\/?>/gi, '\n');
                 editSong.value = myProfileData.song || '';
                 editArtist.value = myProfileData.artist || '';
                 if (editYtUrl) editYtUrl.value = myProfileData.musicUrl || '';
@@ -5449,30 +5447,52 @@
             if (openCreateServerBtn && createServerModal) openCreateServerBtn.addEventListener('click', () => openModalAnimated(createServerModal));
             if (closeCreateServerBtn && createServerModal) closeCreateServerBtn.addEventListener('click', () => closeModalAnimated(createServerModal));
             if (createServerModal) createServerModal.addEventListener('click', (e) => { if (e.target === createServerModal) closeModalAnimated(createServerModal); });
+
             if (createServerForm) {
                 createServerForm.addEventListener('submit', (e) => {
                     e.preventDefault();
-                    const nameEl = document.getElementById('new-server-name');
-                    const sName = (nameEl && nameEl.value.trim()) || 'Novo Servidor';
+                    const nameInp = document.getElementById('new-server-name');
+                    const chInp = document.getElementById('new-server-channels');
+                    const serverName = (nameInp && nameInp.value.trim()) || 'Novo Servidor';
+                    const rawCh = (chInp && chInp.value.trim()) || 'geral, música';
+                    const chList = rawCh.split(',').map(s => s.trim()).filter(Boolean);
+
                     const rail = document.querySelector('.server-rail');
                     if (rail && openCreateServerBtn) {
                         const btn = document.createElement('button');
                         btn.type = 'button';
                         btn.className = 'server-rail-btn';
-                        btn.title = sName;
-                        btn.textContent = sName.charAt(0).toUpperCase() || 'S';
+                        btn.textContent = serverName.charAt(0).toUpperCase() || 'S';
+                        btn.title = serverName;
                         btn.addEventListener('click', () => {
-                            document.querySelectorAll('.server-rail-btn').forEach(b => b.classList.remove('active'));
+                            rail.querySelectorAll('.server-rail-btn').forEach(b => b.classList.remove('active'));
                             btn.classList.add('active');
-                            if (sidebarServerTitle) sidebarServerTitle.textContent = `🥝 ${sName}`;
-                            window.switchToGeral('geral', 'text');
+                            if (sidebarServerTitle) sidebarServerTitle.textContent = `🥝 ${serverName}`;
+                            window.switchToGeral(chList[0] || 'geral', 'text');
                         });
                         rail.insertBefore(btn, openCreateServerBtn);
-                        btn.click();
                     }
-                    if (nameEl) nameEl.value = '';
+
+                    const chContainer = document.getElementById('server-channels-list');
+                    if (chContainer && chList.length > 0) {
+                        chContainer.innerHTML = '';
+                        chList.forEach((cname, idx) => {
+                            const ctype = cname.toLowerCase().includes('música') || cname.toLowerCase().includes('audio') ? 'audio' : 'text';
+                            const item = document.createElement('div');
+                            item.className = `channel-item ${idx === 0 ? 'active' : ''}`;
+                            item.setAttribute('data-channel-name', cname);
+                            item.setAttribute('data-channel-type', ctype);
+                            item.innerHTML = `<span>${ctype === 'audio' ? '🎵' : '#'}</span><span style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${escapeHtmlText(cname)}</span>`;
+                            item.addEventListener('click', () => window.switchToGeral(cname, ctype));
+                            chContainer.appendChild(item);
+                        });
+                    }
+
+                    if (sidebarServerTitle) sidebarServerTitle.textContent = `🥝 ${serverName}`;
+                    window.switchToGeral(chList[0] || 'geral', 'text');
                     closeModalAnimated(createServerModal);
-                    showKiwiToast(`Servidor "${sName}" criado!`);
+                    if (nameInp) nameInp.value = '';
+                    showKiwiToast(`Servidor "${serverName}" criado!`);
                 });
             }
 
@@ -5484,28 +5504,36 @@
             if (openCreateChannelBtn && createChannelModal) openCreateChannelBtn.addEventListener('click', () => openModalAnimated(createChannelModal));
             if (closeCreateChannelBtn && createChannelModal) closeCreateChannelBtn.addEventListener('click', () => closeModalAnimated(createChannelModal));
             if (createChannelModal) createChannelModal.addEventListener('click', (e) => { if (e.target === createChannelModal) closeModalAnimated(createChannelModal); });
+
             if (createChannelForm) {
                 createChannelForm.addEventListener('submit', (e) => {
                     e.preventDefault();
-                    const nameEl = document.getElementById('new-channel-name');
-                    const typeEl = document.getElementById('new-channel-type');
-                    const chName = (nameEl && nameEl.value.trim()) || 'novo-canal';
-                    const chType = (typeEl && typeEl.value) || 'text';
-                    const listEl = document.getElementById('server-channels-list');
-                    if (listEl) {
+                    const nameInp = document.getElementById('new-channel-name');
+                    const typeSel = document.getElementById('new-channel-type');
+                    const cname = (nameInp && nameInp.value.trim()) || 'novo-canal';
+                    const ctype = (typeSel && typeSel.value) || 'text';
+                    const chContainer = document.getElementById('server-channels-list');
+
+                    if (chContainer) {
                         const item = document.createElement('div');
                         item.className = 'channel-item';
-                        item.setAttribute('data-channel-name', chName);
-                        item.setAttribute('data-channel-type', chType);
-                        const prefix = chType === 'audio' ? '🎵' : '#';
-                        item.innerHTML = `<span>${escapeHtmlText(prefix)}</span><span style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${escapeHtmlText(chName)}</span>`;
-                        item.addEventListener('click', () => window.switchToGeral(chName, chType));
-                        listEl.appendChild(item);
-                        window.switchToGeral(chName, chType);
+                        item.setAttribute('data-channel-name', cname);
+                        item.setAttribute('data-channel-type', ctype);
+                        item.innerHTML = `<span>${ctype === 'audio' ? '🎵' : '#'}</span><span style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${escapeHtmlText(cname)}</span>`;
+                        item.addEventListener('click', () => window.switchToGeral(cname, ctype));
+                        chContainer.appendChild(item);
                     }
-                    if (nameEl) nameEl.value = '';
+
                     closeModalAnimated(createChannelModal);
-                    showKiwiToast(`Canal "${chName}" criado!`);
+                    if (nameInp) nameInp.value = '';
+                    window.switchToGeral(cname, ctype);
+                    showKiwiToast(`Canal "${cname}" criado!`);
+                });
+            }
+
+            if (headerCallBtn) {
+                headerCallBtn.addEventListener('click', function() {
+                    if (currentView === 'dm' && currentDmUser) startVoiceCall(currentDmUser);
                 });
             }
 
@@ -5523,6 +5551,8 @@
                 mobNavFriends.addEventListener('click', () => {
                     setActiveMobileNav(mobNavFriends);
                     window.closeMobileChatView();
+                    const amigosTab = document.querySelector('.social-tab[data-tab="amigos"]');
+                    if (amigosTab) amigosTab.click();
                 });
             }
             if (mobNavSearch) {
@@ -5543,13 +5573,7 @@
                     openUserProfile(activeUsername);
                 });
             }
-
-            if (headerCallBtn) {
-                headerCallBtn.addEventListener('click', function() {
-                    if (currentView === 'dm' && currentDmUser) startVoiceCall(currentDmUser);
-                });
-            }
         });
     </script>
 </body>
-</html>
+</html
