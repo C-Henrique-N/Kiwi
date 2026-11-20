@@ -1577,6 +1577,9 @@
     </style>
 </head>
 <body>
+    {{ username|json_script:"kiwi-username-data" }}
+    {{ room_name|default:"geral"|json_script:"kiwi-room-name-data" }}
+
     <div id="kiwi-splash" aria-hidden="true">
         <div class="kiwi-splash-stage">
             <div class="kiwi-splash-ring"></div>
@@ -1701,14 +1704,14 @@
             {% with msg_profile=msg.user.profile %}
             <div class="message-group" data-msg-id="{{ msg.id }}" data-can-delete="{% if msg.user.username == username %}1{% else %}0{% endif %}">
                 {% if msg_profile.avatar %}
-                <div class="avatar" style="background-image: url('{{ msg_profile.avatar.url }}'); background-size: cover; background-position: center; color: transparent;" onclick="openUserProfile('{{ msg.user.username }}')"></div>
+                <div class="avatar" style="background-image: url('{{ msg_profile.avatar.url }}'); background-size: cover; background-position: center; color: transparent;" onclick="openUserProfile('{{ msg.user.username|escapejs }}')"></div>
                 {% else %}
-                <div class="avatar" style="background: #5865f2;" onclick="openUserProfile('{{ msg.user.username }}')">{{ msg.user.username|slice:":1"|upper }}</div>
+                <div class="avatar" style="background: #5865f2;" onclick="openUserProfile('{{ msg.user.username|escapejs }}')">{{ msg.user.username|slice:":1"|upper }}</div>
                 {% endif %}
 
                 <div class="message-content">
                     <div class="message-header">
-                        <span class="username" onclick="openUserProfile('{{ msg.user.username }}')">{{ msg.user.username }}</span>
+                        <span class="username" onclick="openUserProfile('{{ msg.user.username|escapejs }}')">{{ msg.user.username }}</span>
                         <span class="timestamp">{{ msg.timestamp|date:"H:i" }}</span>
                     </div>
                     {% if msg.content %}
@@ -2056,7 +2059,17 @@
             });
 
             try {
-            let activeUsername = "{{ username }}";
+            function readJsonScript(id, fallbackVal) {
+                const el = document.getElementById(id);
+                if (!el) return fallbackVal;
+                try {
+                    return JSON.parse(el.textContent);
+                } catch (_) {
+                    return fallbackVal;
+                }
+            }
+
+            let activeUsername = readJsonScript('kiwi-username-data', '') || '';
             let profileData = {
                 bubble: '🌸 a testar o novo kiwi chat...',
                 pronouns: 'he / him • 🎀',
@@ -2425,7 +2438,7 @@
                 callBarEl.classList.remove('active');
             };
 
-            const roomName = "{{ room_name|default:'geral' }}";
+            const roomName = readJsonScript('kiwi-room-name-data', 'geral') || 'geral';
             let currentView = 'geral';
             let currentDmUser = null;
             let dmSocket = null;
@@ -3472,7 +3485,8 @@
             }
 
             function loadMyProfile() {
-                fetch('/api/profile/' + activeUsername + '/')
+                const targetPath = activeUsername ? ('/api/profile/' + encodeURIComponent(activeUsername) + '/') : '/api/profile/me/';
+                fetch(targetPath)
                 .then(res => res.json())
                 .then(data => {
                     activeUsername = data.username || activeUsername;
@@ -3513,6 +3527,10 @@
 
                 if (profileUsernameEl) {
                     profileUsernameEl.textContent = activeUsername;
+                }
+                const myNameLabelEl = document.getElementById('my-name-label');
+                if (myNameLabelEl && activeUsername) {
+                    myNameLabelEl.textContent = activeUsername;
                 }
                 applySpecialProfileEffects(
                     aestheticModal ? aestheticModal.querySelector('.aesthetic-profile-card') : null,
@@ -3582,8 +3600,7 @@
                 aestheticModal.classList.remove('open');
                 editBubble.value = profileData.bubble;
                 editPronouns.value = profileData.pronouns;
-                editBio.value = profileData.bio.replace(/<br>/g, '
-');
+                editBio.value = profileData.bio.replace(/<br>/g, '\n');
                 editSong.value = profileData.song;
                 editArtist.value = profileData.artist;
                 if (editYtUrl) editYtUrl.value = musicSettings.url;
@@ -4051,7 +4068,7 @@
                     return;
                 }
 
-                fetch('/api/profile/' + username + '/')
+                fetch('/api/profile/' + encodeURIComponent(username) + '/')
                 .then(res => res.json())
                 .then(otherData => {
                     const resolvedName = otherData.username || username;
@@ -4271,7 +4288,7 @@
 
             const wsScheme = window.location.protocol === "https:" ? "wss://" : "ws://";
             const chatSocket = new WebSocket(
-                wsScheme + window.location.host + "/ws/chat/" + roomName + "/"
+                wsScheme + window.location.host + "/ws/chat/" + encodeURIComponent(roomName) + "/"
             );
 
             document.addEventListener('click', function(e) {
