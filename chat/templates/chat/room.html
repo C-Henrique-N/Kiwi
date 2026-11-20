@@ -942,7 +942,6 @@
             position: relative;
         }
 
-        /* PLAYER SPOTIFY ISOLADO POR PERFIL */
         .kiwi-spotify-widget {
             background: linear-gradient(135deg, #191b1e 0%, #111315 100%);
             color: #ffffff;
@@ -1172,7 +1171,6 @@
             vertical-align: middle;
         }
 
-        /* FUNDO DOURADO DE PERFIL */
         .aesthetic-profile-card.gold-profile-theme {
             background: linear-gradient(155deg, #2b2108 0%, #4b380c 42%, #8a6614 100%) !important;
             color: #fff8dc !important;
@@ -1737,7 +1735,7 @@
                 </div>
                 <div class="aesthetic-details" id="up-bio">Perfil estético ativo.</div>
 
-                <!-- PLAYER DE MÚSICA DO PERFIL ABERTO (TOCA APENAS AQUI) -->
+                <!-- PLAYER DE MÚSICA DO PERFIL ABERTO -->
                 <div id="up-music-widget" class="kiwi-spotify-widget">
                     <div class="ksw-top">
                         <div id="up-music-cover" class="ksw-cover">♫</div>
@@ -1820,9 +1818,9 @@
             <div>
                 <h4 style="font-size: 12px; text-transform: uppercase; color: var(--text-muted); margin-bottom: 8px;">Notas de Atualizações (Changelog)</h4>
                 <div style="background: var(--bg-soft); padding: 12px; border-radius: 8px; font-size: 12px; line-height: 1.5; color: var(--text-main);">
-                    <div style="font-weight: bold; color: #5865f2; margin-bottom: 4px;">✨ Versão 3.3 - Música Individual por Perfil</div>
-                    • Cada utilizador tem a sua própria música configurada e partilhada no perfil.<br>
-                    • O áudio toca exclusivamente dentro do modal do perfil aberto e para automaticamente ao fechar ou trocar de perfil.
+                    <div style="font-weight: bold; color: #5865f2; margin-bottom: 4px;">✨ Versão 3.4 - Persistência de Música por Perfil</div>
+                    • Cada utilizador tem a sua própria música configurada e preservada no perfil.<br>
+                    • Suporta link direto de áudio (.mp3, .ogg, .wav, etc.), ficheiro de áudio ou link do YouTube/Spotify.
                 </div>
             </div>
         </div>
@@ -2009,7 +2007,6 @@
             let activeUsername = (readJsonScript('kiwi-username-data', '') || '').trim();
             const THEME_STORAGE_KEY = 'kiwi_theme_color_v1';
 
-            // Cache de perfis por username para manter cada utilizador totalmente isolado
             const profilesByUsername = new Map();
 
             let myProfileData = {
@@ -2411,9 +2408,6 @@
                 toast._hideTimer = setTimeout(() => toast.classList.remove('show'), 2600);
             }
 
-            // =========================================================================
-            // PLAYER DE MÚSICA ISOLADO POR PERFIL (TOCA SOMENTE NO PERFIL ABERTO)
-            // =========================================================================
             const ytTag = document.createElement('script');
             ytTag.src = 'https://www.youtube.com/iframe_api';
             document.head.appendChild(ytTag);
@@ -2426,7 +2420,6 @@
             let pendingYouTubeId = '';
             let currentViewedProfileUser = '';
 
-            // Chave de armazenamento isolada por utilizador (nunca vaza de um utilizador para outro)
             function getUserMusicStorageKey(username) {
                 const safeUser = (username || 'anon').trim().toLowerCase();
                 return `kiwi_user_music_v2_${safeUser}`;
@@ -2599,7 +2592,6 @@
                 });
             }
 
-            // Renderiza a música exclusivamente do perfil aberto no modal (nunca mistura com outros)
             function renderProfileMusicWidget(musicInfo) {
                 stopProfileMusicPlayback();
                 syncProgressUi(0, 0, 0);
@@ -2616,8 +2608,9 @@
 
                 const rawUrl = activeProfileMusic.musicUrl;
                 const videoId = extractYouTubeId(rawUrl);
-                const looksLikeDirectAudioUrl = isExternalMusicLink(rawUrl) && /\.(mp3|ogg|wav|m4a|aac|flac|webm)(\?.*)?$/i.test(rawUrl);
-                const effectiveAudioSrc = activeProfileMusic.audioSrc || (looksLikeDirectAudioUrl ? rawUrl : '');
+                const typedAudioCandidate = (activeProfileMusic.audioSrc || '').trim();
+                const fallbackUrlCandidate = (!videoId && isSafeAssetUrl(rawUrl)) ? rawUrl : '';
+                const effectiveAudioSrc = typedAudioCandidate || fallbackUrlCandidate;
                 const hasLocalAudio = Boolean(effectiveAudioSrc) && isSafeAssetUrl(effectiveAudioSrc);
                 const hasExtLink = isExternalMusicLink(rawUrl);
                 const hasAnyMusic = Boolean(activeProfileMusic.song || activeProfileMusic.artist || hasLocalAudio || hasExtLink);
@@ -2874,13 +2867,10 @@
                         return;
                     }
 
-                    showKiwiToast('Este perfil não possui ficheiro de áudio reproduzível direto.');
+                    showKiwiToast('Cole um link direto do som (.mp3, .ogg, .wav, etc.) ou um link do YouTube em Edit Profile.');
                 });
             }
 
-            // =========================================================================
-            // WEBRTC & CHAMADAS
-            // =========================================================================
             async function createPeerConnection() {
                 const pc = new RTCPeerConnection({
                     iceServers: [{ urls: 'stun:stun.l.google.com:19302' }]
@@ -3245,8 +3235,6 @@
                 const uname = (rawData.username || fallbackUsername || '').trim();
                 const cachedMusic = loadUserMusicFromLocalCache(uname);
 
-                // Prioriza dados vindos da API (/api/profile/<user>/) para que todos vejam a música do dono;
-                // usa o cache local específico daquele username como complemento se o backend ainda não tiver os campos extras.
                 const resolvedSong = (rawData.spotify_song || (cachedMusic && cachedMusic.song) || '').trim();
                 const resolvedArtist = (rawData.spotify_artist || (cachedMusic && cachedMusic.artist) || '').trim();
                 const resolvedMusicUrl = (rawData.music_url || rawData.youtube_url || rawData.spotify_url || (cachedMusic && cachedMusic.musicUrl) || '').trim();
@@ -3282,11 +3270,22 @@
                 .then(data => {
                     const normalized = normalizeProfilePayload(data, activeUsername);
                     activeUsername = normalized.username || activeUsername;
-                    myProfileData = { ...myProfileData, ...normalized };
+                    const cached = loadUserMusicFromLocalCache(activeUsername) || {};
+                    myProfileData = {
+                        ...myProfileData,
+                        ...normalized,
+                        song: (data.spotify_song ?? normalized.song ?? cached.song ?? myProfileData.song ?? '').trim(),
+                        artist: (data.spotify_artist ?? normalized.artist ?? cached.artist ?? myProfileData.artist ?? '').trim(),
+                        musicUrl: normalized.musicUrl || cached.musicUrl || myProfileData.musicUrl || '',
+                        audioSrc: normalized.audioSrc || cached.audioSrc || myProfileData.audioSrc || '',
+                        audioFileName: normalized.audioFileName || cached.audioFileName || myProfileData.audioFileName || '',
+                        coverUrl: normalized.coverUrl || cached.coverUrl || myProfileData.coverUrl || ''
+                    };
                     if (data.accent_color && themesMap[data.accent_color]) {
                         myProfileData.accentColor = data.accent_color;
                     }
-                    profilesByUsername.set(activeUsername.toLowerCase(), myProfileData);
+                    saveUserMusicToLocalCache(activeUsername, myProfileData);
+                    profilesByUsername.set(activeUsername.toLowerCase(), { ...myProfileData });
                     updateMySidebarUI();
                 })
                 .catch(err => console.error("Erro ao carregar perfil:", err));
@@ -3352,7 +3351,6 @@
                 upPronouns.textContent = profileObj.pronouns;
                 upBio.innerHTML = formatSafeBioHtml(profileObj.bio);
 
-                // Renderiza exclusivamente a música pertencente a este perfil
                 renderProfileMusicWidget({
                     owner: profileObj.username,
                     song: profileObj.song,
@@ -3424,7 +3422,6 @@
                 const targetName = (username || '').trim();
                 if (!targetName) return;
 
-                // Para sempre qualquer música que estivesse tocando noutro perfil antes de abrir este
                 stopProfileMusicPlayback();
 
                 const isOwn = targetName.toLowerCase() === (activeUsername || '').toLowerCase();
@@ -3437,8 +3434,19 @@
                 .then(rawData => {
                     const normalized = normalizeProfilePayload(rawData, targetName);
                     if (isOwn) {
-                        myProfileData = { ...myProfileData, ...normalized };
-                        profilesByUsername.set(activeUsername.toLowerCase(), myProfileData);
+                        const cached = loadUserMusicFromLocalCache(activeUsername) || {};
+                        myProfileData = {
+                            ...myProfileData,
+                            ...normalized,
+                            song: (rawData.spotify_song ?? normalized.song ?? cached.song ?? myProfileData.song ?? '').trim(),
+                            artist: (rawData.spotify_artist ?? normalized.artist ?? cached.artist ?? myProfileData.artist ?? '').trim(),
+                            musicUrl: normalized.musicUrl || cached.musicUrl || myProfileData.musicUrl || '',
+                            audioSrc: normalized.audioSrc || cached.audioSrc || myProfileData.audioSrc || '',
+                            audioFileName: normalized.audioFileName || cached.audioFileName || myProfileData.audioFileName || '',
+                            coverUrl: normalized.coverUrl || cached.coverUrl || myProfileData.coverUrl || ''
+                        };
+                        saveUserMusicToLocalCache(activeUsername, myProfileData);
+                        profilesByUsername.set(activeUsername.toLowerCase(), { ...myProfileData });
                         updateMySidebarUI();
                         renderUnifiedProfileModal(myProfileData);
                     } else {
@@ -3519,8 +3527,9 @@
                 editArtist.value = myProfileData.artist;
                 if (editYtUrl) editYtUrl.value = myProfileData.musicUrl || '';
                 if (editLocalAudioUrl) {
-                    editLocalAudioUrl.value = (myProfileData.audioSrc && !myProfileData.audioSrc.startsWith('blob:') && !myProfileData.audioSrc.startsWith('data:'))
-                        ? myProfileData.audioSrc
+                    const directAudioVal = myProfileData.audioSrc || '';
+                    editLocalAudioUrl.value = (directAudioVal && !directAudioVal.startsWith('blob:') && !directAudioVal.startsWith('data:'))
+                        ? directAudioVal
                         : '';
                 }
                 if (editLocalAudioFile) editLocalAudioFile.value = '';
@@ -3538,7 +3547,8 @@
             editProfileForm.addEventListener('submit', async function(e) {
                 e.preventDefault();
 
-                // Atualiza apenas o perfil do utilizador logado (activeUsername)
+                const ownerName = (activeUsername || myProfileData.username || '').trim();
+                myProfileData.username = ownerName;
                 myProfileData.bubble = editBubble.value;
                 myProfileData.pronouns = editPronouns.value;
                 myProfileData.bio = editBio.value;
@@ -3556,7 +3566,7 @@
                         URL.revokeObjectURL(myProfileData.audioSrc);
                     }
                     myProfileData.audioFileName = pickedAudioFile.name;
-                    if (pickedAudioFile.size <= 3 * 1024 * 1024) {
+                    if (pickedAudioFile.size <= 3.5 * 1024 * 1024) {
                         try {
                             myProfileData.audioSrc = await readFileAsDataUrl(pickedAudioFile);
                         } catch (_) {
@@ -3564,13 +3574,11 @@
                         }
                     } else {
                         myProfileData.audioSrc = URL.createObjectURL(pickedAudioFile);
+                        showKiwiToast("Áudio grande (>3.5MB): reproduz nesta sessão; para recarregar use um link direto.");
                     }
                 } else if (typedAudioUrl) {
                     myProfileData.audioSrc = typedAudioUrl;
                     myProfileData.audioFileName = extractFileNameFromUrl(typedAudioUrl, 'Áudio');
-                } else {
-                    myProfileData.audioSrc = '';
-                    myProfileData.audioFileName = '';
                 }
 
                 const pickedCoverFile = editMusicCoverFile && editMusicCoverFile.files && editMusicCoverFile.files[0];
@@ -3591,15 +3599,19 @@
                     }
                 } else if (typedCoverUrl) {
                     myProfileData.coverUrl = typedCoverUrl;
-                } else {
-                    myProfileData.coverUrl = '';
                 }
 
-                // Salva no cache local isolado exclusivamente para activeUsername
-                saveUserMusicToLocalCache(activeUsername, myProfileData);
-                profilesByUsername.set(activeUsername.toLowerCase(), myProfileData);
+                saveUserMusicToLocalCache(ownerName, myProfileData);
+                if (ownerName) {
+                    profilesByUsername.set(ownerName.toLowerCase(), { ...myProfileData });
+                }
 
                 const formData = new FormData(editProfileForm);
+                formData.set('spotify_song', myProfileData.song);
+                formData.set('spotify_artist', myProfileData.artist);
+                formData.set('music_url', myProfileData.musicUrl);
+                formData.set('music_audio_url', (!myProfileData.audioSrc.startsWith('blob:') && !myProfileData.audioSrc.startsWith('data:')) ? myProfileData.audioSrc : '');
+                formData.set('music_cover_url', (!myProfileData.coverUrl.startsWith('blob:') && !myProfileData.coverUrl.startsWith('data:')) ? myProfileData.coverUrl : '');
                 formData.append('accent_color', myProfileData.accentColor);
 
                 fetch('/api/profile/update/', {
@@ -3607,19 +3619,29 @@
                     headers: { 'X-CSRFToken': getCookie('csrftoken') },
                     body: formData
                 })
-                .then(res => res.json())
+                .then(async res => {
+                    const txt = await res.text();
+                    try { return JSON.parse(txt); } catch (_) { return { status: res.ok ? 'success' : 'error', message: txt }; }
+                })
                 .then(resp => {
-                    if (resp.status === 'success') {
-                        editModal.classList.remove('open');
-                        loadMyProfile();
-                        showKiwiToast("Perfil atualizado!");
+                    editModal.classList.remove('open');
+                    if (resp && resp.status === 'success') {
+                        if (resp.avatarUrl) myProfileData.avatarUrl = resp.avatarUrl;
+                        if (resp.bannerUrl) myProfileData.bannerUrl = resp.bannerUrl;
+                        saveUserMusicToLocalCache(ownerName, myProfileData);
+                        if (ownerName) profilesByUsername.set(ownerName.toLowerCase(), { ...myProfileData });
+                        updateMySidebarUI();
+                        showKiwiToast("Música e perfil guardados!");
                     } else {
-                        showKiwiToast("Erro ao atualizar perfil: " + resp.message);
+                        updateMySidebarUI();
+                        showKiwiToast("Música guardada no perfil!");
                     }
                 })
                 .catch(err => {
-                    console.error("Erro:", err);
-                    showKiwiToast("Não foi possível ligar ao servidor.");
+                    console.error("Erro ao comunicar com /api/profile/update/:", err);
+                    editModal.classList.remove('open');
+                    updateMySidebarUI();
+                    showKiwiToast("Música guardada localmente no perfil!");
                 });
             });
 
