@@ -2,7 +2,7 @@
 
 
 Ícone do app HTML
-kiwi_chat_estetico_completo
+kiwi_chat_resolvido
 <!DOCTYPE html>
 <html lang="pt">
 <head>
@@ -67,7 +67,7 @@ kiwi_chat_estetico_completo
             justify-content: center;
             opacity: 0.12;
             transform: translateY(-18px) scale(0.9);
-            animation: kiwiDropIn 0.85s var(--ease-kiwi) forwards;
+            animation: kiwiDropIn 1.15s var(--ease-kiwi) forwards;
         }
         .kiwi-splash-ring {
             position: absolute;
@@ -115,7 +115,7 @@ kiwi_chat_estetico_completo
             color: var(--text-main);
             opacity: 0.15;
             transform: translateY(8px);
-            animation: kiwiTitleReveal 0.75s ease 0.35s forwards;
+            animation: kiwiTitleReveal 0.9s ease 0.55s forwards;
         }
         .kiwi-splash-sub {
             font-size: 12px;
@@ -140,7 +140,7 @@ kiwi_chat_estetico_completo
             height: 100%;
             border-radius: 999px;
             background: #23a55a;
-            animation: kiwiLoadBar 1.25s ease forwards;
+            animation: kiwiLoadBar 2.05s ease forwards;
         }
 
         @keyframes kiwiDropIn {
@@ -2652,6 +2652,10 @@ kiwi_chat_estetico_completo
                             <input type="file" name="banner" id="edit-banner-file" accept="image/*">
                         </div>
 
+                        <div class="form-group">
+                            <label>Nome de Usuário (Exibição)</label>
+                            <input type="text" name="username" id="edit-username" value="KiwiUser" maxlength="32">
+                        </div>
                         <div class="kiwi-editor-two-col-fields">
                             <div class="form-group">
                                 <label>Frase do Balão (Status)</label>
@@ -2856,9 +2860,9 @@ kiwi_chat_estetico_completo
                 sub.textContent = 'kiwi pronto';
                 sub.classList.add('ready');
             }
-        }, 700);
-        setTimeout(dismissKiwiSplash, 1100);
-        window.addEventListener('load', () => setTimeout(dismissKiwiSplash, 500));
+        }, 1450);
+        setTimeout(dismissKiwiSplash, 2250);
+        window.addEventListener('load', () => setTimeout(dismissKiwiSplash, 1600));
 
         document.addEventListener("DOMContentLoaded", function() {
             const lightboxEl = document.getElementById('image-lightbox');
@@ -2946,7 +2950,10 @@ kiwi_chat_estetico_completo
                 }
             }
 
-            let activeUsername = (readJsonScript('kiwi-username-data', 'KiwiUser') || 'KiwiUser').trim();
+            const USERNAME_STORAGE_KEY = 'kiwi_standalone_username_v1';
+            let savedUsername = '';
+            try { savedUsername = (localStorage.getItem(USERNAME_STORAGE_KEY) || '').trim(); } catch (_) {}
+            let activeUsername = (savedUsername || readJsonScript('kiwi-username-data', 'KiwiUser') || 'KiwiUser').trim();
             const THEME_STORAGE_KEY = 'kiwi_standalone_theme_v1';
             const FRIENDS_STORAGE_KEY = 'kiwi_standalone_friends_v1';
             const REQUESTS_STORAGE_KEY = 'kiwi_standalone_requests_v1';
@@ -3143,6 +3150,7 @@ kiwi_chat_estetico_completo
             const upOwnActions = document.getElementById('up-own-actions');
             const upOtherActions = document.getElementById('up-other-actions');
 
+            const editUsernameInput = document.getElementById('edit-username');
             const editBubble = document.getElementById('edit-bubble');
             const editPronouns = document.getElementById('edit-pronouns');
             const editBio = document.getElementById('edit-bio');
@@ -4290,6 +4298,7 @@ kiwi_chat_estetico_completo
             switchToEditBtn.addEventListener('click', () => {
                 closeUnifiedProfileModal();
                 syncAdminVisualRestrictions();
+                if (editUsernameInput) editUsernameInput.value = activeUsername || myProfileData.username || 'KiwiUser';
                 editBubble.value = myProfileData.bubble;
                 editPronouns.value = myProfileData.pronouns;
                 editBio.value = myProfileData.bio.replace(/<br\s*\/?>/gi, '\n');
@@ -4644,7 +4653,10 @@ kiwi_chat_estetico_completo
 
             editProfileForm.addEventListener('submit', async function(e) {
                 e.preventDefault();
-                const ownerName = (activeUsername || myProfileData.username || 'KiwiUser').trim();
+                const typedName = (editUsernameInput && editUsernameInput.value.trim()) || activeUsername || myProfileData.username || 'KiwiUser';
+                activeUsername = typedName;
+                try { localStorage.setItem(USERNAME_STORAGE_KEY, activeUsername); } catch (_) {}
+                const ownerName = activeUsername;
                 const canGold = isAdminIdentity(ownerName, myProfileData.is_admin);
                 myProfileData.username = ownerName;
                 myProfileData.bubble = editBubble.value;
@@ -4658,7 +4670,7 @@ kiwi_chat_estetico_completo
 
                 const pickedAvatarFile = editAvatarFileEl && editAvatarFileEl.files && editAvatarFileEl.files[0];
                 if (pickedAvatarFile) {
-                    if (pickedAvatarFile.size <= 2 * 1024 * 1024) {
+                    if (pickedAvatarFile.size <= 4 * 1024 * 1024) {
                         try { myProfileData.avatarUrl = await readFileAsDataUrl(pickedAvatarFile); } catch (_) { myProfileData.avatarUrl = tempEditorAvatarUrl; }
                     } else if (tempEditorAvatarUrl) {
                         myProfileData.avatarUrl = tempEditorAvatarUrl;
@@ -4669,7 +4681,7 @@ kiwi_chat_estetico_completo
 
                 const pickedBannerFile = editBannerFileEl && editBannerFileEl.files && editBannerFileEl.files[0];
                 if (pickedBannerFile) {
-                    if (pickedBannerFile.size <= 2.5 * 1024 * 1024) {
+                    if (pickedBannerFile.size <= 4.5 * 1024 * 1024) {
                         try { myProfileData.bannerUrl = await readFileAsDataUrl(pickedBannerFile); } catch (_) { myProfileData.bannerUrl = tempEditorBannerUrl; }
                     } else if (tempEditorBannerUrl) {
                         myProfileData.bannerUrl = tempEditorBannerUrl;
@@ -4702,7 +4714,7 @@ kiwi_chat_estetico_completo
 
                 if (pickedCoverFile) {
                     if (myProfileData.coverUrl && myProfileData.coverUrl.startsWith('blob:')) URL.revokeObjectURL(myProfileData.coverUrl);
-                    if (pickedCoverFile.size <= 2 * 1024 * 1024) {
+                    if (pickedCoverFile.size <= 4 * 1024 * 1024) {
                         try { myProfileData.coverUrl = await readFileAsDataUrl(pickedCoverFile); } catch (_) { myProfileData.coverUrl = tempEditorBannerUrl; }
                     } else {
                         myProfileData.coverUrl = URL.createObjectURL(pickedCoverFile);
