@@ -8,7 +8,7 @@ from django.contrib.auth import get_user_model
 from django.db.models import Q
 from django.utils import timezone
 
-from .models import Message, PrivateMessage, Room
+from .models import Message, PrivateMessage
 
 User = get_user_model()
 
@@ -278,14 +278,29 @@ class ChatConsumer(AsyncWebsocketConsumer):
 
     @database_sync_to_async
     def _get_or_create_room(self, slug: str):
-        room, _ = Room.objects.get_or_create(slug=slug, defaults={"name": slug})
-        return room
+        try:
+            from django.apps import apps
+            for model_name in ("Room", "ChatRoom", "Channel"):
+                Model = apps.get_model("chat", model_name)
+                if Model is not None:
+                    field_names = {f.name for f in Model._meta.get_fields()}
+                    lookup = {"slug": slug} if "slug" in field_names else {"name": slug}
+                    defaults = {}
+                    if "name" in field_names and "name" not in lookup:
+                        defaults["name"] = slug
+                    if "slug" in field_names and "slug" not in lookup:
+                        defaults["slug"] = slug
+                    obj, _ = Model.objects.get_or_create(**lookup, defaults=defaults)
+                    return obj
+        except Exception:
+            pass
+        return None
 
     @database_sync_to_async
     def _save_message(self, user, room, content, attachment_url, attachment_type, attachment_name):
         field_names = {f.name for f in Message._meta.get_fields()}
         kwargs = {}
-        if "room" in field_names:
+        if "room" in field_names and room is not None:
             kwargs["room"] = room
         if "user" in field_names:
             kwargs["user"] = user
