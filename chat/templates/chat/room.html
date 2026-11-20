@@ -989,17 +989,44 @@
             border-radius: 999px;
         }
         .social-list-item {
-            padding: 8px;
-            border-radius: 6px;
+            padding: 8px 10px;
+            border-radius: 8px;
             margin-bottom: 6px;
             display: flex;
             align-items: center;
-            gap: 6px;
+            gap: 10px;
             color: var(--text-main);
             background: var(--bg-card);
-            border: 1px solid var(--border-subtle);
+            border: none;
+            box-shadow: none;
+            outline: none;
             cursor: pointer;
-            transition: transform 0.2s var(--ease-kiwi), filter 0.2s ease;
+            transition: transform 0.2s var(--ease-kiwi), background 0.18s ease;
+        }
+        .social-list-item:focus,
+        .social-list-item:focus-visible,
+        .avatar:focus,
+        .mini-avatar:focus,
+        .dm-channel-avatar:focus {
+            outline: none;
+            box-shadow: none;
+        }
+        .social-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: #5865f2;
+            color: #fff;
+            font-size: 12px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-size: cover;
+            background-position: center;
+            flex-shrink: 0;
+            border: none;
+            outline: none;
         }
         .social-list-item:hover { filter: brightness(0.97); transform: translateX(2px); }
         .dm-quick-btn, .remove-friend-mini-btn {
@@ -5017,14 +5044,43 @@
                 });
             }
 
+            const channelSnapshotsByKey = new Map();
+
+            function getChannelStorageKey(serverId = activeServerId, channelName = currentChannelName) {
+                const srvKey = serverId || 'home';
+                const chKey = (channelName || 'geral').trim().toLowerCase();
+                return `${srvKey}::${chKey}`;
+            }
+
+            function getChannelSnapshot(serverId = activeServerId, channelName = currentChannelName) {
+                const key = getChannelStorageKey(serverId, channelName);
+                if (!channelSnapshotsByKey.has(key)) {
+                    channelSnapshotsByKey.set(key, key === 'home::geral' ? geralSnapshotHTML : '');
+                }
+                return channelSnapshotsByKey.get(key);
+            }
+
+            function setChannelSnapshot(htmlContent, serverId = activeServerId, channelName = currentChannelName) {
+                const key = getChannelStorageKey(serverId, channelName);
+                channelSnapshotsByKey.set(key, htmlContent);
+                if (key === 'home::geral') {
+                    geralSnapshotHTML = htmlContent;
+                }
+            }
+
             window.switchToGeral = function(channelName = 'geral', channelType = 'text') {
                 currentView = 'geral';
                 currentDmUser = null;
                 currentChannelName = channelName;
 
-                if (tabGeralEl) tabGeralEl.classList.toggle('active', channelName === 'geral');
+                const activeKey = getChannelStorageKey(activeServerId, channelName);
+                if (tabGeralEl) {
+                    const tabKey = getChannelStorageKey(activeServerId, 'geral');
+                    tabGeralEl.classList.toggle('active', activeKey === tabKey);
+                }
                 document.querySelectorAll('#server-channels-list .channel-item').forEach(el => {
-                    el.classList.toggle('active', el.getAttribute('data-channel-name') === channelName);
+                    const itemCh = (el.getAttribute('data-channel-name') || '').trim().toLowerCase();
+                    el.classList.toggle('active', getChannelStorageKey(activeServerId, itemCh) === activeKey);
                 });
                 renderDmTabs();
 
@@ -5039,7 +5095,7 @@
                 if (backToGeralBtn) backToGeralBtn.classList.remove('visible');
                 if (messageInput) messageInput.placeholder = `Conversar em ${prefix}${channelName}...`;
 
-                chatLog.innerHTML = geralSnapshotHTML;
+                chatLog.innerHTML = getChannelSnapshot(activeServerId, channelName);
                 enhanceExistingMessagesInLog();
                 triggerChatAreaTransition();
                 chatLog.scrollTop = chatLog.scrollHeight;
@@ -5133,13 +5189,14 @@
                 return group;
             }
 
-            function appendGeralMessageToSnapshot(data, avatarUrl = '') {
+            function appendGeralMessageToSnapshot(data, avatarUrl = '', targetServerId = activeServerId, targetChannel = currentChannelName) {
+                const currentHtml = getChannelSnapshot(targetServerId, targetChannel);
                 const tempContainer = document.createElement('div');
-                tempContainer.innerHTML = geralSnapshotHTML;
+                tempContainer.innerHTML = currentHtml;
                 if (data.id && tempContainer.querySelector(`.message-group[data-msg-id="${data.id}"]`)) return;
                 const newEl = buildMessageDomElement(data, { isDm: false, avatarUrl });
                 tempContainer.appendChild(newEl);
-                geralSnapshotHTML = tempContainer.innerHTML;
+                setChannelSnapshot(tempContainer.innerHTML, targetServerId, targetChannel);
             }
 
             function appendMessageElement(data, options = {}) {
@@ -5153,9 +5210,16 @@
                     (canDelete ? myProfileData.avatarUrl : '') ||
                     '';
 
-                if (!isDm) appendGeralMessageToSnapshot(data, avatarSrc);
+                const msgServerId = data.server_id || activeServerId;
+                const msgChannel = data.channel || currentChannelName;
 
-                const shouldRenderHere = isDm ? (currentView === 'dm' && currentDmUser === msgUsername) : (currentView === 'geral');
+                if (!isDm) appendGeralMessageToSnapshot(data, avatarSrc, msgServerId, msgChannel);
+
+                const matchesActiveChannel =
+                    getChannelStorageKey(msgServerId, msgChannel) === getChannelStorageKey(activeServerId, currentChannelName);
+                const shouldRenderHere = isDm
+                    ? (currentView === 'dm' && currentDmUser === msgUsername)
+                    : (currentView === 'geral' && matchesActiveChannel);
                 if (!shouldRenderHere) return;
 
                 if (data.id) {
@@ -5535,20 +5599,52 @@
             const tabs = document.querySelectorAll('.social-tab');
             const socialContent = document.getElementById('social-content-container');
 
+            function resolveUserAvatar(username) {
+                if (!username) return '';
+                if (username.toLowerCase() === (activeUsername || '').toLowerCase()) {
+                    return myProfileData.avatarUrl || '';
+                }
+                const cached = profilesByUsername.get(username.toLowerCase());
+                if (cached && cached.avatarUrl) return cached.avatarUrl;
+                if (openDmTabs.has(username) && openDmTabs.get(username).avatarUrl) {
+                    return openDmTabs.get(username).avatarUrl;
+                }
+                return '';
+            }
+
             function fetchOnlineUsers() {
                 socialContent.innerHTML = '';
-                const item = document.createElement('div');
-                item.className = 'social-list-item';
-                item.style.color = '#23a55a';
-                item.textContent = `● ${activeUsername} (Você)`;
-                item.onclick = () => openUserProfile(activeUsername);
-                socialContent.appendChild(item);
+
+                const selfItem = document.createElement('div');
+                selfItem.className = 'social-list-item';
+
+                const selfAvatar = document.createElement('div');
+                selfAvatar.className = 'social-avatar';
+                setAvatarStyle(selfAvatar, resolveUserAvatar(activeUsername), activeUsername);
+
+                const selfText = document.createElement('span');
+                selfText.style.cssText = 'color:#23a55a; font-weight:600; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;';
+                selfText.textContent = `● ${activeUsername} (Você)`;
+
+                selfItem.appendChild(selfAvatar);
+                selfItem.appendChild(selfText);
+                selfItem.onclick = () => openUserProfile(activeUsername);
+                socialContent.appendChild(selfItem);
 
                 friendsList.forEach(friendName => {
                     const fItem = document.createElement('div');
                     fItem.className = 'social-list-item';
-                    fItem.style.color = '#23a55a';
-                    fItem.textContent = `● ${friendName}`;
+
+                    const fAvatar = document.createElement('div');
+                    fAvatar.className = 'social-avatar';
+                    setAvatarStyle(fAvatar, resolveUserAvatar(friendName), friendName);
+
+                    const fText = document.createElement('span');
+                    fText.style.cssText = 'color:#23a55a; font-weight:600; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;';
+                    fText.textContent = `● ${friendName}`;
+
+                    fItem.appendChild(fAvatar);
+                    fItem.appendChild(fText);
                     fItem.onclick = () => openUserProfile(friendName);
                     socialContent.appendChild(fItem);
                 });

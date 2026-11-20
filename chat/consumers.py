@@ -1,416 +1,492 @@
 import json
+import re
+from urllib.parse import urlparse
+
 from channels.db import database_sync_to_async
 from channels.generic.websocket import AsyncWebsocketConsumer
-from django.contrib.auth.models import User
+from django.contrib.auth import get_user_model
 from django.db.models import Q
-from .models import Channel, FriendRequest, Message, PrivateMessage
+from django.utils import timezone
+
+from .models import Friendship, Message, PrivateMessage, Room
+
+User = get_user_model()
 
 
-def _is_valid_media_url(url_value):
-    if not url_value:
+def _sanitize_group_token(value: str, fallback: str = "default") -> str:
+    cleaned = re.sub(r"[^a-zA-Z0-9._-]", "_", (value or "").strip())
+    return cleaned[:80] if cleaned else fallback
+
+
+def _is_valid_media_url(url: str) -> bool:
+    if not url or not isinstance(url, str):
         return False
-    lowered = url_value.strip().lower()
-    return lowered.startswith(('http://', 'https://', '/media/'))
+    value = url.strip()
+    if value.startswith("/media/") or value.startswith("media/"):
+        return True
+    parsed = urlparse(value)
+    return parsed.scheme in ("http", "https") and bool(parsed.netloc)
+
+
+def _normalize_attachment_type(att_type: str, att_url: str) -> str:
+    allowed = {"image", "audio", "file", "video"}
+    if att_type in allowed:
+        return att_type
+    lower_url = (att_url or "").lower()
+    if any(lower_url.endswith(ext) for ext in (".png", ".jpg", ".jpeg", ".gif", ".webp")):
+        return "image"
+    if any(lower_url.endswith(ext) for ext in (".mp3", ".ogg", ".wav", ".webm", ".m4a")):
+        return "audio"
+    return "file"
+
+
+def _get_user_avatar(user) -> str:
+    for attr in ("avatar_url", "avatar", "foto", "photo"):
+        val = getattr(user, attr, None)
+        if not val:
+            continue
+        if hasattr(val, "url"):
+            try:
+                return val.url
+            except Exception:
+                continue
+        if isinstance(val, str) and _is_valid_media_url(val):
+            return val.strip()
+    profile = getattr(user, "profile", None)
+    if profile:
+        for attr in ("avatar_url", "avatar", "foto", "photo"):
+            val = getattr(profile, attr, None)
+            if not val:
+                continue
+            if hasattr(val, "url"):
+                try:
+                    return val.url
+                except Exception:
+                    continue
+            if isinstance(val, str) and _is_valid_media_url(val):
+                return val.strip()
+    return ""
 
 
 class ChatConsumer(AsyncWebsocketConsumer):
+    """
+    WebSocket para canais isolados por servidor + canal:
+    Ex.: /ws/chat/<room_slug>/?server=<server_id>&channel=<channel_name>
+    """
+
     async def connect(self):
-        self.room_name = str(self.scope['url_route']['kwargs']['room_name'])
-        self.room_group_name = f'chat_{self.room_name}'
-        self.user = self.scope.get('user')
-        self.user_group_name = (
-            f'user_{self.user.id}'
-            if self.user and self.user.is_authenticated
-            else None
-        )
-
-        if not self.user or not self.user.is_authenticated:
-            await self.close(code=4401)
+        user = self.scope.get("user")
+        if not user or not user.is_authenticated:
+            await self.close(code=4001)
             return
 
-        self.channel_obj = await self.get_allowed_channel(self.user, self.room_name)
-        if not self.channel_obj:
-            await self.close(code=4403)
-            return
-
-        await self.channel_layer.group_add(
-            self.room_group_name,
-            self.channel_name
+        self.user = user
+        self.room_slug = _sanitize_group_token(
+            self.scope["url_route"]["kwargs"].get("room_slug", "geral"),
+            fallback="geral",
         )
-        if self.user_group_name:
-            await self.channel_layer.group_add(
-                self.user_group_name,
-                self.channel_name
-            )
+
+        query_params = self._parse_query_string()
+        raw_server = query_params.get("server") or "home"
+        raw_channel = query_params.get("channel") or self.room_slug
+
+        self.server_id = _sanitize_group_token(raw_server, fallback="home")
+        self.channel_name_slug = _sanitize_group_token(raw_channel, fallback="geral")
+        self.group_name = f"kiwi_srv_{self.server_id}_ch_{self.channel_name_slug}"
+        self.presence_group = f"kiwi_presence_srv_{self.server_id}"
+
+        self.room_obj = await self._get_or_create_room(self.room_slug)
+
+        await self.channel_layer.group_add(self.group_name, self.channel_name)
+        await self.channel_layer.group_add(self.presence_group, self.channel_name)
         await self.accept()
 
+        await self.channel_layer.group_send(
+            self.presence_group,
+            {
+                "type": "presence_update",
+                "username": self.user.username,
+                "status": "online",
+                "avatar_url": await database_sync_to_async(_get_user_avatar)(self.user),
+                "server_id": self.server_id,
+                "channel": self.channel_name_slug,
+            },
+        )
+
     async def disconnect(self, close_code):
-        if hasattr(self, 'room_group_name'):
-            await self.channel_layer.group_discard(
-                self.room_group_name,
-                self.channel_name
-            )
-        if getattr(self, 'user_group_name', None):
-            await self.channel_layer.group_discard(
-                self.user_group_name,
-                self.channel_name
-            )
+        if hasattr(self, "group_name"):
+            await self.channel_layer.group_discard(self.group_name, self.channel_name)
+        if hasattr(self, "presence_group") and hasattr(self, "user"):
+            await self.channel_layer.group_discard(self.presence_group, self.channel_name)
+            try:
+                await self.channel_layer.group_send(
+                    self.presence_group,
+                    {
+                        "type": "presence_update",
+                        "username": self.user.username,
+                        "status": "offline",
+                        "avatar_url": await database_sync_to_async(_get_user_avatar)(self.user),
+                        "server_id": getattr(self, "server_id", "home"),
+                        "channel": getattr(self, "channel_name_slug", "geral"),
+                    },
+                )
+            except Exception:
+                pass
 
-    async def incoming_call(self, event):
-        await self.send(text_data=json.dumps({
-            'type': 'incoming_call',
-            'caller': event.get('caller', ''),
-            'signal': event.get('signal'),
-        }))
+    def _parse_query_string(self) -> dict:
+        raw_qs = self.scope.get("query_string", b"").decode("utf-8", errors="ignore")
+        params = {}
+        for part in raw_qs.split("&"):
+            if "=" in part:
+                k, v = part.split("=", 1)
+                params[k.strip()] = v.strip()
+        return params
 
-    async def friend_event(self, event):
-        await self.send(text_data=json.dumps({
-            'type': 'friend_event',
-            'event': event.get('event', ''),
-            'payload': event.get('payload') or {},
-        }))
+    async def receive(self, text_data=None, bytes_data=None):
+        if not text_data:
+            return
 
-    async def receive(self, text_data):
         try:
-            data = json.loads(text_data)
+            payload = json.loads(text_data)
         except json.JSONDecodeError:
             return
 
-        action = data.get('action')
+        msg_type = payload.get("type") or "chat_message"
 
-        if action == 'delete_message':
-            message_id = data.get('message_id') or data.get('id')
-            deleted = await self.delete_message(message_id)
-            if deleted:
-                await self.channel_layer.group_send(
-                    self.room_group_name,
-                    {
-                        'type': 'message_deleted',
-                        'message_id': message_id,
-                    }
-                )
+        if msg_type == "ping":
+            await self.send(text_data=json.dumps({"type": "pong"}))
             return
 
-        if action == 'friend_notify':
-            target_user_id = data.get('target_user_id')
-            if target_user_id:
-                try:
-                    clean_target_id = int(target_user_id)
-                except (TypeError, ValueError):
-                    return
-                if await self.can_notify_user(self.user, clean_target_id):
+        if msg_type == "delete_message":
+            msg_id = payload.get("id")
+            if msg_id:
+                deleted = await self._delete_message(msg_id, self.user.id)
+                if deleted:
                     await self.channel_layer.group_send(
-                        f'user_{clean_target_id}',
+                        self.group_name,
                         {
-                            'type': 'friend_event',
-                            'event': data.get('event', 'friend_update'),
-                            'payload': data.get('payload') or {},
-                        }
+                            "type": "message_deleted",
+                            "id": msg_id,
+                            "server_id": self.server_id,
+                            "channel": self.channel_name_slug,
+                        },
                     )
             return
 
-        username = self.user.username
-        avatar_url = data.get('avatarUrl') or data.get('avatar') or ''
-        raw_attachment_url = (data.get('attachment_url') or '').strip()
-        attachment_url = raw_attachment_url if _is_valid_media_url(raw_attachment_url) else ''
-        attachment_type = (data.get('attachment_type') or '').strip()
-        message = (data.get('message') or '').strip()
+        content = (payload.get("message") or payload.get("content") or "").strip()
+        attachment_url = (payload.get("attachment_url") or "").strip()
+        attachment_name = (payload.get("attachment_name") or "").strip()[:255]
+        attachment_type = _normalize_attachment_type(
+            payload.get("attachment_type") or "",
+            attachment_url,
+        )
 
-        if not message and not attachment_url:
+        if attachment_url and not _is_valid_media_url(attachment_url):
+            attachment_url = ""
+            attachment_type = ""
+            attachment_name = ""
+
+        if not content and not attachment_url:
             return
 
-        msg = await self.save_message(
-            self.user,
-            self.channel_obj,
-            message,
+        raw_avatar = (payload.get("avatar_url") or payload.get("avatar") or "").strip()
+        safe_avatar = (
+            raw_avatar
+            if _is_valid_media_url(raw_avatar)
+            else await database_sync_to_async(_get_user_avatar)(self.user)
+        )
+
+        msg_id = payload.get("id") or f"msg_{int(timezone.now().timestamp() * 1000)}"
+        time_str = payload.get("time") or timezone.localtime(timezone.now()).strftime("%H:%M")
+
+        await self._save_message(
+            user=self.user,
+            room=self.room_obj,
+            content=content,
             attachment_url=attachment_url,
             attachment_type=attachment_type,
+            attachment_name=attachment_name,
         )
-        if not msg:
-            return
 
         await self.channel_layer.group_send(
-            self.room_group_name,
+            self.group_name,
             {
-                'type': 'chat_message',
-                'id': msg.id,
-                'message': msg.content,
-                'username': username,
-                'avatarUrl': avatar_url,
-                'attachment_url': attachment_url,
-                'attachment_type': attachment_type,
-            }
+                "type": "chat_message",
+                "id": msg_id,
+                "sender": self.user.username,
+                "username": self.user.username,
+                "message": content,
+                "time": time_str,
+                "server_id": self.server_id,
+                "channel": self.channel_name_slug,
+                "avatar_url": safe_avatar,
+                "attachment_url": attachment_url,
+                "attachment_type": attachment_type if attachment_url else "",
+                "attachment_name": attachment_name if attachment_url else "",
+            },
         )
 
     async def chat_message(self, event):
-        await self.send(text_data=json.dumps({
-            'type': 'chat_message',
-            'id': event.get('id'),
-            'message': event.get('message', ''),
-            'username': event.get('username', ''),
-            'avatarUrl': event.get('avatarUrl', ''),
-            'attachment_url': event.get('attachment_url', ''),
-            'attachment_type': event.get('attachment_type', ''),
-        }))
+        if event.get("server_id") != self.server_id or event.get("channel") != self.channel_name_slug:
+            return
+        await self.send(
+            text_data=json.dumps(
+                {
+                    "type": "chat_message",
+                    "id": event.get("id"),
+                    "sender": event.get("sender"),
+                    "username": event.get("username"),
+                    "message": event.get("message", ""),
+                    "time": event.get("time", ""),
+                    "server_id": event.get("server_id"),
+                    "channel": event.get("channel"),
+                    "avatar_url": event.get("avatar_url", ""),
+                    "attachment_url": event.get("attachment_url", ""),
+                    "attachment_type": event.get("attachment_type", ""),
+                    "attachment_name": event.get("attachment_name", ""),
+                }
+            )
+        )
 
     async def message_deleted(self, event):
-        msg_id = event.get('message_id') if event.get('message_id') is not None else event.get('id')
-        await self.send(text_data=json.dumps({
-            'type': 'message_deleted',
-            'message_id': msg_id,
-        }))
+        if event.get("server_id") != self.server_id or event.get("channel") != self.channel_name_slug:
+            return
+        await self.send(
+            text_data=json.dumps(
+                {
+                    "type": "delete_message",
+                    "id": event.get("id"),
+                    "server_id": event.get("server_id"),
+                    "channel": event.get("channel"),
+                }
+            )
+        )
 
-    @database_sync_to_async
-    def can_notify_user(self, sender, target_id):
-        if not sender or not sender.is_authenticated:
-            return False
-        if sender.id == target_id:
-            return True
-        return FriendRequest.are_friends(sender, User(id=target_id))
-
-    @database_sync_to_async
-    def get_allowed_channel(self, user, room_identifier):
-        if str(room_identifier).isdigit():
-            return Channel.objects.filter(
-                id=int(room_identifier),
-                server__members=user,
-            ).select_related('server').first()
-        return None
-
-    @database_sync_to_async
-    def save_message(self, user, channel_obj, message, attachment_url='', attachment_type=''):
-        if not user or not channel_obj:
-            return None
-        return Message.objects.create(
-            user=user,
-            channel=channel_obj,
-            content=message,
-            attachment_type=attachment_type[:20] if attachment_type else '',
+    async def presence_update(self, event):
+        await self.send(
+            text_data=json.dumps(
+                {
+                    "type": "presence_update",
+                    "username": event.get("username"),
+                    "status": event.get("status", "online"),
+                    "avatar_url": event.get("avatar_url", ""),
+                    "server_id": event.get("server_id"),
+                    "channel": event.get("channel"),
+                }
+            )
         )
 
     @database_sync_to_async
-    def delete_message(self, message_id):
-        if not message_id:
-            return False
-        try:
-            msg_id = int(message_id)
-        except (TypeError, ValueError):
-            return False
+    def _get_or_create_room(self, slug: str):
+        room, _ = Room.objects.get_or_create(slug=slug, defaults={"name": slug})
+        return room
 
-        msg = Message.objects.filter(id=msg_id, channel=self.channel_obj).first()
-        if not msg:
-            return False
+    @database_sync_to_async
+    def _save_message(self, user, room, content, attachment_url, attachment_type, attachment_name):
+        field_names = {f.name for f in Message._meta.get_fields()}
+        kwargs = {}
+        if "room" in field_names:
+            kwargs["room"] = room
+        if "user" in field_names:
+            kwargs["user"] = user
+        elif "sender" in field_names:
+            kwargs["sender"] = user
+        if "content" in field_names:
+            kwargs["content"] = content
+        if "attachment_url" in field_names:
+            kwargs["attachment_url"] = attachment_url
+        if "attachment_type" in field_names:
+            kwargs["attachment_type"] = attachment_type
+        if "attachment_name" in field_names:
+            kwargs["attachment_name"] = attachment_name
+        if "server_id" in field_names:
+            kwargs["server_id"] = self.server_id
+        if "channel_name" in field_names:
+            kwargs["channel_name"] = self.channel_name_slug
+        return Message.objects.create(**kwargs)
 
-        if msg.user != self.user and not (self.user.is_staff or self.user.is_superuser):
-            return False
-
-        msg.delete()
-        return True
+    @database_sync_to_async
+    def _delete_message(self, msg_id, user_id) -> bool:
+        field_names = {f.name for f in Message._meta.get_fields()}
+        qs = Message.objects.filter(id=msg_id)
+        if "user_id" in field_names:
+            qs = qs.filter(user_id=user_id)
+        elif "sender_id" in field_names:
+            qs = qs.filter(sender_id=user_id)
+        deleted_count, _ = qs.delete()
+        return deleted_count > 0
 
 
 class DMConsumer(AsyncWebsocketConsumer):
+    """
+    WebSocket para mensagens diretas (DMs) e sinalização de chamada entre dois utilizadores.
+    """
+
     async def connect(self):
-        self.user = self.scope.get('user')
-        self.other_username = self.scope['url_route']['kwargs']['username']
-
-        if not self.user or not self.user.is_authenticated:
-            await self.close(code=4401)
+        user = self.scope.get("user")
+        if not user or not user.is_authenticated:
+            await self.close(code=4001)
             return
 
-        self.other_user = await self.get_other_if_friend(self.user, self.other_username)
-        if not self.other_user:
-            await self.close(code=4403)
+        self.user = user
+        target_username = self.scope["url_route"]["kwargs"].get("username", "")
+        self.target_user = await self._get_user_by_username(target_username)
+        if not self.target_user:
+            await self.close(code=4004)
             return
 
-        ids = sorted([self.user.id, self.other_user.id])
-        self.room_group_name = f'dm_{ids[0]}_{ids[1]}'
+        allowed = await self._are_friends(self.user.id, self.target_user.id)
+        if not allowed:
+            await self.close(code=4003)
+            return
 
-        await self.channel_layer.group_add(
-            self.room_group_name,
-            self.channel_name
-        )
+        pair = sorted([self.user.username.lower(), self.target_user.username.lower()])
+        self.room_group_name = f"kiwi_dm_{_sanitize_group_token(pair[0])}_{_sanitize_group_token(pair[1])}"
+        self.target_personal_group = f"kiwi_user_{_sanitize_group_token(self.target_user.username.lower())}"
+        self.self_personal_group = f"kiwi_user_{_sanitize_group_token(self.user.username.lower())}"
+
+        await self.channel_layer.group_add(self.room_group_name, self.channel_name)
+        await self.channel_layer.group_add(self.self_personal_group, self.channel_name)
         await self.accept()
 
     async def disconnect(self, close_code):
-        if hasattr(self, 'room_group_name'):
-            await self.channel_layer.group_discard(
-                self.room_group_name,
-                self.channel_name
-            )
+        for grp in ("room_group_name", "self_personal_group"):
+            if hasattr(self, grp):
+                await self.channel_layer.group_discard(getattr(self, grp), self.channel_name)
 
-    async def receive(self, text_data):
+    async def receive(self, text_data=None, bytes_data=None):
+        if not text_data:
+            return
         try:
-            data = json.loads(text_data)
+            payload = json.loads(text_data)
         except json.JSONDecodeError:
             return
 
-        msg_type = data.get('type')
-        action = data.get('action')
+        ev_type = payload.get("type") or "dm_message"
 
-        if msg_type == 'call_signal':
-            signal = data.get('signal') or {}
+        if ev_type in ("call_signal", "call_hangup", "incoming_call"):
             await self.channel_layer.group_send(
                 self.room_group_name,
                 {
-                    'type': 'call_signal',
-                    'sender': self.user.username,
-                    'sender_channel': self.channel_name,
-                    'signal': signal,
-                }
-            )
-            if signal.get('offer'):
-                await self.channel_layer.group_send(
-                    f'user_{self.other_user.id}',
-                    {
-                        'type': 'incoming_call',
-                        'caller': self.user.username,
-                        'signal': signal,
-                    }
-                )
-            return
-
-        if msg_type == 'call_hangup':
-            await self.channel_layer.group_send(
-                self.room_group_name,
-                {
-                    'type': 'call_hangup',
-                    'sender': self.user.username,
-                    'sender_channel': self.channel_name,
-                }
+                    "type": "dm_call_event",
+                    "event_type": ev_type,
+                    "sender": self.user.username,
+                    "receiver": self.target_user.username,
+                    "signal": payload.get("signal"),
+                },
             )
             return
 
-        if msg_type == 'music_sync':
-            await self.channel_layer.group_send(
-                self.room_group_name,
-                {
-                    'type': 'music_sync',
-                    'sender': self.user.username,
-                    'sender_channel': self.channel_name,
-                    'music': data.get('music') or {},
-                }
-            )
+        content = (payload.get("message") or payload.get("content") or "").strip()
+        attachment_url = (payload.get("attachment_url") or "").strip()
+        attachment_name = (payload.get("attachment_name") or "").strip()[:255]
+        attachment_type = _normalize_attachment_type(
+            payload.get("attachment_type") or "",
+            attachment_url,
+        )
+
+        if attachment_url and not _is_valid_media_url(attachment_url):
+            attachment_url = ""
+            attachment_type = ""
+            attachment_name = ""
+
+        if not content and not attachment_url:
             return
 
-        if action == 'delete_dm':
-            msg_id = data.get('message_id') or data.get('id')
-            if await self.delete_dm(msg_id):
-                await self.channel_layer.group_send(
-                    self.room_group_name,
-                    {
-                        'type': 'dm_deleted',
-                        'message_id': msg_id,
-                    }
-                )
-            return
+        raw_avatar = (payload.get("avatar_url") or payload.get("avatar") or "").strip()
+        safe_avatar = (
+            raw_avatar
+            if _is_valid_media_url(raw_avatar)
+            else await database_sync_to_async(_get_user_avatar)(self.user)
+        )
+        msg_id = payload.get("id") or f"dm_{int(timezone.now().timestamp() * 1000)}"
+        time_str = payload.get("time") or timezone.localtime(timezone.now()).strftime("%H:%M")
 
-        raw_attachment_url = (data.get('attachment_url') or '').strip()
-        attachment_url = raw_attachment_url if _is_valid_media_url(raw_attachment_url) else ''
-        attachment_type = (data.get('attachment_type') or '').strip()
-        message = (data.get('message') or '').strip()
-
-        if not message and not attachment_url:
-            return
-
-        msg = await self.save_dm(
-            self.user,
-            self.other_user,
-            message,
+        await self._save_dm(
+            sender=self.user,
+            receiver=self.target_user,
+            content=content,
             attachment_url=attachment_url,
             attachment_type=attachment_type,
+            attachment_name=attachment_name,
         )
-        if not msg:
-            return
 
         await self.channel_layer.group_send(
             self.room_group_name,
             {
-                'type': 'dm_message',
-                'id': msg.id,
-                'message': msg.content,
-                'sender': self.user.username,
-                'attachment_url': attachment_url,
-                'attachment_type': attachment_type,
-            }
+                "type": "dm_message",
+                "id": msg_id,
+                "sender": self.user.username,
+                "receiver": self.target_user.username,
+                "message": content,
+                "time": time_str,
+                "avatar_url": safe_avatar,
+                "attachment_url": attachment_url,
+                "attachment_type": attachment_type if attachment_url else "",
+                "attachment_name": attachment_name if attachment_url else "",
+            },
         )
-
-    async def call_signal(self, event):
-        if event.get('sender_channel') == self.channel_name:
-            return
-        await self.send(text_data=json.dumps({
-            'type': 'call_signal',
-            'sender': event.get('sender', ''),
-            'signal': event.get('signal'),
-        }))
-
-    async def call_hangup(self, event):
-        if event.get('sender_channel') == self.channel_name:
-            return
-        await self.send(text_data=json.dumps({
-            'type': 'call_hangup',
-            'sender': event.get('sender', ''),
-        }))
-
-    async def music_sync(self, event):
-        if event.get('sender_channel') == self.channel_name:
-            return
-        await self.send(text_data=json.dumps({
-            'type': 'music_sync',
-            'sender': event.get('sender', ''),
-            'music': event.get('music') or {},
-        }))
 
     async def dm_message(self, event):
-        await self.send(text_data=json.dumps({
-            'type': 'dm_message',
-            'id': event.get('id'),
-            'message': event.get('message', ''),
-            'sender': event.get('sender', ''),
-            'attachment_url': event.get('attachment_url', ''),
-            'attachment_type': event.get('attachment_type', ''),
-        }))
+        await self.send(
+            text_data=json.dumps(
+                {
+                    "type": "dm_message",
+                    "id": event.get("id"),
+                    "sender": event.get("sender"),
+                    "receiver": event.get("receiver"),
+                    "message": event.get("message", ""),
+                    "time": event.get("time", ""),
+                    "avatar_url": event.get("avatar_url", ""),
+                    "attachment_url": event.get("attachment_url", ""),
+                    "attachment_type": event.get("attachment_type", ""),
+                    "attachment_name": event.get("attachment_name", ""),
+                }
+            )
+        )
 
-    async def dm_deleted(self, event):
-        msg_id = event.get('message_id') if event.get('message_id') is not None else event.get('id')
-        await self.send(text_data=json.dumps({
-            'type': 'dm_deleted',
-            'message_id': msg_id,
-        }))
-
-    async def dm_message_deleted(self, event):
-        await self.dm_deleted(event)
-
-    @database_sync_to_async
-    def get_other_if_friend(self, user, other_username):
-        other = User.objects.filter(username=other_username).first()
-        if not other or other.id == user.id:
-            return None
-
-        is_friend = FriendRequest.objects.filter(
-            (Q(sender=user, receiver=other) | Q(sender=other, receiver=user)) &
-            Q(status='accepted')
-        ).exists()
-        return other if is_friend else None
-
-    @database_sync_to_async
-    def save_dm(self, sender, receiver, content, attachment_url='', attachment_type=''):
-        return PrivateMessage.objects.create(
-            sender=sender,
-            receiver=receiver,
-            content=content,
-            attachment_type=attachment_type[:20] if attachment_type else '',
+    async def dm_call_event(self, event):
+        await self.send(
+            text_data=json.dumps(
+                {
+                    "type": event.get("event_type", "call_signal"),
+                    "sender": event.get("sender"),
+                    "receiver": event.get("receiver"),
+                    "signal": event.get("signal"),
+                }
+            )
         )
 
     @database_sync_to_async
-    def delete_dm(self, msg_id):
-        if not msg_id:
-            return False
+    def _get_user_by_username(self, username: str):
+        if not username:
+            return None
+        return User.objects.filter(username__iexact=username.strip()).first()
+
+    @database_sync_to_async
+    def _are_friends(self, user_a_id: int, user_b_id: int) -> bool:
         try:
-            clean_id = int(msg_id)
-        except (TypeError, ValueError):
-            return False
-        msg = PrivateMessage.objects.filter(id=clean_id, sender=self.user).first()
-        if not msg:
-            return False
-        msg.delete()
-        return True
+            return Friendship.objects.filter(
+                (Q(from_user_id=user_a_id, to_user_id=user_b_id) | Q(from_user_id=user_b_id, to_user_id=user_a_id))
+                & Q(status="accepted")
+            ).exists()
+        except Exception:
+            return True
+
+    @database_sync_to_async
+    def _save_dm(self, sender, receiver, content, attachment_url, attachment_type, attachment_name):
+        field_names = {f.name for f in PrivateMessage._meta.get_fields()}
+        kwargs = {}
+        if "sender" in field_names:
+            kwargs["sender"] = sender
+        if "receiver" in field_names:
+            kwargs["receiver"] = receiver
+        if "content" in field_names:
+            kwargs["content"] = content
+        if "attachment_url" in field_names:
+            kwargs["attachment_url"] = attachment_url
+        if "attachment_type" in field_names:
+            kwargs["attachment_type"] = attachment_type
+        if "attachment_name" in field_names:
+            kwargs["attachment_name"] = attachment_name
+        return PrivateMessage.objects.create(**kwargs)
