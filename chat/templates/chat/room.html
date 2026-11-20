@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="theme-color" content="#111318">
-    <title>🥝 Kiwi Chat Estético Completo</title>
+    <title>🥝 Kiwi Chat</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700;900&family=Fredoka:wght@600;700&display=swap" rel="stylesheet">
@@ -357,17 +357,6 @@
             color: #1e8e4e;
             border-color: rgba(35, 165, 90, 0.35);
             position: relative;
-        }
-        .header-call-btn.incoming-ring {
-            background: #23a55a;
-            color: #ffffff;
-            border-color: #23a55a;
-            animation: callPulseBtn 1s infinite;
-            box-shadow: 0 0 0 4px rgba(35, 165, 90, 0.25);
-        }
-        @keyframes callPulseBtn {
-            0%, 100% { transform: scale(1); }
-            50% { transform: scale(1.05); }
         }
         .watch-loading-note {
             font-size: 11px;
@@ -1000,11 +989,6 @@
             flex-direction: column;
             gap: 10px;
             box-shadow: 0 10px 24px rgba(0, 0, 0, 0.28);
-        }
-        .kiwi-spotify-widget.green-mode {
-            background: linear-gradient(135deg, #25c95d 0%, #14823b 100%);
-            color: #ffffff;
-            border-color: rgba(255, 255, 255, 0.2);
         }
         .ksw-top {
             display: flex;
@@ -2056,7 +2040,6 @@
             }
         }
 
-        /* === DISCORD-STYLE SERVER RAIL, ADMIN CONTROLS & FRIEND SEARCH === */
         .kiwi-app-shell {
             display: flex;
             width: 100%;
@@ -2206,7 +2189,10 @@
     </style>
 </head>
 <body>
-    <script id="kiwi-username-data" type="application/json">"KiwiUser"</script>
+    <!-- Quando renderizado pelo Django, injete os valores reais do servidor nestes scripts JSON:
+         Ex.: <script id="kiwi-username-data" type="application/json">"{{ request.user.username|escapejs }}"</script>
+         Se ficar null/vazio (ex.: abrindo o HTML direto sem Django), o JS usa o usuário digitado/salvo por você. -->
+    <script id="kiwi-username-data" type="application/json">null</script>
     <script id="kiwi-is-admin-data" type="application/json">false</script>
     <script id="kiwi-channel-id-data" type="application/json">null</script>
     <script id="kiwi-server-id-data" type="application/json">null</script>
@@ -2238,8 +2224,6 @@
     <nav class="server-rail" aria-label="Servidores e Amizades">
         <button type="button" id="rail-home-btn" class="server-rail-btn active" title="Amizades e Mensagens Privadas">🥝</button>
         <div class="server-rail-divider"></div>
-        <button type="button" class="server-rail-btn demo-server-btn" data-server-name="Kiwi Lounge" title="Kiwi Lounge">KL</button>
-        <button type="button" class="server-rail-btn demo-server-btn" data-server-name="Estúdio Estético" title="Estúdio Estético">EE</button>
         <button type="button" id="open-create-server-btn" class="server-rail-btn server-rail-add-btn" title="Criar servidor">+</button>
     </nav>
 
@@ -2272,9 +2256,9 @@
         </div>
         <div class="my-user-panel">
             <div class="my-user-info" id="open-profile-trigger">
-                <div id="my-mini-avatar" class="mini-avatar">K</div>
+                <div id="my-mini-avatar" class="mini-avatar">U</div>
                 <div style="min-width: 0;">
-                    <div id="my-name-label" style="font-size: 14px; font-weight: 600; color: var(--text-main); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">KiwiUser</div>
+                    <div id="my-name-label" style="font-size: 14px; font-weight: 600; color: var(--text-main); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">Usuário</div>
                     <div style="font-size: 11px; color: #23a55a;">● Online</div>
                 </div>
             </div>
@@ -2330,19 +2314,7 @@
                         <span class="username" style="color: #23a55a;">Sistema Kiwi</span>
                         <span class="timestamp">Hoje</span>
                     </div>
-                    <div class="message-text">Bem-vindo ao Kiwi Chat! Personalize o seu perfil, mude de tema, envie mensagens ou abra uma DM com os amigos ao lado.</div>
-                </div>
-            </div>
-
-            <div class="message-group" data-msg-id="demo-1" data-can-delete="0">
-                <div class="avatar" style="background: #ec4899;" data-profile-user="Akiira">A</div>
-                <div class="message-content">
-                    <div class="message-header">
-                        <span class="username" data-profile-user="Akiira">Akiira</span>
-                        <span class="timestamp">10:42</span>
-                    </div>
-                    <div class="message-text">A testar o novo visual do Kiwi Chat ✨ Clique no meu nome para ver o perfil e o player!</div>
-                    <div class="msg-reactions-row"></div>
+                    <div class="message-text">Bem-vindo ao Kiwi Chat! Personalize o seu perfil, mude de tema, envie mensagens ou adicione amigos para conversar.</div>
                 </div>
             </div>
         </div>
@@ -2386,7 +2358,6 @@
         </div>
     </div>
 
-    <!-- PAINEL DE DEFINIÇÕES DE APARÊNCIA & CORES -->
     <div id="settings-colors-modal" class="modal-overlay">
         <div class="aesthetic-profile-card" style="padding: 20px; width: 410px; max-height: 88vh; overflow-y: auto;">
             <button type="button" class="close-modal-btn" id="close-settings-colors-btn">×</button>
@@ -2422,7 +2393,6 @@
         </div>
     </div>
 
-    <!-- MODAL ÚNICO UNIFICADO DE PERFIL -->
     <div id="unified-profile-modal" class="modal-overlay">
         <div class="aesthetic-profile-card" id="unified-profile-card">
             <button type="button" class="close-modal-btn" id="close-unified-profile-btn">×</button>
@@ -2439,15 +2409,14 @@
                     </div>
                     <div style="font-size: 11px; color: var(--text-muted);" id="up-pronouns">utilizador • 🥝</div>
                 </div>
-                <div class="aesthetic-details" id="up-bio">Perfil estético ativo.</div>
+                <div class="aesthetic-details" id="up-bio"></div>
 
-                <!-- PLAYER DE MÚSICA DO PERFIL ABERTO -->
-                <div id="up-music-widget" class="kiwi-spotify-widget">
+                <div id="up-music-widget" class="kiwi-spotify-widget" style="display: none;">
                     <div class="ksw-top">
                         <div id="up-music-cover" class="ksw-cover">♫</div>
                         <div class="ksw-meta">
-                            <div id="up-music-title" class="ksw-title">Drama</div>
-                            <div id="up-music-artist" class="ksw-artist">Lala Sadii</div>
+                            <div id="up-music-title" class="ksw-title"></div>
+                            <div id="up-music-artist" class="ksw-artist"></div>
                         </div>
                         <div class="ksw-top-actions">
                             <button type="button" id="up-like-btn" class="ksw-icon-btn" title="Curtir faixa">+</button>
@@ -2487,12 +2456,10 @@
                     <div id="up-music-fallback" style="font-size: 11px; opacity: 0.78; line-height: 1.35;"></div>
                 </div>
 
-                <!-- AÇÕES DO PRÓPRIO PERFIL -->
                 <div id="up-own-actions" style="display: none;">
                     <button type="button" class="btn-aesthetic-edit" id="switch-to-edit-btn">✏️ Edit Profile</button>
                 </div>
 
-                <!-- AÇÕES DE PERFIL DE OUTRO UTILIZADOR / AMIGO -->
                 <div id="up-other-actions" style="display: none; flex-wrap: wrap; gap: 8px; margin-top: 4px;">
                     <button type="button" class="btn-aesthetic-action" id="add-friend-btn">➕ Adicionar Amigo</button>
                     <button type="button" class="btn-aesthetic-action" id="dm-btn" style="background: #5865f2; flex: 1;">💬 DM</button>
@@ -2504,7 +2471,6 @@
         </div>
     </div>
 
-    <!-- MODAL DA CAIXA DE MENSAGENS -->
     <div id="mailbox-modal" class="modal-overlay">
         <div class="aesthetic-profile-card" style="padding: 20px; width: 420px; max-height: 85vh; overflow-y: auto;">
             <button type="button" class="close-modal-btn" id="close-mailbox-btn">×</button>
@@ -2518,17 +2484,15 @@
             </div>
 
             <div>
-                <h4 style="font-size: 12px; text-transform: uppercase; color: var(--text-muted); margin-bottom: 8px;">Notas de Atualizações (Changelog)</h4>
+                <h4 style="font-size: 12px; text-transform: uppercase; color: var(--text-muted); margin-bottom: 8px;">Notas de Atualizações</h4>
                 <div style="background: var(--bg-soft); padding: 12px; border-radius: 8px; font-size: 12px; line-height: 1.5; color: var(--text-main);">
-                    <div style="font-weight: bold; color: #5865f2; margin-bottom: 4px;">✨ Kiwi Chat Standalone HTML</div>
-                    • Arquivo HTML completo e pronto a abrir diretamente no navegador.<br>
-                    • Perfil estético, editor em 2 colunas, temas, DMs, reações e anexos locais funcionais.
+                    • Identidade sem nomes fixos forçados: respeita o usuário logado/configurado.<br>
+                    • Perfil estético, editor em 2 colunas, temas, DMs, reações e anexos prontos.
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Modal de EDIÇÃO de Perfil -->
     <div id="edit-modal" class="modal-overlay">
         <div class="aesthetic-profile-card kiwi-editor-card" id="kiwi-editor-card">
             <button type="button" class="close-modal-btn" id="close-edit-btn">×</button>
@@ -2541,12 +2505,11 @@
 
             <form id="edit-profile-form">
                 <div class="kiwi-editor-grid">
-                    <!-- COLUNA ESQUERDA -->
                     <div class="kiwi-editor-col-left">
                         <div class="kiwi-preview-media-box">
                             <div class="kiwi-preview-media-row">
                                 <div class="kiwi-editor-avatar-wrap">
-                                    <div id="editor-live-avatar" class="kiwi-editor-avatar-preview">K</div>
+                                    <div id="editor-live-avatar" class="kiwi-editor-avatar-preview">U</div>
                                     <button type="button" id="editor-avatar-pencil-btn" class="kiwi-editor-avatar-badge-btn" title="Alterar foto de perfil">✏️</button>
                                 </div>
                                 <div id="editor-live-banner-thumb" class="kiwi-editor-banner-preview" title="Clique para alterar o banner"></div>
@@ -2600,13 +2563,13 @@
                             </div>
                             <div style="font-size:11px; color:var(--text-muted); margin-bottom:8px;">Clique para alternar fonte e estilo do nome</div>
                             <div id="editor-name-style-toggle" class="kiwi-name-style-card" title="Alternar estilo de destaque do nome">
-                                <span id="editor-live-name-sample" class="kiwi-name-style-sample">KiwiUser</span>
+                                <span id="editor-live-name-sample" class="kiwi-name-style-sample">Usuário</span>
                                 <span style="font-weight:800;">›</span>
                             </div>
                         </div>
 
                         <div class="kiwi-nitro-promo-card">
-                            <div style="font-size:12px; font-weight:800; color:var(--text-main);">✨ Eleve seu visual no Kiwi</div>
+                            <div style="font-size:12px; font-weight:800; color:var(--text-main);">✨ Prévia rápida</div>
                             <button type="button" id="editor-preview-profile-btn" class="kiwi-nitro-btn">
                                 <span>◎ Prévia do Perfil</span>
                                 <span>›</span>
@@ -2614,17 +2577,16 @@
                         </div>
                     </div>
 
-                    <!-- COLUNA DIREITA -->
                     <div class="kiwi-editor-col-right">
                         <div id="editor-live-banner-top" class="kiwi-live-banner-mini"></div>
 
                         <div class="kiwi-live-identity-box">
                             <div>
                                 <div id="editor-live-display-name" style="font-size:18px; font-weight:900; color:var(--text-main); display:flex; align-items:center; gap:6px;">
-                                    <span>KiwiUser</span>
+                                    <span>Usuário</span>
                                     <span style="color:#a855f7; font-size:14px;">✔</span>
                                 </div>
-                                <div id="editor-live-sub-meta" style="font-size:12px; color:var(--text-muted);">@kiwiuser • he / him • 🎀</div>
+                                <div id="editor-live-sub-meta" style="font-size:12px; color:var(--text-muted);">@usuario</div>
                             </div>
                             <span style="background:rgba(128,128,128,0.12); border:1px solid var(--border-subtle); color:var(--text-main); font-size:11px; font-weight:700; padding:5px 10px; border-radius:8px;">
                                 Perfil Estético
@@ -2633,7 +2595,7 @@
 
                         <div id="editor-privacy-notice" class="kiwi-privacy-banner">
                             <div>
-                                Seu perfil completo está sendo compartilhado com seus amigos no Kiwi. Personalize sua faixa, bio e música a qualquer momento.
+                                Personalize sua faixa, bio, status e música a qualquer momento.
                             </div>
                             <button type="button" id="editor-dismiss-privacy-btn" style="background:none; border:none; color:var(--text-main); font-size:15px; font-weight:bold; cursor:pointer; line-height:1;" title="Fechar aviso">×</button>
                         </div>
@@ -2649,22 +2611,22 @@
 
                         <div class="form-group">
                             <label>Nome de Usuário (Exibição)</label>
-                            <input type="text" name="username" id="edit-username" value="KiwiUser" maxlength="32">
+                            <input type="text" name="username" id="edit-username" value="" maxlength="32" placeholder="Seu nome de usuário">
                         </div>
                         <div class="kiwi-editor-two-col-fields">
                             <div class="form-group">
                                 <label>Frase do Balão (Status)</label>
-                                <input type="text" name="bubble" id="edit-bubble" value="🌸 a testar o novo kiwi chat...">
+                                <input type="text" name="bubble" id="edit-bubble" value="" placeholder="Ex.: 🌸 online">
                             </div>
                             <div class="form-group">
                                 <label>Pronomes / Tags</label>
-                                <input type="text" name="pronouns" id="edit-pronouns" value="he / him • 🎀">
+                                <input type="text" name="pronouns" id="edit-pronouns" value="" placeholder="Ex.: ele/ela/elu • 🥝">
                             </div>
                         </div>
 
                         <div class="form-group">
                             <label>Bio</label>
-                            <textarea name="bio" id="edit-bio" rows="3">@matsuda 🤍 infpt 🎧 zekiah ☁️</textarea>
+                            <textarea name="bio" id="edit-bio" rows="3" placeholder="Escreva algo sobre você..."></textarea>
                         </div>
 
                         <div class="form-group" style="position: relative;">
@@ -2674,7 +2636,7 @@
                                     🎵 Músicas salvas
                                 </button>
                             </div>
-                            <input type="text" name="spotify_song" id="edit-spotify-song" value="Drama" style="margin-top:6px;">
+                            <input type="text" name="spotify_song" id="edit-spotify-song" value="" style="margin-top:6px;" placeholder="Nome da música">
 
                             <div id="saved-music-box" style="display:none; margin-top:8px; background:#18191c; color:#fff; border:1px solid rgba(255,255,255,0.16); border-radius:10px; padding:10px; max-height:240px; overflow-y:auto;">
                                 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
@@ -2705,7 +2667,7 @@
                         <div class="kiwi-editor-two-col-fields">
                             <div class="form-group">
                                 <label>Artista</label>
-                                <input type="text" name="spotify_artist" id="edit-spotify-artist" value="Lala Sadii">
+                                <input type="text" name="spotify_artist" id="edit-spotify-artist" value="" placeholder="Nome do artista">
                             </div>
                             <div class="form-group">
                                 <label>Link do YouTube ou Spotify (música)</label>
@@ -2760,20 +2722,21 @@
         </div>
     </div>
 
-    <!-- MODAL PESQUISAR E ADICIONAR AMIGOS -->
     <div id="add-friend-modal" class="modal-overlay">
         <div class="aesthetic-profile-card" style="padding: 20px; width: 420px; max-height: 85vh; overflow-y: auto;">
             <button type="button" class="close-modal-btn" id="close-add-friend-btn">×</button>
-            <h3 style="color: var(--text-main); margin-bottom: 12px; font-size: 16px;">👥 Buscar &amp; Adicionar Amigos</h3>
-            <div class="form-group">
-                <label for="friend-search-input">Nome de usuário</label>
-                <input type="text" id="friend-search-input" placeholder="Digite o nome do amigo (ex: Akiira, Matsuda, Zekiah)...">
-            </div>
-            <div id="friend-search-results" style="display:flex; flex-direction:column; gap:8px; margin-top:10px;"></div>
+            <h3 style="color: var(--text-main); margin-bottom: 12px; font-size: 16px;">👥 Adicionar Amigo por Nome</h3>
+            <form id="add-friend-direct-form">
+                <div class="form-group">
+                    <label for="friend-search-input">Nome de usuário</label>
+                    <input type="text" id="friend-search-input" placeholder="Digite o nome exato do usuário...">
+                </div>
+                <button type="submit" class="btn-aesthetic-edit">+ Adicionar Amigo</button>
+            </form>
+            <div id="friend-search-results" style="display:flex; flex-direction:column; gap:8px; margin-top:12px;"></div>
         </div>
     </div>
 
-    <!-- MODAL CRIAR SERVIDOR -->
     <div id="create-server-modal" class="modal-overlay">
         <div class="aesthetic-profile-card" style="padding: 20px; width: 420px; max-height: 85vh; overflow-y: auto;">
             <button type="button" class="close-modal-btn" id="close-create-server-btn">×</button>
@@ -2781,18 +2744,17 @@
             <form id="create-server-form">
                 <div class="form-group">
                     <label for="new-server-name">Nome do servidor</label>
-                    <input type="text" id="new-server-name" name="name" required placeholder="Ex: Tropa do Kiwi">
+                    <input type="text" id="new-server-name" name="name" required placeholder="Nome do servidor">
                 </div>
                 <div class="form-group">
                     <label for="new-server-channels">Canais iniciais (separados por vírgula)</label>
-                    <input type="text" id="new-server-channels" name="channels" value="chat, música, clipes" placeholder="chat, música, avisos">
+                    <input type="text" id="new-server-channels" name="channels" value="geral, música" placeholder="geral, música">
                 </div>
                 <button type="submit" class="btn-aesthetic-edit">Criar Servidor</button>
             </form>
         </div>
     </div>
 
-    <!-- MODAL CRIAR CANAL -->
     <div id="create-channel-modal" class="modal-overlay">
         <div class="aesthetic-profile-card" style="padding: 20px; width: 400px; max-height: 85vh; overflow-y: auto;">
             <button type="button" class="close-modal-btn" id="close-create-channel-btn">×</button>
@@ -2800,7 +2762,7 @@
             <form id="create-channel-form">
                 <div class="form-group">
                     <label for="new-channel-name">Nome do canal</label>
-                    <input type="text" id="new-channel-name" name="name" required placeholder="Ex: playlist-do-dia">
+                    <input type="text" id="new-channel-name" name="name" required placeholder="Nome do canal">
                 </div>
                 <div class="form-group">
                     <label for="new-channel-type">Tipo de canal</label>
@@ -2816,7 +2778,7 @@
 
     <nav class="mobile-bottom-nav" aria-label="Navegação Mobile">
         <button type="button" class="mobile-nav-btn active" id="mob-nav-friends">💬 Amigos</button>
-        <button type="button" class="mobile-nav-btn" id="mob-nav-search">➕ Buscar</button>
+        <button type="button" class="mobile-nav-btn" id="mob-nav-search">➕ Amigo</button>
         <button type="button" class="mobile-nav-btn" id="mob-nav-music">🎵 Música</button>
         <button type="button" class="mobile-nav-btn" id="mob-nav-profile">👤 Perfil</button>
     </nav>
@@ -2875,7 +2837,10 @@
 
             function formatSafeBioHtml(rawBio) {
                 const escaped = escapeHtmlText(rawBio || '');
-                return escaped.replace(/(?:\r\n|\r|\n|<br\s*\/?>)/gi, '<br>');
+                return escaped.replace(/(?:
+|
+|
+|<br\s*\/?>)/gi, '<br>');
             }
 
             function isSafeAssetUrl(url) {
@@ -2945,14 +2910,28 @@
                 }
             }
 
-            const USERNAME_STORAGE_KEY = 'kiwi_standalone_username_v1';
+            const USERNAME_STORAGE_KEY = 'kiwi_user_identity_v2';
+            const THEME_STORAGE_KEY = 'kiwi_theme_v2';
+            const FRIENDS_STORAGE_KEY = 'kiwi_friends_v2';
+            const REQUESTS_STORAGE_KEY = 'kiwi_requests_v2';
+            const DM_HISTORY_STORAGE_KEY = 'kiwi_dm_history_v2';
+
+            const injectedUser = readJsonScript('kiwi-username-data', null);
+            const injectedIsAdmin = Boolean(readJsonScript('kiwi-is-admin-data', false));
+
             let savedUsername = '';
             try { savedUsername = (localStorage.getItem(USERNAME_STORAGE_KEY) || '').trim(); } catch (_) {}
-            let activeUsername = (savedUsername || readJsonScript('kiwi-username-data', 'KiwiUser') || 'KiwiUser').trim();
-            const THEME_STORAGE_KEY = 'kiwi_standalone_theme_v1';
-            const FRIENDS_STORAGE_KEY = 'kiwi_standalone_friends_v1';
-            const REQUESTS_STORAGE_KEY = 'kiwi_standalone_requests_v1';
-            const DM_HISTORY_STORAGE_KEY = 'kiwi_standalone_dm_history_v1';
+
+            // Prioridade: usuário injetado pelo Django -> usuário salvo no navegador -> "Usuário" (nunca força "KiwiUser" nem nomes fictícios)
+            let activeUsername = (
+                (typeof injectedUser === 'string' && injectedUser.trim()) ||
+                savedUsername ||
+                'Usuário'
+            ).trim();
+
+            if (typeof injectedUser === 'string' && injectedUser.trim()) {
+                try { localStorage.setItem(USERNAME_STORAGE_KEY, activeUsername); } catch (_) {}
+            }
 
             const themesMap = {
                 '#ffffff': { accent: '#e5e7eb', main: '#ffffff', sidebar: '#f5f6f8', darkest: '#eceef2', input: '#f8f9fa', card: '#ffffff', soft: '#f3f4f6', textMain: '#1f2328', textMuted: '#57606a', border: 'rgba(0, 0, 0, 0.08)' },
@@ -2965,79 +2944,15 @@
                 '#d4af37': { accent: '#d4af37', main: '#fdf8e7', sidebar: '#f7ecc8', darkest: '#e8d084', input: '#ffffff', card: '#fffdf5', soft: '#fbf3d5', textMain: '#3b2c06', textMuted: '#7a5c12', border: 'rgba(184, 134, 11, 0.22)' }
             };
 
-            const demoUsers = [
-                {
-                    username: 'Akiira',
-                    bubble: '🌸 estética kiwi ligada ✨',
-                    pronouns: 'she / her • 🥝',
-                    bio: 'Criadora de moods e playlists noturnas 🎧☁️',
-                    song: 'Drama',
-                    artist: 'Lala Sadii',
-                    musicUrl: '',
-                    audioSrc: '',
-                    coverUrl: '',
-                    accentColor: '#ff9de2',
-                    goldProfileBg: false,
-                    frameEffect: true,
-                    avatarPulse: false,
-                    nameSpecialStyle: true,
-                    avatarUrl: '',
-                    bannerUrl: '',
-                    is_admin: false,
-                    online: true
-                },
-                {
-                    username: 'Matsuda',
-                    bubble: '🎧 ouvindo lo-fi no estúdio',
-                    pronouns: 'he / him • 🤍',
-                    bio: 'Notas, café gelado e boas conversas.',
-                    song: 'Midnight Rain',
-                    artist: 'Lo-Fi Kiwi',
-                    musicUrl: '',
-                    audioSrc: '',
-                    coverUrl: '',
-                    accentColor: '#5865f2',
-                    goldProfileBg: false,
-                    frameEffect: false,
-                    avatarPulse: false,
-                    nameSpecialStyle: false,
-                    avatarUrl: '',
-                    bannerUrl: '',
-                    is_admin: false,
-                    online: true
-                },
-                {
-                    username: 'Zekiah',
-                    bubble: '☁️ online para conversar',
-                    pronouns: 'they / them • ☁️',
-                    bio: 'Arte digital, cores suaves e ideias novas.',
-                    song: 'Soft Clouds',
-                    artist: 'Ambient Lab',
-                    musicUrl: '',
-                    audioSrc: '',
-                    coverUrl: '',
-                    accentColor: '#23a55a',
-                    goldProfileBg: false,
-                    frameEffect: false,
-                    avatarPulse: false,
-                    nameSpecialStyle: false,
-                    avatarUrl: '',
-                    bannerUrl: '',
-                    is_admin: false,
-                    online: false
-                }
-            ];
-
             const profilesByUsername = new Map();
-            demoUsers.forEach(u => profilesByUsername.set(u.username.toLowerCase(), { ...u }));
 
             let myProfileData = {
                 username: activeUsername,
-                bubble: '🌸 a testar o novo kiwi chat...',
-                pronouns: 'he / him • 🎀',
-                bio: '@matsuda 🤍\ninfpt 🎧 zekiah ☁️',
-                song: 'Drama',
-                artist: 'Lala Sadii',
+                bubble: '',
+                pronouns: '',
+                bio: '',
+                song: '',
+                artist: '',
                 musicUrl: '',
                 audioSrc: '',
                 audioFileName: '',
@@ -3049,7 +2964,7 @@
                 nameSpecialStyle: false,
                 avatarUrl: '',
                 bannerUrl: '',
-                is_admin: false
+                is_admin: injectedIsAdmin
             };
 
             function readStorageJson(key, fallbackVal) {
@@ -3067,20 +2982,9 @@
                 } catch (_) {}
             }
 
-            let friendsList = readStorageJson(FRIENDS_STORAGE_KEY, ['Akiira', 'Matsuda']);
-            let friendRequestsList = readStorageJson(REQUESTS_STORAGE_KEY, [
-                { id: 101, sender: 'Zekiah' }
-            ]);
-            let dmHistoryStore = readStorageJson(DM_HISTORY_STORAGE_KEY, {
-                Akiira: [
-                    {
-                        id: 'dm-init-1',
-                        sender: 'Akiira',
-                        content: 'Oi! Tudo bem por aí no Kiwi Chat? 🌸',
-                        time: '10:30'
-                    }
-                ]
-            });
+            let friendsList = readStorageJson(FRIENDS_STORAGE_KEY, []);
+            let friendRequestsList = readStorageJson(REQUESTS_STORAGE_KEY, []);
+            let dmHistoryStore = readStorageJson(DM_HISTORY_STORAGE_KEY, {});
 
             function isAdminIdentity(username, isAdminFlag) {
                 const clean = (username || '').trim().toLowerCase();
@@ -3204,7 +3108,6 @@
             const callAcceptBtn = document.getElementById('call-accept-btn');
             const callDeclineBtn = document.getElementById('call-decline-btn');
             const callMuteBtn = document.getElementById('call-mute-btn');
-            const callHangupBtn = document.getElementById('call-hangup-btn');
             const remoteAudioEl = document.getElementById('remote-call-audio');
 
             let currentView = 'geral';
@@ -3269,7 +3172,7 @@
             window.watchUserStream = function(targetUsername, knownAvatarUrl = '') {
                 if (!targetUsername || targetUsername === activeUsername) return;
                 if (remoteScreenLabel) remoteScreenLabel.textContent = `👁️ Prévia de transmissão de ${targetUsername}`;
-                if (remoteScreenStatus) remoteScreenStatus.textContent = `Modo offline standalone: sem transmissão ao vivo de ${targetUsername} no momento.`;
+                if (remoteScreenStatus) remoteScreenStatus.textContent = `Nenhuma transmissão ativa de ${targetUsername} no momento.`;
                 if (remoteScreenContainer) remoteScreenContainer.style.display = 'flex';
                 openPrivateChat(targetUsername, knownAvatarUrl);
             };
@@ -3399,7 +3302,7 @@
                 }
 
                 const amigosTab = document.querySelector('.social-tab[data-tab="amigos"]');
-                if (amigosTab && amigosTab.classList.contains('active')) fetchFriendsList(true);
+                if (amigosTab && amigosTab.classList.contains('active')) fetchFriendsList();
             };
 
             function closeAllMessagePopovers() {
@@ -3584,13 +3487,13 @@
                 } else {
                     el.style.backgroundImage = 'none';
                     el.style.color = '#fff';
-                    el.textContent = (fallbackLetter || '?').charAt(0).toUpperCase();
+                    el.textContent = (fallbackLetter || 'U').charAt(0).toUpperCase();
                 }
             }
 
             function getUserMusicStorageKey(username) {
                 const safeUser = (username || 'anon').trim().toLowerCase();
-                return `kiwi_user_music_v2_${safeUser}`;
+                return `kiwi_user_profile_v2_${safeUser}`;
             }
 
             function saveUserMusicToLocalCache(username, musicObj) {
@@ -3598,6 +3501,8 @@
                 try {
                     const safeCover = (musicObj.coverUrl || '').startsWith('blob:') ? '' : (musicObj.coverUrl || '');
                     const safeAudio = (musicObj.audioSrc || '').startsWith('blob:') ? '' : (musicObj.audioSrc || '');
+                    const safeAvatar = (musicObj.avatarUrl || '').startsWith('blob:') ? '' : (musicObj.avatarUrl || '');
+                    const safeBanner = (musicObj.bannerUrl || '').startsWith('blob:') ? '' : (musicObj.bannerUrl || '');
                     const payload = {
                         username: musicObj.username || username,
                         bubble: musicObj.bubble || '',
@@ -3609,6 +3514,8 @@
                         audioSrc: safeAudio,
                         audioFileName: musicObj.audioFileName || '',
                         coverUrl: safeCover,
+                        avatarUrl: safeAvatar,
+                        bannerUrl: safeBanner,
                         goldProfileBg: Boolean(musicObj.goldProfileBg),
                         frameEffect: Boolean(musicObj.frameEffect),
                         avatarPulse: Boolean(musicObj.avatarPulse),
@@ -3649,6 +3556,7 @@
                     myProfileData = {
                         ...myProfileData,
                         ...cachedSelf,
+                        username: activeUsername,
                         accentColor: sanitizeThemeForUser(myProfileData.accentColor, activeUsername, myProfileData.is_admin)
                     };
                 }
@@ -3882,7 +3790,7 @@
                     || (hasLocalAudio ? extractFileNameFromUrl(activeProfileMusic.audioSrc, 'Faixa de áudio') : 'Música do Perfil');
 
                 const displayArtist = activeProfileMusic.artist
-                    || (hasLocalAudio ? 'Áudio do perfil' : (videoId ? 'YouTube' : (hasExtLink ? 'Spotify / Link' : 'Artista')));
+                    || (hasLocalAudio ? 'Áudio do perfil' : (videoId ? 'YouTube' : (hasExtLink ? 'Spotify / Link' : '')));
 
                 if (upMusicTitle) upMusicTitle.textContent = displayTitle;
                 if (upMusicArtist) upMusicArtist.textContent = displayArtist;
@@ -3906,7 +3814,7 @@
                     } else if (videoId && ytEmbedBlocked) {
                         upMusicFallback.textContent = 'Vídeo bloqueado para embed: clique em ↗ para ouvir no link.';
                     } else if (hasExtLink && !videoId) {
-                        upMusicFallback.textContent = 'Link externo (Spotify/outro): clique em ↗ para abrir a faixa.';
+                        upMusicFallback.textContent = 'Link externo: clique em ↗ para abrir a faixa.';
                     } else {
                         upMusicFallback.textContent = '';
                     }
@@ -4104,9 +4012,9 @@
                     upBanner.style.backgroundColor = sanitizeThemeForUser(profileObj.accentColor, profileObj.username, profileObj.is_admin) || '#ff9de2';
                 }
 
-                upStatusBubble.textContent = profileObj.bubble;
-                upPronouns.textContent = profileObj.pronouns;
-                upBio.innerHTML = formatSafeBioHtml(profileObj.bio);
+                upStatusBubble.textContent = profileObj.bubble || 'Online';
+                upPronouns.textContent = profileObj.pronouns || `@${profileObj.username}`;
+                upBio.innerHTML = profileObj.bio ? formatSafeBioHtml(profileObj.bio) : 'Sem bio definida.';
 
                 renderProfileMusicWidget({
                     owner: profileObj.username,
@@ -4135,7 +4043,7 @@
                         showKiwiToast(`${profileObj.username} adicionado aos seus amigos!`);
                         closeUnifiedProfileModal();
                         const amigosTab = document.querySelector('.social-tab[data-tab="amigos"]');
-                        if (amigosTab && amigosTab.classList.contains('active')) fetchFriendsList(true);
+                        if (amigosTab && amigosTab.classList.contains('active')) fetchFriendsList();
                     };
 
                     const dmBtn = document.getElementById('dm-btn');
@@ -4178,13 +4086,14 @@
                     renderUnifiedProfileModal(myProfileData);
                     return;
                 }
-                const known = profilesByUsername.get(targetName.toLowerCase()) || {
+                const cachedOther = loadUserMusicFromLocalCache(targetName);
+                const known = profilesByUsername.get(targetName.toLowerCase()) || cachedOther || {
                     username: targetName,
-                    bubble: '🌸 No Kiwi Chat',
-                    pronouns: 'utilizador • 🥝',
-                    bio: 'Membro da comunidade Kiwi.',
-                    song: 'Kiwi Vibes',
-                    artist: 'Estúdio',
+                    bubble: '',
+                    pronouns: '',
+                    bio: '',
+                    song: '',
+                    artist: '',
                     musicUrl: '',
                     audioSrc: '',
                     coverUrl: '',
@@ -4193,7 +4102,7 @@
                     bannerUrl: '',
                     is_admin: false
                 };
-                renderUnifiedProfileModal(known);
+                renderUnifiedProfileModal({ ...known, username: targetName });
             };
 
             const settingsColorsModal = document.getElementById('settings-colors-modal');
@@ -4293,12 +4202,13 @@
             switchToEditBtn.addEventListener('click', () => {
                 closeUnifiedProfileModal();
                 syncAdminVisualRestrictions();
-                if (editUsernameInput) editUsernameInput.value = activeUsername || myProfileData.username || 'KiwiUser';
-                editBubble.value = myProfileData.bubble;
-                editPronouns.value = myProfileData.pronouns;
-                editBio.value = myProfileData.bio.replace(/<br\s*\/?>/gi, '\n');
-                editSong.value = myProfileData.song;
-                editArtist.value = myProfileData.artist;
+                if (editUsernameInput) editUsernameInput.value = activeUsername || myProfileData.username || '';
+                editBubble.value = myProfileData.bubble || '';
+                editPronouns.value = myProfileData.pronouns || '';
+                editBio.value = (myProfileData.bio || '').replace(/<br\s*\/?>/gi, '
+');
+                editSong.value = myProfileData.song || '';
+                editArtist.value = myProfileData.artist || '';
                 if (editYtUrl) editYtUrl.value = myProfileData.musicUrl || '';
                 if (editLocalAudioUrl) {
                     const directAudioVal = myProfileData.audioSrc || '';
@@ -4325,8 +4235,8 @@
 
             function refreshEditorLivePreview() {
                 syncAdminVisualRestrictions();
-                const owner = (activeUsername || myProfileData.username || 'KiwiUser').trim() || 'KiwiUser';
-                const prn = (editPronouns && editPronouns.value.trim()) ? editPronouns.value.trim() : 'he / him • 🎀';
+                const owner = ((editUsernameInput && editUsernameInput.value.trim()) || activeUsername || myProfileData.username || 'Usuário').trim();
+                const prn = (editPronouns && editPronouns.value.trim()) || '';
                 const canGold = isAdminIdentity(owner, myProfileData.is_admin);
                 const isGold = canGold && Boolean(editGoldCheckbox && editGoldCheckbox.checked);
                 const isFrameActive = Boolean(myProfileData.frameEffect);
@@ -4363,7 +4273,7 @@
                     editorLiveDisplayName.innerHTML = `<span>${escapeHtmlText(owner)}</span><span style="color:#a855f7; font-size:14px;">✔</span>`;
                 }
                 if (editorLiveSubMeta) {
-                    editorLiveSubMeta.textContent = `@${owner.toLowerCase()} • ${prn}`;
+                    editorLiveSubMeta.textContent = prn ? `@${owner.toLowerCase()} • ${prn}` : `@${owner.toLowerCase()}`;
                 }
                 const safeAccent = sanitizeThemeForUser(myProfileData.accentColor, owner, myProfileData.is_admin);
                 if (editorBandColorSelect) editorBandColorSelect.value = safeAccent;
@@ -4385,6 +4295,8 @@
                     kiwiEditorCard.classList.toggle('akiira-shimmer-card', canGold || isFrameActive);
                 }
             }
+
+            if (editUsernameInput) editUsernameInput.addEventListener('input', refreshEditorLivePreview);
 
             const editAvatarFileEl = document.getElementById('edit-avatar-file');
             const editBannerFileEl = document.getElementById('edit-banner-file');
@@ -4478,7 +4390,7 @@
 
             function getSavedTracksStorageKey() {
                 const safeUser = (activeUsername || 'anon').trim().toLowerCase();
-                return `kiwi_saved_tracks_v1_${safeUser}`;
+                return `kiwi_saved_tracks_v2_${safeUser}`;
             }
 
             function loadSavedTracksList() {
@@ -4648,7 +4560,7 @@
 
             editProfileForm.addEventListener('submit', async function(e) {
                 e.preventDefault();
-                const typedName = (editUsernameInput && editUsernameInput.value.trim()) || activeUsername || myProfileData.username || 'KiwiUser';
+                const typedName = (editUsernameInput && editUsernameInput.value.trim()) || activeUsername || 'Usuário';
                 activeUsername = typedName;
                 try { localStorage.setItem(USERNAME_STORAGE_KEY, activeUsername); } catch (_) {}
                 const ownerName = activeUsername;
@@ -4723,7 +4635,7 @@
                 saveUserMusicToLocalCache(ownerName, myProfileData);
                 updateMySidebarUI();
                 closeModalAnimated(editModal);
-                showKiwiToast("Perfil e música guardados!");
+                showKiwiToast("Perfil guardado!");
             });
 
             function renderEmptyFriendRequests(container) {
@@ -4790,7 +4702,7 @@
                                 renderEmptyFriendRequests(container);
                             }
                             const amigosTab = document.querySelector('.social-tab[data-tab="amigos"]');
-                            if (amigosTab && amigosTab.classList.contains('active')) fetchFriendsList(true);
+                            if (amigosTab && amigosTab.classList.contains('active')) fetchFriendsList();
                         }, 360);
                     }, 900);
                 } else {
@@ -4872,7 +4784,7 @@
 
             function buildMessageDomElement(data, options = {}) {
                 const isDm = Boolean(options.isDm);
-                const msgUsername = data.sender || data.username || 'Anônimo';
+                const msgUsername = data.sender || data.username || activeUsername || 'Usuário';
                 const canDelete = msgUsername === activeUsername;
                 const avatarSrc =
                     options.avatarUrl ||
@@ -4880,7 +4792,7 @@
                     data.avatarUrl ||
                     (canDelete ? myProfileData.avatarUrl : '') ||
                     '';
-                const avatarInitial = msgUsername.charAt(0).toUpperCase() || 'K';
+                const avatarInitial = msgUsername.charAt(0).toUpperCase() || 'U';
                 const timeText = data.time || new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
                 const group = document.createElement('div');
@@ -4960,7 +4872,7 @@
 
             function appendMessageElement(data, options = {}) {
                 const isDm = Boolean(options.isDm);
-                const msgUsername = data.sender || data.username || 'Anônimo';
+                const msgUsername = data.sender || data.username || activeUsername || 'Usuário';
                 const canDelete = msgUsername === activeUsername;
                 const avatarSrc =
                     options.avatarUrl ||
@@ -5035,7 +4947,7 @@
                         chatLog.appendChild(el);
                     });
                 } else {
-                    chatLog.innerHTML = `<div style="font-size:12px; color:var(--text-muted); text-align:center; padding:16px;">Nenhuma mensagem ainda com ${escapeHtmlText(targetUsername)}. Diga olá! 👋</div>`;
+                    chatLog.innerHTML = `<div style="font-size:12px; color:var(--text-muted); text-align:center; padding:16px;">Nenhuma mensagem ainda com ${escapeHtmlText(targetUsername)}.</div>`;
                 }
                 chatLog.scrollTop = chatLog.scrollHeight;
             };
@@ -5397,12 +5309,12 @@
             }
 
             function fetchOnlineUsers() {
-                const online = demoUsers.filter(u => u.online);
-                renderUserSocialList(online, 'Ninguém online de momento.', false);
+                const listObjs = friendsList.map(name => profilesByUsername.get(name.toLowerCase()) || { username: name, avatarUrl: '' });
+                renderUserSocialList(listObjs, 'Nenhum amigo na lista no momento.', false);
             }
 
             function fetchFollowersList() {
-                renderUserSocialList(demoUsers, 'Ainda não tem seguidores.', false);
+                renderUserSocialList([], 'Nenhum seguidor listado.', false);
             }
 
             function handleSocialTabSelection(tabName) {
@@ -5436,15 +5348,6 @@
                     window.switchToGeral('geral', 'text');
                 });
             }
-            document.querySelectorAll('.demo-server-btn').forEach(btn => {
-                btn.addEventListener('click', () => {
-                    document.querySelectorAll('.server-rail-btn').forEach(b => b.classList.remove('active'));
-                    btn.classList.add('active');
-                    const sname = btn.getAttribute('data-server-name') || 'Servidor Kiwi';
-                    if (sidebarServerTitle) sidebarServerTitle.textContent = `🥝 ${sname}`;
-                    showKiwiToast(`Servidor "${sname}" selecionado`);
-                });
-            });
 
             const addFriendModal = document.getElementById('add-friend-modal');
             const openAddFriendBtn = document.getElementById('open-add-friend-btn');
@@ -5452,33 +5355,46 @@
             const closeAddFriendBtn = document.getElementById('close-add-friend-btn');
             const friendSearchInput = document.getElementById('friend-search-input');
             const friendSearchResults = document.getElementById('friend-search-results');
+            const addFriendDirectForm = document.getElementById('add-friend-direct-form');
+
+            function addFriendByName(rawName) {
+                const cleanName = (rawName || '').trim();
+                if (!cleanName) return;
+                if (cleanName.toLowerCase() === activeUsername.toLowerCase()) {
+                    showKiwiToast('Você não pode adicionar a si mesmo.');
+                    return;
+                }
+                if (!isFriendName(cleanName)) {
+                    friendsList.push(cleanName);
+                    writeStorageJson(FRIENDS_STORAGE_KEY, friendsList);
+                    showKiwiToast(`${cleanName} adicionado aos amigos!`);
+                } else {
+                    showKiwiToast(`${cleanName} já está na sua lista de amigos.`);
+                }
+                renderFriendSearchMatches(friendSearchInput ? friendSearchInput.value : '');
+                const activeTab = document.querySelector('.social-tab.active')?.getAttribute('data-tab') || 'online';
+                handleSocialTabSelection(activeTab);
+            }
 
             function renderFriendSearchMatches(queryText = '') {
                 if (!friendSearchResults) return;
                 const q = (queryText || '').trim().toLowerCase();
-                const matches = demoUsers.filter(u =>
-                    u.username.toLowerCase() !== activeUsername.toLowerCase() &&
-                    (!q || u.username.toLowerCase().includes(q))
-                );
                 friendSearchResults.innerHTML = '';
-                if (!matches.length) {
-                    friendSearchResults.innerHTML = `<div style="font-size:12px; color:var(--text-muted); text-align:center; padding:12px;">Nenhum usuário encontrado.</div>`;
-                    return;
-                }
-                matches.forEach(u => {
-                    const alreadyFriend = isFriendName(u.username);
+
+                if (q) {
                     const row = document.createElement('div');
                     row.className = 'social-list-item';
                     row.style.cursor = 'default';
 
                     const av = document.createElement('div');
                     av.className = 'dm-channel-avatar';
-                    setAvatarStyle(av, u.avatarUrl || '', u.username);
+                    setAvatarStyle(av, '', queryText.trim());
 
                     const nameEl = document.createElement('span');
-                    nameEl.textContent = u.username;
+                    nameEl.textContent = queryText.trim();
                     nameEl.style.fontWeight = '700';
 
+                    const alreadyFriend = isFriendName(queryText.trim());
                     const actionBtn = document.createElement('button');
                     actionBtn.type = 'button';
                     actionBtn.className = 'dm-quick-btn';
@@ -5486,14 +5402,9 @@
                     if (alreadyFriend) actionBtn.style.background = '#23a55a';
                     actionBtn.addEventListener('click', () => {
                         if (!alreadyFriend) {
-                            friendsList.push(u.username);
-                            writeStorageJson(FRIENDS_STORAGE_KEY, friendsList);
-                            showKiwiToast(`${u.username} adicionado aos amigos!`);
-                            renderFriendSearchMatches(friendSearchInput ? friendSearchInput.value : '');
-                            const amigosTab = document.querySelector('.social-tab[data-tab="amigos"]');
-                            if (amigosTab && amigosTab.classList.contains('active')) fetchFriendsList();
+                            addFriendByName(queryText.trim());
                         } else {
-                            openPrivateChat(u.username, u.avatarUrl || '');
+                            openPrivateChat(queryText.trim());
                             closeModalAnimated(addFriendModal);
                         }
                     });
@@ -5502,7 +5413,9 @@
                     row.appendChild(nameEl);
                     row.appendChild(actionBtn);
                     friendSearchResults.appendChild(row);
-                });
+                } else {
+                    friendSearchResults.innerHTML = `<div style="font-size:12px; color:var(--text-muted); text-align:center; padding:8px;">Digite o nome de usuário para adicionar.</div>`;
+                }
             }
 
             function openFriendSearchModal() {
@@ -5518,47 +5431,48 @@
             if (closeAddFriendBtn && addFriendModal) closeAddFriendBtn.addEventListener('click', () => closeModalAnimated(addFriendModal));
             if (addFriendModal) addFriendModal.addEventListener('click', (e) => { if (e.target === addFriendModal) closeModalAnimated(addFriendModal); });
             if (friendSearchInput) friendSearchInput.addEventListener('input', () => renderFriendSearchMatches(friendSearchInput.value));
+            if (addFriendDirectForm) {
+                addFriendDirectForm.addEventListener('submit', (e) => {
+                    e.preventDefault();
+                    if (!friendSearchInput || !friendSearchInput.value.trim()) return;
+                    addFriendByName(friendSearchInput.value);
+                    friendSearchInput.value = '';
+                    renderFriendSearchMatches('');
+                });
+            }
 
             const createServerModal = document.getElementById('create-server-modal');
             const openCreateServerBtn = document.getElementById('open-create-server-btn');
             const closeCreateServerBtn = document.getElementById('close-create-server-btn');
             const createServerForm = document.getElementById('create-server-form');
 
-            if (openCreateServerBtn && createServerModal) {
-                openCreateServerBtn.addEventListener('click', () => openModalAnimated(createServerModal));
-            }
-            if (closeCreateServerBtn && createServerModal) {
-                closeCreateServerBtn.addEventListener('click', () => closeModalAnimated(createServerModal));
-            }
-            if (createServerModal) {
-                createServerModal.addEventListener('click', (e) => { if (e.target === createServerModal) closeModalAnimated(createServerModal); });
-            }
+            if (openCreateServerBtn && createServerModal) openCreateServerBtn.addEventListener('click', () => openModalAnimated(createServerModal));
+            if (closeCreateServerBtn && createServerModal) closeCreateServerBtn.addEventListener('click', () => closeModalAnimated(createServerModal));
+            if (createServerModal) createServerModal.addEventListener('click', (e) => { if (e.target === createServerModal) closeModalAnimated(createServerModal); });
             if (createServerForm) {
                 createServerForm.addEventListener('submit', (e) => {
                     e.preventDefault();
-                    const sname = (document.getElementById('new-server-name')?.value || '').trim();
-                    if (!sname) return;
+                    const nameEl = document.getElementById('new-server-name');
+                    const sName = (nameEl && nameEl.value.trim()) || 'Novo Servidor';
                     const rail = document.querySelector('.server-rail');
                     if (rail && openCreateServerBtn) {
                         const btn = document.createElement('button');
                         btn.type = 'button';
-                        btn.className = 'server-rail-btn demo-server-btn active';
-                        btn.setAttribute('data-server-name', sname);
-                        btn.title = sname;
-                        btn.textContent = sname.slice(0, 2).toUpperCase();
-                        document.querySelectorAll('.server-rail-btn').forEach(b => b.classList.remove('active'));
+                        btn.className = 'server-rail-btn';
+                        btn.title = sName;
+                        btn.textContent = sName.charAt(0).toUpperCase() || 'S';
                         btn.addEventListener('click', () => {
                             document.querySelectorAll('.server-rail-btn').forEach(b => b.classList.remove('active'));
                             btn.classList.add('active');
-                            if (sidebarServerTitle) sidebarServerTitle.textContent = `🥝 ${sname}`;
-                            showKiwiToast(`Servidor "${sname}" selecionado`);
+                            if (sidebarServerTitle) sidebarServerTitle.textContent = `🥝 ${sName}`;
+                            window.switchToGeral('geral', 'text');
                         });
                         rail.insertBefore(btn, openCreateServerBtn);
+                        btn.click();
                     }
-                    if (sidebarServerTitle) sidebarServerTitle.textContent = `🥝 ${sname}`;
-                    showKiwiToast(`Servidor "${sname}" criado!`);
-                    createServerForm.reset();
+                    if (nameEl) nameEl.value = '';
                     closeModalAnimated(createServerModal);
+                    showKiwiToast(`Servidor "${sName}" criado!`);
                 });
             }
 
@@ -5566,34 +5480,32 @@
             const openCreateChannelBtn = document.getElementById('open-create-channel-btn');
             const closeCreateChannelBtn = document.getElementById('close-create-channel-btn');
             const createChannelForm = document.getElementById('create-channel-form');
-            const serverChannelsList = document.getElementById('server-channels-list');
 
-            if (openCreateChannelBtn && createChannelModal) {
-                openCreateChannelBtn.addEventListener('click', () => openModalAnimated(createChannelModal));
-            }
-            if (closeCreateChannelBtn && createChannelModal) {
-                closeCreateChannelBtn.addEventListener('click', () => closeModalAnimated(createChannelModal));
-            }
-            if (createChannelModal) {
-                createChannelModal.addEventListener('click', (e) => { if (e.target === createChannelModal) closeModalAnimated(createChannelModal); });
-            }
-            if (createChannelForm && serverChannelsList) {
+            if (openCreateChannelBtn && createChannelModal) openCreateChannelBtn.addEventListener('click', () => openModalAnimated(createChannelModal));
+            if (closeCreateChannelBtn && createChannelModal) closeCreateChannelBtn.addEventListener('click', () => closeModalAnimated(createChannelModal));
+            if (createChannelModal) createChannelModal.addEventListener('click', (e) => { if (e.target === createChannelModal) closeModalAnimated(createChannelModal); });
+            if (createChannelForm) {
                 createChannelForm.addEventListener('submit', (e) => {
                     e.preventDefault();
-                    const rawName = (document.getElementById('new-channel-name')?.value || '').trim().toLowerCase().replace(/\s+/g, '-');
-                    const ctype = document.getElementById('new-channel-type')?.value || 'text';
-                    if (!rawName) return;
-                    const item = document.createElement('div');
-                    item.className = 'channel-item';
-                    item.setAttribute('data-channel-name', rawName);
-                    item.setAttribute('data-channel-type', ctype);
-                    item.innerHTML = `<span>${ctype === 'audio' ? '🎵' : '#'}</span><span style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${escapeHtmlText(rawName)}</span>`;
-                    item.addEventListener('click', () => window.switchToGeral(rawName, ctype));
-                    serverChannelsList.appendChild(item);
-                    showKiwiToast(`Canal "${rawName}" criado!`);
-                    createChannelForm.reset();
+                    const nameEl = document.getElementById('new-channel-name');
+                    const typeEl = document.getElementById('new-channel-type');
+                    const chName = (nameEl && nameEl.value.trim()) || 'novo-canal';
+                    const chType = (typeEl && typeEl.value) || 'text';
+                    const listEl = document.getElementById('server-channels-list');
+                    if (listEl) {
+                        const item = document.createElement('div');
+                        item.className = 'channel-item';
+                        item.setAttribute('data-channel-name', chName);
+                        item.setAttribute('data-channel-type', chType);
+                        const prefix = chType === 'audio' ? '🎵' : '#';
+                        item.innerHTML = `<span>${escapeHtmlText(prefix)}</span><span style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${escapeHtmlText(chName)}</span>`;
+                        item.addEventListener('click', () => window.switchToGeral(chName, chType));
+                        listEl.appendChild(item);
+                        window.switchToGeral(chName, chType);
+                    }
+                    if (nameEl) nameEl.value = '';
                     closeModalAnimated(createChannelModal);
-                    window.switchToGeral(rawName, ctype);
+                    showKiwiToast(`Canal "${chName}" criado!`);
                 });
             }
 
@@ -5606,12 +5518,11 @@
                 document.querySelectorAll('.mobile-nav-btn').forEach(b => b.classList.remove('active'));
                 if (btn) btn.classList.add('active');
             }
+
             if (mobNavFriends) {
                 mobNavFriends.addEventListener('click', () => {
                     setActiveMobileNav(mobNavFriends);
                     window.closeMobileChatView();
-                    const amigosTab = document.querySelector('.social-tab[data-tab="amigos"]');
-                    if (amigosTab) amigosTab.click();
                 });
             }
             if (mobNavSearch) {
@@ -5634,7 +5545,7 @@
             }
 
             if (headerCallBtn) {
-                headerCallBtn.addEventListener('click', () => {
+                headerCallBtn.addEventListener('click', function() {
                     if (currentView === 'dm' && currentDmUser) startVoiceCall(currentDmUser);
                 });
             }
