@@ -1505,29 +1505,35 @@
             }
         }
     
-        /* === EDITOR ESTÉTICO EM 2 COLUNAS (ESTILO CARD / PERFIL) === */
+        /* === EDITOR ESTÉTICO EM 2 COLUNAS (NA COR DO TEMA) === */
         #edit-modal .aesthetic-profile-card.kiwi-editor-card {
-            width: min(820px, 95vw);
+            width: min(840px, 95vw);
             max-height: 92vh;
             padding: 0;
             overflow-y: auto;
-            border-radius: 18px;
-            background: linear-gradient(155deg, #1b1033 0%, #241442 48%, #160c29 100%);
-            color: #f5f3ff;
-            border: 1px solid rgba(196, 181, 253, 0.24);
-            box-shadow: 0 24px 60px rgba(0, 0, 0, 0.55), 0 0 36px rgba(139, 92, 246, 0.18);
+            border-radius: 16px;
+            background: var(--bg-card);
+            color: var(--text-main);
+            border: 1px solid var(--border-subtle);
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.28);
+            position: relative;
+            z-index: 2;
+        }
+        #edit-modal .aesthetic-profile-card.kiwi-editor-card.gold-profile-theme {
+            background: linear-gradient(155deg, #2b2108 0%, #4b380c 42%, #8a6614 100%) !important;
+            color: #fff8dc !important;
+            border: 1.5px solid rgba(255, 215, 0, 0.78) !important;
         }
         .kiwi-editor-topbar {
             display: flex;
             align-items: center;
             justify-content: space-between;
-            padding: 15px 48px 15px 20px;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-            background: rgba(17, 9, 34, 0.55);
-            backdrop-filter: blur(8px);
+            padding: 14px 48px 14px 20px;
+            border-bottom: 1px solid var(--border-subtle);
+            background: var(--bg-darkest);
             position: sticky;
             top: 0;
-            z-index: 8;
+            z-index: 15;
         }
         .kiwi-editor-title {
             display: flex;
@@ -1535,14 +1541,13 @@
             gap: 10px;
             font-size: 16px;
             font-weight: 800;
-            color: #ffffff;
-            letter-spacing: 0.01em;
+            color: var(--text-main);
         }
         .kiwi-editor-grid {
             display: grid;
             grid-template-columns: 270px minmax(0, 1fr);
-            gap: 18px;
-            padding: 18px 20px 22px 20px;
+            gap: 16px;
+            padding: 16px 20px 20px 20px;
             align-items: start;
         }
         .kiwi-editor-col-left,
@@ -1553,41 +1558,41 @@
             min-width: 0;
         }
         .kiwi-preview-media-box {
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid rgba(255, 255, 255, 0.12);
-            border-radius: 14px;
-            padding: 14px;
+            background: var(--bg-soft);
+            border: 1px solid var(--border-subtle);
+            border-radius: 12px;
+            padding: 12px;
             display: flex;
             flex-direction: column;
             align-items: center;
-            gap: 12px;
+            gap: 10px;
         }
         .kiwi-preview-media-row {
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 14px;
+            gap: 12px;
             width: 100%;
         }
         .kiwi-editor-avatar-wrap {
             position: relative;
-            width: 84px;
-            height: 84px;
+            width: 78px;
+            height: 78px;
             flex-shrink: 0;
         }
         .kiwi-editor-avatar-preview {
-            width: 84px;
-            height: 84px;
+            width: 78px;
+            height: 78px;
             border-radius: 50%;
             background: #5865f2;
             background-size: cover;
             background-position: center;
-            border: 3px solid #a855f7;
-            box-shadow: 0 0 18px rgba(168, 85, 247, 0.45);
+            border: 3px solid var(--bg-card);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.16);
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 30px;
+            font-size: 28px;
             font-weight: 800;
             color: #fff;
         }
@@ -1598,37 +1603,37 @@
             width: 28px;
             height: 28px;
             border-radius: 50%;
-            border: 2px solid #1b1033;
-            background: #7c3aed;
+            border: 2px solid var(--bg-card);
+            background: #5865f2;
             color: #fff;
             font-size: 12px;
             cursor: pointer;
             display: flex;
             align-items: center;
             justify-content: center;
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.35);
+            box-shadow: 0 3px 8px rgba(0, 0, 0, 0.22);
         }
         .kiwi-editor-banner-preview {
             flex: 1;
             min-width: 0;
-            height: 68px;
+            height: 64px;
             border-radius: 10px;
-            background-color: #3b1d6e;
+            background-color: var(--bg-darkest);
             background-image: var(--auth-artwork);
             background-size: cover;
             background-position: center;
-            border: 1px solid rgba(255, 255, 255, 0.16);
+            border: 1px solid var(--border-subtle);
             cursor: pointer;
             position: relative;
             overflow: hidden;
         }
         .kiwi-editor-action-pill {
             width: 100%;
-            background: rgba(124, 58, 237, 0.28);
-            border: 1px solid rgba(196, 181, 253, 0.32);
-            color: #ffffff;
-            padding: 9px 12px;
-            border-radius: 10px;
+            background: var(--bg-card);
+            border: 1px solid var(--border-subtle);
+            color: var(--text-main);
+            padding: 8px 12px;
+            border-radius: 8px;
             font-size: 12px;
             font-weight: 700;
             cursor: pointer;
@@ -1636,14 +1641,14 @@
             align-items: center;
             justify-content: center;
             gap: 6px;
-            transition: background 0.18s ease, transform 0.15s ease;
+            transition: filter 0.15s ease, background 0.15s ease;
         }
         .kiwi-editor-action-pill:hover {
-            background: rgba(124, 58, 237, 0.45);
+            filter: brightness(0.96);
         }
         .kiwi-editor-panel {
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid rgba(255, 255, 255, 0.11);
+            background: var(--bg-soft);
+            border: 1px solid var(--border-subtle);
             border-radius: 12px;
             padding: 11px 12px;
         }
@@ -1653,7 +1658,7 @@
             font-weight: 800;
             text-transform: uppercase;
             letter-spacing: 0.04em;
-            color: #d8b4fe;
+            color: var(--text-muted);
             margin-bottom: 6px;
         }
         .kiwi-swatch-row {
@@ -1663,24 +1668,24 @@
         }
         .kiwi-swatch-bar {
             flex: 1;
-            height: 34px;
-            border-radius: 9px;
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            background: linear-gradient(90deg, #7c3aed 0%, #c084fc 55%, #ec4899 100%);
+            height: 32px;
+            border-radius: 8px;
+            border: 1px solid var(--border-subtle);
+            background: var(--bg-card);
             display: flex;
             align-items: center;
             justify-content: space-between;
             padding: 0 10px;
-            color: #fff;
+            color: var(--text-main);
             font-size: 12px;
             font-weight: 700;
             cursor: pointer;
         }
         .kiwi-editor-select {
             width: 100%;
-            background: rgba(15, 9, 28, 0.72);
-            color: #ffffff;
-            border: 1px solid rgba(255, 255, 255, 0.16);
+            background: var(--bg-input);
+            color: var(--text-main);
+            border: 1px solid var(--border-subtle);
             border-radius: 8px;
             padding: 7px 9px;
             font-size: 12px;
@@ -1693,11 +1698,11 @@
             gap: 8px;
         }
         .kiwi-effect-slot {
-            height: 76px;
+            height: 70px;
             border-radius: 10px;
-            border: 1.5px dashed rgba(216, 180, 254, 0.35);
-            background: rgba(15, 9, 28, 0.45);
-            color: #e9d5ff;
+            border: 1.5px dashed var(--border-subtle);
+            background: var(--bg-card);
+            color: var(--text-main);
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -1706,28 +1711,29 @@
             font-size: 11px;
             font-weight: 700;
             cursor: pointer;
-            transition: border-color 0.18s ease, background 0.18s ease;
+            transition: border-color 0.15s ease, background 0.15s ease;
         }
         .kiwi-effect-slot:hover,
         .kiwi-effect-slot.active {
             border-style: solid;
-            border-color: #c084fc;
-            background: rgba(139, 92, 246, 0.24);
+            border-color: #5865f2;
+            background: var(--bg-darkest);
         }
         .kiwi-effect-plus {
-            width: 26px;
-            height: 26px;
+            width: 24px;
+            height: 24px;
             border-radius: 50%;
-            background: rgba(255, 255, 255, 0.14);
+            background: var(--bg-soft);
+            border: 1px solid var(--border-subtle);
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 15px;
+            font-size: 14px;
             font-weight: 800;
         }
         .kiwi-name-style-card {
-            background: rgba(15, 9, 28, 0.65);
-            border: 1px solid rgba(255, 255, 255, 0.14);
+            background: var(--bg-card);
+            border: 1px solid var(--border-subtle);
             border-radius: 10px;
             padding: 10px 12px;
             display: flex;
@@ -1737,56 +1743,59 @@
             cursor: pointer;
         }
         .kiwi-name-style-sample {
-            font-size: 16px;
-            font-weight: 900;
-            color: #ffffff;
+            font-size: 15px;
+            font-weight: 800;
+            color: var(--text-main);
             overflow: hidden;
             text-overflow: ellipsis;
             white-space: nowrap;
         }
         .kiwi-name-style-sample.special-preview {
             font-family: 'Cinzel Decorative', 'Fredoka', cursive, sans-serif;
-            background: linear-gradient(90deg, #ff5ec4, #c084fc, #ffd700);
+            background: linear-gradient(90deg, #ff5ec4, #9b6dff, #4ea8de);
             -webkit-background-clip: text;
             background-clip: text;
             color: transparent;
         }
         .kiwi-nitro-promo-card {
-            background: linear-gradient(135deg, rgba(168, 85, 247, 0.28) 0%, rgba(236, 72, 153, 0.24) 100%);
-            border: 1px solid rgba(244, 114, 182, 0.42);
+            background: var(--bg-soft);
+            border: 1px solid var(--border-subtle);
             border-radius: 12px;
-            padding: 12px;
+            padding: 11px 12px;
             display: flex;
             flex-direction: column;
             gap: 8px;
         }
         .kiwi-nitro-btn {
             width: 100%;
-            background: linear-gradient(90deg, #9333ea 0%, #db2777 100%);
-            color: #ffffff;
-            border: none;
+            background: var(--bg-card);
+            color: var(--text-main);
+            border: 1px solid var(--border-subtle);
             border-radius: 8px;
             padding: 8px 12px;
             font-size: 12px;
-            font-weight: 800;
+            font-weight: 700;
             cursor: pointer;
             display: flex;
             align-items: center;
             justify-content: space-between;
         }
+        .kiwi-nitro-btn:hover {
+            filter: brightness(0.96);
+        }
         .kiwi-live-banner-mini {
-            height: 92px;
+            height: 86px;
             border-radius: 12px;
-            background-color: #4c1d95;
+            background-color: var(--bg-darkest);
             background-image: var(--auth-artwork);
             background-size: cover;
             background-position: center;
-            border: 1px solid rgba(255, 255, 255, 0.16);
+            border: 1px solid var(--border-subtle);
             position: relative;
         }
         .kiwi-live-identity-box {
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid rgba(255, 255, 255, 0.11);
+            background: var(--bg-soft);
+            border: 1px solid var(--border-subtle);
             border-radius: 12px;
             padding: 10px 14px;
             display: flex;
@@ -1796,13 +1805,13 @@
             flex-wrap: wrap;
         }
         .kiwi-privacy-banner {
-            background: rgba(139, 92, 246, 0.22);
-            border: 1px solid rgba(196, 181, 253, 0.35);
+            background: var(--bg-soft);
+            border: 1px solid var(--border-subtle);
             border-radius: 10px;
             padding: 10px 12px;
             font-size: 12px;
             line-height: 1.4;
-            color: #f3e8ff;
+            color: var(--text-muted);
             display: flex;
             align-items: flex-start;
             justify-content: space-between;
@@ -1812,23 +1821,23 @@
             margin-bottom: 8px;
         }
         .kiwi-editor-grid .form-group label {
-            color: #e9d5ff;
+            color: var(--text-muted);
             font-size: 11px;
             letter-spacing: 0.03em;
         }
         .kiwi-editor-grid .form-group input[type="text"],
         .kiwi-editor-grid .form-group input[type="url"],
         .kiwi-editor-grid .form-group textarea {
-            background: rgba(13, 7, 24, 0.72);
-            border: 1px solid rgba(255, 255, 255, 0.15);
-            color: #ffffff;
+            background: var(--bg-input);
+            border: 1px solid var(--border-subtle);
+            color: var(--text-main);
             border-radius: 8px;
             padding: 8px 10px;
         }
         .kiwi-editor-grid .form-group input[type="file"] {
-            background: rgba(13, 7, 24, 0.55);
-            border: 1px solid rgba(255, 255, 255, 0.14);
-            color: #e9d5ff;
+            background: var(--bg-card);
+            border: 1px solid var(--border-subtle);
+            color: var(--text-main);
             border-radius: 8px;
             padding: 5px 8px;
             font-size: 12px;
@@ -1839,9 +1848,9 @@
             gap: 10px;
         }
         .kiwi-saved-music-pill-btn {
-            background: rgba(139, 92, 246, 0.32);
-            color: #ffffff;
-            border: 1px solid rgba(216, 180, 254, 0.4);
+            background: var(--bg-soft);
+            color: var(--text-main);
+            border: 1px solid var(--border-subtle);
             border-radius: 8px;
             padding: 5px 10px;
             font-size: 11px;
@@ -1851,35 +1860,43 @@
             align-items: center;
             gap: 5px;
         }
+        .kiwi-saved-music-pill-btn:hover {
+            filter: brightness(0.96);
+        }
         .kiwi-editor-footer-actions {
             display: flex;
             gap: 12px;
             margin-top: 12px;
             padding-top: 10px;
-            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            border-top: 1px solid var(--border-subtle);
         }
         .kiwi-btn-guardar {
             flex: 1;
-            background: linear-gradient(90deg, #6366f1 0%, #8b5cf6 100%);
+            background: #5865f2;
             color: #ffffff;
             border: none;
-            padding: 11px 16px;
-            border-radius: 9px;
-            font-size: 13px;
-            font-weight: 800;
-            cursor: pointer;
-            box-shadow: 0 6px 18px rgba(99, 102, 241, 0.35);
-        }
-        .kiwi-btn-cancelar {
-            flex: 1;
-            background: rgba(255, 255, 255, 0.08);
-            color: #e9d5ff;
-            border: 1px solid rgba(255, 255, 255, 0.18);
-            padding: 11px 16px;
-            border-radius: 9px;
+            padding: 10px 16px;
+            border-radius: 8px;
             font-size: 13px;
             font-weight: 700;
             cursor: pointer;
+        }
+        .kiwi-btn-guardar:hover {
+            filter: brightness(0.95);
+        }
+        .kiwi-btn-cancelar {
+            flex: 1;
+            background: var(--bg-soft);
+            color: var(--text-main);
+            border: 1px solid var(--border-subtle);
+            padding: 10px 16px;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 700;
+            cursor: pointer;
+        }
+        .kiwi-btn-cancelar:hover {
+            filter: brightness(0.96);
         }
         @media (max-width: 768px) {
             .kiwi-editor-grid {
@@ -1890,6 +1907,79 @@
             .kiwi-editor-two-col-fields {
                 grid-template-columns: 1fr;
             }
+        }
+
+
+        .kiwi-file-picker-wrap {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: var(--bg-card);
+            border: 1px solid var(--border-subtle);
+            border-radius: 9px;
+            padding: 5px 8px;
+            transition: border-color 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
+        }
+        .kiwi-file-picker-wrap:hover {
+            border-color: rgba(124, 58, 237, 0.55);
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+        }
+        .kiwi-file-picker-btn {
+            background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+            color: #ffffff;
+            border: none;
+            border-radius: 7px;
+            padding: 6px 11px;
+            font-size: 11px;
+            font-weight: 700;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            white-space: nowrap;
+            flex-shrink: 0;
+            box-shadow: 0 2px 8px rgba(99, 102, 241, 0.28);
+            transition: transform 0.12s ease, filter 0.15s ease;
+        }
+        .kiwi-file-picker-btn:hover {
+            filter: brightness(1.06);
+            transform: translateY(-1px);
+        }
+        .kiwi-file-picker-btn:active {
+            transform: translateY(0);
+        }
+        .kiwi-file-picker-name {
+            flex: 1;
+            min-width: 0;
+            font-size: 11px;
+            color: var(--text-muted);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            user-select: none;
+        }
+        .kiwi-file-picker-name.has-file {
+            color: var(--text-main);
+            font-weight: 600;
+        }
+        .kiwi-file-picker-clear {
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            font-size: 12px;
+            font-weight: 700;
+            cursor: pointer;
+            padding: 2px 5px;
+            border-radius: 5px;
+            display: none;
+            line-height: 1;
+        }
+        .kiwi-file-picker-clear.visible {
+            display: inline-flex;
+        }
+        .kiwi-file-picker-clear:hover {
+            background: rgba(231, 76, 60, 0.15);
+            color: #e74c3c;
         }
 </style>
 </head>
@@ -2395,7 +2485,12 @@
                         <div class="kiwi-editor-two-col-fields">
                             <div class="form-group">
                                 <label>Ficheiro de áudio local (.mp3, .ogg, .wav, .m4a)</label>
-                                <input type="file" name="music_audio" id="edit-local-audio-file" accept="audio/*">
+                                <div class="kiwi-file-picker-wrap" data-file-picker-for="edit-local-audio-file" data-empty-text="Nenhum ficheiro escolhido">
+                                    <button type="button" class="kiwi-file-picker-btn">🎧 Escolher áudio</button>
+                                    <span class="kiwi-file-picker-name">Nenhum ficheiro escolhido</span>
+                                    <button type="button" class="kiwi-file-picker-clear" title="Limpar ficheiro">✕</button>
+                                    <input type="file" name="music_audio" id="edit-local-audio-file" accept="audio/*" style="display:none;">
+                                </div>
                             </div>
                             <div class="form-group">
                                 <label>Colar link direto do som (.mp3, .ogg, .wav, etc.)</label>
@@ -2411,7 +2506,12 @@
                         <div class="kiwi-editor-two-col-fields">
                             <div class="form-group">
                                 <label>Foto da capa da música (arquivo)</label>
-                                <input type="file" name="music_cover" id="edit-music-cover-file" accept="image/*">
+                                <div class="kiwi-file-picker-wrap" data-file-picker-for="edit-music-cover-file" data-empty-text="Nenhuma capa escolhida">
+                                    <button type="button" class="kiwi-file-picker-btn">🖼️ Escolher capa</button>
+                                    <span class="kiwi-file-picker-name">Nenhuma capa escolhida</span>
+                                    <button type="button" class="kiwi-file-picker-clear" title="Limpar capa">✕</button>
+                                    <input type="file" name="music_cover" id="edit-music-cover-file" accept="image/*" style="display:none;">
+                                </div>
                             </div>
                             <div class="form-group">
                                 <label>Ou URL da foto da capa</label>
@@ -4102,6 +4202,7 @@
                         : '';
                 }
                 if (editMusicCoverFile) editMusicCoverFile.value = '';
+                if (typeof syncCustomFilePickers === 'function') syncCustomFilePickers();
                 if (tempEditorAvatarUrl && tempEditorAvatarUrl.startsWith('blob:')) URL.revokeObjectURL(tempEditorAvatarUrl);
                 if (tempEditorBannerUrl && tempEditorBannerUrl.startsWith('blob:')) URL.revokeObjectURL(tempEditorBannerUrl);
                 tempEditorAvatarUrl = '';
@@ -4189,7 +4290,7 @@
                 }
             }
 
-            if (editorTriggerAvatarBtn && editLocalAudioFile && editAvatarFile) {
+            if (editorTriggerAvatarBtn && editAvatarFile) {
                 editorTriggerAvatarBtn.addEventListener('click', () => editAvatarFile.click());
             }
             if (editorAvatarPencilBtn && editAvatarFile) {
@@ -4276,6 +4377,110 @@
                     editorPrivacyNotice.style.display = 'none';
                 });
             }
+
+            
+            const openMusicBoxBtn = document.getElementById('open-music-box-btn');
+            const savedMusicBox = document.getElementById('saved-music-box');
+            const quickAddMusicToggle = document.getElementById('quick-add-music-toggle');
+            const quickAddMusicForm = document.getElementById('quick-add-music-form');
+            const qmSaveBtn = document.getElementById('qm-save-btn');
+            const savedMusicList = document.getElementById('saved-music-list');
+
+            if (openMusicBoxBtn && savedMusicBox) {
+                openMusicBoxBtn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    const isOpen = savedMusicBox.style.display === 'block';
+                    savedMusicBox.style.display = isOpen ? 'none' : 'block';
+                });
+            }
+            if (quickAddMusicToggle && quickAddMusicForm) {
+                quickAddMusicToggle.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    quickAddMusicForm.style.display = quickAddMusicForm.style.display === 'block' ? 'none' : 'block';
+                });
+            }
+            if (qmSaveBtn && savedMusicList) {
+                qmSaveBtn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    const titleEl = document.getElementById('qm-title');
+                    const artistEl = document.getElementById('qm-artist');
+                    const titleVal = (titleEl && titleEl.value.trim()) || 'Faixa salva';
+                    const artistVal = (artistEl && artistEl.value.trim()) || 'Artista';
+                    if (editSong) editSong.value = titleVal;
+                    if (editArtist) editArtist.value = artistVal;
+                    const row = document.createElement('div');
+                    row.style.cssText = 'display:flex; justify-content:space-between; align-items:center; background:#2b2d31; color:#fff; padding:6px 8px; border-radius:6px; cursor:pointer;';
+                    row.innerHTML = `<span><strong>${escapeHtmlText(titleVal)}</strong> — ${escapeHtmlText(artistVal)}</span><span style="color:#23a55a; font-weight:bold;">Usar</span>`;
+                    row.addEventListener('click', function() {
+                        if (editSong) editSong.value = titleVal;
+                        if (editArtist) editArtist.value = artistVal;
+                        showKiwiToast(`Música "${titleVal}" selecionada!`);
+                    });
+                    if (savedMusicList.textContent && savedMusicList.textContent.includes('Nenhuma música salva ainda')) {
+                        savedMusicList.innerHTML = '';
+                    }
+                    savedMusicList.prepend(row);
+                    if (titleEl) titleEl.value = '';
+                    if (artistEl) artistEl.value = '';
+                    if (quickAddMusicForm) quickAddMusicForm.style.display = 'none';
+                    showKiwiToast(`"${titleVal}" adicionada às músicas salvas!`);
+                });
+            }
+
+            
+            function syncCustomFilePickers() {
+                document.querySelectorAll('.kiwi-file-picker-wrap').forEach(wrap => {
+                    const inputId = wrap.getAttribute('data-file-picker-for');
+                    const emptyText = wrap.getAttribute('data-empty-text') || 'Nenhum ficheiro escolhido';
+                    const inp = inputId ? document.getElementById(inputId) : wrap.querySelector('input[type="file"]');
+                    const nameEl = wrap.querySelector('.kiwi-file-picker-name');
+                    const clearEl = wrap.querySelector('.kiwi-file-picker-clear');
+                    const file = inp && inp.files && inp.files[0] ? inp.files[0] : null;
+                    if (nameEl) {
+                        if (file) {
+                            nameEl.textContent = file.name;
+                            nameEl.classList.add('has-file');
+                        } else {
+                            nameEl.textContent = emptyText;
+                            nameEl.classList.remove('has-file');
+                        }
+                    }
+                    if (clearEl) {
+                        clearEl.classList.toggle('visible', Boolean(file));
+                    }
+                });
+            }
+
+            document.querySelectorAll('.kiwi-file-picker-wrap').forEach(wrap => {
+                const inputId = wrap.getAttribute('data-file-picker-for');
+                const inp = inputId ? document.getElementById(inputId) : wrap.querySelector('input[type="file"]');
+                const btn = wrap.querySelector('.kiwi-file-picker-btn');
+                const clearEl = wrap.querySelector('.kiwi-file-picker-clear');
+
+                if (btn && inp) {
+                    btn.addEventListener('click', (e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        inp.click();
+                    });
+                }
+                if (clearEl && inp) {
+                    clearEl.addEventListener('click', (e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        inp.value = '';
+                        inp.dispatchEvent(new Event('change', { bubbles: true }));
+                        syncCustomFilePickers();
+                    });
+                }
+                if (inp) {
+                    inp.addEventListener('change', syncCustomFilePickers);
+                }
+            });
+            syncCustomFilePickers();
 
             editProfileForm.addEventListener('submit', async function(e) {
                 e.preventDefault();
