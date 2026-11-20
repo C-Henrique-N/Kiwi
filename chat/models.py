@@ -14,6 +14,11 @@ class UserProfile(models.Model):
     spotify_song = models.CharField(max_length=150, blank=True, default='Drama')
     spotify_artist = models.CharField(max_length=150, blank=True, default='Lala Sadii')
     accent_color = models.CharField(max_length=50, default='#ff9de2')
+    music_url = models.URLField(blank=True, default='')
+    music_audio_file = models.FileField(upload_to='music_audios/', blank=True, null=True)
+    music_audio_url = models.TextField(blank=True, default='')
+    music_cover_file = models.ImageField(upload_to='music_covers/', blank=True, null=True)
+    music_cover_url = models.TextField(blank=True, default='')
 
     def __str__(self):
         return self.user.username
@@ -60,3 +65,30 @@ class PrivateMessage(models.Model):
 def create_user_profile(sender, instance, created, **kwargs):
     if created:
         UserProfile.objects.create(user=instance)
+
+class SavedMusic(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='saved_musics')
+    title = models.CharField(max_length=150, blank=True)
+    artist = models.CharField(max_length=150, blank=True)
+    music_url = models.URLField(blank=True)
+    audio_file = models.FileField(upload_to='music_audios/', blank=True, null=True)
+    audio_url = models.TextField(blank=True)
+    cover_file = models.ImageField(upload_to='music_covers/', blank=True, null=True)
+    cover_url = models.TextField(blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-created_at']
+
+    def get_audio_src(self):
+        if self.audio_file:
+            return self.audio_file.url
+        return self.audio_url or ''
+
+    def get_cover_src(self):
+        if self.cover_file:
+            return self.cover_file.url
+        return self.cover_url or ''
+
+    def __str__(self):
+        return f'{self.user.username}: {self.title or "Música"}'

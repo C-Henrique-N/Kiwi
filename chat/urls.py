@@ -19,4 +19,7 @@ urlpatterns = [
     path('api/upload-attachment/', views.upload_attachment, name='upload_attachment'),
     path('profile/', views.profile_page_view, name='profile_page'),
     path('api/friends/remove/', views.remove_friend, name='remove_friend'),
+    path('api/musics/saved/', views.list_saved_musics, name='list_saved_musics'),
+    path('api/musics/save/', views.create_saved_music, name='create_saved_music'),
+    path('api/musics/delete/<int:music_id>/', views.delete_saved_music, name='delete_saved_music'),
 ]

@@ -1852,9 +1852,37 @@
                     <label>Biografia Detalhada</label>
                     <textarea name="bio" id="edit-bio" rows="3">@matsuda 🤍 infpt 🎧 zekiah ☁️</textarea>
                 </div>
-                <div class="form-group">
-                    <label>Música a Ouvir (Nome da Faixa)</label>
-                    <input type="text" name="spotify_song" id="edit-spotify-song" value="Drama">
+                <div class="form-group" style="position: relative;">
+                    <div style="display:flex; justify-content:space-between; align-items:center; gap:8px;">
+                        <label style="margin:0;">Música a Ouvir (Nome da Faixa)</label>
+                        <button type="button" id="open-music-box-btn" style="background:#2b2d31; color:#fff; border:1px solid rgba(255,255,255,0.18); border-radius:6px; padding:3px 8px; font-size:11px; cursor:pointer;">
+                            🎵 Músicas salvas
+                        </button>
+                    </div>
+                    <input type="text" name="spotify_song" id="edit-spotify-song" value="Drama" style="margin-top:6px;">
+
+                    <div id="saved-music-box" style="display:none; margin-top:8px; background:#18191c; border:1px solid rgba(255,255,255,0.16); border-radius:10px; padding:10px; max-height:240px; overflow-y:auto;">
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+                            <strong style="font-size:12px;">Minhas músicas no banco</strong>
+                            <button type="button" id="quick-add-music-toggle" style="background:#5865f2; color:#fff; border:none; border-radius:5px; padding:3px 8px; font-size:11px; cursor:pointer;">+ Adicionar</button>
+                        </div>
+
+                        <div id="quick-add-music-form" style="display:none; background:#232429; padding:8px; border-radius:8px; margin-bottom:8px;">
+                            <input type="text" id="qm-title" placeholder="Nome da música" style="width:100%; margin-bottom:6px; padding:6px; font-size:12px;">
+                            <input type="text" id="qm-artist" placeholder="Artista" style="width:100%; margin-bottom:6px; padding:6px; font-size:12px;">
+                            <label style="font-size:11px; display:block; margin-bottom:2px;">MP3 / Áudio</label>
+                            <input type="file" id="qm-audio-file" accept="audio/*" style="width:100%; margin-bottom:6px; font-size:11px;">
+                            <label style="font-size:11px; display:block; margin-bottom:2px;">Capa (foto)</label>
+                            <input type="file" id="qm-cover-file" accept="image/*" style="width:100%; margin-bottom:6px; font-size:11px;">
+                            <button type="button" id="qm-save-btn" style="width:100%; background:#23a55a; color:#fff; border:none; border-radius:6px; padding:7px; font-size:12px; font-weight:bold; cursor:pointer;">
+                                Guardar música no banco
+                            </button>
+                        </div>
+
+                        <div id="saved-music-list" style="display:flex; flex-direction:column; gap:6px; font-size:12px;">
+                            <div style="opacity:0.7;">Nenhuma música salva ainda. Clique em "+ Adicionar".</div>
+                        </div>
+                    </div>
                 </div>
                 <div class="form-group">
                     <label>Artista</label>
@@ -3638,6 +3666,8 @@
                 formData.set('spotify_song', myProfileData.song);
                 formData.set('spotify_artist', myProfileData.artist);
                 formData.set('music_url', myProfileData.musicUrl);
+                if (pickedAudioFile) formData.set('music_audio', pickedAudioFile);
+                if (pickedCoverFile) formData.set('music_cover', pickedCoverFile);
                 formData.set('music_audio_url', (!myProfileData.audioSrc.startsWith('blob:') && !myProfileData.audioSrc.startsWith('data:')) ? myProfileData.audioSrc : '');
                 formData.set('music_cover_url', (!myProfileData.coverUrl.startsWith('blob:') && !myProfileData.coverUrl.startsWith('data:')) ? myProfileData.coverUrl : '');
                 formData.set('gold_profile_bg', myProfileData.goldProfileBg ? 'true' : 'false');
@@ -3657,6 +3687,8 @@
                     if (resp && resp.status === 'success') {
                         if (resp.avatarUrl) myProfileData.avatarUrl = resp.avatarUrl;
                         if (resp.bannerUrl) myProfileData.bannerUrl = resp.bannerUrl;
+                        if (resp.music_audio_url) myProfileData.audioSrc = resp.music_audio_url;
+                        if (resp.music_cover_url) myProfileData.coverUrl = resp.music_cover_url;
                         saveUserMusicToLocalCache(ownerName, myProfileData);
                         if (ownerName) profilesByUsername.set(ownerName.toLowerCase(), { ...myProfileData });
                         updateMySidebarUI();
@@ -3673,6 +3705,158 @@
                     showKiwiToast("Alterações guardadas localmente no perfil!");
                 });
             });
+
+            const openMusicBoxBtn = document.getElementById('open-music-box-btn');
+            const savedMusicBox = document.getElementById('saved-music-box');
+            const quickAddMusicToggle = document.getElementById('quick-add-music-toggle');
+            const quickAddMusicForm = document.getElementById('quick-add-music-form');
+            const savedMusicListEl = document.getElementById('saved-music-list');
+            const qmSaveBtn = document.getElementById('qm-save-btn');
+            let savedMusicsCache = [];
+
+            function applySavedMusicToFormAndPlayer(item, autoPlay = false) {
+                if (!item) return;
+                if (editSong) editSong.value = item.title || '';
+                if (editArtist) editArtist.value = item.artist || '';
+                if (editYtUrl) editYtUrl.value = item.music_url || '';
+                if (editLocalAudioUrl) editLocalAudioUrl.value = item.audio_url || '';
+                if (editMusicCoverUrl) editMusicCoverUrl.value = item.cover_url || '';
+
+                myProfileData.song = item.title || '';
+                myProfileData.artist = item.artist || '';
+                myProfileData.musicUrl = item.music_url || '';
+                myProfileData.audioSrc = item.audio_url || '';
+                myProfileData.coverUrl = item.cover_url || '';
+
+                saveUserMusicToLocalCache(activeUsername || myProfileData.username || '', myProfileData);
+                renderProfileMusicWidget({
+                    owner: activeUsername || myProfileData.username || '',
+                    song: myProfileData.song,
+                    artist: myProfileData.artist,
+                    musicUrl: myProfileData.musicUrl,
+                    audioSrc: myProfileData.audioSrc,
+                    coverUrl: myProfileData.coverUrl
+                });
+
+                if (autoPlay && myProfileData.audioSrc && upLocalAudio) {
+                    upLocalAudio.src = myProfileData.audioSrc;
+                    upLocalAudio.play().catch(() => {});
+                }
+            }
+
+            function renderSavedMusicList() {
+                if (!savedMusicListEl) return;
+                if (!savedMusicsCache.length) {
+                    savedMusicListEl.innerHTML = '<div style="opacity:0.7;">Nenhuma música salva ainda. Clique em "+ Adicionar".</div>';
+                    return;
+                }
+                savedMusicListEl.innerHTML = savedMusicsCache.map(m => {
+                    const safeTitle = (m.title || 'Sem título').replace(/</g, '&lt;');
+                    const safeArtist = (m.artist || 'Artista').replace(/</g, '&lt;');
+                    const thumb = m.cover_url
+                        ? `<img src="${m.cover_url}" alt="" style="width:34px;height:34px;border-radius:6px;object-fit:cover;flex-shrink:0;">`
+                        : `<div style="width:34px;height:34px;border-radius:6px;background:#2b2d31;display:flex;align-items:center;justify-content:center;flex-shrink:0;">♫</div>`;
+                    return `
+                        <div style="display:flex;align-items:center;gap:8px;background:#232429;padding:6px;border-radius:7px;">
+                            ${thumb}
+                            <div style="flex:1;min-width:0;cursor:pointer;" onclick="window.__selectSavedMusic(${m.id}, true)">
+                                <div style="font-weight:bold;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${safeTitle}</div>
+                                <div style="font-size:11px;opacity:0.75;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${safeArtist}</div>
+                            </div>
+                            <button type="button" onclick="window.__selectSavedMusic(${m.id}, true)" style="background:#5865f2;color:#fff;border:none;border-radius:5px;padding:4px 7px;font-size:11px;cursor:pointer;">Ouvir</button>
+                            <button type="button" onclick="window.__deleteSavedMusic(${m.id})" style="background:transparent;color:#f23f42;border:1px solid rgba(242,63,66,0.4);border-radius:5px;padding:4px 6px;font-size:11px;cursor:pointer;">✕</button>
+                        </div>
+                    `;
+                }).join('');
+            }
+
+            window.__selectSavedMusic = function(id, autoPlay = false) {
+                const found = savedMusicsCache.find(x => Number(x.id) === Number(id));
+                if (!found) return;
+                applySavedMusicToFormAndPlayer(found, autoPlay);
+                if (savedMusicBox) savedMusicBox.style.display = 'none';
+                showKiwiToast(`Música selecionada: ${found.title}`);
+            };
+
+            window.__deleteSavedMusic = function(id) {
+                fetch(`/api/musics/delete/${id}/`, {
+                    method: 'POST',
+                    headers: { 'X-CSRFToken': getCookie('csrftoken') }
+                })
+                .then(r => r.json())
+                .then(resp => {
+                    if (resp.status === 'success') {
+                        savedMusicsCache = savedMusicsCache.filter(x => Number(x.id) !== Number(id));
+                        renderSavedMusicList();
+                    }
+                });
+            };
+
+            function fetchSavedMusicsFromDb() {
+                fetch('/api/musics/saved/')
+                .then(r => r.json())
+                .then(resp => {
+                    if (resp && resp.status === 'success') {
+                        savedMusicsCache = resp.musics || [];
+                        renderSavedMusicList();
+                    }
+                })
+                .catch(() => {});
+            }
+
+            if (openMusicBoxBtn && savedMusicBox) {
+                openMusicBoxBtn.addEventListener('click', () => {
+                    const willOpen = savedMusicBox.style.display === 'none';
+                    savedMusicBox.style.display = willOpen ? 'block' : 'none';
+                    if (willOpen) fetchSavedMusicsFromDb();
+                });
+            }
+
+            if (quickAddMusicToggle && quickAddMusicForm) {
+                quickAddMusicToggle.addEventListener('click', () => {
+                    quickAddMusicForm.style.display = quickAddMusicForm.style.display === 'none' ? 'block' : 'none';
+                });
+            }
+
+            if (qmSaveBtn) {
+                qmSaveBtn.addEventListener('click', () => {
+                    const fd = new FormData();
+                    fd.append('title', (document.getElementById('qm-title')?.value || editSong?.value || '').trim());
+                    fd.append('artist', (document.getElementById('qm-artist')?.value || editArtist?.value || '').trim());
+                    fd.append('music_url', (editYtUrl?.value || '').trim());
+                    fd.append('audio_url', (editLocalAudioUrl?.value || '').trim());
+                    fd.append('cover_url', (editMusicCoverUrl?.value || '').trim());
+
+                    const aFile = document.getElementById('qm-audio-file')?.files?.[0] || editLocalAudioFile?.files?.[0];
+                    const cFile = document.getElementById('qm-cover-file')?.files?.[0] || editMusicCoverFile?.files?.[0];
+                    if (aFile) fd.append('audio_file', aFile);
+                    if (cFile) fd.append('cover_file', cFile);
+
+                    qmSaveBtn.disabled = true;
+                    fetch('/api/musics/save/', {
+                        method: 'POST',
+                        headers: { 'X-CSRFToken': getCookie('csrftoken') },
+                        body: fd
+                    })
+                    .then(r => r.json())
+                    .then(resp => {
+                        qmSaveBtn.disabled = false;
+                        if (resp && resp.status === 'success' && resp.music) {
+                            savedMusicsCache.unshift(resp.music);
+                            renderSavedMusicList();
+                            applySavedMusicToFormAndPlayer(resp.music, false);
+                            if (quickAddMusicForm) quickAddMusicForm.style.display = 'none';
+                            showKiwiToast('Música e capa guardadas no banco!');
+                        } else {
+                            showKiwiToast(resp.message || 'Erro ao guardar música.');
+                        }
+                    })
+                    .catch(() => {
+                        qmSaveBtn.disabled = false;
+                        showKiwiToast('Erro de rede ao guardar música.');
+                    });
+                });
+            }
 
             function renderEmptyFriendRequests(container) {
                 container.innerHTML = `<div style="font-size: 12px; color: var(--text-muted); background: var(--bg-soft); padding: 10px; border-radius: 8px; text-align: center;">Sem novos pedidos de amizade.</div>`;
