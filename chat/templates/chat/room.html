@@ -1,3 +1,8 @@
+
+
+
+Ícone do app HTML
+room
 <!DOCTYPE html>
 <html lang="pt">
 <head>
@@ -2871,9 +2876,7 @@
 
             function formatSafeBioHtml(rawBio) {
                 const escaped = escapeHtmlText(rawBio || '');
-                return escaped.replace(/
-?
-|<br\s*\/?>/gi, '<br>');
+                return escaped.replace(/(?:\r\n|\r|\n|<br\s*\/?>)/gi, '<br>');
             }
 
             function isSafeAssetUrl(url) {
