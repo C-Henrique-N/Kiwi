@@ -5,10 +5,9 @@ from urllib.parse import urlparse
 from channels.db import database_sync_to_async
 from channels.generic.websocket import AsyncWebsocketConsumer
 from django.contrib.auth import get_user_model
-from django.db.models import Q
 from django.utils import timezone
 
-from .models import Message, PrivateMessage
+from .models import Channel, FriendRequest, Message, PrivateMessage, Server
 
 User = get_user_model()
 
@@ -41,30 +40,21 @@ def _normalize_attachment_type(att_type: str, att_url: str) -> str:
 
 
 def _get_user_avatar(user) -> str:
-    for attr in ("avatar_url", "avatar", "foto", "photo"):
-        val = getattr(user, attr, None)
-        if not val:
-            continue
-        if hasattr(val, "url"):
-            try:
-                return val.url
-            except Exception:
-                continue
-        if isinstance(val, str) and _is_valid_media_url(val):
-            return val.strip()
     profile = getattr(user, "profile", None)
     if profile:
-        for attr in ("avatar_url", "avatar", "foto", "photo"):
-            val = getattr(profile, attr, None)
-            if not val:
-                continue
-            if hasattr(val, "url"):
-                try:
-                    return val.url
-                except Exception:
-                    continue
-            if isinstance(val, str) and _is_valid_media_url(val):
-                return val.strip()
+        if getattr(profile, "avatar", None):
+            try:
+                return profile.avatar.url
+            except Exception:
+                pass
+        if getattr(profile, "music_cover_file", None):
+            try:
+                return profile.music_cover_file.url
+            except Exception:
+                pass
+        cover_url = getattr(profile, "music_cover_url", "") or ""
+        if isinstance(cover_url, str) and _is_valid_media_url(cover_url):
+            return cover_url.strip()
     return ""
 
 
@@ -95,7 +85,12 @@ class ChatConsumer(AsyncWebsocketConsumer):
         self.group_name = f"kiwi_srv_{self.server_id}_ch_{self.channel_name_slug}"
         self.presence_group = f"kiwi_presence_srv_{self.server_id}"
 
-        self.room_obj = await self._get_or_create_room(self.room_slug)
+        self.channel_obj = await self._get_or_create_channel(
+            raw_server=raw_server,
+            server_token=self.server_id,
+            raw_channel=raw_channel,
+            channel_token=self.channel_name_slug,
+        )
 
         await self.channel_layer.group_add(self.group_name, self.channel_name)
         await self.channel_layer.group_add(self.presence_group, self.channel_name)
@@ -198,21 +193,22 @@ class ChatConsumer(AsyncWebsocketConsumer):
 
         msg_id = payload.get("id") or f"msg_{int(timezone.now().timestamp() * 1000)}"
         time_str = payload.get("time") or timezone.localtime(timezone.now()).strftime("%H:%M")
+        client_id = str(payload.get("client_id") or msg_id)[:100]
 
-        await self._save_message(
+        saved_msg = await self._save_message(
             user=self.user,
-            room=self.room_obj,
+            channel=self.channel_obj,
             content=content,
-            attachment_url=attachment_url,
             attachment_type=attachment_type,
-            attachment_name=attachment_name,
+            client_id=client_id,
         )
 
         await self.channel_layer.group_send(
             self.group_name,
             {
                 "type": "chat_message",
-                "id": msg_id,
+                "id": saved_msg.id if saved_msg else msg_id,
+                "client_id": client_id,
                 "sender": self.user.username,
                 "username": self.user.username,
                 "message": content,
@@ -234,6 +230,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
                 {
                     "type": "chat_message",
                     "id": event.get("id"),
+                    "client_id": event.get("client_id", ""),
                     "sender": event.get("sender"),
                     "username": event.get("username"),
                     "message": event.get("message", ""),
@@ -277,58 +274,53 @@ class ChatConsumer(AsyncWebsocketConsumer):
         )
 
     @database_sync_to_async
-    def _get_or_create_room(self, slug: str):
-        try:
-            from django.apps import apps
-            for model_name in ("Room", "ChatRoom", "Channel"):
-                Model = apps.get_model("chat", model_name)
-                if Model is not None:
-                    field_names = {f.name for f in Model._meta.get_fields()}
-                    lookup = {"slug": slug} if "slug" in field_names else {"name": slug}
-                    defaults = {}
-                    if "name" in field_names and "name" not in lookup:
-                        defaults["name"] = slug
-                    if "slug" in field_names and "slug" not in lookup:
-                        defaults["slug"] = slug
-                    obj, _ = Model.objects.get_or_create(**lookup, defaults=defaults)
-                    return obj
-        except Exception:
-            pass
-        return None
+    def _get_or_create_channel(self, raw_server: str, server_token: str, raw_channel: str, channel_token: str):
+        server = None
+        clean_srv = (raw_server or "").strip()
+        if clean_srv.isdigit():
+            server = Server.objects.filter(pk=int(clean_srv)).first()
+        if server is None:
+            server = Server.objects.filter(name__iexact=clean_srv).first() or Server.objects.filter(name__iexact=server_token).first()
+        if server is None:
+            server_name = (clean_srv or server_token or "home")[:120]
+            server, _ = Server.objects.get_or_create(
+                name=server_name,
+                defaults={"owner": self.user},
+            )
+            server.members.add(self.user)
+
+        clean_ch = (raw_channel or "").strip().lstrip("#")[:100]
+        channel = (
+            Channel.objects.filter(server=server, name__iexact=clean_ch).first()
+            or Channel.objects.filter(server=server, name__iexact=channel_token).first()
+        )
+        if channel is None:
+            ch_name = (clean_ch or channel_token or "geral")[:100]
+            channel, _ = Channel.objects.get_or_create(
+                server=server,
+                name=ch_name,
+                defaults={"channel_type": "text"},
+            )
+        return channel
 
     @database_sync_to_async
-    def _save_message(self, user, room, content, attachment_url, attachment_type, attachment_name):
-        field_names = {f.name for f in Message._meta.get_fields()}
-        kwargs = {}
-        if "room" in field_names and room is not None:
-            kwargs["room"] = room
-        if "user" in field_names:
-            kwargs["user"] = user
-        elif "sender" in field_names:
-            kwargs["sender"] = user
-        if "content" in field_names:
-            kwargs["content"] = content
-        if "attachment_url" in field_names:
-            kwargs["attachment_url"] = attachment_url
-        if "attachment_type" in field_names:
-            kwargs["attachment_type"] = attachment_type
-        if "attachment_name" in field_names:
-            kwargs["attachment_name"] = attachment_name
-        if "server_id" in field_names:
-            kwargs["server_id"] = self.server_id
-        if "channel_name" in field_names:
-            kwargs["channel_name"] = self.channel_name_slug
-        return Message.objects.create(**kwargs)
+    def _save_message(self, user, channel, content, attachment_type, client_id=""):
+        return Message.objects.create(
+            user=user,
+            channel=channel,
+            content=content,
+            attachment_type=attachment_type,
+            client_id=client_id,
+        )
 
     @database_sync_to_async
     def _delete_message(self, msg_id, user_id) -> bool:
-        field_names = {f.name for f in Message._meta.get_fields()}
-        qs = Message.objects.filter(id=msg_id)
-        if "user_id" in field_names:
-            qs = qs.filter(user_id=user_id)
-        elif "sender_id" in field_names:
-            qs = qs.filter(sender_id=user_id)
-        deleted_count, _ = qs.delete()
+        try:
+            numeric_id = int(msg_id)
+        except (TypeError, ValueError):
+            deleted_count, _ = Message.objects.filter(client_id=str(msg_id), user_id=user_id).delete()
+            return deleted_count > 0
+        deleted_count, _ = Message.objects.filter(id=numeric_id, user_id=user_id).delete()
         return deleted_count > 0
 
 
@@ -350,7 +342,7 @@ class DMConsumer(AsyncWebsocketConsumer):
             await self.close(code=4004)
             return
 
-        allowed = await self._are_friends(self.user.id, self.target_user.id)
+        allowed = await self._are_friends(self.user, self.target_user)
         if not allowed:
             await self.close(code=4003)
             return
@@ -416,21 +408,22 @@ class DMConsumer(AsyncWebsocketConsumer):
         )
         msg_id = payload.get("id") or f"dm_{int(timezone.now().timestamp() * 1000)}"
         time_str = payload.get("time") or timezone.localtime(timezone.now()).strftime("%H:%M")
+        client_id = str(payload.get("client_id") or msg_id)[:100]
 
-        await self._save_dm(
+        saved_dm = await self._save_dm(
             sender=self.user,
             receiver=self.target_user,
             content=content,
-            attachment_url=attachment_url,
             attachment_type=attachment_type,
-            attachment_name=attachment_name,
+            client_id=client_id,
         )
 
         await self.channel_layer.group_send(
             self.room_group_name,
             {
                 "type": "dm_message",
-                "id": msg_id,
+                "id": saved_dm.id if saved_dm else msg_id,
+                "client_id": client_id,
                 "sender": self.user.username,
                 "receiver": self.target_user.username,
                 "message": content,
@@ -448,6 +441,7 @@ class DMConsumer(AsyncWebsocketConsumer):
                 {
                     "type": "dm_message",
                     "id": event.get("id"),
+                    "client_id": event.get("client_id", ""),
                     "sender": event.get("sender"),
                     "receiver": event.get("receiver"),
                     "message": event.get("message", ""),
@@ -479,33 +473,15 @@ class DMConsumer(AsyncWebsocketConsumer):
         return User.objects.filter(username__iexact=username.strip()).first()
 
     @database_sync_to_async
-    def _are_friends(self, user_a_id: int, user_b_id: int) -> bool:
-        try:
-            from django.apps import apps
-            Friendship = apps.get_model("chat", "Friendship")
-            if Friendship is None:
-                return True
-            return Friendship.objects.filter(
-                (Q(from_user_id=user_a_id, to_user_id=user_b_id) | Q(from_user_id=user_b_id, to_user_id=user_a_id))
-                & Q(status="accepted")
-            ).exists()
-        except Exception:
-            return True
+    def _are_friends(self, user_a, user_b) -> bool:
+        return FriendRequest.are_friends(user_a, user_b)
 
     @database_sync_to_async
-    def _save_dm(self, sender, receiver, content, attachment_url, attachment_type, attachment_name):
-        field_names = {f.name for f in PrivateMessage._meta.get_fields()}
-        kwargs = {}
-        if "sender" in field_names:
-            kwargs["sender"] = sender
-        if "receiver" in field_names:
-            kwargs["receiver"] = receiver
-        if "content" in field_names:
-            kwargs["content"] = content
-        if "attachment_url" in field_names:
-            kwargs["attachment_url"] = attachment_url
-        if "attachment_type" in field_names:
-            kwargs["attachment_type"] = attachment_type
-        if "attachment_name" in field_names:
-            kwargs["attachment_name"] = attachment_name
-        return PrivateMessage.objects.create(**kwargs)
+    def _save_dm(self, sender, receiver, content, attachment_type, client_id=""):
+        return PrivateMessage.objects.create(
+            sender=sender,
+            receiver=receiver,
+            content=content,
+            attachment_type=attachment_type,
+            client_id=client_id,
+        )
