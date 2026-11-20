@@ -80,7 +80,7 @@
     "pk": 17,
     "fields": {
       "user": 2,
-      "room": "geral",
+      "channel": 1,
       "content": "oi",
       "attachment": "",
       "attachment_type": "",
@@ -92,7 +92,7 @@
     "pk": 18,
     "fields": {
       "user": 1,
-      "room": "geral",
+      "channel": 1,
       "content": "",
       "attachment": "chat_attachments/kris_deltarune.jpeg",
       "attachment_type": "image",
@@ -104,7 +104,7 @@
     "pk": 19,
     "fields": {
       "user": 1,
-      "room": "geral",
+      "channel": 1,
       "content": "",
       "attachment": "chat_attachments/s21_IA.docx",
       "attachment_type": "document",
