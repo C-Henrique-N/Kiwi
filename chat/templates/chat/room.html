@@ -1504,7 +1504,394 @@
                 overflow-y: auto;
             }
         }
-    </style>
+    
+        /* === EDITOR ESTÉTICO EM 2 COLUNAS (ESTILO CARD / PERFIL) === */
+        #edit-modal .aesthetic-profile-card.kiwi-editor-card {
+            width: min(820px, 95vw);
+            max-height: 92vh;
+            padding: 0;
+            overflow-y: auto;
+            border-radius: 18px;
+            background: linear-gradient(155deg, #1b1033 0%, #241442 48%, #160c29 100%);
+            color: #f5f3ff;
+            border: 1px solid rgba(196, 181, 253, 0.24);
+            box-shadow: 0 24px 60px rgba(0, 0, 0, 0.55), 0 0 36px rgba(139, 92, 246, 0.18);
+        }
+        .kiwi-editor-topbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 15px 48px 15px 20px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            background: rgba(17, 9, 34, 0.55);
+            backdrop-filter: blur(8px);
+            position: sticky;
+            top: 0;
+            z-index: 8;
+        }
+        .kiwi-editor-title {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 16px;
+            font-weight: 800;
+            color: #ffffff;
+            letter-spacing: 0.01em;
+        }
+        .kiwi-editor-grid {
+            display: grid;
+            grid-template-columns: 270px minmax(0, 1fr);
+            gap: 18px;
+            padding: 18px 20px 22px 20px;
+            align-items: start;
+        }
+        .kiwi-editor-col-left,
+        .kiwi-editor-col-right {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            min-width: 0;
+        }
+        .kiwi-preview-media-box {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            border-radius: 14px;
+            padding: 14px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 12px;
+        }
+        .kiwi-preview-media-row {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 14px;
+            width: 100%;
+        }
+        .kiwi-editor-avatar-wrap {
+            position: relative;
+            width: 84px;
+            height: 84px;
+            flex-shrink: 0;
+        }
+        .kiwi-editor-avatar-preview {
+            width: 84px;
+            height: 84px;
+            border-radius: 50%;
+            background: #5865f2;
+            background-size: cover;
+            background-position: center;
+            border: 3px solid #a855f7;
+            box-shadow: 0 0 18px rgba(168, 85, 247, 0.45);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 30px;
+            font-weight: 800;
+            color: #fff;
+        }
+        .kiwi-editor-avatar-badge-btn {
+            position: absolute;
+            right: -2px;
+            bottom: -2px;
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            border: 2px solid #1b1033;
+            background: #7c3aed;
+            color: #fff;
+            font-size: 12px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.35);
+        }
+        .kiwi-editor-banner-preview {
+            flex: 1;
+            min-width: 0;
+            height: 68px;
+            border-radius: 10px;
+            background-color: #3b1d6e;
+            background-image: var(--auth-artwork);
+            background-size: cover;
+            background-position: center;
+            border: 1px solid rgba(255, 255, 255, 0.16);
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+        }
+        .kiwi-editor-action-pill {
+            width: 100%;
+            background: rgba(124, 58, 237, 0.28);
+            border: 1px solid rgba(196, 181, 253, 0.32);
+            color: #ffffff;
+            padding: 9px 12px;
+            border-radius: 10px;
+            font-size: 12px;
+            font-weight: 700;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            transition: background 0.18s ease, transform 0.15s ease;
+        }
+        .kiwi-editor-action-pill:hover {
+            background: rgba(124, 58, 237, 0.45);
+        }
+        .kiwi-editor-panel {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.11);
+            border-radius: 12px;
+            padding: 11px 12px;
+        }
+        .kiwi-editor-panel-label {
+            display: block;
+            font-size: 11px;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            color: #d8b4fe;
+            margin-bottom: 6px;
+        }
+        .kiwi-swatch-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .kiwi-swatch-bar {
+            flex: 1;
+            height: 34px;
+            border-radius: 9px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            background: linear-gradient(90deg, #7c3aed 0%, #c084fc 55%, #ec4899 100%);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 10px;
+            color: #fff;
+            font-size: 12px;
+            font-weight: 700;
+            cursor: pointer;
+        }
+        .kiwi-editor-select {
+            width: 100%;
+            background: rgba(15, 9, 28, 0.72);
+            color: #ffffff;
+            border: 1px solid rgba(255, 255, 255, 0.16);
+            border-radius: 8px;
+            padding: 7px 9px;
+            font-size: 12px;
+            outline: none;
+            cursor: pointer;
+        }
+        .kiwi-effects-pair {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+        }
+        .kiwi-effect-slot {
+            height: 76px;
+            border-radius: 10px;
+            border: 1.5px dashed rgba(216, 180, 254, 0.35);
+            background: rgba(15, 9, 28, 0.45);
+            color: #e9d5ff;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
+            font-size: 11px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: border-color 0.18s ease, background 0.18s ease;
+        }
+        .kiwi-effect-slot:hover,
+        .kiwi-effect-slot.active {
+            border-style: solid;
+            border-color: #c084fc;
+            background: rgba(139, 92, 246, 0.24);
+        }
+        .kiwi-effect-plus {
+            width: 26px;
+            height: 26px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.14);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 15px;
+            font-weight: 800;
+        }
+        .kiwi-name-style-card {
+            background: rgba(15, 9, 28, 0.65);
+            border: 1px solid rgba(255, 255, 255, 0.14);
+            border-radius: 10px;
+            padding: 10px 12px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px;
+            cursor: pointer;
+        }
+        .kiwi-name-style-sample {
+            font-size: 16px;
+            font-weight: 900;
+            color: #ffffff;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        .kiwi-name-style-sample.special-preview {
+            font-family: 'Cinzel Decorative', 'Fredoka', cursive, sans-serif;
+            background: linear-gradient(90deg, #ff5ec4, #c084fc, #ffd700);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+        .kiwi-nitro-promo-card {
+            background: linear-gradient(135deg, rgba(168, 85, 247, 0.28) 0%, rgba(236, 72, 153, 0.24) 100%);
+            border: 1px solid rgba(244, 114, 182, 0.42);
+            border-radius: 12px;
+            padding: 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        .kiwi-nitro-btn {
+            width: 100%;
+            background: linear-gradient(90deg, #9333ea 0%, #db2777 100%);
+            color: #ffffff;
+            border: none;
+            border-radius: 8px;
+            padding: 8px 12px;
+            font-size: 12px;
+            font-weight: 800;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .kiwi-live-banner-mini {
+            height: 92px;
+            border-radius: 12px;
+            background-color: #4c1d95;
+            background-image: var(--auth-artwork);
+            background-size: cover;
+            background-position: center;
+            border: 1px solid rgba(255, 255, 255, 0.16);
+            position: relative;
+        }
+        .kiwi-live-identity-box {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.11);
+            border-radius: 12px;
+            padding: 10px 14px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        .kiwi-privacy-banner {
+            background: rgba(139, 92, 246, 0.22);
+            border: 1px solid rgba(196, 181, 253, 0.35);
+            border-radius: 10px;
+            padding: 10px 12px;
+            font-size: 12px;
+            line-height: 1.4;
+            color: #f3e8ff;
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 10px;
+        }
+        .kiwi-editor-grid .form-group {
+            margin-bottom: 8px;
+        }
+        .kiwi-editor-grid .form-group label {
+            color: #e9d5ff;
+            font-size: 11px;
+            letter-spacing: 0.03em;
+        }
+        .kiwi-editor-grid .form-group input[type="text"],
+        .kiwi-editor-grid .form-group input[type="url"],
+        .kiwi-editor-grid .form-group textarea {
+            background: rgba(13, 7, 24, 0.72);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            color: #ffffff;
+            border-radius: 8px;
+            padding: 8px 10px;
+        }
+        .kiwi-editor-grid .form-group input[type="file"] {
+            background: rgba(13, 7, 24, 0.55);
+            border: 1px solid rgba(255, 255, 255, 0.14);
+            color: #e9d5ff;
+            border-radius: 8px;
+            padding: 5px 8px;
+            font-size: 12px;
+        }
+        .kiwi-editor-two-col-fields {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+        .kiwi-saved-music-pill-btn {
+            background: rgba(139, 92, 246, 0.32);
+            color: #ffffff;
+            border: 1px solid rgba(216, 180, 254, 0.4);
+            border-radius: 8px;
+            padding: 5px 10px;
+            font-size: 11px;
+            font-weight: 700;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+        }
+        .kiwi-editor-footer-actions {
+            display: flex;
+            gap: 12px;
+            margin-top: 12px;
+            padding-top: 10px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .kiwi-btn-guardar {
+            flex: 1;
+            background: linear-gradient(90deg, #6366f1 0%, #8b5cf6 100%);
+            color: #ffffff;
+            border: none;
+            padding: 11px 16px;
+            border-radius: 9px;
+            font-size: 13px;
+            font-weight: 800;
+            cursor: pointer;
+            box-shadow: 0 6px 18px rgba(99, 102, 241, 0.35);
+        }
+        .kiwi-btn-cancelar {
+            flex: 1;
+            background: rgba(255, 255, 255, 0.08);
+            color: #e9d5ff;
+            border: 1px solid rgba(255, 255, 255, 0.18);
+            padding: 11px 16px;
+            border-radius: 9px;
+            font-size: 13px;
+            font-weight: 700;
+            cursor: pointer;
+        }
+        @media (max-width: 768px) {
+            .kiwi-editor-grid {
+                grid-template-columns: 1fr;
+                padding: 14px;
+                gap: 14px;
+            }
+            .kiwi-editor-two-col-fields {
+                grid-template-columns: 1fr;
+            }
+        }
+</style>
 </head>
 <body>
     {{ username|json_script:"kiwi-username-data" }}
@@ -1828,93 +2215,215 @@
 
     <!-- Modal de EDIÇÃO de Perfil -->
     <div id="edit-modal" class="modal-overlay">
-        <div class="aesthetic-profile-card" style="padding: 20px; max-height: 90vh; overflow-y: auto;">
-            <button class="close-modal-btn" id="close-edit-btn">×</button>
-            <h3 style="color: var(--text-main); margin-bottom: 14px; font-size: 16px;">Editar Perfil Estético</h3>
+        <div class="aesthetic-profile-card kiwi-editor-card" id="kiwi-editor-card">
+            <button type="button" class="close-modal-btn" id="close-edit-btn">×</button>
+            <div class="kiwi-editor-topbar">
+                <div class="kiwi-editor-title">
+                    <span>🖌️</span>
+                    <span>Editar <span style="color: #c084fc;">Perfil</span> Estético</span>
+                </div>
+            </div>
+
             <form id="edit-profile-form" enctype="multipart/form-data">
-                <div class="form-group">
-                    <label>Selecionar Foto de Perfil</label>
-                    <input type="file" name="avatar" id="edit-avatar-file" accept="image/*">
-                </div>
-                <div class="form-group">
-                    <label>Selecionar Banner</label>
-                    <input type="file" name="banner" id="edit-banner-file" accept="image/*">
-                </div>
-                <div class="form-group">
-                    <label>Frase do Balão (Status)</label>
-                    <input type="text" name="bubble" id="edit-bubble" value="🌸 a testar o novo kiwi chat...">
-                </div>
-                <div class="form-group">
-                    <label>Pronomes / Tags</label>
-                    <input type="text" name="pronouns" id="edit-pronouns" value="he / him • 🎀">
-                </div>
-                <div class="form-group">
-                    <label>Biografia Detalhada</label>
-                    <textarea name="bio" id="edit-bio" rows="3">@matsuda 🤍 infpt 🎧 zekiah ☁️</textarea>
-                </div>
-                <div class="form-group" style="position: relative;">
-                    <div style="display:flex; justify-content:space-between; align-items:center; gap:8px;">
-                        <label style="margin:0;">Música a Ouvir (Nome da Faixa)</label>
-                        <button type="button" id="open-music-box-btn" style="background:#2b2d31; color:#fff; border:1px solid rgba(255,255,255,0.18); border-radius:6px; padding:3px 8px; font-size:11px; cursor:pointer;">
-                            🎵 Músicas salvas
-                        </button>
-                    </div>
-                    <input type="text" name="spotify_song" id="edit-spotify-song" value="Drama" style="margin-top:6px;">
-
-                    <div id="saved-music-box" style="display:none; margin-top:8px; background:#18191c; border:1px solid rgba(255,255,255,0.16); border-radius:10px; padding:10px; max-height:240px; overflow-y:auto;">
-                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
-                            <strong style="font-size:12px;">Minhas músicas no banco</strong>
-                            <button type="button" id="quick-add-music-toggle" style="background:#5865f2; color:#fff; border:none; border-radius:5px; padding:3px 8px; font-size:11px; cursor:pointer;">+ Adicionar</button>
-                        </div>
-
-                        <div id="quick-add-music-form" style="display:none; background:#232429; padding:8px; border-radius:8px; margin-bottom:8px;">
-                            <input type="text" id="qm-title" placeholder="Nome da música" style="width:100%; margin-bottom:6px; padding:6px; font-size:12px;">
-                            <input type="text" id="qm-artist" placeholder="Artista" style="width:100%; margin-bottom:6px; padding:6px; font-size:12px;">
-                            <label style="font-size:11px; display:block; margin-bottom:2px;">MP3 / Áudio</label>
-                            <input type="file" id="qm-audio-file" accept="audio/*" style="width:100%; margin-bottom:6px; font-size:11px;">
-                            <label style="font-size:11px; display:block; margin-bottom:2px;">Capa (foto)</label>
-                            <input type="file" id="qm-cover-file" accept="image/*" style="width:100%; margin-bottom:6px; font-size:11px;">
-                            <button type="button" id="qm-save-btn" style="width:100%; background:#23a55a; color:#fff; border:none; border-radius:6px; padding:7px; font-size:12px; font-weight:bold; cursor:pointer;">
-                                Guardar música no banco
+                <div class="kiwi-editor-grid">
+                    <!-- COLUNA ESQUERDA: MÍDIA, COR DA FAIXA, EFEITOS E ESTILO -->
+                    <div class="kiwi-editor-col-left">
+                        <div class="kiwi-preview-media-box">
+                            <div class="kiwi-preview-media-row">
+                                <div class="kiwi-editor-avatar-wrap">
+                                    <div id="editor-live-avatar" class="kiwi-editor-avatar-preview">K</div>
+                                    <button type="button" id="editor-avatar-pencil-btn" class="kiwi-editor-avatar-badge-btn" title="Alterar foto de perfil">✏️</button>
+                                </div>
+                                <div id="editor-live-banner-thumb" class="kiwi-editor-banner-preview" title="Clique para alterar o banner"></div>
+                            </div>
+                            <button type="button" id="editor-trigger-avatar-btn" class="kiwi-editor-action-pill">
+                                🖼️ Alterar Avatar
+                            </button>
+                            <button type="button" id="editor-trigger-banner-btn" class="kiwi-editor-action-pill" style="background: rgba(255,255,255,0.07); border-color: rgba(255,255,255,0.16);">
+                                🏞️ Alterar Banner
                             </button>
                         </div>
 
-                        <div id="saved-music-list" style="display:flex; flex-direction:column; gap:6px; font-size:12px;">
-                            <div style="opacity:0.7;">Nenhuma música salva ainda. Clique em "+ Adicionar".</div>
+                        <div class="kiwi-editor-panel">
+                            <label class="kiwi-editor-panel-label" for="editor-band-color-select">Cor da faixa</label>
+                            <div class="kiwi-swatch-row">
+                                <div id="editor-band-swatch" class="kiwi-swatch-bar" title="Escolher cor do tema">
+                                    <span>🎨 Faixa &amp; Tema</span>
+                                    <span id="editor-band-color-label">Padrão</span>
+                                </div>
+                            </div>
+                            <select id="editor-band-color-select" class="kiwi-editor-select" style="margin-top: 8px;" aria-label="Cor da faixa">
+                                <option value="#ffffff">Branco Padrão</option>
+                                <option value="#2b2d31">Cinza Escuro</option>
+                                <option value="#ff9de2">Rosa Vivo Pastel</option>
+                                <option value="#e74c3c">Vermelho Vibrante</option>
+                                <option value="#23a55a">Verde Kiwi</option>
+                                <option value="#5865f2">Azul Discord</option>
+                                <option value="#95a5a6">Cinza Elegante</option>
+                                <option value="#d4af37">Dourado Real</option>
+                            </select>
+                        </div>
+
+                        <div class="kiwi-editor-panel">
+                            <span class="kiwi-editor-panel-label">Efeitos de perfil e molduras</span>
+                            <div class="kiwi-effects-pair">
+                                <button type="button" id="editor-effect-frame-btn" class="kiwi-effect-slot" title="Alternar brilho e moldura especial">
+                                    <span class="kiwi-effect-plus">+</span>
+                                    <span>Efeito</span>
+                                </button>
+                                <button type="button" id="editor-effect-gold-btn" class="kiwi-effect-slot" title="Alternar fundo dourado">
+                                    <span class="kiwi-effect-plus">+</span>
+                                    <span>Dourado</span>
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="kiwi-editor-panel">
+                            <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:4px;">
+                                <span class="kiwi-editor-panel-label" style="margin:0;">Estilo do nome exibido</span>
+                                <span style="background:#7c3aed; color:#fff; font-size:10px; font-weight:800; padding:2px 7px; border-radius:999px;">Novo!</span>
+                            </div>
+                            <div style="font-size:11px; color:#c4b5fd; margin-bottom:8px;">Experimente o estilo visual do Kiwi</div>
+                            <div id="editor-name-style-toggle" class="kiwi-name-style-card" title="Alternar estilo de destaque do nome">
+                                <span id="editor-live-name-sample" class="kiwi-name-style-sample">Akiira</span>
+                                <span style="color:#d8b4fe; font-weight:800;">›</span>
+                            </div>
+                        </div>
+
+                        <div class="kiwi-nitro-promo-card">
+                            <div style="font-size:12px; font-weight:800; color:#fff;">✨ Eleve seu visual no Kiwi</div>
+                            <button type="button" id="editor-preview-profile-btn" class="kiwi-nitro-btn">
+                                <span>◎ Prévia do Perfil</span>
+                                <span>›</span>
+                            </button>
                         </div>
                     </div>
-                </div>
-                <div class="form-group">
-                    <label>Artista</label>
-                    <input type="text" name="spotify_artist" id="edit-spotify-artist" value="Lala Sadii">
-                </div>
-                <div class="form-group">
-                    <label>Link do YouTube ou Spotify (Música)</label>
-                    <input type="url" name="music_url" id="edit-yt-url" placeholder="https://www.youtube.com/watch?v=... ou https://open.spotify.com/...">
-                </div>
-                <div class="form-group">
-                    <label>Ficheiro de Áudio Local (.mp3, .ogg, .wav, .m4a)</label>
-                    <input type="file" name="music_audio" id="edit-local-audio-file" accept="audio/*">
-                </div>
-                <div class="form-group">
-                    <label>Colar Link Direto do Som (.mp3, .ogg, .wav, Discord CDN, Catbox, etc.)</label>
-                    <input type="text" name="music_audio_url" id="edit-local-audio-url" placeholder="Cole aqui o link direto do som: https://.../som.mp3">
-                </div>
-                <div class="form-group" style="display: flex; align-items: center; gap: 8px; background: var(--bg-soft); padding: 8px 10px; border-radius: 8px; border: 1px solid var(--border-subtle);">
-                    <input type="checkbox" id="edit-gold-profile-bg" name="gold_profile_bg" style="width: auto; accent-color: #d4af37; cursor: pointer;">
-                    <label for="edit-gold-profile-bg" style="margin: 0; cursor: pointer; color: var(--text-main);">✨ Fundo do meu perfil Dourado</label>
-                </div>
-                <div class="form-group">
-                    <label>Foto da Capa da Música (Arquivo)</label>
-                    <input type="file" name="music_cover" id="edit-music-cover-file" accept="image/*">
-                </div>
-                <div class="form-group">
-                    <label>Ou URL da Foto da Capa</label>
-                    <input type="text" name="music_cover_url" id="edit-music-cover-url" placeholder="https://... ou /media/capa.jpg">
-                </div>
-                <div style="display: flex; gap: 10px; margin-top: 15px;">
-                    <button type="submit" id="save-profile-btn" style="flex:1; background: #5865f2; color:#fff; border:none; padding:10px; border-radius:6px; font-weight:bold; cursor:pointer;">Guardar</button>
-                    <button type="button" id="cancel-edit-btn" style="flex:1; background: var(--bg-soft); color:var(--text-main); border:1px solid var(--border-subtle); padding:10px; border-radius:6px; font-weight:bold; cursor:pointer;">Cancelar</button>
+
+                    <!-- COLUNA DIREITA: PRÉVIA, BIO, MÚSICA E BOTÕES -->
+                    <div class="kiwi-editor-col-right">
+                        <div id="editor-live-banner-top" class="kiwi-live-banner-mini"></div>
+
+                        <div class="kiwi-live-identity-box">
+                            <div>
+                                <div id="editor-live-display-name" style="font-size:18px; font-weight:900; color:#fff; display:flex; align-items:center; gap:6px;">
+                                    <span>Utilizador</span>
+                                    <span style="color:#a855f7; font-size:14px;">✔</span>
+                                </div>
+                                <div id="editor-live-sub-meta" style="font-size:12px; color:#c4b5fd;">@kiwi • he / him • 🎀</div>
+                            </div>
+                            <span style="background:rgba(255,255,255,0.09); border:1px solid rgba(255,255,255,0.16); color:#f3e8ff; font-size:11px; font-weight:700; padding:5px 10px; border-radius:8px;">
+                                Perfil Estético
+                            </span>
+                        </div>
+
+                        <div id="editor-privacy-notice" class="kiwi-privacy-banner">
+                            <div>
+                                Seu perfil completo está sendo compartilhado com seus amigos no Kiwi. Personalize sua faixa, bio e música a qualquer momento.
+                            </div>
+                            <button type="button" id="editor-dismiss-privacy-btn" style="background:none; border:none; color:#e9d5ff; font-size:15px; font-weight:bold; cursor:pointer; line-height:1;" title="Fechar aviso">×</button>
+                        </div>
+
+                        <div class="form-group" style="display:none;">
+                            <label>Selecionar Foto de Perfil</label>
+                            <input type="file" name="avatar" id="edit-avatar-file" accept="image/*">
+                        </div>
+                        <div class="form-group" style="display:none;">
+                            <label>Selecionar Banner</label>
+                            <input type="file" name="banner" id="edit-banner-file" accept="image/*">
+                        </div>
+
+                        <div class="kiwi-editor-two-col-fields">
+                            <div class="form-group">
+                                <label>Frase do Balão (Status)</label>
+                                <input type="text" name="bubble" id="edit-bubble" value="🌸 a testar o novo kiwi chat...">
+                            </div>
+                            <div class="form-group">
+                                <label>Pronomes / Tags</label>
+                                <input type="text" name="pronouns" id="edit-pronouns" value="he / him • 🎀">
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Bio</label>
+                            <textarea name="bio" id="edit-bio" rows="3">@matsuda 🤍 infpt 🎧 zekiah ☁️</textarea>
+                        </div>
+
+                        <div class="form-group" style="position: relative;">
+                            <div style="display:flex; justify-content:space-between; align-items:center; gap:8px;">
+                                <label style="margin:0;">Música a ouvir (nome da faixa)</label>
+                                <button type="button" id="open-music-box-btn" class="kiwi-saved-music-pill-btn">
+                                    🎵 Músicas salvas
+                                </button>
+                            </div>
+                            <input type="text" name="spotify_song" id="edit-spotify-song" value="Drama" style="margin-top:6px;">
+
+                            <div id="saved-music-box" style="display:none; margin-top:8px; background:#18191c; border:1px solid rgba(255,255,255,0.16); border-radius:10px; padding:10px; max-height:240px; overflow-y:auto;">
+                                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+                                    <strong style="font-size:12px;">Minhas músicas no banco</strong>
+                                    <button type="button" id="quick-add-music-toggle" style="background:#5865f2; color:#fff; border:none; border-radius:5px; padding:3px 8px; font-size:11px; cursor:pointer;">+ Adicionar</button>
+                                </div>
+
+                                <div id="quick-add-music-form" style="display:none; background:#232429; padding:8px; border-radius:8px; margin-bottom:8px;">
+                                    <input type="text" id="qm-title" placeholder="Nome da música" style="width:100%; margin-bottom:6px; padding:6px; font-size:12px;">
+                                    <input type="text" id="qm-artist" placeholder="Artista" style="width:100%; margin-bottom:6px; padding:6px; font-size:12px;">
+                                    <label style="font-size:11px; display:block; margin-bottom:2px;">MP3 / Áudio</label>
+                                    <input type="file" id="qm-audio-file" accept="audio/*" style="width:100%; margin-bottom:6px; font-size:11px;">
+                                    <label style="font-size:11px; display:block; margin-bottom:2px;">Capa (foto)</label>
+                                    <input type="file" id="qm-cover-file" accept="image/*" style="width:100%; margin-bottom:6px; font-size:11px;">
+                                    <button type="button" id="qm-save-btn" style="width:100%; background:#23a55a; color:#fff; border:none; border-radius:6px; padding:7px; font-size:12px; font-weight:bold; cursor:pointer;">
+                                        Guardar música no banco
+                                    </button>
+                                </div>
+
+                                <div id="saved-music-list" style="display:flex; flex-direction:column; gap:6px; font-size:12px;">
+                                    <div style="opacity:0.7;">Nenhuma música salva ainda. Clique em "+ Adicionar".</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="kiwi-editor-two-col-fields">
+                            <div class="form-group">
+                                <label>Artista</label>
+                                <input type="text" name="spotify_artist" id="edit-spotify-artist" value="Lala Sadii">
+                            </div>
+                            <div class="form-group">
+                                <label>Link do YouTube ou Spotify (música)</label>
+                                <input type="url" name="music_url" id="edit-yt-url" placeholder="https://www.youtube.com/watch?v=... ou https://open.spotify.com/...">
+                            </div>
+                        </div>
+
+                        <div class="kiwi-editor-two-col-fields">
+                            <div class="form-group">
+                                <label>Ficheiro de áudio local (.mp3, .ogg, .wav, .m4a)</label>
+                                <input type="file" name="music_audio" id="edit-local-audio-file" accept="audio/*">
+                            </div>
+                            <div class="form-group">
+                                <label>Colar link direto do som (.mp3, .ogg, .wav, etc.)</label>
+                                <input type="text" name="music_audio_url" id="edit-local-audio-url" placeholder="https://.../som.mp3">
+                            </div>
+                        </div>
+
+                        <div class="form-group" style="display: flex; align-items: center; gap: 8px; background: rgba(255, 215, 0, 0.08); padding: 8px 12px; border-radius: 9px; border: 1px solid rgba(255, 215, 0, 0.25);">
+                            <input type="checkbox" id="edit-gold-profile-bg" name="gold_profile_bg" style="width: auto; accent-color: #d4af37; cursor: pointer;">
+                            <label for="edit-gold-profile-bg" style="margin: 0; cursor: pointer; color: #ffe885;">✨ Fundo do meu perfil Dourado</label>
+                        </div>
+
+                        <div class="kiwi-editor-two-col-fields">
+                            <div class="form-group">
+                                <label>Foto da capa da música (arquivo)</label>
+                                <input type="file" name="music_cover" id="edit-music-cover-file" accept="image/*">
+                            </div>
+                            <div class="form-group">
+                                <label>Ou URL da foto da capa</label>
+                                <input type="text" name="music_cover_url" id="edit-music-cover-url" placeholder="https://... ou /media/capa.jpg">
+                            </div>
+                        </div>
+
+                        <div class="kiwi-editor-footer-actions">
+                            <button type="submit" id="save-profile-btn" class="kiwi-btn-guardar">💾 Guardar</button>
+                            <button type="button" id="cancel-edit-btn" class="kiwi-btn-cancelar">Cancelar</button>
+                        </div>
+                    </div>
                 </div>
             </form>
         </div>
@@ -3593,8 +4102,180 @@
                         : '';
                 }
                 if (editMusicCoverFile) editMusicCoverFile.value = '';
+                if (tempEditorAvatarUrl && tempEditorAvatarUrl.startsWith('blob:')) URL.revokeObjectURL(tempEditorAvatarUrl);
+                if (tempEditorBannerUrl && tempEditorBannerUrl.startsWith('blob:')) URL.revokeObjectURL(tempEditorBannerUrl);
+                tempEditorAvatarUrl = '';
+                tempEditorBannerUrl = '';
+                refreshEditorLivePreview();
                 editModal.classList.add('open');
             });
+
+            
+            const editorLiveAvatar = document.getElementById('editor-live-avatar');
+            const editorLiveBannerThumb = document.getElementById('editor-live-banner-thumb');
+            const editorLiveBannerTop = document.getElementById('editor-live-banner-top');
+            const editorLiveNameSample = document.getElementById('editor-live-name-sample');
+            const editorLiveDisplayName = document.getElementById('editor-live-display-name');
+            const editorLiveSubMeta = document.getElementById('editor-live-sub-meta');
+            const editorTriggerAvatarBtn = document.getElementById('editor-trigger-avatar-btn');
+            const editorAvatarPencilBtn = document.getElementById('editor-avatar-pencil-btn');
+            const editorTriggerBannerBtn = document.getElementById('editor-trigger-banner-btn');
+            const editorBandColorSelect = document.getElementById('editor-band-color-select');
+            const editorBandColorLabel = document.getElementById('editor-band-color-label');
+            const editorBandSwatch = document.getElementById('editor-band-swatch');
+            const editorEffectFrameBtn = document.getElementById('editor-effect-frame-btn');
+            const editorEffectGoldBtn = document.getElementById('editor-effect-gold-btn');
+            const editorNameStyleToggle = document.getElementById('editor-name-style-toggle');
+            const editorPreviewProfileBtn = document.getElementById('editor-preview-profile-btn');
+            const editorDismissPrivacyBtn = document.getElementById('editor-dismiss-privacy-btn');
+            const editorPrivacyNotice = document.getElementById('editor-privacy-notice');
+            const kiwiEditorCard = document.getElementById('kiwi-editor-card');
+
+            let tempEditorAvatarUrl = '';
+            let tempEditorBannerUrl = '';
+
+            function refreshEditorLivePreview() {
+                const owner = (activeUsername || myProfileData.username || 'Utilizador').trim() || 'Utilizador';
+                const prn = (editPronouns && editPronouns.value.trim()) ? editPronouns.value.trim() : 'he / him • 🎀';
+                const isGold = Boolean(editGoldCheckbox && editGoldCheckbox.checked);
+
+                const avatarSrc = tempEditorAvatarUrl || (isSafeAssetUrl(myProfileData.avatarUrl) ? myProfileData.avatarUrl : '');
+                if (editorLiveAvatar) {
+                    setAvatarStyle(editorLiveAvatar, avatarSrc, owner);
+                }
+
+                const bannerSrc = tempEditorBannerUrl || (isSafeAssetUrl(myProfileData.bannerUrl) ? myProfileData.bannerUrl : '');
+                const applyBannerBg = (el) => {
+                    if (!el) return;
+                    if (bannerSrc) {
+                        el.style.backgroundImage = `url("${encodeURI(bannerSrc)}")`;
+                        el.style.backgroundSize = 'cover';
+                        el.style.backgroundPosition = 'center';
+                    } else {
+                        el.style.backgroundImage = 'var(--auth-artwork)';
+                        el.style.backgroundColor = myProfileData.accentColor || '#4c1d95';
+                    }
+                };
+                applyBannerBg(editorLiveBannerThumb);
+                applyBannerBg(editorLiveBannerTop);
+
+                if (editorLiveNameSample) {
+                    editorLiveNameSample.textContent = owner;
+                    editorLiveNameSample.classList.toggle('special-preview', owner.toLowerCase() === 'akiirapw' || isGold);
+                }
+                if (editorLiveDisplayName) {
+                    editorLiveDisplayName.innerHTML = `<span>${escapeHtmlText(owner)}</span><span style="color:#a855f7; font-size:14px;">✔</span>`;
+                }
+                if (editorLiveSubMeta) {
+                    editorLiveSubMeta.textContent = `@${owner.toLowerCase()} • ${prn}`;
+                }
+                if (editorBandColorSelect) {
+                    editorBandColorSelect.value = themesMap[myProfileData.accentColor] ? myProfileData.accentColor : '#ffffff';
+                }
+                if (editorBandColorLabel && editorBandColorSelect) {
+                    const opt = editorBandColorSelect.options[editorBandColorSelect.selectedIndex];
+                    editorBandColorLabel.textContent = opt ? opt.text : 'Padrão';
+                }
+                if (editorBandSwatch) {
+                    editorBandSwatch.style.background = myProfileData.accentColor === '#d4af37'
+                        ? 'linear-gradient(90deg, #b8860b 0%, #ffd700 100%)'
+                        : `linear-gradient(90deg, #7c3aed 0%, ${myProfileData.accentColor || '#c084fc'} 100%)`;
+                }
+                if (editorEffectGoldBtn) {
+                    editorEffectGoldBtn.classList.toggle('active', isGold);
+                }
+                if (kiwiEditorCard) {
+                    kiwiEditorCard.classList.toggle('gold-profile-theme', isGold);
+                }
+            }
+
+            if (editorTriggerAvatarBtn && editLocalAudioFile && editAvatarFile) {
+                editorTriggerAvatarBtn.addEventListener('click', () => editAvatarFile.click());
+            }
+            if (editorAvatarPencilBtn && editAvatarFile) {
+                editorAvatarPencilBtn.addEventListener('click', () => editAvatarFile.click());
+            }
+            if (editorTriggerBannerBtn && editBannerFile) {
+                editorTriggerBannerBtn.addEventListener('click', () => editBannerFile.click());
+            }
+            if (editorLiveBannerThumb && editBannerFile) {
+                editorLiveBannerThumb.addEventListener('click', () => editBannerFile.click());
+            }
+
+            const editAvatarFileEl = document.getElementById('edit-avatar-file');
+            const editBannerFileEl = document.getElementById('edit-banner-file');
+            if (editAvatarFileEl) {
+                editAvatarFileEl.addEventListener('change', () => {
+                    const f = editAvatarFileEl.files && editAvatarFileEl.files[0];
+                    if (tempEditorAvatarUrl && tempEditorAvatarUrl.startsWith('blob:')) URL.revokeObjectURL(tempEditorAvatarUrl);
+                    tempEditorAvatarUrl = f ? URL.createObjectURL(f) : '';
+                    refreshEditorLivePreview();
+                });
+            }
+            if (editBannerFileEl) {
+                editBannerFileEl.addEventListener('change', () => {
+                    const f = editBannerFileEl.files && editBannerFileEl.files[0];
+                    if (tempEditorBannerUrl && tempEditorBannerUrl.startsWith('blob:')) URL.revokeObjectURL(tempEditorBannerUrl);
+                    tempEditorBannerUrl = f ? URL.createObjectURL(f) : '';
+                    refreshEditorLivePreview();
+                });
+            }
+
+            if (editorBandColorSelect) {
+                editorBandColorSelect.addEventListener('change', () => {
+                    const chosen = editorBandColorSelect.value;
+                    if (!chosen || !themesMap[chosen]) return;
+                    myProfileData.accentColor = chosen;
+                    updateMySidebarUI();
+                    persistThemePreference(chosen);
+                    refreshEditorLivePreview();
+                });
+            }
+            if (editorBandSwatch && editorBandColorSelect) {
+                editorBandSwatch.addEventListener('click', () => {
+                    const opts = Array.from(editorBandColorSelect.options);
+                    const idx = opts.findIndex(o => o.value === editorBandColorSelect.value);
+                    const nextOpt = opts[(idx + 1) % opts.length];
+                    if (nextOpt) {
+                        editorBandColorSelect.value = nextOpt.value;
+                        editorBandColorSelect.dispatchEvent(new Event('change'));
+                    }
+                });
+            }
+            if (editorEffectGoldBtn && editGoldCheckbox) {
+                editorEffectGoldBtn.addEventListener('click', () => {
+                    editGoldCheckbox.checked = !editGoldCheckbox.checked;
+                    refreshEditorLivePreview();
+                });
+            }
+            if (editGoldCheckbox) {
+                editGoldCheckbox.addEventListener('change', refreshEditorLivePreview);
+            }
+            if (editPronouns) {
+                editPronouns.addEventListener('input', refreshEditorLivePreview);
+            }
+            if (editorEffectFrameBtn && kiwiEditorCard) {
+                editorEffectFrameBtn.addEventListener('click', () => {
+                    const active = editorEffectFrameBtn.classList.toggle('active');
+                    kiwiEditorCard.classList.toggle('akiira-shimmer-card', active);
+                });
+            }
+            if (editorNameStyleToggle && editorLiveNameSample) {
+                editorNameStyleToggle.addEventListener('click', () => {
+                    editorLiveNameSample.classList.toggle('special-preview');
+                });
+            }
+            if (editorPreviewProfileBtn) {
+                editorPreviewProfileBtn.addEventListener('click', () => {
+                    editModal.classList.remove('open');
+                    openUserProfile(activeUsername || myProfileData.username);
+                });
+            }
+            if (editorDismissPrivacyBtn && editorPrivacyNotice) {
+                editorDismissPrivacyBtn.addEventListener('click', () => {
+                    editorPrivacyNotice.style.display = 'none';
+                });
+            }
 
             editProfileForm.addEventListener('submit', async function(e) {
                 e.preventDefault();
@@ -3666,8 +4347,6 @@
                 formData.set('spotify_song', myProfileData.song);
                 formData.set('spotify_artist', myProfileData.artist);
                 formData.set('music_url', myProfileData.musicUrl);
-                if (pickedAudioFile) formData.set('music_audio', pickedAudioFile);
-                if (pickedCoverFile) formData.set('music_cover', pickedCoverFile);
                 formData.set('music_audio_url', (!myProfileData.audioSrc.startsWith('blob:') && !myProfileData.audioSrc.startsWith('data:')) ? myProfileData.audioSrc : '');
                 formData.set('music_cover_url', (!myProfileData.coverUrl.startsWith('blob:') && !myProfileData.coverUrl.startsWith('data:')) ? myProfileData.coverUrl : '');
                 formData.set('gold_profile_bg', myProfileData.goldProfileBg ? 'true' : 'false');
@@ -3687,8 +4366,6 @@
                     if (resp && resp.status === 'success') {
                         if (resp.avatarUrl) myProfileData.avatarUrl = resp.avatarUrl;
                         if (resp.bannerUrl) myProfileData.bannerUrl = resp.bannerUrl;
-                        if (resp.music_audio_url) myProfileData.audioSrc = resp.music_audio_url;
-                        if (resp.music_cover_url) myProfileData.coverUrl = resp.music_cover_url;
                         saveUserMusicToLocalCache(ownerName, myProfileData);
                         if (ownerName) profilesByUsername.set(ownerName.toLowerCase(), { ...myProfileData });
                         updateMySidebarUI();
@@ -3705,158 +4382,6 @@
                     showKiwiToast("Alterações guardadas localmente no perfil!");
                 });
             });
-
-            const openMusicBoxBtn = document.getElementById('open-music-box-btn');
-            const savedMusicBox = document.getElementById('saved-music-box');
-            const quickAddMusicToggle = document.getElementById('quick-add-music-toggle');
-            const quickAddMusicForm = document.getElementById('quick-add-music-form');
-            const savedMusicListEl = document.getElementById('saved-music-list');
-            const qmSaveBtn = document.getElementById('qm-save-btn');
-            let savedMusicsCache = [];
-
-            function applySavedMusicToFormAndPlayer(item, autoPlay = false) {
-                if (!item) return;
-                if (editSong) editSong.value = item.title || '';
-                if (editArtist) editArtist.value = item.artist || '';
-                if (editYtUrl) editYtUrl.value = item.music_url || '';
-                if (editLocalAudioUrl) editLocalAudioUrl.value = item.audio_url || '';
-                if (editMusicCoverUrl) editMusicCoverUrl.value = item.cover_url || '';
-
-                myProfileData.song = item.title || '';
-                myProfileData.artist = item.artist || '';
-                myProfileData.musicUrl = item.music_url || '';
-                myProfileData.audioSrc = item.audio_url || '';
-                myProfileData.coverUrl = item.cover_url || '';
-
-                saveUserMusicToLocalCache(activeUsername || myProfileData.username || '', myProfileData);
-                renderProfileMusicWidget({
-                    owner: activeUsername || myProfileData.username || '',
-                    song: myProfileData.song,
-                    artist: myProfileData.artist,
-                    musicUrl: myProfileData.musicUrl,
-                    audioSrc: myProfileData.audioSrc,
-                    coverUrl: myProfileData.coverUrl
-                });
-
-                if (autoPlay && myProfileData.audioSrc && upLocalAudio) {
-                    upLocalAudio.src = myProfileData.audioSrc;
-                    upLocalAudio.play().catch(() => {});
-                }
-            }
-
-            function renderSavedMusicList() {
-                if (!savedMusicListEl) return;
-                if (!savedMusicsCache.length) {
-                    savedMusicListEl.innerHTML = '<div style="opacity:0.7;">Nenhuma música salva ainda. Clique em "+ Adicionar".</div>';
-                    return;
-                }
-                savedMusicListEl.innerHTML = savedMusicsCache.map(m => {
-                    const safeTitle = (m.title || 'Sem título').replace(/</g, '&lt;');
-                    const safeArtist = (m.artist || 'Artista').replace(/</g, '&lt;');
-                    const thumb = m.cover_url
-                        ? `<img src="${m.cover_url}" alt="" style="width:34px;height:34px;border-radius:6px;object-fit:cover;flex-shrink:0;">`
-                        : `<div style="width:34px;height:34px;border-radius:6px;background:#2b2d31;display:flex;align-items:center;justify-content:center;flex-shrink:0;">♫</div>`;
-                    return `
-                        <div style="display:flex;align-items:center;gap:8px;background:#232429;padding:6px;border-radius:7px;">
-                            ${thumb}
-                            <div style="flex:1;min-width:0;cursor:pointer;" onclick="window.__selectSavedMusic(${m.id}, true)">
-                                <div style="font-weight:bold;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${safeTitle}</div>
-                                <div style="font-size:11px;opacity:0.75;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${safeArtist}</div>
-                            </div>
-                            <button type="button" onclick="window.__selectSavedMusic(${m.id}, true)" style="background:#5865f2;color:#fff;border:none;border-radius:5px;padding:4px 7px;font-size:11px;cursor:pointer;">Ouvir</button>
-                            <button type="button" onclick="window.__deleteSavedMusic(${m.id})" style="background:transparent;color:#f23f42;border:1px solid rgba(242,63,66,0.4);border-radius:5px;padding:4px 6px;font-size:11px;cursor:pointer;">✕</button>
-                        </div>
-                    `;
-                }).join('');
-            }
-
-            window.__selectSavedMusic = function(id, autoPlay = false) {
-                const found = savedMusicsCache.find(x => Number(x.id) === Number(id));
-                if (!found) return;
-                applySavedMusicToFormAndPlayer(found, autoPlay);
-                if (savedMusicBox) savedMusicBox.style.display = 'none';
-                showKiwiToast(`Música selecionada: ${found.title}`);
-            };
-
-            window.__deleteSavedMusic = function(id) {
-                fetch(`/api/musics/delete/${id}/`, {
-                    method: 'POST',
-                    headers: { 'X-CSRFToken': getCookie('csrftoken') }
-                })
-                .then(r => r.json())
-                .then(resp => {
-                    if (resp.status === 'success') {
-                        savedMusicsCache = savedMusicsCache.filter(x => Number(x.id) !== Number(id));
-                        renderSavedMusicList();
-                    }
-                });
-            };
-
-            function fetchSavedMusicsFromDb() {
-                fetch('/api/musics/saved/')
-                .then(r => r.json())
-                .then(resp => {
-                    if (resp && resp.status === 'success') {
-                        savedMusicsCache = resp.musics || [];
-                        renderSavedMusicList();
-                    }
-                })
-                .catch(() => {});
-            }
-
-            if (openMusicBoxBtn && savedMusicBox) {
-                openMusicBoxBtn.addEventListener('click', () => {
-                    const willOpen = savedMusicBox.style.display === 'none';
-                    savedMusicBox.style.display = willOpen ? 'block' : 'none';
-                    if (willOpen) fetchSavedMusicsFromDb();
-                });
-            }
-
-            if (quickAddMusicToggle && quickAddMusicForm) {
-                quickAddMusicToggle.addEventListener('click', () => {
-                    quickAddMusicForm.style.display = quickAddMusicForm.style.display === 'none' ? 'block' : 'none';
-                });
-            }
-
-            if (qmSaveBtn) {
-                qmSaveBtn.addEventListener('click', () => {
-                    const fd = new FormData();
-                    fd.append('title', (document.getElementById('qm-title')?.value || editSong?.value || '').trim());
-                    fd.append('artist', (document.getElementById('qm-artist')?.value || editArtist?.value || '').trim());
-                    fd.append('music_url', (editYtUrl?.value || '').trim());
-                    fd.append('audio_url', (editLocalAudioUrl?.value || '').trim());
-                    fd.append('cover_url', (editMusicCoverUrl?.value || '').trim());
-
-                    const aFile = document.getElementById('qm-audio-file')?.files?.[0] || editLocalAudioFile?.files?.[0];
-                    const cFile = document.getElementById('qm-cover-file')?.files?.[0] || editMusicCoverFile?.files?.[0];
-                    if (aFile) fd.append('audio_file', aFile);
-                    if (cFile) fd.append('cover_file', cFile);
-
-                    qmSaveBtn.disabled = true;
-                    fetch('/api/musics/save/', {
-                        method: 'POST',
-                        headers: { 'X-CSRFToken': getCookie('csrftoken') },
-                        body: fd
-                    })
-                    .then(r => r.json())
-                    .then(resp => {
-                        qmSaveBtn.disabled = false;
-                        if (resp && resp.status === 'success' && resp.music) {
-                            savedMusicsCache.unshift(resp.music);
-                            renderSavedMusicList();
-                            applySavedMusicToFormAndPlayer(resp.music, false);
-                            if (quickAddMusicForm) quickAddMusicForm.style.display = 'none';
-                            showKiwiToast('Música e capa guardadas no banco!');
-                        } else {
-                            showKiwiToast(resp.message || 'Erro ao guardar música.');
-                        }
-                    })
-                    .catch(() => {
-                        qmSaveBtn.disabled = false;
-                        showKiwiToast('Erro de rede ao guardar música.');
-                    });
-                });
-            }
 
             function renderEmptyFriendRequests(container) {
                 container.innerHTML = `<div style="font-size: 12px; color: var(--text-muted); background: var(--bg-soft); padding: 10px; border-radius: 8px; text-align: center;">Sem novos pedidos de amizade.</div>`;
