@@ -7,7 +7,7 @@ from django.db import models
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.http import require_POST
-from .models import UserProfile, FriendRequest, Message, PrivateMessage
+from .models import UserProfile, FriendRequest, Message, PrivateMessage, SavedMusic
 
 IMAGE_EXTS = {'.png', '.jpg', '.jpeg', '.gif', '.webp'}
 AUDIO_EXTS = {'.mp3', '.wav', '.ogg', '.webm', '.m4a'}
@@ -34,10 +34,6 @@ def room_view(request, room_name='geral'):
             'messages': messages
         }
     )
-
-
-@login_required
-from .models import UserProfile, FriendRequest, Message, PrivateMessage, SavedMusic
 
 
 def _build_music_payload(request, profile):
@@ -221,25 +217,6 @@ def delete_saved_music(request, music_id):
     if not deleted:
         return JsonResponse({'status': 'error', 'message': 'Música não encontrada.'}, status=404)
     return JsonResponse({'status': 'success'})
-
-@login_required
-def get_user_profile(request, username):
-    target_user = get_object_or_404(User, username=username)
-    profile, created = UserProfile.objects.get_or_create(user=target_user)
-
-    data = {
-        'username': target_user.username,
-        'bubble': profile.bubble,
-        'pronouns': profile.pronouns,
-        'bio': profile.bio,
-        'spotify_song': profile.spotify_song,
-        'spotify_artist': profile.spotify_artist,
-        'accent_color': profile.accent_color or '#ff9de2',
-        'avatarUrl': request.build_absolute_uri(profile.avatar.url) if profile.avatar else '',
-        'bannerUrl': request.build_absolute_uri(profile.banner.url) if profile.banner else '',
-        'is_friend': are_friends(request.user, target_user) if target_user != request.user else False,
-    }
-    return JsonResponse(data)
 
 
 def register_view(request):
