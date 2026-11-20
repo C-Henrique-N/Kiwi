@@ -749,13 +749,25 @@ def reject_friend_request(request):
 def get_friends_list(request):
     try:
         friend_users = _get_accepted_friend_users(request.user)
-        friends = [
-            {
+        friends = []
+        for u in friend_users:
+            prof = getattr(u, 'profile', None)
+            avatar_url = ''
+            if prof and prof.avatar:
+                try:
+                    avatar_url = request.build_absolute_uri(prof.avatar.url)
+                except Exception:
+                    avatar_url = ''
+            friends.append({
+                'id': u.id,
                 'username': u.username,
-                'avatarUrl': request.build_absolute_uri(u.profile.avatar.url) if u.profile.avatar else '',
-            }
-            for u in friend_users
-        ]
+                'avatarUrl': avatar_url,
+                'bubble': (prof.bubble or '') if prof else '',
+                'pronouns': (prof.pronouns or '') if prof else '',
+                'spotify_song': (prof.spotify_song or '') if prof else '',
+                'spotify_artist': (prof.spotify_artist or '') if prof else '',
+                'accent_color': (prof.accent_color or '#ff9de2') if prof else '#ff9de2',
+            })
         return JsonResponse({'status': 'success', 'friends': friends})
     except Exception as e:
         return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
@@ -997,5 +1009,89 @@ def remove_friend(request):
         return JsonResponse({'status': 'success', 'message': f'Amizade com {other_user.username} removida.'})
     except Http404:
         return JsonResponse({'status': 'error', 'message': 'Utilizador não encontrado.'}, status=404)
+    except Exception as e:
+        return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
+
+@login_required
+@require_POST
+def send_message(request):
+    try:
+        data = _parse_request_data(request)
+        content = (data.get('message') or data.get('content') or '').strip()
+        client_id = str(data.get('client_id') or data.get('id') or '')[:100]
+        channel_id = data.get('channel_id')
+        target_username = (data.get('target') or data.get('username') or data.get('receiver') or '').strip()
+        avatar_url = _sanitize_external_url(data.get('avatarUrl') or data.get('avatar_url') or '')
+
+        if not content:
+            return JsonResponse({'status': 'error', 'message': 'Digite uma mensagem antes de enviar.'}, status=400)
+
+        channel_layer = get_channel_layer()
+
+        if channel_id:
+            channel = get_object_or_404(Channel, id=channel_id, server__members=request.user)
+            msg = Message.objects.create(
+                user=request.user,
+                channel=channel,
+                content=content,
+                client_id=client_id,
+            )
+            if channel_layer:
+                async_to_sync(channel_layer.group_send)(
+                    f'chat_{channel.id}',
+                    {
+                        'type': 'chat_message',
+                        'id': msg.id,
+                        'client_id': msg.client_id,
+                        'message': msg.content,
+                        'username': request.user.username,
+                        'sender': request.user.username,
+                        'avatarUrl': avatar_url,
+                        'avatar_url': avatar_url,
+                        'time': msg.timestamp.strftime('%H:%M'),
+                    },
+                )
+            return JsonResponse({
+                'status': 'success',
+                'message': msg.to_dict(),
+            })
+
+        if target_username:
+            other_user = get_object_or_404(User, username__iexact=target_username)
+            if other_user == request.user:
+                return JsonResponse({'status': 'error', 'message': 'Não podes enviar DM para ti mesmo.'}, status=400)
+            if not are_friends(request.user, other_user):
+                return JsonResponse({'status': 'error', 'message': 'Precisam de ser amigos para enviar mensagem privada.'}, status=403)
+
+            dm = PrivateMessage.objects.create(
+                sender=request.user,
+                receiver=other_user,
+                content=content,
+                client_id=client_id,
+            )
+            if channel_layer:
+                ids = sorted([request.user.id, other_user.id])
+                async_to_sync(channel_layer.group_send)(
+                    f'dm_{ids[0]}_{ids[1]}',
+                    {
+                        'type': 'dm_message',
+                        'id': dm.id,
+                        'client_id': dm.client_id,
+                        'message': dm.content,
+                        'sender': request.user.username,
+                        'receiver': other_user.username,
+                        'avatarUrl': avatar_url,
+                        'avatar_url': avatar_url,
+                        'time': dm.timestamp.strftime('%H:%M'),
+                    },
+                )
+            return JsonResponse({
+                'status': 'success',
+                'message': dm.to_dict(),
+            })
+
+        return JsonResponse({'status': 'error', 'message': 'Informe channel_id ou target.'}, status=400)
+    except Http404:
+        return JsonResponse({'status': 'error', 'message': 'Canal ou utilizador não encontrado.'}, status=404)
     except Exception as e:
         return JsonResponse({'status': 'error', 'message': str(e)}, status=400)

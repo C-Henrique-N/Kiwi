@@ -27,6 +27,7 @@ urlpatterns = [
     path('api/friends/list/', views.get_friends_list, name='get_friends_list'),
     path('api/friends/remove/', views.remove_friend, name='remove_friend'),
 
+    path('api/messages/send/', views.send_message, name='send_message'),
     path('api/messages/<int:message_id>/delete/', views.delete_message, name='delete_message'),
     path('api/dm/message/<int:message_id>/delete/', views.delete_dm_message, name='delete_dm_message'),
     path('api/dm/<str:username>/', views.get_dm_history, name='dm_history'),
