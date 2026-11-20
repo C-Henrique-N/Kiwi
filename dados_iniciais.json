@@ -80,6 +80,7 @@
     "model": "chat.server",
     "pk": 1,
     "fields": {
+      "owner": 1,
       "name": "Servidor Principal",
       "created_at": "2026-11-19T16:25:00Z"
     }
