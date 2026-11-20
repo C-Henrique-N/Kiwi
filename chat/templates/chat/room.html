@@ -2,7 +2,7 @@
 
 
 Ícone do app HTML
-room
+kiwi_chat_estetico_completo
 <!DOCTYPE html>
 <html lang="pt">
 <head>
@@ -3033,8 +3033,7 @@ room
                 username: activeUsername,
                 bubble: '🌸 a testar o novo kiwi chat...',
                 pronouns: 'he / him • 🎀',
-                bio: '@matsuda 🤍
-infpt 🎧 zekiah ☁️',
+                bio: '@matsuda 🤍\ninfpt 🎧 zekiah ☁️',
                 song: 'Drama',
                 artist: 'Lala Sadii',
                 musicUrl: '',
@@ -4293,8 +4292,7 @@ infpt 🎧 zekiah ☁️',
                 syncAdminVisualRestrictions();
                 editBubble.value = myProfileData.bubble;
                 editPronouns.value = myProfileData.pronouns;
-                editBio.value = myProfileData.bio.replace(/<br\s*\/?>/gi, '
-');
+                editBio.value = myProfileData.bio.replace(/<br\s*\/?>/gi, '\n');
                 editSong.value = myProfileData.song;
                 editArtist.value = myProfileData.artist;
                 if (editYtUrl) editYtUrl.value = myProfileData.musicUrl || '';
@@ -4705,7 +4703,7 @@ infpt 🎧 zekiah ☁️',
                 if (pickedCoverFile) {
                     if (myProfileData.coverUrl && myProfileData.coverUrl.startsWith('blob:')) URL.revokeObjectURL(myProfileData.coverUrl);
                     if (pickedCoverFile.size <= 2 * 1024 * 1024) {
-                        try { myProfileData.coverUrl = await readFileAsDataUrl(pickedCoverFile); } catch (_) { myProfileData.coverUrl = URL.createObjectURL(pickedCoverFile); }
+                        try { myProfileData.coverUrl = await readFileAsDataUrl(pickedCoverFile); } catch (_) { myProfileData.coverUrl = tempEditorBannerUrl; }
                     } else {
                         myProfileData.coverUrl = URL.createObjectURL(pickedCoverFile);
                     }
@@ -5457,10 +5455,11 @@ infpt 🎧 zekiah ☁️',
                 );
                 friendSearchResults.innerHTML = '';
                 if (!matches.length) {
-                    friendSearchResults.innerHTML = `<div style="font-size:12px; color:var(--text-muted); text-align:center; padding:10px; background:var(--bg-soft); border-radius:8px;">Nenhum usuário encontrado.</div>`;
+                    friendSearchResults.innerHTML = `<div style="font-size:12px; color:var(--text-muted); text-align:center; padding:12px;">Nenhum usuário encontrado.</div>`;
                     return;
                 }
                 matches.forEach(u => {
+                    const alreadyFriend = isFriendName(u.username);
                     const row = document.createElement('div');
                     row.className = 'social-list-item';
                     row.style.cursor = 'default';
@@ -5471,26 +5470,25 @@ infpt 🎧 zekiah ☁️',
 
                     const nameEl = document.createElement('span');
                     nameEl.textContent = u.username;
-                    nameEl.style.cssText = 'font-weight:700; flex:1;';
+                    nameEl.style.fontWeight = '700';
 
-                    const alreadyFriend = isFriendName(u.username);
                     const actionBtn = document.createElement('button');
                     actionBtn.type = 'button';
                     actionBtn.className = 'dm-quick-btn';
-                    actionBtn.style.background = alreadyFriend ? '#57606a' : '#23a55a';
                     actionBtn.textContent = alreadyFriend ? 'Amigo ✓' : '+ Adicionar';
-                    actionBtn.disabled = alreadyFriend;
+                    if (alreadyFriend) actionBtn.style.background = '#23a55a';
                     actionBtn.addEventListener('click', () => {
-                        if (!isFriendName(u.username)) {
+                        if (!alreadyFriend) {
                             friendsList.push(u.username);
                             writeStorageJson(FRIENDS_STORAGE_KEY, friendsList);
+                            showKiwiToast(`${u.username} adicionado aos amigos!`);
+                            renderFriendSearchMatches(friendSearchInput ? friendSearchInput.value : '');
+                            const amigosTab = document.querySelector('.social-tab[data-tab="amigos"]');
+                            if (amigosTab && amigosTab.classList.contains('active')) fetchFriendsList();
+                        } else {
+                            openPrivateChat(u.username, u.avatarUrl || '');
+                            closeModalAnimated(addFriendModal);
                         }
-                        actionBtn.textContent = 'Amigo ✓';
-                        actionBtn.style.background = '#57606a';
-                        actionBtn.disabled = true;
-                        showKiwiToast(`${u.username} adicionado aos amigos!`);
-                        const amigosTab = document.querySelector('.social-tab[data-tab="amigos"]');
-                        if (amigosTab && amigosTab.classList.contains('active')) fetchFriendsList();
                     });
 
                     row.appendChild(av);
@@ -5500,37 +5498,24 @@ infpt 🎧 zekiah ☁️',
                 });
             }
 
-            if (openAddFriendBtn && addFriendModal) {
-                openAddFriendBtn.addEventListener('click', () => {
-                    openModalAnimated(addFriendModal);
-                    renderFriendSearchMatches(friendSearchInput ? friendSearchInput.value : '');
-                    setTimeout(() => friendSearchInput && friendSearchInput.focus(), 80);
-                });
+            function openFriendSearchModal() {
+                if (!addFriendModal) return;
+                if (friendSearchInput) friendSearchInput.value = '';
+                renderFriendSearchMatches('');
+                openModalAnimated(addFriendModal);
+                setTimeout(() => { if (friendSearchInput) friendSearchInput.focus(); }, 60);
             }
-            if (sidebarSearchFriendBtn && addFriendModal) {
-                sidebarSearchFriendBtn.addEventListener('click', () => {
-                    openModalAnimated(addFriendModal);
-                    renderFriendSearchMatches(friendSearchInput ? friendSearchInput.value : '');
-                    setTimeout(() => friendSearchInput && friendSearchInput.focus(), 80);
-                });
-            }
-            if (closeAddFriendBtn && addFriendModal) {
-                closeAddFriendBtn.addEventListener('click', () => closeModalAnimated(addFriendModal));
-            }
-            if (addFriendModal) {
-                addFriendModal.addEventListener('click', (e) => {
-                    if (e.target === addFriendModal) closeModalAnimated(addFriendModal);
-                });
-            }
-            if (friendSearchInput) {
-                friendSearchInput.addEventListener('input', () => renderFriendSearchMatches(friendSearchInput.value));
-            }
+
+            if (openAddFriendBtn) openAddFriendBtn.addEventListener('click', openFriendSearchModal);
+            if (sidebarSearchFriendBtn) sidebarSearchFriendBtn.addEventListener('click', openFriendSearchModal);
+            if (closeAddFriendBtn && addFriendModal) closeAddFriendBtn.addEventListener('click', () => closeModalAnimated(addFriendModal));
+            if (addFriendModal) addFriendModal.addEventListener('click', (e) => { if (e.target === addFriendModal) closeModalAnimated(addFriendModal); });
+            if (friendSearchInput) friendSearchInput.addEventListener('input', () => renderFriendSearchMatches(friendSearchInput.value));
 
             const createServerModal = document.getElementById('create-server-modal');
             const openCreateServerBtn = document.getElementById('open-create-server-btn');
             const closeCreateServerBtn = document.getElementById('close-create-server-btn');
             const createServerForm = document.getElementById('create-server-form');
-            const serverRailEl = document.querySelector('.server-rail');
 
             if (openCreateServerBtn && createServerModal) {
                 openCreateServerBtn.addEventListener('click', () => openModalAnimated(createServerModal));
@@ -5539,33 +5524,34 @@ infpt 🎧 zekiah ☁️',
                 closeCreateServerBtn.addEventListener('click', () => closeModalAnimated(createServerModal));
             }
             if (createServerModal) {
-                createServerModal.addEventListener('click', (e) => {
-                    if (e.target === createServerModal) closeModalAnimated(createServerModal);
-                });
+                createServerModal.addEventListener('click', (e) => { if (e.target === createServerModal) closeModalAnimated(createServerModal); });
             }
             if (createServerForm) {
                 createServerForm.addEventListener('submit', (e) => {
                     e.preventDefault();
                     const sname = (document.getElementById('new-server-name')?.value || '').trim();
                     if (!sname) return;
-                    if (serverRailEl && openCreateServerBtn) {
+                    const rail = document.querySelector('.server-rail');
+                    if (rail && openCreateServerBtn) {
                         const btn = document.createElement('button');
                         btn.type = 'button';
-                        btn.className = 'server-rail-btn demo-server-btn';
+                        btn.className = 'server-rail-btn demo-server-btn active';
                         btn.setAttribute('data-server-name', sname);
                         btn.title = sname;
                         btn.textContent = sname.slice(0, 2).toUpperCase();
+                        document.querySelectorAll('.server-rail-btn').forEach(b => b.classList.remove('active'));
                         btn.addEventListener('click', () => {
                             document.querySelectorAll('.server-rail-btn').forEach(b => b.classList.remove('active'));
                             btn.classList.add('active');
                             if (sidebarServerTitle) sidebarServerTitle.textContent = `🥝 ${sname}`;
                             showKiwiToast(`Servidor "${sname}" selecionado`);
                         });
-                        serverRailEl.insertBefore(btn, openCreateServerBtn);
+                        rail.insertBefore(btn, openCreateServerBtn);
                     }
-                    document.getElementById('new-server-name').value = '';
-                    closeModalAnimated(createServerModal);
+                    if (sidebarServerTitle) sidebarServerTitle.textContent = `🥝 ${sname}`;
                     showKiwiToast(`Servidor "${sname}" criado!`);
+                    createServerForm.reset();
+                    closeModalAnimated(createServerModal);
                 });
             }
 
@@ -5573,7 +5559,7 @@ infpt 🎧 zekiah ☁️',
             const openCreateChannelBtn = document.getElementById('open-create-channel-btn');
             const closeCreateChannelBtn = document.getElementById('close-create-channel-btn');
             const createChannelForm = document.getElementById('create-channel-form');
-            const serverChannelsListEl = document.getElementById('server-channels-list');
+            const serverChannelsList = document.getElementById('server-channels-list');
 
             if (openCreateChannelBtn && createChannelModal) {
                 openCreateChannelBtn.addEventListener('click', () => openModalAnimated(createChannelModal));
@@ -5582,29 +5568,25 @@ infpt 🎧 zekiah ☁️',
                 closeCreateChannelBtn.addEventListener('click', () => closeModalAnimated(createChannelModal));
             }
             if (createChannelModal) {
-                createChannelModal.addEventListener('click', (e) => {
-                    if (e.target === createChannelModal) closeModalAnimated(createChannelModal);
-                });
+                createChannelModal.addEventListener('click', (e) => { if (e.target === createChannelModal) closeModalAnimated(createChannelModal); });
             }
-            if (createChannelForm) {
+            if (createChannelForm && serverChannelsList) {
                 createChannelForm.addEventListener('submit', (e) => {
                     e.preventDefault();
-                    const cname = (document.getElementById('new-channel-name')?.value || '').trim().replace(/^#+/, '');
+                    const rawName = (document.getElementById('new-channel-name')?.value || '').trim().toLowerCase().replace(/\s+/g, '-');
                     const ctype = document.getElementById('new-channel-type')?.value || 'text';
-                    if (!cname) return;
-                    if (serverChannelsListEl) {
-                        const item = document.createElement('div');
-                        item.className = 'channel-item';
-                        item.setAttribute('data-channel-name', cname);
-                        item.setAttribute('data-channel-type', ctype);
-                        item.innerHTML = `<span>${ctype === 'audio' ? '🎵' : '#'}</span><span style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${escapeHtmlText(cname)}</span>`;
-                        item.addEventListener('click', () => window.switchToGeral(cname, ctype));
-                        serverChannelsListEl.appendChild(item);
-                    }
-                    document.getElementById('new-channel-name').value = '';
+                    if (!rawName) return;
+                    const item = document.createElement('div');
+                    item.className = 'channel-item';
+                    item.setAttribute('data-channel-name', rawName);
+                    item.setAttribute('data-channel-type', ctype);
+                    item.innerHTML = `<span>${ctype === 'audio' ? '🎵' : '#'}</span><span style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${escapeHtmlText(rawName)}</span>`;
+                    item.addEventListener('click', () => window.switchToGeral(rawName, ctype));
+                    serverChannelsList.appendChild(item);
+                    showKiwiToast(`Canal "${rawName}" criado!`);
+                    createChannelForm.reset();
                     closeModalAnimated(createChannelModal);
-                    window.switchToGeral(cname, ctype);
-                    showKiwiToast(`Canal "${cname}" criado!`);
+                    window.switchToGeral(rawName, ctype);
                 });
             }
 
@@ -5613,23 +5595,22 @@ infpt 🎧 zekiah ☁️',
             const mobNavMusic = document.getElementById('mob-nav-music');
             const mobNavProfile = document.getElementById('mob-nav-profile');
 
-            function setActiveMobileNav(btnEl) {
+            function setActiveMobileNav(btn) {
                 document.querySelectorAll('.mobile-nav-btn').forEach(b => b.classList.remove('active'));
-                if (btnEl) btnEl.classList.add('active');
+                if (btn) btn.classList.add('active');
             }
             if (mobNavFriends) {
                 mobNavFriends.addEventListener('click', () => {
                     setActiveMobileNav(mobNavFriends);
                     window.closeMobileChatView();
+                    const amigosTab = document.querySelector('.social-tab[data-tab="amigos"]');
+                    if (amigosTab) amigosTab.click();
                 });
             }
             if (mobNavSearch) {
                 mobNavSearch.addEventListener('click', () => {
                     setActiveMobileNav(mobNavSearch);
-                    if (addFriendModal) {
-                        openModalAnimated(addFriendModal);
-                        renderFriendSearchMatches(friendSearchInput ? friendSearchInput.value : '');
-                    }
+                    openFriendSearchModal();
                 });
             }
             if (mobNavMusic) {
@@ -5642,6 +5623,12 @@ infpt 🎧 zekiah ☁️',
                 mobNavProfile.addEventListener('click', () => {
                     setActiveMobileNav(mobNavProfile);
                     openUserProfile(activeUsername);
+                });
+            }
+
+            if (headerCallBtn) {
+                headerCallBtn.addEventListener('click', () => {
+                    if (currentView === 'dm' && currentDmUser) startVoiceCall(currentDmUser);
                 });
             }
         });
