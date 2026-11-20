@@ -1818,9 +1818,9 @@
             <div>
                 <h4 style="font-size: 12px; text-transform: uppercase; color: var(--text-muted); margin-bottom: 8px;">Notas de Atualizações (Changelog)</h4>
                 <div style="background: var(--bg-soft); padding: 12px; border-radius: 8px; font-size: 12px; line-height: 1.5; color: var(--text-main);">
-                    <div style="font-weight: bold; color: #5865f2; margin-bottom: 4px;">✨ Versão 3.4 - Persistência de Música por Perfil</div>
-                    • Cada utilizador tem a sua própria música configurada e preservada no perfil.<br>
-                    • Suporta link direto de áudio (.mp3, .ogg, .wav, etc.), ficheiro de áudio ou link do YouTube/Spotify.
+                    <div style="font-weight: bold; color: #5865f2; margin-bottom: 4px;">✨ Versão 3.5 - Perfil Dourado &amp; Persistência de Áudio</div>
+                    • O estado do perfil dourado respeita desmarcação e sincroniza com servidor e cache.<br>
+                    • Suporte a link direto de áudio, YouTube/Spotify e persistência por utilizador.
                 </div>
             </div>
         </div>
@@ -1873,7 +1873,7 @@
                     <input type="text" name="music_audio_url" id="edit-local-audio-url" placeholder="Cole aqui o link direto do som: https://.../som.mp3">
                 </div>
                 <div class="form-group" style="display: flex; align-items: center; gap: 8px; background: var(--bg-soft); padding: 8px 10px; border-radius: 8px; border: 1px solid var(--border-subtle);">
-                    <input type="checkbox" id="edit-gold-profile-bg" style="width: auto; accent-color: #d4af37; cursor: pointer;" checked>
+                    <input type="checkbox" id="edit-gold-profile-bg" name="gold_profile_bg" style="width: auto; accent-color: #d4af37; cursor: pointer;">
                     <label for="edit-gold-profile-bg" style="margin: 0; cursor: pointer; color: var(--text-main);">✨ Fundo do meu perfil Dourado</label>
                 </div>
                 <div class="form-group">
@@ -2021,7 +2021,7 @@
                 audioFileName: '',
                 coverUrl: '',
                 accentColor: '#ffffff',
-                goldProfileBg: true,
+                goldProfileBg: false,
                 avatarUrl: '',
                 bannerUrl: '',
                 is_admin: false
@@ -2066,6 +2066,7 @@
             const editYtUrl = document.getElementById('edit-yt-url');
             const editLocalAudioFile = document.getElementById('edit-local-audio-file');
             const editLocalAudioUrl = document.getElementById('edit-local-audio-url');
+            const editGoldCheckbox = document.getElementById('edit-gold-profile-bg');
             const editMusicCoverFile = document.getElementById('edit-music-cover-file');
             const editMusicCoverUrl = document.getElementById('edit-music-cover-url');
 
@@ -2678,7 +2679,9 @@
                 }
 
                 if (upMusicFallback) {
-                    if (hasLocalAudio) {
+                    if (hasLocalAudio && activeProfileMusic.audioSrc.startsWith('blob:')) {
+                        upMusicFallback.textContent = 'Áudio local temporário desta sessão: cole um link direto (.mp3/.ogg) para manter após recarregar ou noutro dispositivo.';
+                    } else if (hasLocalAudio) {
                         upMusicFallback.textContent = '';
                     } else if (videoId && ytEmbedBlocked) {
                         upMusicFallback.textContent = 'Vídeo bloqueado para embed: clique em ↗ para ouvir no link.';
@@ -2837,6 +2840,11 @@
                 upLocalAudio.addEventListener('ended', () => {
                     isMusicPlaying = false;
                     if (upPlayPauseBtn) upPlayPauseBtn.textContent = '▶';
+                });
+                upLocalAudio.addEventListener('error', () => {
+                    isMusicPlaying = false;
+                    if (upPlayPauseBtn) upPlayPauseBtn.textContent = '▶';
+                    showKiwiToast('Não foi possível carregar este som no aparelho.');
                 });
             }
 
@@ -3231,15 +3239,28 @@
                 }
             }
 
+            function parseExplicitGoldFlag(rawData, cachedMusic) {
+                if (typeof rawData.gold_profile_bg === 'boolean') return rawData.gold_profile_bg;
+                if (typeof rawData.gold_profile_bg === 'string') {
+                    const lower = rawData.gold_profile_bg.trim().toLowerCase();
+                    if (lower === 'true' || lower === '1' || lower === 'on') return true;
+                    if (lower === 'false' || lower === '0' || lower === 'off') return false;
+                }
+                if (cachedMusic && typeof cachedMusic.goldProfileBg === 'boolean') {
+                    return cachedMusic.goldProfileBg;
+                }
+                return rawData.accent_color === '#d4af37';
+            }
+
             function normalizeProfilePayload(rawData, fallbackUsername) {
                 const uname = (rawData.username || fallbackUsername || '').trim();
                 const cachedMusic = loadUserMusicFromLocalCache(uname);
 
-                const resolvedSong = (rawData.spotify_song || (cachedMusic && cachedMusic.song) || '').trim();
-                const resolvedArtist = (rawData.spotify_artist || (cachedMusic && cachedMusic.artist) || '').trim();
-                const resolvedMusicUrl = (rawData.music_url || rawData.youtube_url || rawData.spotify_url || (cachedMusic && cachedMusic.musicUrl) || '').trim();
-                const resolvedAudioSrc = (rawData.music_audio_url || rawData.audio_url || (cachedMusic && cachedMusic.audioSrc) || '').trim();
-                const resolvedCoverUrl = (rawData.music_cover_url || rawData.cover_url || (cachedMusic && cachedMusic.coverUrl) || '').trim();
+                const resolvedSong = (rawData.spotify_song ?? (cachedMusic && cachedMusic.song) ?? '').trim();
+                const resolvedArtist = (rawData.spotify_artist ?? (cachedMusic && cachedMusic.artist) ?? '').trim();
+                const resolvedMusicUrl = (rawData.music_url ?? rawData.youtube_url ?? rawData.spotify_url ?? (cachedMusic && cachedMusic.musicUrl) ?? '').trim();
+                const resolvedAudioSrc = (rawData.music_audio_url ?? rawData.audio_url ?? (cachedMusic && cachedMusic.audioSrc) ?? '').trim();
+                const resolvedCoverUrl = (rawData.music_cover_url ?? rawData.cover_url ?? (cachedMusic && cachedMusic.coverUrl) ?? '').trim();
 
                 return {
                     username: uname,
@@ -3253,9 +3274,7 @@
                     audioFileName: (cachedMusic && cachedMusic.audioFileName) || '',
                     coverUrl: resolvedCoverUrl,
                     accentColor: rawData.accent_color || '#ffffff',
-                    goldProfileBg: (cachedMusic && typeof cachedMusic.goldProfileBg === 'boolean')
-                        ? cachedMusic.goldProfileBg
-                        : (rawData.accent_color === '#d4af37' || uname.toLowerCase() === (activeUsername || '').toLowerCase()),
+                    goldProfileBg: parseExplicitGoldFlag(rawData, cachedMusic),
                     avatarUrl: rawData.avatarUrl || '',
                     bannerUrl: rawData.bannerUrl || '',
                     is_admin: Boolean(rawData.is_admin || rawData.is_staff || rawData.is_superuser),
@@ -3274,12 +3293,13 @@
                     myProfileData = {
                         ...myProfileData,
                         ...normalized,
-                        song: (data.spotify_song ?? normalized.song ?? cached.song ?? myProfileData.song ?? '').trim(),
-                        artist: (data.spotify_artist ?? normalized.artist ?? cached.artist ?? myProfileData.artist ?? '').trim(),
+                        song: (data.spotify_song !== undefined ? String(data.spotify_song).trim() : (cached.song ?? myProfileData.song ?? '')).trim(),
+                        artist: (data.spotify_artist !== undefined ? String(data.spotify_artist).trim() : (cached.artist ?? myProfileData.artist ?? '')).trim(),
                         musicUrl: normalized.musicUrl || cached.musicUrl || myProfileData.musicUrl || '',
                         audioSrc: normalized.audioSrc || cached.audioSrc || myProfileData.audioSrc || '',
                         audioFileName: normalized.audioFileName || cached.audioFileName || myProfileData.audioFileName || '',
-                        coverUrl: normalized.coverUrl || cached.coverUrl || myProfileData.coverUrl || ''
+                        coverUrl: normalized.coverUrl || cached.coverUrl || myProfileData.coverUrl || '',
+                        goldProfileBg: parseExplicitGoldFlag(data, cached)
                     };
                     if (data.accent_color && themesMap[data.accent_color]) {
                         myProfileData.accentColor = data.accent_color;
@@ -3295,6 +3315,10 @@
                 const savedTheme = localStorage.getItem(THEME_STORAGE_KEY);
                 if (savedTheme && themesMap[savedTheme]) {
                     myProfileData.accentColor = savedTheme;
+                }
+                const initialCached = loadUserMusicFromLocalCache(activeUsername);
+                if (initialCached && typeof initialCached.goldProfileBg === 'boolean') {
+                    myProfileData.goldProfileBg = initialCached.goldProfileBg;
                 }
             } catch (_) {}
             applyTheme(myProfileData.accentColor);
@@ -3438,12 +3462,13 @@
                         myProfileData = {
                             ...myProfileData,
                             ...normalized,
-                            song: (rawData.spotify_song ?? normalized.song ?? cached.song ?? myProfileData.song ?? '').trim(),
-                            artist: (rawData.spotify_artist ?? normalized.artist ?? cached.artist ?? myProfileData.artist ?? '').trim(),
+                            song: (rawData.spotify_song !== undefined ? String(rawData.spotify_song).trim() : (cached.song ?? myProfileData.song ?? '')).trim(),
+                            artist: (rawData.spotify_artist !== undefined ? String(rawData.spotify_artist).trim() : (cached.artist ?? myProfileData.artist ?? '')).trim(),
                             musicUrl: normalized.musicUrl || cached.musicUrl || myProfileData.musicUrl || '',
                             audioSrc: normalized.audioSrc || cached.audioSrc || myProfileData.audioSrc || '',
                             audioFileName: normalized.audioFileName || cached.audioFileName || myProfileData.audioFileName || '',
-                            coverUrl: normalized.coverUrl || cached.coverUrl || myProfileData.coverUrl || ''
+                            coverUrl: normalized.coverUrl || cached.coverUrl || myProfileData.coverUrl || '',
+                            goldProfileBg: parseExplicitGoldFlag(rawData, cached)
                         };
                         saveUserMusicToLocalCache(activeUsername, myProfileData);
                         profilesByUsername.set(activeUsername.toLowerCase(), { ...myProfileData });
@@ -3533,7 +3558,6 @@
                         : '';
                 }
                 if (editLocalAudioFile) editLocalAudioFile.value = '';
-                const editGoldCheckbox = document.getElementById('edit-gold-profile-bg');
                 if (editGoldCheckbox) editGoldCheckbox.checked = Boolean(myProfileData.goldProfileBg);
                 if (editMusicCoverUrl) {
                     editMusicCoverUrl.value = (myProfileData.coverUrl && !myProfileData.coverUrl.startsWith('blob:') && !myProfileData.coverUrl.startsWith('data:'))
@@ -3555,8 +3579,7 @@
                 myProfileData.song = editSong.value.trim();
                 myProfileData.artist = editArtist.value.trim();
                 myProfileData.musicUrl = editYtUrl ? editYtUrl.value.trim() : '';
-                const editGoldCheckbox = document.getElementById('edit-gold-profile-bg');
-                myProfileData.goldProfileBg = editGoldCheckbox ? editGoldCheckbox.checked : true;
+                myProfileData.goldProfileBg = editGoldCheckbox ? Boolean(editGoldCheckbox.checked) : false;
 
                 const pickedAudioFile = editLocalAudioFile && editLocalAudioFile.files && editLocalAudioFile.files[0];
                 const typedAudioUrl = editLocalAudioUrl ? editLocalAudioUrl.value.trim() : '';
@@ -3574,11 +3597,14 @@
                         }
                     } else {
                         myProfileData.audioSrc = URL.createObjectURL(pickedAudioFile);
-                        showKiwiToast("Áudio grande (>3.5MB): reproduz nesta sessão; para recarregar use um link direto.");
+                        showKiwiToast("Áudio grande (>3.5MB): reproduz apenas nesta sessão; para salvar permanente use um link direto.");
                     }
                 } else if (typedAudioUrl) {
                     myProfileData.audioSrc = typedAudioUrl;
                     myProfileData.audioFileName = extractFileNameFromUrl(typedAudioUrl, 'Áudio');
+                } else {
+                    myProfileData.audioSrc = '';
+                    myProfileData.audioFileName = '';
                 }
 
                 const pickedCoverFile = editMusicCoverFile && editMusicCoverFile.files && editMusicCoverFile.files[0];
@@ -3599,6 +3625,8 @@
                     }
                 } else if (typedCoverUrl) {
                     myProfileData.coverUrl = typedCoverUrl;
+                } else {
+                    myProfileData.coverUrl = '';
                 }
 
                 saveUserMusicToLocalCache(ownerName, myProfileData);
@@ -3612,6 +3640,7 @@
                 formData.set('music_url', myProfileData.musicUrl);
                 formData.set('music_audio_url', (!myProfileData.audioSrc.startsWith('blob:') && !myProfileData.audioSrc.startsWith('data:')) ? myProfileData.audioSrc : '');
                 formData.set('music_cover_url', (!myProfileData.coverUrl.startsWith('blob:') && !myProfileData.coverUrl.startsWith('data:')) ? myProfileData.coverUrl : '');
+                formData.set('gold_profile_bg', myProfileData.goldProfileBg ? 'true' : 'false');
                 formData.append('accent_color', myProfileData.accentColor);
 
                 fetch('/api/profile/update/', {
@@ -3631,17 +3660,17 @@
                         saveUserMusicToLocalCache(ownerName, myProfileData);
                         if (ownerName) profilesByUsername.set(ownerName.toLowerCase(), { ...myProfileData });
                         updateMySidebarUI();
-                        showKiwiToast("Música e perfil guardados!");
+                        showKiwiToast("Perfil e música guardados!");
                     } else {
                         updateMySidebarUI();
-                        showKiwiToast("Música guardada no perfil!");
+                        showKiwiToast("Alterações guardadas no perfil!");
                     }
                 })
                 .catch(err => {
                     console.error("Erro ao comunicar com /api/profile/update/:", err);
                     editModal.classList.remove('open');
                     updateMySidebarUI();
-                    showKiwiToast("Música guardada localmente no perfil!");
+                    showKiwiToast("Alterações guardadas localmente no perfil!");
                 });
             });
 
