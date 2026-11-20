@@ -36,7 +36,6 @@
             transition: background 0.3s ease, color 0.3s ease;
         }
 
-        /* Tela de Inicialização (Splash Screen Kiwi) */
         #kiwi-splash {
             position: fixed;
             inset: 0;
@@ -375,9 +374,7 @@
             border-bottom: 1px solid var(--border-subtle);
             font-size: 13px;
         }
-        .call-bar.active {
-            display: flex;
-        }
+        .call-bar.active { display: flex; }
         .call-status-group {
             display: flex;
             align-items: center;
@@ -454,9 +451,7 @@
             border-radius: 8px;
             transition: background 0.15s ease;
         }
-        .message-group:hover {
-            background: rgba(128, 128, 128, 0.06);
-        }
+        .message-group:hover { background: rgba(128, 128, 128, 0.06); }
         .message-group:hover .msg-hover-toolbar,
         .message-group.menu-open .msg-hover-toolbar {
             opacity: 1;
@@ -523,9 +518,7 @@
             flex-direction: column;
             gap: 2px;
         }
-        .msg-more-popover.open {
-            display: flex;
-        }
+        .msg-more-popover.open { display: flex; }
         .msg-more-item {
             background: transparent;
             border: none;
@@ -540,12 +533,8 @@
             align-items: center;
             gap: 8px;
         }
-        .msg-more-item:hover {
-            background: var(--bg-soft);
-        }
-        .msg-more-item.danger {
-            color: #c0392b;
-        }
+        .msg-more-item:hover { background: var(--bg-soft); }
+        .msg-more-item.danger { color: #c0392b; }
 
         .msg-emoji-picker {
             display: none;
@@ -561,9 +550,7 @@
             gap: 4px;
             align-items: center;
         }
-        .msg-emoji-picker.open {
-            display: inline-flex;
-        }
+        .msg-emoji-picker.open { display: inline-flex; }
         .msg-emoji-choice {
             background: transparent;
             border: none;
@@ -598,9 +585,7 @@
             cursor: pointer;
             transition: transform 0.15s ease, background 0.15s ease, border-color 0.15s ease;
         }
-        .msg-reaction-chip:hover {
-            transform: scale(1.05);
-        }
+        .msg-reaction-chip:hover { transform: scale(1.05); }
         .msg-reaction-chip.active {
             background: rgba(88, 101, 242, 0.16);
             border-color: rgba(88, 101, 242, 0.55);
@@ -637,9 +622,7 @@
             cursor: zoom-in;
             transition: transform 0.15s ease;
         }
-        .msg-attachment-img:hover {
-            transform: scale(1.015);
-        }
+        .msg-attachment-img:hover { transform: scale(1.015); }
         .msg-attachment-audio {
             margin-top: 6px;
             max-width: 100%;
@@ -674,9 +657,7 @@
             z-index: 25000;
             padding: 24px;
         }
-        .image-lightbox-overlay.open {
-            display: flex;
-        }
+        .image-lightbox-overlay.open { display: flex; }
         .image-lightbox-img {
             max-width: 92vw;
             max-height: 88vh;
@@ -701,9 +682,7 @@
             align-items: center;
             justify-content: center;
         }
-        .image-lightbox-close:hover {
-            background: rgba(255, 255, 255, 0.26);
-        }
+        .image-lightbox-close:hover { background: rgba(255, 255, 255, 0.26); }
 
         .chat-input-area { padding: 0 20px 20px 20px; position: relative; }
         #attachment-preview-bar {
@@ -963,6 +942,7 @@
             position: relative;
         }
 
+        /* PLAYER SPOTIFY ISOLADO POR PERFIL */
         .kiwi-spotify-widget {
             background: linear-gradient(135deg, #191b1e 0%, #111315 100%);
             color: #ffffff;
@@ -999,10 +979,6 @@
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
             color: #111315;
             font-weight: 800;
-        }
-        .kiwi-spotify-widget.green-mode .ksw-cover {
-            background: #121417;
-            color: #1db954;
         }
         .ksw-meta {
             min-width: 0;
@@ -1080,13 +1056,10 @@
         }
         .ksw-track-fill {
             height: 100%;
-            width: 32%;
+            width: 0%;
             border-radius: 999px;
             background: #1db954;
             transition: width 0.12s linear;
-        }
-        .kiwi-spotify-widget.green-mode .ksw-track-fill {
-            background: #121417;
         }
         .ksw-seek-input {
             position: absolute;
@@ -1126,9 +1099,6 @@
             color: #1db954;
             opacity: 1;
         }
-        .kiwi-spotify-widget.green-mode .ksw-ctrl-btn.active {
-            color: #121417;
-        }
         .ksw-play-circle {
             width: 38px;
             height: 38px;
@@ -1145,9 +1115,7 @@
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.28);
             transition: transform 0.15s ease;
         }
-        .ksw-play-circle:hover {
-            transform: scale(1.06);
-        }
+        .ksw-play-circle:hover { transform: scale(1.06); }
 
         .ksw-vol-wrap {
             position: relative;
@@ -1170,9 +1138,7 @@
             gap: 8px;
             min-width: 124px;
         }
-        .ksw-vol-popover.open {
-            display: inline-flex;
-        }
+        .ksw-vol-popover.open { display: inline-flex; }
         .ksw-vol-slider {
             width: 82px;
             accent-color: #1db954;
@@ -1204,6 +1170,43 @@
             box-shadow: 0 0 12px rgba(255, 215, 0, 0.55), inset 0 1px 1px rgba(255, 255, 255, 0.5);
             text-shadow: 0 1px 2px rgba(92, 62, 0, 0.75);
             vertical-align: middle;
+        }
+
+        /* FUNDO DOURADO DE PERFIL */
+        .aesthetic-profile-card.gold-profile-theme {
+            background: linear-gradient(155deg, #2b2108 0%, #4b380c 42%, #8a6614 100%) !important;
+            color: #fff8dc !important;
+            border: 1.5px solid rgba(255, 215, 0, 0.78) !important;
+            box-shadow:
+                0 0 26px rgba(255, 215, 0, 0.34),
+                0 18px 44px rgba(0, 0, 0, 0.42) !important;
+        }
+        .aesthetic-profile-card.gold-profile-theme .aesthetic-avatar {
+            border-color: #d4af37 !important;
+            box-shadow: 0 0 14px rgba(255, 215, 0, 0.55);
+        }
+        .aesthetic-profile-card.gold-profile-theme .aesthetic-status-bubble {
+            background: rgba(255, 223, 107, 0.16) !important;
+            border-color: rgba(255, 215, 0, 0.45) !important;
+            color: #fff6cc !important;
+        }
+        .aesthetic-profile-card.gold-profile-theme .aesthetic-name {
+            color: #ffe885 !important;
+            text-shadow: 0 1px 6px rgba(255, 215, 0, 0.35);
+        }
+        .aesthetic-profile-card.gold-profile-theme .aesthetic-name.akiira-special-font {
+            background: linear-gradient(90deg, #fff3b0, #ffd700, #ffb703);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent !important;
+        }
+        .aesthetic-profile-card.gold-profile-theme #up-pronouns {
+            color: rgba(255, 238, 173, 0.82) !important;
+        }
+        .aesthetic-profile-card.gold-profile-theme .aesthetic-details {
+            background: rgba(255, 215, 0, 0.13) !important;
+            border: 1px solid rgba(255, 215, 0, 0.32);
+            color: #fff6d6 !important;
         }
 
         .aesthetic-profile-card.akiira-shimmer-card {
@@ -1357,38 +1360,6 @@
             padding: 10px;
             border-radius: 8px;
         }
-        .spotify-card {
-            background: var(--bg-soft);
-            border-radius: 10px;
-            padding: 10px;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            border: 1px solid var(--border-subtle);
-        }
-        .spotify-album {
-            width: 48px;
-            height: 48px;
-            border-radius: 6px;
-            background: #1db954;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 20px;
-            flex-shrink: 0;
-        }
-        .spotify-info { flex: 1; min-width: 0; }
-        .spotify-title { font-size: 13px; font-weight: bold; color: var(--text-main); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        .spotify-artist { font-size: 11px; color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        .spotify-progress {
-            width: 100%;
-            height: 4px;
-            background: rgba(128, 128, 128, 0.25);
-            border-radius: 2px;
-            margin-top: 6px;
-            overflow: hidden;
-        }
-        .spotify-progress-bar { width: 30%; height: 100%; background: #1db954; }
 
         .btn-aesthetic-edit, .btn-aesthetic-action {
             width: 100%;
@@ -1406,9 +1377,7 @@
             justify-content: center;
             gap: 6px;
         }
-        .btn-aesthetic-action.call-btn {
-            background: #23a55a;
-        }
+        .btn-aesthetic-action.call-btn { background: #23a55a; }
         .btn-aesthetic-action.remove-btn {
             background: rgba(231, 76, 60, 0.16);
             color: #c0392b;
@@ -1488,17 +1457,10 @@
             transition: opacity 0.25s ease, transform 0.25s ease;
             pointer-events: none;
         }
-        .kiwi-toast.show {
-            opacity: 1;
-            transform: translateY(0);
-        }
+        .kiwi-toast.show { opacity: 1; transform: translateY(0); }
 
-        /* Esconde botão mobile de canais no desktop */
-        #mobile-back-list-btn {
-            display: none;
-        }
+        #mobile-back-list-btn { display: none; }
 
-        /* Layout Responsivo Mobile (<= 768px) */
         @media (max-width: 768px) {
             body {
                 height: 100dvh;
@@ -1506,73 +1468,37 @@
                 overflow: hidden;
                 position: relative;
             }
-
-            .sidebar-right {
-                display: none;
-            }
-
+            .sidebar-right { display: none; }
             .sidebar-left {
                 width: 100%;
                 max-width: 100%;
                 height: 100dvh;
                 border-right: none;
             }
-
             .chat-area {
                 display: none;
                 width: 100%;
                 height: 100dvh;
             }
-
-            body.mobile-chat-open .sidebar-left {
-                display: none;
-            }
-
-            body.mobile-chat-open .chat-area {
-                display: flex;
-            }
-
+            body.mobile-chat-open .sidebar-left { display: none; }
+            body.mobile-chat-open .chat-area { display: flex; }
             #mobile-back-list-btn,
             .back-geral-btn.visible {
                 display: inline-flex;
                 align-items: center;
                 gap: 4px;
             }
-
             .chat-header {
                 padding: 10px 12px;
                 gap: 8px;
                 flex-wrap: wrap;
             }
-
-            .theme-picker-container {
-                gap: 5px;
-            }
-
-            .theme-ball {
-                width: 18px;
-                height: 18px;
-            }
-
-            #chat-log {
-                padding: 12px;
-                gap: 12px;
-            }
-
-            .chat-input-area {
-                padding: 0 10px 12px 10px;
-            }
-
-            .input-wrapper {
-                padding: 8px 10px;
-                gap: 6px;
-            }
-
-            #chat-message-submit {
-                padding: 8px 12px;
-                font-size: 13px;
-            }
-
+            .theme-picker-container { gap: 5px; }
+            .theme-ball { width: 18px; height: 18px; }
+            #chat-log { padding: 12px; gap: 12px; }
+            .chat-input-area { padding: 0 10px 12px 10px; }
+            .input-wrapper { padding: 8px 10px; gap: 6px; }
+            #chat-message-submit { padding: 8px 12px; font-size: 13px; }
             .aesthetic-profile-card {
                 width: calc(100vw - 24px);
                 max-width: 390px;
@@ -1607,19 +1533,7 @@
         <img id="image-lightbox-img" class="image-lightbox-img" src="" alt="Imagem em tela cheia">
     </div>
 
-    <div id="kiwi-music-dock" style="display: none; position: fixed; right: 20px; bottom: 68px; width: 220px; background: var(--bg-card); border: 1px solid var(--border-subtle); border-radius: 12px; padding: 8px; box-shadow: 0 12px 28px rgba(0,0,0,0.22); z-index: 9500; flex-direction: column; gap: 6px;">
-        <div style="display: flex; align-items: center; justify-content: space-between; gap: 6px; font-size: 11px; font-weight: 700;">
-            <span style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">🎵 <span id="dock-music-title">Música</span></span>
-            <div style="display: flex; gap: 4px;">
-                <button type="button" id="dock-size-btn" style="background: var(--bg-soft); color: var(--text-main); border: 1px solid var(--border-subtle); border-radius: 5px; padding: 2px 6px; font-size: 10px; cursor: pointer;">+</button>
-                <button type="button" id="dock-disable-btn" title="Desabilitar no layout" style="background: rgba(231,76,60,0.16); color: #c0392b; border: none; border-radius: 5px; padding: 2px 6px; font-size: 10px; font-weight: 700; cursor: pointer;">×</button>
-            </div>
-        </div>
-        <div id="yt-dock-slot" style="width: 100%; border-radius: 8px; overflow: hidden;"></div>
-    </div>
-
     <audio id="remote-call-audio" autoplay playsinline></audio>
-
     <form id="csrf-helper-form" style="display:none;">{% csrf_token %}</form>
 
     <div class="sidebar-left">
@@ -1789,6 +1703,7 @@
                     <div class="theme-ball" style="background: #23a55a;" data-color="#23a55a" data-label="Verde Kiwi" title="Verde Kiwi"></div>
                     <div class="theme-ball" style="background: #5865f2;" data-color="#5865f2" data-label="Azul Discord" title="Azul Discord"></div>
                     <div class="theme-ball" style="background: #95a5a6;" data-color="#95a5a6" data-label="Cinza Elegante" title="Cinza Elegante"></div>
+                    <div class="theme-ball" style="background: linear-gradient(135deg, #b8860b, #ffd700);" data-color="#d4af37" data-label="Dourado Real" title="Dourado Real"></div>
                 </div>
             </div>
 
@@ -1803,94 +1718,78 @@
         </div>
     </div>
 
-    <!-- Modal do PRÓPRIO Perfil -->
-    <div id="aesthetic-modal" class="modal-overlay">
-        <div class="aesthetic-profile-card">
-            <button class="close-modal-btn" id="close-aesthetic-btn">×</button>
-            <div id="profile-banner" class="aesthetic-banner"></div>
+    <!-- MODAL ÚNICO UNIFICADO DE PERFIL (MEU PERFIL E PERFIL DE AMIGOS, COM PLAYER ISOLADO) -->
+    <div id="unified-profile-modal" class="modal-overlay">
+        <div class="aesthetic-profile-card" id="unified-profile-card">
+            <button class="close-modal-btn" id="close-unified-profile-btn">×</button>
+            <div id="up-banner" class="aesthetic-banner"></div>
             <div class="aesthetic-header-row">
-                <div id="profile-avatar" class="aesthetic-avatar">M</div>
-                <div id="profile-status-bubble" class="aesthetic-status-bubble">🌸 a testar o novo kiwi chat...</div>
+                <div id="up-avatar" class="aesthetic-avatar">?</div>
+                <div id="up-status-bubble" class="aesthetic-status-bubble">🌸 Olá!</div>
             </div>
             <div class="aesthetic-body">
                 <div>
                     <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
-                        <div id="profile-username" class="aesthetic-name">{{ username }}</div>
-                        <span id="profile-admin-badge" class="admin-gold-badge" style="display: none;">👑 ADMIN</span>
+                        <div id="up-username" class="aesthetic-name">Utilizador</div>
+                        <span id="up-admin-badge" class="admin-gold-badge" style="display: none;">👑 ADMIN</span>
                     </div>
-                    <div style="font-size: 11px; color: var(--text-muted);" id="profile-pronouns">he / him • 🎀</div>
+                    <div style="font-size: 11px; color: var(--text-muted);" id="up-pronouns">utilizador • 🥝</div>
                 </div>
-                <div class="aesthetic-details" id="profile-bio">
-                    @matsuda 🤍<br>infpt 🎧 zekiah ☁️
-                </div>
-                <div id="profile-yt-player-box" class="kiwi-spotify-widget">
+                <div class="aesthetic-details" id="up-bio">Perfil estético ativo.</div>
+
+                <!-- PLAYER DE MÚSICA DO PERFIL ABERTO (TOCA APENAS AQUI) -->
+                <div id="up-music-widget" class="kiwi-spotify-widget">
                     <div class="ksw-top">
-                        <div id="music-cover-thumb" class="ksw-cover">♫</div>
+                        <div id="up-music-cover" class="ksw-cover">♫</div>
                         <div class="ksw-meta">
-                            <div id="music-track-title" class="ksw-title">Drama</div>
-                            <div id="music-track-subtitle" class="ksw-artist">Lala Sadii</div>
+                            <div id="up-music-title" class="ksw-title">Sem música</div>
+                            <div id="up-music-artist" class="ksw-artist">---</div>
                         </div>
                         <div class="ksw-top-actions">
-                            <button type="button" id="ksw-like-btn" class="ksw-icon-btn" title="Guardar / Curtir faixa">+</button>
-                            <a id="profile-external-music-link" href="#" target="_blank" rel="noopener noreferrer" class="ksw-icon-btn" style="display: none;" title="Abrir link externo">↗</a>
+                            <button type="button" id="up-like-btn" class="ksw-icon-btn" title="Curtir faixa">+</button>
+                            <a id="up-external-music-link" href="#" target="_blank" rel="noopener noreferrer" class="ksw-icon-btn" style="display: none;" title="Abrir no Spotify / YouTube">↗</a>
                         </div>
                     </div>
 
                     <div class="ksw-progress-row">
-                        <span id="ksw-time-current">0:55</span>
+                        <span id="up-time-current">0:00</span>
                         <div class="ksw-seek-wrap">
                             <div class="ksw-track-bg">
-                                <div id="ksw-progress-fill" class="ksw-track-fill"></div>
+                                <div id="up-progress-fill" class="ksw-track-fill"></div>
                             </div>
-                            <input type="range" id="ksw-seek-input" class="ksw-seek-input" min="0" max="1000" value="320" aria-label="Progresso da música">
+                            <input type="range" id="up-seek-input" class="ksw-seek-input" min="0" max="1000" value="0" aria-label="Progresso da música">
                         </div>
-                        <span id="ksw-time-remaining">-3:18</span>
+                        <span id="up-time-remaining">-0:00</span>
                     </div>
 
                     <div class="ksw-controls-row">
-                        <button type="button" id="ksw-shuffle-btn" class="ksw-ctrl-btn" title="Aleatório">⇄</button>
-                        <button type="button" id="ksw-prev-btn" class="ksw-ctrl-btn" title="Voltar 10s">⏮</button>
-                        <button type="button" id="yt-play-pause-btn" class="ksw-play-circle" title="Play / Pause">▶</button>
-                        <button type="button" id="ksw-next-btn" class="ksw-ctrl-btn" title="Avançar 10s">⏭</button>
-                        <button type="button" id="ksw-repeat-btn" class="ksw-ctrl-btn" title="Repetir">🔁</button>
+                        <button type="button" id="up-shuffle-btn" class="ksw-ctrl-btn" title="Aleatório">⇄</button>
+                        <button type="button" id="up-prev-btn" class="ksw-ctrl-btn" title="Voltar 10s">⏮</button>
+                        <button type="button" id="up-play-pause-btn" class="ksw-play-circle" title="Play / Pause">▶</button>
+                        <button type="button" id="up-next-btn" class="ksw-ctrl-btn" title="Avançar 10s">⏭</button>
+                        <button type="button" id="up-repeat-btn" class="ksw-ctrl-btn" title="Repetir">🔁</button>
                         <div class="ksw-vol-wrap">
-                            <button type="button" id="ksw-vol-btn" class="ksw-ctrl-btn" title="Volume">🔊</button>
-                            <div id="ksw-vol-popover" class="ksw-vol-popover" role="dialog" aria-label="Controle de volume">
-                                <input type="range" id="ksw-vol-slider" class="ksw-vol-slider" min="0" max="100" value="80" aria-label="Volume">
-                                <span id="ksw-vol-val" class="ksw-vol-val">80%</span>
+                            <button type="button" id="up-vol-btn" class="ksw-ctrl-btn" title="Volume">🔊</button>
+                            <div id="up-vol-popover" class="ksw-vol-popover" role="dialog" aria-label="Controle de volume">
+                                <input type="range" id="up-vol-slider" class="ksw-vol-slider" min="0" max="100" value="80" aria-label="Volume">
+                                <span id="up-vol-val" class="ksw-vol-val">80%</span>
                             </div>
                         </div>
-                        <button type="button" id="yt-toggle-size-btn" class="ksw-ctrl-btn" title="Expandir / Reduzir" style="font-size: 11px; font-weight: 700;">⤢</button>
+                        <button type="button" id="up-toggle-size-btn" class="ksw-ctrl-btn" title="Expandir / Reduzir vídeo" style="font-size: 11px; font-weight: 700;">Aumentar</button>
                     </div>
 
-                    <audio id="profile-local-audio" preload="metadata" style="display: none;"></audio>
-                    <div id="yt-player-mount" style="display: none; width: 100%; height: 90px; border-radius: 8px; overflow: hidden; background: #000;"></div>
-                    <div id="profile-music-fallback" style="font-size: 11px; opacity: 0.78; line-height: 1.35;"></div>
+                    <audio id="up-local-audio" preload="metadata" style="display: none;"></audio>
+                    <div id="up-yt-player-mount" style="display: none; width: 100%; height: 90px; border-radius: 8px; overflow: hidden; background: #000;"></div>
+                    <div id="up-music-fallback" style="font-size: 11px; opacity: 0.78; line-height: 1.35;"></div>
                 </div>
-                <button class="btn-aesthetic-edit" id="switch-to-edit-btn">✏️ Edit Profile</button>
-            </div>
-        </div>
-    </div>
 
-    <!-- Modal de PERFIL DE TERCEIROS -->
-    <div id="other-profile-modal" class="modal-overlay">
-        <div class="aesthetic-profile-card">
-            <button class="close-modal-btn" id="close-other-btn">×</button>
-            <div id="other-profile-banner" class="aesthetic-banner"></div>
-            <div class="aesthetic-header-row">
-                <div id="other-profile-avatar" class="aesthetic-avatar">?</div>
-                <div id="other-profile-status-bubble" class="aesthetic-status-bubble">...</div>
-            </div>
-            <div class="aesthetic-body">
-                <div>
-                    <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
-                        <div id="other-profile-username" class="aesthetic-name">Utilizador</div>
-                        <span id="other-profile-admin-badge" class="admin-gold-badge" style="display: none;">👑 ADMIN</span>
-                    </div>
-                    <div style="font-size: 11px; color: var(--text-muted);" id="other-profile-pronouns">...</div>
+                <!-- AÇÕES DO PRÓPRIO PERFIL -->
+                <div id="up-own-actions" style="display: none;">
+                    <button class="btn-aesthetic-edit" id="switch-to-edit-btn">✏️ Edit Profile</button>
                 </div>
-                <div class="aesthetic-details" id="other-profile-bio">...</div>
-                <div style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 4px;">
+
+                <!-- AÇÕES DE PERFIL DE OUTRO UTILIZADOR / AMIGO -->
+                <div id="up-other-actions" style="display: none; flex-wrap: wrap; gap: 8px; margin-top: 4px;">
                     <button class="btn-aesthetic-action" id="add-friend-btn">➕ Adicionar Amigo</button>
                     <button class="btn-aesthetic-action" id="dm-btn" style="background: #5865f2; flex: 1;">💬 DM</button>
                     <button class="btn-aesthetic-action call-btn" id="call-friend-btn" style="flex: 1;">📞 Call</button>
@@ -1909,14 +1808,6 @@
                 📬 Caixa de Mensagens & Atualizações
             </h3>
 
-            <div style="margin-bottom: 16px;">
-                <h4 style="font-size: 12px; text-transform: uppercase; color: var(--text-muted); margin-bottom: 8px;">Preferências de Música & Notificações</h4>
-                <label style="display: flex; align-items: center; justify-content: space-between; background: var(--bg-soft); padding: 10px 12px; border-radius: 8px; border: 1px solid var(--border-subtle); font-size: 12px; color: var(--text-main); cursor: pointer;">
-                    <span>Desabilitar música no layout / notificações</span>
-                    <input type="checkbox" id="disable-music-layout-toggle">
-                </label>
-            </div>
-
             <div style="margin-bottom: 20px;">
                 <h4 style="font-size: 12px; text-transform: uppercase; color: var(--text-muted); margin-bottom: 8px;">Pedidos de Amizade</h4>
                 <div id="mailbox-friend-requests" style="display: flex; flex-direction: column; gap: 8px;">
@@ -1929,8 +1820,9 @@
             <div>
                 <h4 style="font-size: 12px; text-transform: uppercase; color: var(--text-muted); margin-bottom: 8px;">Notas de Atualizações (Changelog)</h4>
                 <div style="background: var(--bg-soft); padding: 12px; border-radius: 8px; font-size: 12px; line-height: 1.5; color: var(--text-main);">
-                    <div style="font-weight: bold; color: #5865f2; margin-bottom: 4px;">✨ Versão 3.2 - Definições de Cores</div>
-                    • Seletor de cores do tema integrado no menu de Definições (⚙️).
+                    <div style="font-weight: bold; color: #5865f2; margin-bottom: 4px;">✨ Versão 3.3 - Música Individual por Perfil</div>
+                    • Cada utilizador tem a sua própria música configurada e partilhada no perfil.<br>
+                    • O áudio toca exclusivamente dentro do modal do perfil aberto e para automaticamente ao fechar ou trocar de perfil.
                 </div>
             </div>
         </div>
@@ -1963,7 +1855,7 @@
                     <textarea name="bio" id="edit-bio" rows="3">@matsuda 🤍 infpt 🎧 zekiah ☁️</textarea>
                 </div>
                 <div class="form-group">
-                    <label>Música a Ouvir (Spotify)</label>
+                    <label>Música a Ouvir (Nome da Faixa)</label>
                     <input type="text" name="spotify_song" id="edit-spotify-song" value="Drama">
                 </div>
                 <div class="form-group">
@@ -1972,34 +1864,27 @@
                 </div>
                 <div class="form-group">
                     <label>Link do YouTube ou Spotify (Música)</label>
-                    <input type="url" id="edit-yt-url" placeholder="https://www.youtube.com/watch?v=... ou https://open.spotify.com/...">
+                    <input type="url" name="music_url" id="edit-yt-url" placeholder="https://www.youtube.com/watch?v=... ou https://open.spotify.com/...">
                 </div>
                 <div class="form-group">
                     <label>Ficheiro de Áudio Local (.mp3, .ogg, .wav, .m4a)</label>
-                    <input type="file" id="edit-local-audio-file" accept="audio/*">
+                    <input type="file" name="music_audio" id="edit-local-audio-file" accept="audio/*">
                 </div>
                 <div class="form-group">
-                    <label>Ou URL Direto de Áudio Local (/media/... ou /static/...)</label>
-                    <input type="text" id="edit-local-audio-url" placeholder="/media/musica.mp3">
+                    <label>Colar Link Direto do Som (.mp3, .ogg, .wav, Discord CDN, Catbox, etc.)</label>
+                    <input type="text" name="music_audio_url" id="edit-local-audio-url" placeholder="Cole aqui o link direto do som: https://.../som.mp3">
+                </div>
+                <div class="form-group" style="display: flex; align-items: center; gap: 8px; background: var(--bg-soft); padding: 8px 10px; border-radius: 8px; border: 1px solid var(--border-subtle);">
+                    <input type="checkbox" id="edit-gold-profile-bg" style="width: auto; accent-color: #d4af37; cursor: pointer;" checked>
+                    <label for="edit-gold-profile-bg" style="margin: 0; cursor: pointer; color: var(--text-main);">✨ Fundo do meu perfil Dourado</label>
                 </div>
                 <div class="form-group">
-                    <label>Foto da Capa da Música (Arquivo ou Link)</label>
-                    <input type="file" id="edit-music-cover-file" accept="image/*">
+                    <label>Foto da Capa da Música (Arquivo)</label>
+                    <input type="file" name="music_cover" id="edit-music-cover-file" accept="image/*">
                 </div>
                 <div class="form-group">
                     <label>Ou URL da Foto da Capa</label>
-                    <input type="text" id="edit-music-cover-url" placeholder="https://... ou /media/capa.jpg">
-                </div>
-                <div class="form-group">
-                    <label>Onde exibir a música</label>
-                    <select id="edit-music-mode">
-                        <option value="profile_only">Apenas no perfil</option>
-                        <option value="layout">No layout (fixo na tela)</option>
-                    </select>
-                </div>
-                <div class="form-group" style="display: flex; align-items: center; gap: 8px;">
-                    <input type="checkbox" id="edit-music-disabled" style="width: auto;">
-                    <label for="edit-music-disabled" style="margin: 0; text-transform: none;">Desabilitar música no layout / notificações</label>
+                    <input type="text" name="music_cover_url" id="edit-music-cover-url" placeholder="https://... ou /media/capa.jpg">
                 </div>
                 <div style="display: flex; gap: 10px; margin-top: 15px;">
                     <button type="submit" id="save-profile-btn" style="flex:1; background: #5865f2; color:#fff; border:none; padding:10px; border-radius:6px; font-weight:bold; cursor:pointer;">Guardar</button>
@@ -2082,6 +1967,7 @@
                 if (trimmed.startsWith('/') && !trimmed.startsWith('//')) return true;
                 if (/^https?:\/\//i.test(trimmed)) return true;
                 if (/^data:image\/(png|jpe?g|gif|webp|avif);base64,/i.test(trimmed)) return true;
+                if (/^data:audio\/[a-z0-9.+-]+;base64,/i.test(trimmed)) return true;
                 if (/^blob:/i.test(trimmed)) return true;
                 return false;
             }
@@ -2099,20 +1985,14 @@
                 lightboxImgEl.src = '';
             }
 
-            if (lightboxCloseEl) {
-                lightboxCloseEl.addEventListener('click', closeImageLightbox);
-            }
+            if (lightboxCloseEl) lightboxCloseEl.addEventListener('click', closeImageLightbox);
             if (lightboxEl) {
                 lightboxEl.addEventListener('click', function(e) {
-                    if (e.target === lightboxEl) {
-                        closeImageLightbox();
-                    }
+                    if (e.target === lightboxEl) closeImageLightbox();
                 });
             }
             document.addEventListener('keydown', function(e) {
-                if (e.key === 'Escape') {
-                    closeImageLightbox();
-                }
+                if (e.key === 'Escape') closeImageLightbox();
             });
 
             try {
@@ -2126,15 +2006,25 @@
                 }
             }
 
-            let activeUsername = readJsonScript('kiwi-username-data', '') || '';
+            let activeUsername = (readJsonScript('kiwi-username-data', '') || '').trim();
             const THEME_STORAGE_KEY = 'kiwi_theme_color_v1';
-            let profileData = {
+
+            // Cache de perfis por username para manter cada utilizador totalmente isolado
+            const profilesByUsername = new Map();
+
+            let myProfileData = {
+                username: activeUsername,
                 bubble: '🌸 a testar o novo kiwi chat...',
                 pronouns: 'he / him • 🎀',
                 bio: '@matsuda 🤍<br>infpt 🎧 zekiah ☁️',
                 song: 'Drama',
                 artist: 'Lala Sadii',
+                musicUrl: '',
+                audioSrc: '',
+                audioFileName: '',
+                coverUrl: '',
                 accentColor: '#ffffff',
+                goldProfileBg: true,
                 avatarUrl: '',
                 bannerUrl: '',
                 is_admin: false
@@ -2143,39 +2033,44 @@
             const miniAvatar = document.getElementById('my-mini-avatar');
             const themeBalls = document.querySelectorAll('.theme-ball');
 
-            const aestheticModal = document.getElementById('aesthetic-modal');
+            const unifiedProfileModal = document.getElementById('unified-profile-modal');
+            const unifiedProfileCard = document.getElementById('unified-profile-card');
+            const closeUnifiedProfileBtn = document.getElementById('close-unified-profile-btn');
+
             const editModal = document.getElementById('edit-modal');
-            const otherProfileModal = document.getElementById('other-profile-modal');
             const mailboxModal = document.getElementById('mailbox-modal');
 
             const openTrigger = document.getElementById('open-profile-trigger');
             const settingsBtn = document.getElementById('settings-btn');
             const mailboxBtn = document.getElementById('mailbox-btn');
 
-            const closeAestheticBtn = document.getElementById('close-aesthetic-btn');
             const closeEditBtn = document.getElementById('close-edit-btn');
-            const closeOtherBtn = document.getElementById('close-other-btn');
             const closeMailboxBtn = document.getElementById('close-mailbox-btn');
 
             const switchToEditBtn = document.getElementById('switch-to-edit-btn');
             const cancelEditBtn = document.getElementById('cancel-edit-btn');
             const editProfileForm = document.getElementById('edit-profile-form');
 
-            const profileUsernameEl = document.getElementById('profile-username');
-            const profileAdminBadge = document.getElementById('profile-admin-badge');
-            const otherProfileUsernameEl = document.getElementById('other-profile-username');
-            const otherProfileAdminBadge = document.getElementById('other-profile-admin-badge');
-            const profileBubble = document.getElementById('profile-status-bubble');
-            const profilePronouns = document.getElementById('profile-pronouns');
-            const profileBio = document.getElementById('profile-bio');
-            const profileAvatar = document.getElementById('profile-avatar');
-            const profileBanner = document.getElementById('profile-banner');
+            const upBanner = document.getElementById('up-banner');
+            const upAvatar = document.getElementById('up-avatar');
+            const upStatusBubble = document.getElementById('up-status-bubble');
+            const upUsername = document.getElementById('up-username');
+            const upAdminBadge = document.getElementById('up-admin-badge');
+            const upPronouns = document.getElementById('up-pronouns');
+            const upBio = document.getElementById('up-bio');
+            const upOwnActions = document.getElementById('up-own-actions');
+            const upOtherActions = document.getElementById('up-other-actions');
 
             const editBubble = document.getElementById('edit-bubble');
             const editPronouns = document.getElementById('edit-pronouns');
             const editBio = document.getElementById('edit-bio');
             const editSong = document.getElementById('edit-spotify-song');
             const editArtist = document.getElementById('edit-spotify-artist');
+            const editYtUrl = document.getElementById('edit-yt-url');
+            const editLocalAudioFile = document.getElementById('edit-local-audio-file');
+            const editLocalAudioUrl = document.getElementById('edit-local-audio-url');
+            const editMusicCoverFile = document.getElementById('edit-music-cover-file');
+            const editMusicCoverUrl = document.getElementById('edit-music-cover-url');
 
             const chatLog = document.getElementById('chat-log');
             const messageInput = document.getElementById('chat-message-input');
@@ -2300,15 +2195,11 @@
 
             if (remoteScreenVideo) {
                 remoteScreenVideo.addEventListener('loadedmetadata', () => {
-                    if (remoteScreenStatus) {
-                        remoteScreenStatus.textContent = 'Transmissão de tela ativa';
-                    }
+                    if (remoteScreenStatus) remoteScreenStatus.textContent = 'Transmissão de tela ativa';
                     remoteScreenVideo.play().catch(() => {});
                 });
                 remoteScreenVideo.addEventListener('playing', () => {
-                    if (remoteScreenStatus) {
-                        remoteScreenStatus.textContent = '';
-                    }
+                    if (remoteScreenStatus) remoteScreenStatus.textContent = '';
                 });
             }
 
@@ -2330,20 +2221,12 @@
             window.watchUserStream = function(targetUsername, knownAvatarUrl = '') {
                 if (!targetUsername || targetUsername === activeUsername) return;
                 const watcherName = callTargetUser || currentDmUser || targetUsername;
-                if (remoteScreenLabel) {
-                    remoteScreenLabel.textContent = `👁️ A assistir à tela de ${watcherName}`;
-                }
-                if (remoteScreenStatus) {
-                    remoteScreenStatus.textContent = 'A ligar à transmissão de tela...';
-                }
-                if (remoteScreenContainer) {
-                    remoteScreenContainer.style.display = 'flex';
-                }
+                if (remoteScreenLabel) remoteScreenLabel.textContent = `👁️ A assistir à tela de ${watcherName}`;
+                if (remoteScreenStatus) remoteScreenStatus.textContent = 'A ligar à transmissão de tela...';
+                if (remoteScreenContainer) remoteScreenContainer.style.display = 'flex';
                 if (remoteScreenVideo && remoteScreenVideo.srcObject) {
                     remoteScreenVideo.play().catch(() => {});
-                    if (remoteScreenStatus) {
-                        remoteScreenStatus.textContent = 'Transmissão de tela ativa';
-                    }
+                    if (remoteScreenStatus) remoteScreenStatus.textContent = 'Transmissão de tela ativa';
                     showKiwiToast(`👁️ A assistir à transmissão de ${watcherName}`);
                     return;
                 }
@@ -2367,13 +2250,8 @@
                     return;
                 }
                 try {
-                    if (screenStream) {
-                        stopScreenShare(false);
-                    }
-                    screenStream = await navigator.mediaDevices.getDisplayMedia({
-                        video: true,
-                        audio: false
-                    });
+                    if (screenStream) stopScreenShare(false);
+                    screenStream = await navigator.mediaDevices.getDisplayMedia({ video: true, audio: false });
                     const videoTrack = screenStream.getVideoTracks()[0];
                     if (!videoTrack) return;
 
@@ -2386,14 +2264,9 @@
                     const offer = await peerConnection.createOffer();
                     await peerConnection.setLocalDescription(offer);
                     const sock = await waitForDmSocketOpen();
-                    sock.send(JSON.stringify({
-                        type: 'call_signal',
-                        signal: { offer: offer }
-                    }));
+                    sock.send(JSON.stringify({ type: 'call_signal', signal: { offer: offer } }));
 
-                    videoTrack.onended = () => {
-                        stopScreenShare(true);
-                    };
+                    videoTrack.onended = () => stopScreenShare(true);
                     showKiwiToast('🖥️ Compartilhando tela...');
                 } catch (err) {
                     console.error('Erro ao compartilhar tela:', err);
@@ -2408,9 +2281,7 @@
                     screenStream = null;
                 }
                 if (screenSender && peerConnection) {
-                    try {
-                        peerConnection.removeTrack(screenSender);
-                    } catch (_) {}
+                    try { peerConnection.removeTrack(screenSender); } catch (_) {}
                     screenSender = null;
                 }
                 if (callScreenBtn) {
@@ -2418,19 +2289,13 @@
                     callScreenBtn.textContent = '🖥️ Tela';
                 }
                 if (notifyPeer && dmSocket && dmSocket.readyState === WebSocket.OPEN) {
-                    dmSocket.send(JSON.stringify({
-                        type: 'call_signal',
-                        signal: { screenStopped: true }
-                    }));
+                    dmSocket.send(JSON.stringify({ type: 'call_signal', signal: { screenStopped: true } }));
                 }
             };
 
             window.toggleScreenShare = function() {
-                if (screenStream) {
-                    stopScreenShare(true);
-                } else {
-                    startScreenShare();
-                }
+                if (screenStream) stopScreenShare(true);
+                else startScreenShare();
             };
 
             function waitForDmSocketOpen(timeoutMs = 3500) {
@@ -2470,18 +2335,13 @@
                     if (callBarEl) callBarEl.classList.add('active');
                     if (callStatusTextEl) callStatusTextEl.textContent = `Em chamada com ${callTargetUser}`;
 
-                    if (!peerConnection) {
-                        peerConnection = await createPeerConnection();
-                    }
+                    if (!peerConnection) peerConnection = await createPeerConnection();
                     await peerConnection.setRemoteDescription(new RTCSessionDescription(offer));
                     const answer = await peerConnection.createAnswer();
                     await peerConnection.setLocalDescription(answer);
 
                     const sock = await waitForDmSocketOpen();
-                    sock.send(JSON.stringify({
-                        type: 'call_signal',
-                        signal: { answer: answer }
-                    }));
+                    sock.send(JSON.stringify({ type: 'call_signal', signal: { answer: answer } }));
                 } catch (err) {
                     console.error("Erro ao atender call:", err);
                     showKiwiToast("Não foi possível atender a chamada.");
@@ -2517,90 +2377,14 @@
             const extraReactions = ['😂', '🥝', '🔥', '🥺', '✨'];
 
             const themesMap = {
-                '#ffffff': {
-                    accent: '#e5e7eb',
-                    main: '#ffffff',
-                    sidebar: '#f5f6f8',
-                    darkest: '#eceef2',
-                    input: '#f8f9fa',
-                    card: '#ffffff',
-                    soft: '#f3f4f6',
-                    textMain: '#1f2328',
-                    textMuted: '#57606a',
-                    border: 'rgba(0, 0, 0, 0.08)'
-                },
-                '#2b2d31': {
-                    accent: '#4e5058',
-                    main: '#313338',
-                    sidebar: '#2b2d31',
-                    darkest: '#1e1f22',
-                    input: '#383a40',
-                    card: '#2b2d31',
-                    soft: '#232428',
-                    textMain: '#f2f3f5',
-                    textMuted: '#b5bac1',
-                    border: 'rgba(255, 255, 255, 0.08)'
-                },
-                '#ff9de2': {
-                    accent: '#ff9de2',
-                    main: '#f7c9e8',
-                    sidebar: '#ebadd5',
-                    darkest: '#e092c7',
-                    input: '#ffffff',
-                    card: '#ffffff',
-                    soft: '#fcf0f8',
-                    textMain: '#3d2535',
-                    textMuted: '#735065',
-                    border: 'rgba(0, 0, 0, 0.08)'
-                },
-                '#e74c3c': {
-                    accent: '#e74c3c',
-                    main: '#fadbd8',
-                    sidebar: '#f5b7b1',
-                    darkest: '#ec7063',
-                    input: '#ffffff',
-                    card: '#ffffff',
-                    soft: '#fdedec',
-                    textMain: '#3d2020',
-                    textMuted: '#784242',
-                    border: 'rgba(0, 0, 0, 0.08)'
-                },
-                '#23a55a': {
-                    accent: '#23a55a',
-                    main: '#d4efdf',
-                    sidebar: '#a9dfbf',
-                    darkest: '#58d68d',
-                    input: '#ffffff',
-                    card: '#ffffff',
-                    soft: '#eafaf1',
-                    textMain: '#183626',
-                    textMuted: '#3b6e52',
-                    border: 'rgba(0, 0, 0, 0.08)'
-                },
-                '#5865f2': {
-                    accent: '#5865f2',
-                    main: '#ebedef',
-                    sidebar: '#d4e6f1',
-                    darkest: '#5499c7',
-                    input: '#ffffff',
-                    card: '#ffffff',
-                    soft: '#eef2ff',
-                    textMain: '#1e2433',
-                    textMuted: '#4b5563',
-                    border: 'rgba(0, 0, 0, 0.08)'
-                },
-                '#95a5a6': {
-                    accent: '#95a5a6',
-                    main: '#eaeded',
-                    sidebar: '#d5dbdb',
-                    darkest: '#909497',
-                    input: '#ffffff',
-                    card: '#ffffff',
-                    soft: '#f2f4f4',
-                    textMain: '#27292b',
-                    textMuted: '#5d6266',
-                    border: 'rgba(0, 0, 0, 0.08)'
-                }
+                '#ffffff': { accent: '#e5e7eb', main: '#ffffff', sidebar: '#f5f6f8', darkest: '#eceef2', input: '#f8f9fa', card: '#ffffff', soft: '#f3f4f6', textMain: '#1f2328', textMuted: '#57606a', border: 'rgba(0, 0, 0, 0.08)' },
+                '#2b2d31': { accent: '#4e5058', main: '#313338', sidebar: '#2b2d31', darkest: '#1e1f22', input: '#383a40', card: '#2b2d31', soft: '#232428', textMain: '#f2f3f5', textMuted: '#b5bac1', border: 'rgba(255, 255, 255, 0.08)' },
+                '#ff9de2': { accent: '#ff9de2', main: '#f7c9e8', sidebar: '#ebadd5', darkest: '#e092c7', input: '#ffffff', card: '#ffffff', soft: '#fcf0f8', textMain: '#3d2535', textMuted: '#735065', border: 'rgba(0, 0, 0, 0.08)' },
+                '#e74c3c': { accent: '#e74c3c', main: '#fadbd8', sidebar: '#f5b7b1', darkest: '#ec7063', input: '#ffffff', card: '#ffffff', soft: '#fdedec', textMain: '#3d2020', textMuted: '#784242', border: 'rgba(0, 0, 0, 0.08)' },
+                '#23a55a': { accent: '#23a55a', main: '#d4efdf', sidebar: '#a9dfbf', darkest: '#58d68d', input: '#ffffff', card: '#ffffff', soft: '#eafaf1', textMain: '#183626', textMuted: '#3b6e52', border: 'rgba(0, 0, 0, 0.08)' },
+                '#5865f2': { accent: '#5865f2', main: '#ebedef', sidebar: '#d4e6f1', darkest: '#5499c7', input: '#ffffff', card: '#ffffff', soft: '#eef2ff', textMain: '#1e2433', textMuted: '#4b5563', border: 'rgba(0, 0, 0, 0.08)' },
+                '#95a5a6': { accent: '#95a5a6', main: '#eaeded', sidebar: '#d5dbdb', darkest: '#909497', input: '#ffffff', card: '#ffffff', soft: '#f2f4f4', textMain: '#27292b', textMuted: '#5d6266', border: 'rgba(0, 0, 0, 0.08)' },
+                '#d4af37': { accent: '#d4af37', main: '#fdf8e7', sidebar: '#f7ecc8', darkest: '#e8d084', input: '#ffffff', card: '#fffdf5', soft: '#fbf3d5', textMain: '#3b2c06', textMuted: '#7a5c12', border: 'rgba(184, 134, 11, 0.22)' }
             };
 
             function applySpecialProfileEffects(cardEl, nameEl, badgeEl, username, isAdminFlag = false) {
@@ -2608,15 +2392,9 @@
                 const isAkiira = cleanName === 'akiirapw';
                 const showAdmin = isAkiira || Boolean(isAdminFlag);
 
-                if (nameEl) {
-                    nameEl.classList.toggle('akiira-special-font', isAkiira);
-                }
-                if (cardEl) {
-                    cardEl.classList.toggle('akiira-shimmer-card', showAdmin);
-                }
-                if (badgeEl) {
-                    badgeEl.style.display = showAdmin ? 'inline-flex' : 'none';
-                }
+                if (nameEl) nameEl.classList.toggle('akiira-special-font', isAkiira);
+                if (cardEl) cardEl.classList.toggle('akiira-shimmer-card', showAdmin);
+                if (badgeEl) badgeEl.style.display = showAdmin ? 'inline-flex' : 'none';
             }
 
             function showKiwiToast(text) {
@@ -2630,11 +2408,12 @@
                 toast.textContent = text;
                 toast.classList.add('show');
                 clearTimeout(toast._hideTimer);
-                toast._hideTimer = setTimeout(() => {
-                    toast.classList.remove('show');
-                }, 2600);
+                toast._hideTimer = setTimeout(() => toast.classList.remove('show'), 2600);
             }
 
+            // =========================================================================
+            // PLAYER DE MÚSICA ISOLADO POR PERFIL (TOCA SOMENTE NO PERFIL ABERTO)
+            // =========================================================================
             const ytTag = document.createElement('script');
             ytTag.src = 'https://www.youtube.com/iframe_api';
             document.head.appendChild(ytTag);
@@ -2642,60 +2421,44 @@
             let ytPlayer = null;
             let ytApiReady = false;
             let isYtExpanded = false;
-            let isYtPlaying = false;
+            let isMusicPlaying = false;
+            let ytEmbedBlocked = false;
+            let pendingYouTubeId = '';
+            let currentViewedProfileUser = '';
 
-            const MUSIC_STORAGE_KEY = 'kiwi_music_settings_v1';
-            const musicSettings = {
-                url: '',
-                audioSrc: '',
-                audioFileName: '',
-                coverUrl: '',
-                mode: 'profile_only',
-                disabledInLayout: false
-            };
-
-            function saveMusicSettingsToStorage() {
-                try {
-                    const safeCover = (musicSettings.coverUrl || '').startsWith('blob:') ? '' : (musicSettings.coverUrl || '');
-                    const safeAudio = (musicSettings.audioSrc || '').startsWith('blob:') ? '' : (musicSettings.audioSrc || '');
-                    const payload = {
-                        url: musicSettings.url || '',
-                        audioSrc: safeAudio,
-                        audioFileName: musicSettings.audioFileName || '',
-                        coverUrl: safeCover,
-                        mode: musicSettings.mode === 'layout' ? 'layout' : 'profile_only',
-                        disabledInLayout: Boolean(musicSettings.disabledInLayout),
-                        song: profileData.song || '',
-                        artist: profileData.artist || ''
-                    };
-                    localStorage.setItem(MUSIC_STORAGE_KEY, JSON.stringify(payload));
-                } catch (err) {
-                    console.warn('Não foi possível salvar música no localStorage:', err);
-                }
+            // Chave de armazenamento isolada por utilizador (nunca vaza de um utilizador para outro)
+            function getUserMusicStorageKey(username) {
+                const safeUser = (username || 'anon').trim().toLowerCase();
+                return `kiwi_user_music_v2_${safeUser}`;
             }
 
-            function loadMusicSettingsFromStorage() {
+            function saveUserMusicToLocalCache(username, musicObj) {
+                if (!username) return;
                 try {
-                    const raw = localStorage.getItem(MUSIC_STORAGE_KEY);
-                    if (!raw) return;
-                    const saved = JSON.parse(raw);
-                    if (!saved || typeof saved !== 'object') return;
-                    if (typeof saved.url === 'string') musicSettings.url = saved.url;
-                    if (typeof saved.audioSrc === 'string') musicSettings.audioSrc = saved.audioSrc;
-                    if (typeof saved.audioFileName === 'string') musicSettings.audioFileName = saved.audioFileName;
-                    if (typeof saved.coverUrl === 'string') musicSettings.coverUrl = saved.coverUrl;
-                    if (saved.mode === 'layout' || saved.mode === 'profile_only') {
-                        musicSettings.mode = saved.mode;
-                    }
-                    musicSettings.disabledInLayout = Boolean(saved.disabledInLayout);
-                    if (typeof saved.song === 'string' && saved.song.trim()) {
-                        profileData.song = saved.song.trim();
-                    }
-                    if (typeof saved.artist === 'string' && saved.artist.trim()) {
-                        profileData.artist = saved.artist.trim();
-                    }
-                } catch (err) {
-                    console.warn('Não foi possível ler música do localStorage:', err);
+                    const safeCover = (musicObj.coverUrl || '').startsWith('blob:') ? '' : (musicObj.coverUrl || '');
+                    const safeAudio = (musicObj.audioSrc || '').startsWith('blob:') ? '' : (musicObj.audioSrc || '');
+                    const payload = {
+                        song: musicObj.song || '',
+                        artist: musicObj.artist || '',
+                        musicUrl: musicObj.musicUrl || '',
+                        audioSrc: safeAudio,
+                        audioFileName: musicObj.audioFileName || '',
+                        coverUrl: safeCover,
+                        goldProfileBg: Boolean(musicObj.goldProfileBg)
+                    };
+                    localStorage.setItem(getUserMusicStorageKey(username), JSON.stringify(payload));
+                } catch (_) {}
+            }
+
+            function loadUserMusicFromLocalCache(username) {
+                if (!username) return null;
+                try {
+                    const raw = localStorage.getItem(getUserMusicStorageKey(username));
+                    if (!raw) return null;
+                    const parsed = JSON.parse(raw);
+                    return (parsed && typeof parsed === 'object') ? parsed : null;
+                } catch (_) {
+                    return null;
                 }
             }
 
@@ -2708,45 +2471,39 @@
                 });
             }
 
-            const profileYtBox = document.getElementById('profile-yt-player-box');
-            const ytPlayerMount = document.getElementById('yt-player-mount');
-            const localAudioEl = document.getElementById('profile-local-audio');
-            const externalMusicLink = document.getElementById('profile-external-music-link');
-            const musicFallbackEl = document.getElementById('profile-music-fallback');
-            const musicCoverThumb = document.getElementById('music-cover-thumb');
-            const musicTrackTitle = document.getElementById('music-track-title');
-            const musicTrackSubtitle = document.getElementById('music-track-subtitle');
-            const kswTimeCurrent = document.getElementById('ksw-time-current');
-            const kswTimeRemaining = document.getElementById('ksw-time-remaining');
-            const kswProgressFill = document.getElementById('ksw-progress-fill');
-            const kswSeekInput = document.getElementById('ksw-seek-input');
-            const kswLikeBtn = document.getElementById('ksw-like-btn');
-            const kswShuffleBtn = document.getElementById('ksw-shuffle-btn');
-            const kswPrevBtn = document.getElementById('ksw-prev-btn');
-            const kswNextBtn = document.getElementById('ksw-next-btn');
-            const kswRepeatBtn = document.getElementById('ksw-repeat-btn');
-            const kswVolBtn = document.getElementById('ksw-vol-btn');
-            const kswVolPopover = document.getElementById('ksw-vol-popover');
-            const kswVolSlider = document.getElementById('ksw-vol-slider');
-            const kswVolVal = document.getElementById('ksw-vol-val');
-            const ytDock = document.getElementById('kiwi-music-dock');
-            const ytDockSlot = document.getElementById('yt-dock-slot');
-            const dockMusicTitle = document.getElementById('dock-music-title');
-            const ytToggleSizeBtn = document.getElementById('yt-toggle-size-btn');
-            const dockSizeBtn = document.getElementById('dock-size-btn');
-            const ytPlayPauseBtn = document.getElementById('yt-play-pause-btn');
-            const dockDisableBtn = document.getElementById('dock-disable-btn');
-            const mailboxDisableToggle = document.getElementById('disable-music-layout-toggle');
-            const editYtUrl = document.getElementById('edit-yt-url');
-            const editLocalAudioFile = document.getElementById('edit-local-audio-file');
-            const editLocalAudioUrl = document.getElementById('edit-local-audio-url');
-            const editMusicCoverFile = document.getElementById('edit-music-cover-file');
-            const editMusicCoverUrl = document.getElementById('edit-music-cover-url');
-            const editMusicMode = document.getElementById('edit-music-mode');
-            const editMusicDisabled = document.getElementById('edit-music-disabled');
+            const upMusicWidget = document.getElementById('up-music-widget');
+            const upYtPlayerMount = document.getElementById('up-yt-player-mount');
+            const upLocalAudio = document.getElementById('up-local-audio');
+            const upExternalMusicLink = document.getElementById('up-external-music-link');
+            const upMusicFallback = document.getElementById('up-music-fallback');
+            const upMusicCover = document.getElementById('up-music-cover');
+            const upMusicTitle = document.getElementById('up-music-title');
+            const upMusicArtist = document.getElementById('up-music-artist');
+            const upTimeCurrent = document.getElementById('up-time-current');
+            const upTimeRemaining = document.getElementById('up-time-remaining');
+            const upProgressFill = document.getElementById('up-progress-fill');
+            const upSeekInput = document.getElementById('up-seek-input');
+            const upLikeBtn = document.getElementById('up-like-btn');
+            const upShuffleBtn = document.getElementById('up-shuffle-btn');
+            const upPrevBtn = document.getElementById('up-prev-btn');
+            const upNextBtn = document.getElementById('up-next-btn');
+            const upRepeatBtn = document.getElementById('up-repeat-btn');
+            const upVolBtn = document.getElementById('up-vol-btn');
+            const upVolPopover = document.getElementById('up-vol-popover');
+            const upVolSlider = document.getElementById('up-vol-slider');
+            const upVolVal = document.getElementById('up-vol-val');
+            const upToggleSizeBtn = document.getElementById('up-toggle-size-btn');
+            const upPlayPauseBtn = document.getElementById('up-play-pause-btn');
 
-            let ytEmbedBlocked = false;
-            let pendingYouTubeId = '';
+            let activeProfileMusic = {
+                owner: '',
+                song: '',
+                artist: '',
+                musicUrl: '',
+                audioSrc: '',
+                audioFileName: '',
+                coverUrl: ''
+            };
 
             function extractYouTubeId(url) {
                 if (!url) return '';
@@ -2759,191 +2516,20 @@
                 return /^https?:\/\//i.test(url.trim());
             }
 
-            function getExternalPlatformLabel(url) {
-                const lower = (url || '').toLowerCase();
-                if (lower.includes('spotify.com')) return '↗ Abrir no Spotify';
-                if (lower.includes('youtube.com') || lower.includes('youtu.be')) return '↗ Abrir no YouTube';
-                return '↗ Abrir link';
-            }
-
-            function mountYouTubePlayer(videoId) {
-                if (!videoId) return;
-                ytEmbedBlocked = false;
-
-                if (!ytApiReady || !window.YT || !window.YT.Player) {
-                    pendingYouTubeId = videoId;
-                    return;
+            function stopProfileMusicPlayback() {
+                isMusicPlaying = false;
+                if (upPlayPauseBtn) upPlayPauseBtn.textContent = '▶';
+                if (upLocalAudio) {
+                    try {
+                        upLocalAudio.pause();
+                    } catch (_) {}
                 }
-                pendingYouTubeId = '';
-
-                if (ytPlayerMount) ytPlayerMount.style.display = 'block';
-
-                if (ytPlayer && typeof ytPlayer.loadVideoById === 'function') {
-                    ytPlayer.loadVideoById(videoId);
-                    return;
-                }
-
-                ytPlayer = new window.YT.Player('yt-player-mount', {
-                    width: '100%',
-                    height: isYtExpanded ? '180' : '90',
-                    videoId: videoId,
-                    playerVars: { rel: 0, modestbranding: 1 },
-                    events: {
-                        onReady: () => {
-                            if (ytPlayerMount) ytPlayerMount.style.display = 'block';
-                        },
-                        onError: () => {
-                            ytEmbedBlocked = true;
-                            if (ytPlayerMount) ytPlayerMount.style.display = 'none';
-                            applyMusicPlacement();
-                        },
-                        onStateChange: (ev) => {
-                            isYtPlaying = ev.data === window.YT.PlayerState.PLAYING;
-                            if (ytPlayPauseBtn) {
-                                ytPlayPauseBtn.textContent = isYtPlaying ? '⏸' : '▶';
-                            }
-                        }
-                    }
-                });
-            }
-
-            function applyMusicPlacement() {
-                const rawUrl = (musicSettings.url || '').trim();
-                const videoId = extractYouTubeId(rawUrl);
-                const hasLocalAudio = Boolean((musicSettings.audioSrc || '').trim());
-                const hasExtLink = isExternalMusicLink(rawUrl);
-
-                if (externalMusicLink) {
-                    if (hasExtLink) {
-                        externalMusicLink.href = rawUrl;
-                        externalMusicLink.textContent = getExternalPlatformLabel(rawUrl);
-                        externalMusicLink.style.display = 'inline-flex';
-                    } else {
-                        externalMusicLink.href = '#';
-                        externalMusicLink.style.display = 'none';
-                    }
-                }
-
-                if (localAudioEl) {
-                    if (hasLocalAudio) {
-                        if (localAudioEl.getAttribute('src') !== musicSettings.audioSrc) {
-                            localAudioEl.src = musicSettings.audioSrc;
-                        }
-                        localAudioEl.style.display = 'block';
-                    } else {
-                        localAudioEl.removeAttribute('src');
-                        localAudioEl.style.display = 'none';
-                    }
-                }
-
-                if (ytPlayerMount) {
-                    const showYtMount = Boolean(videoId) && !ytEmbedBlocked && !hasLocalAudio;
-                    ytPlayerMount.style.display = showYtMount ? 'block' : 'none';
-                }
-
-                const displayTrackName = (musicSettings.audioFileName || '').trim()
-                    || (hasLocalAudio ? extractFileNameFromUrl(musicSettings.audioSrc, 'Áudio local') : '')
-                    || (profileData.song || '').trim()
-                    || 'Song Name';
-
-                if (musicTrackTitle) {
-                    musicTrackTitle.textContent = displayTrackName;
-                }
-                if (musicTrackSubtitle) {
-                    if (hasLocalAudio) {
-                        musicTrackSubtitle.textContent = profileData.artist || 'Áudio local';
-                    } else if (videoId) {
-                        musicTrackSubtitle.textContent = profileData.artist || 'YouTube';
-                    } else if (hasExtLink) {
-                        musicTrackSubtitle.textContent = profileData.artist || getExternalPlatformLabel(rawUrl).replace(/^↗\s*/, '');
-                    } else {
-                        musicTrackSubtitle.textContent = profileData.artist || 'Artists Names';
-                    }
-                }
-                if (musicCoverThumb) {
-                    const coverVal = (musicSettings.coverUrl || '').trim();
-                    if (coverVal && isSafeAssetUrl(coverVal)) {
-                        musicCoverThumb.style.backgroundImage = `url("${encodeURI(coverVal)}")`;
-                        musicCoverThumb.textContent = '';
-                    } else {
-                        musicCoverThumb.style.backgroundImage = 'none';
-                        musicCoverThumb.textContent = '♫';
-                    }
-                }
-
-                if (musicFallbackEl) {
-                    if (hasLocalAudio) {
-                        musicFallbackEl.textContent = '';
-                    } else if (videoId && ytEmbedBlocked) {
-                        musicFallbackEl.textContent = 'Vídeo sem embed direto: use ↗ para abrir o link ou escolha um áudio local.';
-                    } else if (hasExtLink && !videoId) {
-                        musicFallbackEl.textContent = 'Link externo configurado: clique em ↗ para abrir.';
-                    } else {
-                        musicFallbackEl.textContent = '';
-                    }
-                }
-
-                const isProfileOnly = musicSettings.mode === 'profile_only';
-                const shouldShowInLayout = !isProfileOnly && (Boolean(videoId && !ytEmbedBlocked) || hasLocalAudio) && musicSettings.mode === 'layout' && !musicSettings.disabledInLayout;
-
-                if (mailboxDisableToggle) {
-                    mailboxDisableToggle.checked = musicSettings.disabledInLayout;
-                }
-                if (dockMusicTitle) {
-                    dockMusicTitle.textContent = profileData.song || 'Música';
-                }
-
-                if (shouldShowInLayout && ytDock && ytDockSlot) {
-                    ytDock.style.display = 'flex';
-                    ytDock.style.width = isYtExpanded ? '320px' : '220px';
-                    const activeMediaEl = hasLocalAudio ? localAudioEl : ytPlayerMount;
-                    if (activeMediaEl && activeMediaEl.parentElement !== ytDockSlot) {
-                        ytDockSlot.appendChild(activeMediaEl);
-                    }
-                } else if (ytDock && profileYtBox) {
-                    ytDock.style.display = 'none';
-                    if (ytPlayerMount && ytPlayerMount.parentElement !== profileYtBox) {
-                        profileYtBox.appendChild(ytPlayerMount);
-                    }
-                    if (localAudioEl && localAudioEl.parentElement !== profileYtBox) {
-                        profileYtBox.appendChild(localAudioEl);
-                    }
-                    if (isProfileOnly && ytPlayer && typeof ytPlayer.pauseVideo === 'function') {
-                        try { ytPlayer.pauseVideo(); } catch (_) {}
-                    }
-                }
-
-                if (ytPlayer && typeof ytPlayer.setSize === 'function') {
-                    const w = isYtExpanded ? 300 : 200;
-                    const h = isYtExpanded ? 175 : 90;
-                    ytPlayer.setSize(w, h);
-                }
-
-                if (ytToggleSizeBtn) {
-                    ytToggleSizeBtn.textContent = isYtExpanded ? 'Diminuir' : 'Aumentar';
-                }
-                if (dockSizeBtn) {
-                    dockSizeBtn.textContent = isYtExpanded ? '-' : '+';
+                if (ytPlayer && typeof ytPlayer.pauseVideo === 'function') {
+                    try {
+                        ytPlayer.pauseVideo();
+                    } catch (_) {}
                 }
             }
-
-            window.onYouTubeIframeAPIReady = function() {
-                ytApiReady = true;
-                const vid = extractYouTubeId(musicSettings.url) || pendingYouTubeId;
-                if (vid && !(musicSettings.audioSrc || '').trim()) mountYouTubePlayer(vid);
-                applyMusicPlacement();
-            };
-
-            function toggleMusicSize() {
-                isYtExpanded = !isYtExpanded;
-                applyMusicPlacement();
-            }
-
-            if (ytToggleSizeBtn) ytToggleSizeBtn.addEventListener('click', toggleMusicSize);
-            if (dockSizeBtn) dockSizeBtn.addEventListener('click', toggleMusicSize);
-
-            let demoProgressRatio = 0.22;
-            const demoTotalSeconds = 253;
 
             function formatClock(sec) {
                 const s = Math.max(0, Math.floor(sec || 0));
@@ -2954,210 +2540,347 @@
 
             function syncProgressUi(ratio, currentSec, durationSec) {
                 const clamped = Math.max(0, Math.min(1, ratio || 0));
-                if (kswProgressFill) {
-                    kswProgressFill.style.width = `${(clamped * 100).toFixed(1)}%`;
-                }
-                if (kswSeekInput) {
-                    kswSeekInput.value = String(Math.round(clamped * 1000));
-                }
-                if (kswTimeCurrent) {
-                    kswTimeCurrent.textContent = formatClock(currentSec);
-                }
-                if (kswTimeRemaining) {
-                    const rem = Math.max(0, (durationSec || demoTotalSeconds) - (currentSec || 0));
-                    kswTimeRemaining.textContent = `-${formatClock(rem)}`;
+                if (upProgressFill) upProgressFill.style.width = `${(clamped * 100).toFixed(1)}%`;
+                if (upSeekInput) upSeekInput.value = String(Math.round(clamped * 1000));
+                if (upTimeCurrent) upTimeCurrent.textContent = formatClock(currentSec);
+                if (upTimeRemaining) {
+                    const rem = Math.max(0, (durationSec || 0) - (currentSec || 0));
+                    upTimeRemaining.textContent = `-${formatClock(rem)}`;
                 }
             }
 
-            loadMusicSettingsFromStorage();
-            syncProgressUi(demoProgressRatio, Math.round(demoTotalSeconds * demoProgressRatio), demoTotalSeconds);
-            applyMusicPlacement();
+            function mountYouTubePlayerForProfile(videoId, autoPlay = false) {
+                if (!videoId) return;
+                ytEmbedBlocked = false;
 
-            setInterval(() => {
-                if ((musicSettings.audioSrc || '').trim() && localAudioEl) {
-                    if (!localAudioEl.paused && isFinite(localAudioEl.duration) && localAudioEl.duration > 0) {
-                        const r = localAudioEl.currentTime / localAudioEl.duration;
-                        syncProgressUi(r, localAudioEl.currentTime, localAudioEl.duration);
+                if (!ytApiReady || !window.YT || !window.YT.Player) {
+                    pendingYouTubeId = videoId;
+                    return;
+                }
+                pendingYouTubeId = '';
+
+                if (upYtPlayerMount) upYtPlayerMount.style.display = 'block';
+
+                if (ytPlayer && typeof ytPlayer.cueVideoById === 'function') {
+                    if (autoPlay && typeof ytPlayer.loadVideoById === 'function') {
+                        ytPlayer.loadVideoById(videoId);
+                    } else {
+                        ytPlayer.cueVideoById(videoId);
                     }
                     return;
                 }
-                if (ytPlayer && typeof ytPlayer.getCurrentTime === 'function' && typeof ytPlayer.getDuration === 'function' && isYtPlaying) {
+
+                ytPlayer = new window.YT.Player('up-yt-player-mount', {
+                    width: '100%',
+                    height: isYtExpanded ? '180' : '90',
+                    videoId: videoId,
+                    playerVars: { rel: 0, modestbranding: 1, autoplay: autoPlay ? 1 : 0 },
+                    events: {
+                        onReady: (ev) => {
+                            if (upYtPlayerMount) upYtPlayerMount.style.display = 'block';
+                            if (!autoPlay && ev.target && typeof ev.target.pauseVideo === 'function') {
+                                ev.target.pauseVideo();
+                            }
+                        },
+                        onError: () => {
+                            ytEmbedBlocked = true;
+                            if (upYtPlayerMount) upYtPlayerMount.style.display = 'none';
+                            renderProfileMusicWidget(activeProfileMusic);
+                        },
+                        onStateChange: (ev) => {
+                            if (!unifiedProfileModal.classList.contains('open')) {
+                                stopProfileMusicPlayback();
+                                return;
+                            }
+                            isMusicPlaying = ev.data === window.YT.PlayerState.PLAYING;
+                            if (upPlayPauseBtn) upPlayPauseBtn.textContent = isMusicPlaying ? '⏸' : '▶';
+                        }
+                    }
+                });
+            }
+
+            // Renderiza a música exclusivamente do perfil aberto no modal (nunca mistura com outros)
+            function renderProfileMusicWidget(musicInfo) {
+                stopProfileMusicPlayback();
+                syncProgressUi(0, 0, 0);
+
+                activeProfileMusic = {
+                    owner: musicInfo.owner || '',
+                    song: (musicInfo.song || '').trim(),
+                    artist: (musicInfo.artist || '').trim(),
+                    musicUrl: (musicInfo.musicUrl || '').trim(),
+                    audioSrc: (musicInfo.audioSrc || '').trim(),
+                    audioFileName: (musicInfo.audioFileName || '').trim(),
+                    coverUrl: (musicInfo.coverUrl || '').trim()
+                };
+
+                const rawUrl = activeProfileMusic.musicUrl;
+                const videoId = extractYouTubeId(rawUrl);
+                const looksLikeDirectAudioUrl = isExternalMusicLink(rawUrl) && /\.(mp3|ogg|wav|m4a|aac|flac|webm)(\?.*)?$/i.test(rawUrl);
+                const effectiveAudioSrc = activeProfileMusic.audioSrc || (looksLikeDirectAudioUrl ? rawUrl : '');
+                const hasLocalAudio = Boolean(effectiveAudioSrc) && isSafeAssetUrl(effectiveAudioSrc);
+                const hasExtLink = isExternalMusicLink(rawUrl);
+                const hasAnyMusic = Boolean(activeProfileMusic.song || activeProfileMusic.artist || hasLocalAudio || hasExtLink);
+
+                if (upMusicWidget) {
+                    upMusicWidget.style.display = hasAnyMusic ? 'flex' : 'none';
+                }
+                if (!hasAnyMusic) {
+                    if (upLocalAudio) {
+                        upLocalAudio.removeAttribute('src');
+                        upLocalAudio.load();
+                    }
+                    return;
+                }
+
+                if (upExternalMusicLink) {
+                    if (hasExtLink) {
+                        upExternalMusicLink.href = rawUrl;
+                        upExternalMusicLink.style.display = 'inline-flex';
+                    } else {
+                        upExternalMusicLink.href = '#';
+                        upExternalMusicLink.style.display = 'none';
+                    }
+                }
+
+                activeProfileMusic.audioSrc = hasLocalAudio ? effectiveAudioSrc : '';
+                if (upLocalAudio) {
+                    if (hasLocalAudio) {
+                        upLocalAudio.src = effectiveAudioSrc;
+                        upLocalAudio.currentTime = 0;
+                        upLocalAudio.load();
+                    } else {
+                        upLocalAudio.removeAttribute('src');
+                        upLocalAudio.load();
+                    }
+                }
+
+                if (upYtPlayerMount) {
+                    const showYt = Boolean(videoId) && !ytEmbedBlocked && !hasLocalAudio;
+                    upYtPlayerMount.style.display = showYt ? 'block' : 'none';
+                    if (showYt) {
+                        mountYouTubePlayerForProfile(videoId, false);
+                    }
+                }
+
+                const displayTitle = activeProfileMusic.song
+                    || activeProfileMusic.audioFileName
+                    || (hasLocalAudio ? extractFileNameFromUrl(activeProfileMusic.audioSrc, 'Faixa de áudio') : 'Música do Perfil');
+
+                const displayArtist = activeProfileMusic.artist
+                    || (hasLocalAudio ? 'Áudio do perfil' : (videoId ? 'YouTube' : (hasExtLink ? 'Spotify / Link' : 'Artista')));
+
+                if (upMusicTitle) upMusicTitle.textContent = displayTitle;
+                if (upMusicArtist) upMusicArtist.textContent = displayArtist;
+
+                if (upMusicCover) {
+                    const coverVal = activeProfileMusic.coverUrl;
+                    if (coverVal && isSafeAssetUrl(coverVal)) {
+                        upMusicCover.style.backgroundImage = `url("${encodeURI(coverVal)}")`;
+                        upMusicCover.textContent = '';
+                    } else {
+                        upMusicCover.style.backgroundImage = 'none';
+                        upMusicCover.textContent = '♫';
+                    }
+                }
+
+                if (upMusicFallback) {
+                    if (hasLocalAudio) {
+                        upMusicFallback.textContent = '';
+                    } else if (videoId && ytEmbedBlocked) {
+                        upMusicFallback.textContent = 'Vídeo bloqueado para embed: clique em ↗ para ouvir no link.';
+                    } else if (hasExtLink && !videoId) {
+                        upMusicFallback.textContent = 'Link externo (Spotify/outro): clique em ↗ para abrir a faixa.';
+                    } else {
+                        upMusicFallback.textContent = '';
+                    }
+                }
+
+                if (ytPlayer && typeof ytPlayer.setSize === 'function') {
+                    ytPlayer.setSize(isYtExpanded ? 340 : 340, isYtExpanded ? 175 : 90);
+                }
+                if (upToggleSizeBtn) {
+                    upToggleSizeBtn.textContent = isYtExpanded ? 'Diminuir' : 'Aumentar';
+                }
+            }
+
+            window.onYouTubeIframeAPIReady = function() {
+                ytApiReady = true;
+                const vid = extractYouTubeId(activeProfileMusic.musicUrl) || pendingYouTubeId;
+                if (vid && !activeProfileMusic.audioSrc && unifiedProfileModal.classList.contains('open')) {
+                    mountYouTubePlayerForProfile(vid, false);
+                }
+            };
+
+            if (upToggleSizeBtn) {
+                upToggleSizeBtn.addEventListener('click', () => {
+                    isYtExpanded = !isYtExpanded;
+                    if (ytPlayer && typeof ytPlayer.setSize === 'function') {
+                        ytPlayer.setSize(340, isYtExpanded ? 175 : 90);
+                    }
+                    upToggleSizeBtn.textContent = isYtExpanded ? 'Diminuir' : 'Aumentar';
+                });
+            }
+
+            setInterval(() => {
+                if (!unifiedProfileModal.classList.contains('open')) return;
+                if (activeProfileMusic.audioSrc && upLocalAudio) {
+                    if (!upLocalAudio.paused && isFinite(upLocalAudio.duration) && upLocalAudio.duration > 0) {
+                        syncProgressUi(upLocalAudio.currentTime / upLocalAudio.duration, upLocalAudio.currentTime, upLocalAudio.duration);
+                    }
+                    return;
+                }
+                if (ytPlayer && typeof ytPlayer.getCurrentTime === 'function' && typeof ytPlayer.getDuration === 'function' && isMusicPlaying) {
                     const dur = ytPlayer.getDuration();
                     const cur = ytPlayer.getCurrentTime();
                     if (dur > 0) {
                         syncProgressUi(cur / dur, cur, dur);
-                        return;
                     }
                 }
-                if (isYtPlaying) {
-                    demoProgressRatio += 1 / demoTotalSeconds;
-                    if (demoProgressRatio >= 1) {
-                        demoProgressRatio = localAudioEl && localAudioEl.loop ? 0 : 1;
-                    }
-                    syncProgressUi(demoProgressRatio, demoProgressRatio * demoTotalSeconds, demoTotalSeconds);
-                }
-            }, 400);
+            }, 350);
 
-            if (kswSeekInput) {
-                kswSeekInput.addEventListener('input', () => {
-                    const r = Number(kswSeekInput.value || 0) / 1000;
-                    demoProgressRatio = r;
-                    if ((musicSettings.audioSrc || '').trim() && localAudioEl && isFinite(localAudioEl.duration) && localAudioEl.duration > 0) {
-                        localAudioEl.currentTime = r * localAudioEl.duration;
-                        syncProgressUi(r, localAudioEl.currentTime, localAudioEl.duration);
+            if (upSeekInput) {
+                upSeekInput.addEventListener('input', () => {
+                    const r = Number(upSeekInput.value || 0) / 1000;
+                    if (activeProfileMusic.audioSrc && upLocalAudio && isFinite(upLocalAudio.duration) && upLocalAudio.duration > 0) {
+                        upLocalAudio.currentTime = r * upLocalAudio.duration;
+                        syncProgressUi(r, upLocalAudio.currentTime, upLocalAudio.duration);
                     } else if (ytPlayer && typeof ytPlayer.getDuration === 'function' && typeof ytPlayer.seekTo === 'function') {
                         const dur = ytPlayer.getDuration();
                         if (dur > 0) {
                             ytPlayer.seekTo(r * dur, true);
                             syncProgressUi(r, r * dur, dur);
                         }
-                    } else {
-                        syncProgressUi(r, r * demoTotalSeconds, demoTotalSeconds);
                     }
                 });
             }
 
-            if (kswPrevBtn) {
-                kswPrevBtn.addEventListener('click', () => {
-                    if ((musicSettings.audioSrc || '').trim() && localAudioEl) {
-                        localAudioEl.currentTime = Math.max(0, localAudioEl.currentTime - 10);
+            if (upPrevBtn) {
+                upPrevBtn.addEventListener('click', () => {
+                    if (activeProfileMusic.audioSrc && upLocalAudio) {
+                        upLocalAudio.currentTime = Math.max(0, upLocalAudio.currentTime - 10);
                     } else if (ytPlayer && typeof ytPlayer.getCurrentTime === 'function' && typeof ytPlayer.seekTo === 'function') {
                         ytPlayer.seekTo(Math.max(0, ytPlayer.getCurrentTime() - 10), true);
-                    } else {
-                        demoProgressRatio = Math.max(0, demoProgressRatio - 10 / demoTotalSeconds);
-                        syncProgressUi(demoProgressRatio, demoProgressRatio * demoTotalSeconds, demoTotalSeconds);
                     }
                 });
             }
 
-            if (kswNextBtn) {
-                kswNextBtn.addEventListener('click', () => {
-                    if ((musicSettings.audioSrc || '').trim() && localAudioEl) {
-                        localAudioEl.currentTime = Math.min(localAudioEl.duration || localAudioEl.currentTime + 10, localAudioEl.currentTime + 10);
+            if (upNextBtn) {
+                upNextBtn.addEventListener('click', () => {
+                    if (activeProfileMusic.audioSrc && upLocalAudio) {
+                        upLocalAudio.currentTime = Math.min(upLocalAudio.duration || upLocalAudio.currentTime + 10, upLocalAudio.currentTime + 10);
                     } else if (ytPlayer && typeof ytPlayer.getCurrentTime === 'function' && typeof ytPlayer.seekTo === 'function') {
                         ytPlayer.seekTo(ytPlayer.getCurrentTime() + 10, true);
-                    } else {
-                        demoProgressRatio = Math.min(1, demoProgressRatio + 10 / demoTotalSeconds);
-                        syncProgressUi(demoProgressRatio, demoProgressRatio * demoTotalSeconds, demoTotalSeconds);
                     }
                 });
             }
 
-            if (kswShuffleBtn) {
-                kswShuffleBtn.addEventListener('click', () => {
-                    kswShuffleBtn.classList.toggle('active');
-                });
+            if (upShuffleBtn) {
+                upShuffleBtn.addEventListener('click', () => upShuffleBtn.classList.toggle('active'));
             }
 
-            if (kswRepeatBtn) {
-                kswRepeatBtn.addEventListener('click', () => {
-                    const active = kswRepeatBtn.classList.toggle('active');
-                    if (localAudioEl) localAudioEl.loop = active;
+            if (upRepeatBtn) {
+                upRepeatBtn.addEventListener('click', () => {
+                    const active = upRepeatBtn.classList.toggle('active');
+                    if (upLocalAudio) upLocalAudio.loop = active;
                 });
             }
 
             function applyPlayerVolume(volPercent) {
                 const clamped = Math.max(0, Math.min(100, Number(volPercent)));
-                if (kswVolSlider) kswVolSlider.value = String(clamped);
-                if (kswVolVal) kswVolVal.textContent = `${clamped}%`;
-                if (kswVolBtn) {
-                    if (clamped === 0) kswVolBtn.textContent = '🔇';
-                    else if (clamped < 50) kswVolBtn.textContent = '🔉';
-                    else kswVolBtn.textContent = '🔊';
+                if (upVolSlider) upVolSlider.value = String(clamped);
+                if (upVolVal) upVolVal.textContent = `${clamped}%`;
+                if (upVolBtn) {
+                    if (clamped === 0) upVolBtn.textContent = '🔇';
+                    else if (clamped < 50) upVolBtn.textContent = '🔉';
+                    else upVolBtn.textContent = '🔊';
                 }
-                if (localAudioEl) {
-                    localAudioEl.volume = clamped / 100;
-                    localAudioEl.muted = clamped === 0;
+                if (upLocalAudio) {
+                    upLocalAudio.volume = clamped / 100;
+                    upLocalAudio.muted = clamped === 0;
                 }
                 if (ytPlayer && typeof ytPlayer.setVolume === 'function') {
                     ytPlayer.setVolume(clamped);
-                    if (clamped === 0 && typeof ytPlayer.mute === 'function') {
-                        ytPlayer.mute();
-                    } else if (typeof ytPlayer.unMute === 'function') {
-                        ytPlayer.unMute();
-                    }
+                    if (clamped === 0 && typeof ytPlayer.mute === 'function') ytPlayer.mute();
+                    else if (typeof ytPlayer.unMute === 'function') ytPlayer.unMute();
                 }
             }
 
             applyPlayerVolume(80);
 
-            if (kswVolBtn && kswVolPopover) {
-                kswVolBtn.addEventListener('click', (e) => {
+            if (upVolBtn && upVolPopover) {
+                upVolBtn.addEventListener('click', (e) => {
                     e.stopPropagation();
-                    kswVolPopover.classList.toggle('open');
+                    upVolPopover.classList.toggle('open');
                 });
                 document.addEventListener('click', (e) => {
-                    if (!kswVolPopover.contains(e.target) && e.target !== kswVolBtn) {
-                        kswVolPopover.classList.remove('open');
+                    if (!upVolPopover.contains(e.target) && e.target !== upVolBtn) {
+                        upVolPopover.classList.remove('open');
                     }
                 });
             }
 
-            if (kswVolSlider) {
-                kswVolSlider.addEventListener('input', () => {
-                    applyPlayerVolume(kswVolSlider.value);
-                });
+            if (upVolSlider) {
+                upVolSlider.addEventListener('input', () => applyPlayerVolume(upVolSlider.value));
             }
 
-            if (kswLikeBtn) {
-                kswLikeBtn.addEventListener('click', () => {
-                    const liked = kswLikeBtn.classList.toggle('active');
-                    kswLikeBtn.textContent = liked ? '✓' : '+';
+            if (upLikeBtn) {
+                upLikeBtn.addEventListener('click', () => {
+                    const liked = upLikeBtn.classList.toggle('active');
+                    upLikeBtn.textContent = liked ? '✓' : '+';
                     showKiwiToast(liked ? 'Faixa guardada!' : 'Removida das guardadas.');
                 });
             }
 
-            if (localAudioEl) {
-                localAudioEl.addEventListener('play', () => {
-                    isYtPlaying = true;
-                    if (ytPlayPauseBtn) ytPlayPauseBtn.textContent = '⏸';
+            if (upLocalAudio) {
+                upLocalAudio.addEventListener('play', () => {
+                    isMusicPlaying = true;
+                    if (upPlayPauseBtn) upPlayPauseBtn.textContent = '⏸';
                 });
-                localAudioEl.addEventListener('pause', () => {
-                    isYtPlaying = false;
-                    if (ytPlayPauseBtn) ytPlayPauseBtn.textContent = '▶';
+                upLocalAudio.addEventListener('pause', () => {
+                    isMusicPlaying = false;
+                    if (upPlayPauseBtn) upPlayPauseBtn.textContent = '▶';
+                });
+                upLocalAudio.addEventListener('ended', () => {
+                    isMusicPlaying = false;
+                    if (upPlayPauseBtn) upPlayPauseBtn.textContent = '▶';
                 });
             }
 
-            if (ytPlayPauseBtn) {
-                ytPlayPauseBtn.addEventListener('click', () => {
-                    if ((musicSettings.audioSrc || '').trim() && localAudioEl) {
-                        if (localAudioEl.paused) {
-                            localAudioEl.play().catch(() => {});
+            if (upPlayPauseBtn) {
+                upPlayPauseBtn.addEventListener('click', () => {
+                    if (!unifiedProfileModal.classList.contains('open')) return;
+
+                    if (activeProfileMusic.audioSrc && upLocalAudio) {
+                        if (upLocalAudio.paused) {
+                            upLocalAudio.play().catch(() => {
+                                showKiwiToast('Não foi possível reproduzir o áudio deste perfil.');
+                            });
                         } else {
-                            localAudioEl.pause();
+                            upLocalAudio.pause();
                         }
                         return;
                     }
-                    if (ytPlayer && !ytEmbedBlocked && typeof ytPlayer.playVideo === 'function') {
-                        if (isYtPlaying) {
-                            ytPlayer.pauseVideo();
-                        } else {
-                            ytPlayer.playVideo();
-                        }
+
+                    const vid = extractYouTubeId(activeProfileMusic.musicUrl);
+                    if (vid && ytPlayer && !ytEmbedBlocked && typeof ytPlayer.playVideo === 'function') {
+                        if (isMusicPlaying) ytPlayer.pauseVideo();
+                        else ytPlayer.playVideo();
                         return;
                     }
-                    isYtPlaying = !isYtPlaying;
-                    ytPlayPauseBtn.textContent = isYtPlaying ? '⏸' : '▶';
+
+                    if (isExternalMusicLink(activeProfileMusic.musicUrl)) {
+                        window.open(activeProfileMusic.musicUrl, '_blank', 'noopener,noreferrer');
+                        return;
+                    }
+
+                    showKiwiToast('Este perfil não possui ficheiro de áudio reproduzível direto.');
                 });
             }
 
-            if (dockDisableBtn) {
-                dockDisableBtn.addEventListener('click', () => {
-                    musicSettings.disabledInLayout = true;
-                    saveMusicSettingsToStorage();
-                    applyMusicPlacement();
-                    showKiwiToast('Música desabilitada no layout.');
-                });
-            }
-
-            if (mailboxDisableToggle) {
-                mailboxDisableToggle.addEventListener('change', (e) => {
-                    musicSettings.disabledInLayout = Boolean(e.target.checked);
-                    saveMusicSettingsToStorage();
-                    applyMusicPlacement();
-                });
-            }
-
+            // =========================================================================
+            // WEBRTC & CHAMADAS
+            // =========================================================================
             async function createPeerConnection() {
                 const pc = new RTCPeerConnection({
                     iceServers: [{ urls: 'stun:stun.l.google.com:19302' }]
@@ -3165,10 +2888,7 @@
 
                 pc.onicecandidate = (event) => {
                     if (event.candidate && dmSocket && dmSocket.readyState === WebSocket.OPEN) {
-                        dmSocket.send(JSON.stringify({
-                            type: 'call_signal',
-                            signal: { candidate: event.candidate }
-                        }));
+                        dmSocket.send(JSON.stringify({ type: 'call_signal', signal: { candidate: event.candidate } }));
                     }
                 };
 
@@ -3176,12 +2896,8 @@
                     if (!event.streams || !event.streams[0]) return;
                     if (event.track && event.track.kind === 'video') {
                         const streamOwner = callTargetUser || currentDmUser || 'utilizador';
-                        if (remoteScreenLabel) {
-                            remoteScreenLabel.textContent = `👁️ A assistir à tela de ${streamOwner}`;
-                        }
-                        if (remoteScreenStatus) {
-                            remoteScreenStatus.textContent = 'A carregar vídeo...';
-                        }
+                        if (remoteScreenLabel) remoteScreenLabel.textContent = `👁️ A assistir à tela de ${streamOwner}`;
+                        if (remoteScreenStatus) remoteScreenStatus.textContent = 'A carregar vídeo...';
                         if (remoteScreenVideo) {
                             const incomingStream = event.streams && event.streams[0] ? event.streams[0] : new MediaStream([event.track]);
                             remoteScreenVideo.srcObject = incomingStream;
@@ -3227,10 +2943,7 @@
                     const offer = await peerConnection.createOffer();
                     await peerConnection.setLocalDescription(offer);
 
-                    sock.send(JSON.stringify({
-                        type: 'call_signal',
-                        signal: { offer: offer }
-                    }));
+                    sock.send(JSON.stringify({ type: 'call_signal', signal: { offer: offer } }));
                 } catch (err) {
                     console.error("Erro ao iniciar call:", err);
                     showKiwiToast("Não foi possível iniciar a chamada.");
@@ -3253,10 +2966,7 @@
                         const answer = await peerConnection.createAnswer();
                         await peerConnection.setLocalDescription(answer);
                         if (dmSocket && dmSocket.readyState === WebSocket.OPEN) {
-                            dmSocket.send(JSON.stringify({
-                                type: 'call_signal',
-                                signal: { answer: answer }
-                            }));
+                            dmSocket.send(JSON.stringify({ type: 'call_signal', signal: { answer: answer } }));
                         }
                         return;
                     }
@@ -3273,18 +2983,14 @@
                 }
 
                 if (signal.candidate && peerConnection) {
-                    try {
-                        await peerConnection.addIceCandidate(new RTCIceCandidate(signal.candidate));
-                    } catch (_) {}
+                    try { await peerConnection.addIceCandidate(new RTCIceCandidate(signal.candidate)); } catch (_) {}
                 }
             }
 
             window.toggleMuteCall = function() {
                 if (!localStream) return;
                 isCallMuted = !isCallMuted;
-                localStream.getAudioTracks().forEach(track => {
-                    track.enabled = !isCallMuted;
-                });
+                localStream.getAudioTracks().forEach(track => { track.enabled = !isCallMuted; });
                 callMuteBtn.classList.toggle('mute-active', isCallMuted);
                 callMuteBtn.textContent = isCallMuted ? '🔇 Sem som' : '🎙️ Mudo';
             };
@@ -3299,17 +3005,9 @@
                 if (notifyPeer && dmSocket && dmSocket.readyState === WebSocket.OPEN && callTargetUser) {
                     dmSocket.send(JSON.stringify({ type: 'call_hangup' }));
                 }
-                if (peerConnection) {
-                    peerConnection.close();
-                    peerConnection = null;
-                }
-                if (localStream) {
-                    localStream.getTracks().forEach(t => t.stop());
-                    localStream = null;
-                }
-                if (remoteAudioEl) {
-                    remoteAudioEl.srcObject = null;
-                }
+                if (peerConnection) { peerConnection.close(); peerConnection = null; }
+                if (localStream) { localStream.getTracks().forEach(t => t.stop()); localStream = null; }
+                if (remoteAudioEl) remoteAudioEl.srcObject = null;
                 callTargetUser = null;
                 isCallMuted = false;
                 callMuteBtn.classList.remove('mute-active');
@@ -3334,21 +3032,16 @@
                         return;
                     }
                     showKiwiToast(resp.message || `Amizade com ${targetUsername} removida.`);
-                    otherProfileModal.classList.remove('open');
+                    closeUnifiedProfileModal();
 
                     if (openDmTabs.has(targetUsername)) {
                         openDmTabs.delete(targetUsername);
-                        if (currentView === 'dm' && currentDmUser === targetUsername) {
-                            switchToGeral();
-                        } else {
-                            renderDmTabs();
-                        }
+                        if (currentView === 'dm' && currentDmUser === targetUsername) switchToGeral();
+                        else renderDmTabs();
                     }
 
                     const amigosTab = document.querySelector('.social-tab[data-tab="amigos"]');
-                    if (amigosTab && amigosTab.classList.contains('active')) {
-                        fetchFriendsList();
-                    }
+                    if (amigosTab && amigosTab.classList.contains('active')) fetchFriendsList();
                 })
                 .catch(err => {
                     console.error("Erro ao remover amizade:", err);
@@ -3357,12 +3050,8 @@
             };
 
             function closeAllMessagePopovers() {
-                chatLog.querySelectorAll('.msg-emoji-picker.open, .msg-more-popover.open').forEach(el => {
-                    el.classList.remove('open');
-                });
-                chatLog.querySelectorAll('.message-group.menu-open').forEach(el => {
-                    el.classList.remove('menu-open');
-                });
+                chatLog.querySelectorAll('.msg-emoji-picker.open, .msg-more-popover.open').forEach(el => el.classList.remove('open'));
+                chatLog.querySelectorAll('.message-group.menu-open').forEach(el => el.classList.remove('menu-open'));
             }
 
             function enhanceMessageGroup(group, options = {}) {
@@ -3481,12 +3170,10 @@
                 } else {
                     const isActive = chip.classList.contains('active');
                     let count = Number(chip.getAttribute('data-count') || '1');
-
                     if (isActive) {
                         count -= 1;
-                        if (count <= 0) {
-                            chip.remove();
-                        } else {
+                        if (count <= 0) chip.remove();
+                        else {
                             chip.classList.remove('active');
                             chip.setAttribute('data-count', String(count));
                             chip.querySelector('.reaction-count').textContent = String(count);
@@ -3499,9 +3186,7 @@
                     }
                 }
 
-                if (currentView === 'geral') {
-                    geralSnapshotHTML = chatLog.innerHTML;
-                }
+                if (currentView === 'geral') geralSnapshotHTML = chatLog.innerHTML;
             }
 
             function enhanceExistingMessagesInLog() {
@@ -3516,9 +3201,7 @@
             let geralSnapshotHTML = chatLog.innerHTML;
 
             function persistThemePreference(colorKey) {
-                try {
-                    localStorage.setItem(THEME_STORAGE_KEY, colorKey);
-                } catch (_) {}
+                try { localStorage.setItem(THEME_STORAGE_KEY, colorKey); } catch (_) {}
                 const csrfToken = getCookie('csrftoken');
                 if (!csrfToken) return;
                 const fd = new FormData();
@@ -3558,87 +3241,218 @@
                 }
             }
 
+            function normalizeProfilePayload(rawData, fallbackUsername) {
+                const uname = (rawData.username || fallbackUsername || '').trim();
+                const cachedMusic = loadUserMusicFromLocalCache(uname);
+
+                // Prioriza dados vindos da API (/api/profile/<user>/) para que todos vejam a música do dono;
+                // usa o cache local específico daquele username como complemento se o backend ainda não tiver os campos extras.
+                const resolvedSong = (rawData.spotify_song || (cachedMusic && cachedMusic.song) || '').trim();
+                const resolvedArtist = (rawData.spotify_artist || (cachedMusic && cachedMusic.artist) || '').trim();
+                const resolvedMusicUrl = (rawData.music_url || rawData.youtube_url || rawData.spotify_url || (cachedMusic && cachedMusic.musicUrl) || '').trim();
+                const resolvedAudioSrc = (rawData.music_audio_url || rawData.audio_url || (cachedMusic && cachedMusic.audioSrc) || '').trim();
+                const resolvedCoverUrl = (rawData.music_cover_url || rawData.cover_url || (cachedMusic && cachedMusic.coverUrl) || '').trim();
+
+                return {
+                    username: uname,
+                    bubble: rawData.bubble || '🌸 Olá, estou no Kiwi Chat!',
+                    pronouns: rawData.pronouns || 'utilizador • 🥝',
+                    bio: rawData.bio || 'Perfil estético ativo.',
+                    song: resolvedSong,
+                    artist: resolvedArtist,
+                    musicUrl: resolvedMusicUrl,
+                    audioSrc: resolvedAudioSrc,
+                    audioFileName: (cachedMusic && cachedMusic.audioFileName) || '',
+                    coverUrl: resolvedCoverUrl,
+                    accentColor: rawData.accent_color || '#ffffff',
+                    goldProfileBg: (cachedMusic && typeof cachedMusic.goldProfileBg === 'boolean')
+                        ? cachedMusic.goldProfileBg
+                        : (rawData.accent_color === '#d4af37' || uname.toLowerCase() === (activeUsername || '').toLowerCase()),
+                    avatarUrl: rawData.avatarUrl || '',
+                    bannerUrl: rawData.bannerUrl || '',
+                    is_admin: Boolean(rawData.is_admin || rawData.is_staff || rawData.is_superuser),
+                    is_friend: Boolean(rawData.is_friend)
+                };
+            }
+
             function loadMyProfile() {
                 const targetPath = activeUsername ? ('/api/profile/' + encodeURIComponent(activeUsername) + '/') : '/api/profile/me/';
                 fetch(targetPath)
                 .then(res => res.json())
                 .then(data => {
-                    activeUsername = data.username || activeUsername;
-                    profileData.bubble = data.bubble || profileData.bubble;
-                    profileData.pronouns = data.pronouns || profileData.pronouns;
-                    profileData.bio = data.bio || profileData.bio;
-                    profileData.song = data.spotify_song || profileData.song;
-                    profileData.artist = data.spotify_artist || profileData.artist;
-                    profileData.is_admin = Boolean(data.is_admin || data.is_staff || data.is_superuser);
+                    const normalized = normalizeProfilePayload(data, activeUsername);
+                    activeUsername = normalized.username || activeUsername;
+                    myProfileData = { ...myProfileData, ...normalized };
                     if (data.accent_color && themesMap[data.accent_color]) {
-                        profileData.accentColor = data.accent_color;
+                        myProfileData.accentColor = data.accent_color;
                     }
-                    profileData.avatarUrl = data.avatarUrl || '';
-                    profileData.bannerUrl = data.bannerUrl || '';
-                    updateUI();
+                    profilesByUsername.set(activeUsername.toLowerCase(), myProfileData);
+                    updateMySidebarUI();
                 })
                 .catch(err => console.error("Erro ao carregar perfil:", err));
             }
+
             try {
                 const savedTheme = localStorage.getItem(THEME_STORAGE_KEY);
                 if (savedTheme && themesMap[savedTheme]) {
-                    profileData.accentColor = savedTheme;
+                    myProfileData.accentColor = savedTheme;
                 }
             } catch (_) {}
-            applyTheme(profileData.accentColor);
-            applySpecialProfileEffects(
-                aestheticModal ? aestheticModal.querySelector('.aesthetic-profile-card') : null,
-                profileUsernameEl,
-                profileAdminBadge,
-                activeUsername,
-                profileData.is_admin
-            );
+            applyTheme(myProfileData.accentColor);
             loadMyProfile();
 
-            function updateUI() {
-                applyTheme(profileData.accentColor);
+            function updateMySidebarUI() {
+                applyTheme(myProfileData.accentColor);
                 themeBalls.forEach(ball => {
-                    if (ball.getAttribute('data-color') === profileData.accentColor) {
-                        ball.classList.add('active');
-                    } else {
-                        ball.classList.remove('active');
-                    }
+                    ball.classList.toggle('active', ball.getAttribute('data-color') === myProfileData.accentColor);
                 });
 
-                if (profileUsernameEl) {
-                    profileUsernameEl.textContent = activeUsername;
-                }
                 const myNameLabelEl = document.getElementById('my-name-label');
                 if (myNameLabelEl && activeUsername) {
                     myNameLabelEl.textContent = activeUsername;
                 }
+                setAvatarStyle(miniAvatar, myProfileData.avatarUrl, activeUsername);
+            }
+
+            function closeUnifiedProfileModal() {
+                stopProfileMusicPlayback();
+                currentViewedProfileUser = '';
+                unifiedProfileModal.classList.remove('open');
+            }
+
+            function renderUnifiedProfileModal(profileObj) {
+                const isOwn = (profileObj.username || '').toLowerCase() === (activeUsername || '').toLowerCase();
+                currentViewedProfileUser = profileObj.username;
+
+                upUsername.textContent = profileObj.username;
+                const useGoldBg = Boolean(profileObj.goldProfileBg) || profileObj.accentColor === '#d4af37';
+                if (unifiedProfileCard) {
+                    unifiedProfileCard.classList.toggle('gold-profile-theme', useGoldBg);
+                }
                 applySpecialProfileEffects(
-                    aestheticModal ? aestheticModal.querySelector('.aesthetic-profile-card') : null,
-                    profileUsernameEl,
-                    profileAdminBadge,
-                    activeUsername,
-                    profileData.is_admin
+                    unifiedProfileCard,
+                    upUsername,
+                    upAdminBadge,
+                    profileObj.username,
+                    profileObj.is_admin
                 );
 
-                setAvatarStyle(miniAvatar, profileData.avatarUrl, activeUsername);
-                setAvatarStyle(profileAvatar, profileData.avatarUrl, activeUsername);
+                setAvatarStyle(upAvatar, profileObj.avatarUrl, profileObj.username);
 
-                if (profileData.bannerUrl && profileData.bannerUrl.trim() !== '' && isSafeAssetUrl(profileData.bannerUrl)) {
-                    profileBanner.style.backgroundImage = `url("${encodeURI(profileData.bannerUrl.trim())}")`;
-                    profileBanner.style.backgroundSize = 'cover';
-                    profileBanner.style.backgroundPosition = 'center';
+                if (profileObj.bannerUrl && profileObj.bannerUrl.trim() !== '' && isSafeAssetUrl(profileObj.bannerUrl)) {
+                    upBanner.style.backgroundImage = `url("${encodeURI(profileObj.bannerUrl.trim())}")`;
+                    upBanner.style.backgroundSize = 'cover';
+                    upBanner.style.backgroundPosition = 'center';
                 } else {
-                    profileBanner.style.backgroundImage = 'var(--auth-artwork)';
-                    profileBanner.style.backgroundColor = profileData.accentColor;
+                    upBanner.style.backgroundImage = 'var(--auth-artwork)';
+                    upBanner.style.backgroundColor = profileObj.accentColor || '#ff9de2';
                 }
 
-                profileBubble.textContent = profileData.bubble;
-                profilePronouns.textContent = profileData.pronouns;
-                profileBio.innerHTML = formatSafeBioHtml(profileData.bio);
-                if (dockMusicTitle) {
-                    dockMusicTitle.textContent = profileData.song || 'YouTube';
+                upStatusBubble.textContent = profileObj.bubble;
+                upPronouns.textContent = profileObj.pronouns;
+                upBio.innerHTML = formatSafeBioHtml(profileObj.bio);
+
+                // Renderiza exclusivamente a música pertencente a este perfil
+                renderProfileMusicWidget({
+                    owner: profileObj.username,
+                    song: profileObj.song,
+                    artist: profileObj.artist,
+                    musicUrl: profileObj.musicUrl,
+                    audioSrc: profileObj.audioSrc,
+                    audioFileName: profileObj.audioFileName,
+                    coverUrl: profileObj.coverUrl
+                });
+
+                if (isOwn) {
+                    upOwnActions.style.display = 'block';
+                    upOtherActions.style.display = 'none';
+                } else {
+                    upOwnActions.style.display = 'none';
+                    upOtherActions.style.display = 'flex';
+
+                    const addFriendBtn = document.getElementById('add-friend-btn');
+                    addFriendBtn.style.display = profileObj.is_friend ? 'none' : 'flex';
+                    addFriendBtn.onclick = function() {
+                        fetch('/api/friend-request/send/', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-CSRFToken': getCookie('csrftoken')
+                            },
+                            body: JSON.stringify({ username: profileObj.username })
+                        })
+                        .then(r => r.json())
+                        .then(resp => {
+                            showKiwiToast(resp.message || "Pedido de amizade enviado!");
+                            closeUnifiedProfileModal();
+                        })
+                        .catch(() => showKiwiToast("Não foi possível enviar o pedido de amizade."));
+                    };
+
+                    const dmBtn = document.getElementById('dm-btn');
+                    dmBtn.style.display = profileObj.is_friend ? 'flex' : 'none';
+                    dmBtn.onclick = function() {
+                        closeUnifiedProfileModal();
+                        openPrivateChat(profileObj.username, profileObj.avatarUrl || '');
+                    };
+
+                    const callFriendBtn = document.getElementById('call-friend-btn');
+                    callFriendBtn.style.display = profileObj.is_friend ? 'flex' : 'none';
+                    callFriendBtn.onclick = function() {
+                        closeUnifiedProfileModal();
+                        startVoiceCall(profileObj.username);
+                    };
+
+                    const watchFriendBtn = document.getElementById('watch-friend-btn');
+                    watchFriendBtn.style.display = profileObj.is_friend ? 'flex' : 'none';
+                    watchFriendBtn.onclick = function() {
+                        closeUnifiedProfileModal();
+                        watchUserStream(profileObj.username, profileObj.avatarUrl || '');
+                    };
+
+                    const removeFriendBtn = document.getElementById('remove-friend-btn');
+                    removeFriendBtn.style.display = profileObj.is_friend ? 'flex' : 'none';
+                    removeFriendBtn.onclick = function() {
+                        removeFriend(profileObj.username);
+                    };
                 }
+
+                unifiedProfileModal.classList.add('open');
             }
+
+            window.openUserProfile = function(username) {
+                const targetName = (username || '').trim();
+                if (!targetName) return;
+
+                // Para sempre qualquer música que estivesse tocando noutro perfil antes de abrir este
+                stopProfileMusicPlayback();
+
+                const isOwn = targetName.toLowerCase() === (activeUsername || '').toLowerCase();
+                if (isOwn) {
+                    renderUnifiedProfileModal(myProfileData);
+                }
+
+                fetch('/api/profile/' + encodeURIComponent(targetName) + '/')
+                .then(res => res.json())
+                .then(rawData => {
+                    const normalized = normalizeProfilePayload(rawData, targetName);
+                    if (isOwn) {
+                        myProfileData = { ...myProfileData, ...normalized };
+                        profilesByUsername.set(activeUsername.toLowerCase(), myProfileData);
+                        updateMySidebarUI();
+                        renderUnifiedProfileModal(myProfileData);
+                    } else {
+                        profilesByUsername.set(normalized.username.toLowerCase(), normalized);
+                        renderUnifiedProfileModal(normalized);
+                    }
+                })
+                .catch(err => {
+                    console.error("Erro ao carregar perfil:", err);
+                    if (!isOwn) {
+                        showKiwiToast("Não foi possível carregar o perfil do utilizador.");
+                    }
+                });
+            };
 
             const settingsColorsModal = document.getElementById('settings-colors-modal');
             const closeSettingsColorsBtn = document.getElementById('close-settings-colors-btn');
@@ -3650,39 +3464,31 @@
                 ball.addEventListener('click', () => {
                     const chosenColor = ball.getAttribute('data-color');
                     if (!chosenColor || !themesMap[chosenColor]) return;
-                    profileData.accentColor = chosenColor;
+                    myProfileData.accentColor = chosenColor;
                     if (settingsActiveColorName) {
                         settingsActiveColorName.textContent = ball.getAttribute('data-label') || chosenColor;
                     }
-                    updateUI();
+                    updateMySidebarUI();
                     persistThemePreference(chosenColor);
                 });
             });
 
-            if (openTrigger && aestheticModal) {
-                openTrigger.addEventListener('click', () => {
-                    applyMusicPlacement();
-                    aestheticModal.classList.add('open');
-                });
+            if (openTrigger) {
+                openTrigger.addEventListener('click', () => openUserProfile(activeUsername));
             }
             if (settingsBtn && settingsColorsModal) {
-                settingsBtn.addEventListener('click', () => {
-                    settingsColorsModal.classList.add('open');
-                });
+                settingsBtn.addEventListener('click', () => settingsColorsModal.classList.add('open'));
             }
             if (closeSettingsColorsBtn && settingsColorsModal) {
-                closeSettingsColorsBtn.addEventListener('click', () => {
-                    settingsColorsModal.classList.remove('open');
-                });
+                closeSettingsColorsBtn.addEventListener('click', () => settingsColorsModal.classList.remove('open'));
             }
-            if (openProfileFromSettingsBtn && settingsColorsModal && aestheticModal) {
+            if (openProfileFromSettingsBtn && settingsColorsModal) {
                 openProfileFromSettingsBtn.addEventListener('click', () => {
                     settingsColorsModal.classList.remove('open');
-                    applyMusicPlacement();
-                    aestheticModal.classList.add('open');
+                    openUserProfile(activeUsername);
                 });
             }
-            if (openEditFromSettingsBtn && settingsColorsModal && editModal) {
+            if (openEditFromSettingsBtn && settingsColorsModal) {
                 openEditFromSettingsBtn.addEventListener('click', () => {
                     settingsColorsModal.classList.remove('open');
                     switchToEditBtn.click();
@@ -3690,111 +3496,115 @@
             }
             if (mailboxBtn && mailboxModal) {
                 mailboxBtn.addEventListener('click', () => {
-                    if (mailboxDisableToggle) mailboxDisableToggle.checked = musicSettings.disabledInLayout;
                     mailboxModal.classList.add('open');
                     fetchFriendRequests();
                 });
             }
 
-            closeAestheticBtn.addEventListener('click', () => {
-                aestheticModal.classList.remove('open');
-                applyMusicPlacement();
+            closeUnifiedProfileBtn.addEventListener('click', closeUnifiedProfileModal);
+            unifiedProfileModal.addEventListener('click', (e) => {
+                if (e.target === unifiedProfileModal) closeUnifiedProfileModal();
             });
+
             closeEditBtn.addEventListener('click', () => editModal.classList.remove('open'));
-            closeOtherBtn.addEventListener('click', () => otherProfileModal.classList.remove('open'));
             closeMailboxBtn.addEventListener('click', () => mailboxModal.classList.remove('open'));
             cancelEditBtn.addEventListener('click', () => editModal.classList.remove('open'));
 
             switchToEditBtn.addEventListener('click', () => {
-                aestheticModal.classList.remove('open');
-                editBubble.value = profileData.bubble;
-                editPronouns.value = profileData.pronouns;
-                editBio.value = profileData.bio.replace(/<br\s*\/?>/gi, '\n');
-                editSong.value = profileData.song;
-                editArtist.value = profileData.artist;
-                if (editYtUrl) editYtUrl.value = musicSettings.url;
-                if (editLocalAudioUrl) editLocalAudioUrl.value = musicSettings.audioSrc && !musicSettings.audioSrc.startsWith('blob:') ? musicSettings.audioSrc : '';
+                closeUnifiedProfileModal();
+                editBubble.value = myProfileData.bubble;
+                editPronouns.value = myProfileData.pronouns;
+                editBio.value = myProfileData.bio.replace(/<br\s*\/?>/gi, '\n');
+                editSong.value = myProfileData.song;
+                editArtist.value = myProfileData.artist;
+                if (editYtUrl) editYtUrl.value = myProfileData.musicUrl || '';
+                if (editLocalAudioUrl) {
+                    editLocalAudioUrl.value = (myProfileData.audioSrc && !myProfileData.audioSrc.startsWith('blob:') && !myProfileData.audioSrc.startsWith('data:'))
+                        ? myProfileData.audioSrc
+                        : '';
+                }
                 if (editLocalAudioFile) editLocalAudioFile.value = '';
-                if (editMusicCoverUrl) editMusicCoverUrl.value = musicSettings.coverUrl && !musicSettings.coverUrl.startsWith('blob:') ? musicSettings.coverUrl : '';
+                const editGoldCheckbox = document.getElementById('edit-gold-profile-bg');
+                if (editGoldCheckbox) editGoldCheckbox.checked = Boolean(myProfileData.goldProfileBg);
+                if (editMusicCoverUrl) {
+                    editMusicCoverUrl.value = (myProfileData.coverUrl && !myProfileData.coverUrl.startsWith('blob:') && !myProfileData.coverUrl.startsWith('data:'))
+                        ? myProfileData.coverUrl
+                        : '';
+                }
                 if (editMusicCoverFile) editMusicCoverFile.value = '';
-                if (editMusicMode) editMusicMode.value = musicSettings.mode;
-                if (editMusicDisabled) editMusicDisabled.checked = musicSettings.disabledInLayout;
                 editModal.classList.add('open');
             });
 
             editProfileForm.addEventListener('submit', async function(e) {
                 e.preventDefault();
-                if (editSong && editSong.value.trim()) profileData.song = editSong.value.trim();
-                if (editArtist && editArtist.value.trim()) profileData.artist = editArtist.value.trim();
-                if (editYtUrl) musicSettings.url = editYtUrl.value.trim();
-                if (editMusicMode) {
-                    musicSettings.mode = editMusicMode.value === 'layout' ? 'layout' : 'profile_only';
-                }
-                if (editMusicDisabled) musicSettings.disabledInLayout = Boolean(editMusicDisabled.checked);
+
+                // Atualiza apenas o perfil do utilizador logado (activeUsername)
+                myProfileData.bubble = editBubble.value;
+                myProfileData.pronouns = editPronouns.value;
+                myProfileData.bio = editBio.value;
+                myProfileData.song = editSong.value.trim();
+                myProfileData.artist = editArtist.value.trim();
+                myProfileData.musicUrl = editYtUrl ? editYtUrl.value.trim() : '';
+                const editGoldCheckbox = document.getElementById('edit-gold-profile-bg');
+                myProfileData.goldProfileBg = editGoldCheckbox ? editGoldCheckbox.checked : true;
 
                 const pickedAudioFile = editLocalAudioFile && editLocalAudioFile.files && editLocalAudioFile.files[0];
                 const typedAudioUrl = editLocalAudioUrl ? editLocalAudioUrl.value.trim() : '';
 
                 if (pickedAudioFile) {
-                    if (musicSettings.audioSrc && musicSettings.audioSrc.startsWith('blob:')) {
-                        URL.revokeObjectURL(musicSettings.audioSrc);
+                    if (myProfileData.audioSrc && myProfileData.audioSrc.startsWith('blob:')) {
+                        URL.revokeObjectURL(myProfileData.audioSrc);
                     }
-                    musicSettings.audioFileName = pickedAudioFile.name;
+                    myProfileData.audioFileName = pickedAudioFile.name;
                     if (pickedAudioFile.size <= 3 * 1024 * 1024) {
                         try {
-                            musicSettings.audioSrc = await readFileAsDataUrl(pickedAudioFile);
+                            myProfileData.audioSrc = await readFileAsDataUrl(pickedAudioFile);
                         } catch (_) {
-                            musicSettings.audioSrc = URL.createObjectURL(pickedAudioFile);
+                            myProfileData.audioSrc = URL.createObjectURL(pickedAudioFile);
                         }
                     } else {
-                        musicSettings.audioSrc = URL.createObjectURL(pickedAudioFile);
+                        myProfileData.audioSrc = URL.createObjectURL(pickedAudioFile);
                     }
                 } else if (typedAudioUrl) {
-                    musicSettings.audioSrc = typedAudioUrl;
-                    musicSettings.audioFileName = extractFileNameFromUrl(typedAudioUrl, 'Áudio local');
-                } else if (!typedAudioUrl && (!musicSettings.audioSrc || !musicSettings.audioSrc.startsWith('blob:'))) {
-                    musicSettings.audioSrc = '';
-                    musicSettings.audioFileName = '';
+                    myProfileData.audioSrc = typedAudioUrl;
+                    myProfileData.audioFileName = extractFileNameFromUrl(typedAudioUrl, 'Áudio');
+                } else {
+                    myProfileData.audioSrc = '';
+                    myProfileData.audioFileName = '';
                 }
 
                 const pickedCoverFile = editMusicCoverFile && editMusicCoverFile.files && editMusicCoverFile.files[0];
                 const typedCoverUrl = editMusicCoverUrl ? editMusicCoverUrl.value.trim() : '';
 
                 if (pickedCoverFile) {
-                    if (musicSettings.coverUrl && musicSettings.coverUrl.startsWith('blob:')) {
-                        URL.revokeObjectURL(musicSettings.coverUrl);
+                    if (myProfileData.coverUrl && myProfileData.coverUrl.startsWith('blob:')) {
+                        URL.revokeObjectURL(myProfileData.coverUrl);
                     }
                     if (pickedCoverFile.size <= 2 * 1024 * 1024) {
                         try {
-                            musicSettings.coverUrl = await readFileAsDataUrl(pickedCoverFile);
+                            myProfileData.coverUrl = await readFileAsDataUrl(pickedCoverFile);
                         } catch (_) {
-                            musicSettings.coverUrl = URL.createObjectURL(pickedCoverFile);
+                            myProfileData.coverUrl = URL.createObjectURL(pickedCoverFile);
                         }
                     } else {
-                        musicSettings.coverUrl = URL.createObjectURL(pickedCoverFile);
+                        myProfileData.coverUrl = URL.createObjectURL(pickedCoverFile);
                     }
                 } else if (typedCoverUrl) {
-                    musicSettings.coverUrl = typedCoverUrl;
-                } else if (!typedCoverUrl && (!musicSettings.coverUrl || !musicSettings.coverUrl.startsWith('blob:'))) {
-                    musicSettings.coverUrl = '';
+                    myProfileData.coverUrl = typedCoverUrl;
+                } else {
+                    myProfileData.coverUrl = '';
                 }
 
-                saveMusicSettingsToStorage();
-
-                const vid = extractYouTubeId(musicSettings.url);
-                if (vid && !musicSettings.audioSrc) {
-                    mountYouTubePlayer(vid);
-                }
-                applyMusicPlacement();
+                // Salva no cache local isolado exclusivamente para activeUsername
+                saveUserMusicToLocalCache(activeUsername, myProfileData);
+                profilesByUsername.set(activeUsername.toLowerCase(), myProfileData);
 
                 const formData = new FormData(editProfileForm);
-                formData.append('accent_color', profileData.accentColor);
+                formData.append('accent_color', myProfileData.accentColor);
 
                 fetch('/api/profile/update/', {
                     method: 'POST',
-                    headers: {
-                        'X-CSRFToken': getCookie('csrftoken')
-                    },
+                    headers: { 'X-CSRFToken': getCookie('csrftoken') },
                     body: formData
                 })
                 .then(res => res.json())
@@ -3853,17 +3663,12 @@
                         renderEmptyFriendRequests(container);
                     }
                 })
-                .catch(() => {
-                    renderEmptyFriendRequests(container);
-                });
+                .catch(() => renderEmptyFriendRequests(container));
             }
 
             window.acceptRequest = function(requestId, btnEl) {
                 const card = document.getElementById(`friend-req-card-${requestId}`) || (btnEl ? btnEl.closest('.friend-req-card') : null);
-                if (btnEl) {
-                    btnEl.disabled = true;
-                    btnEl.style.opacity = '0.7';
-                }
+                if (btnEl) { btnEl.disabled = true; btnEl.style.opacity = '0.7'; }
 
                 fetch('/api/friend-request/accept/', {
                     method: 'POST',
@@ -3876,10 +3681,7 @@
                 .then(res => res.json().then(resp => ({ ok: res.ok, resp })))
                 .then(({ ok, resp }) => {
                     if (!ok || resp.status === 'error') {
-                        if (btnEl) {
-                            btnEl.disabled = false;
-                            btnEl.style.opacity = '1';
-                        }
+                        if (btnEl) { btnEl.disabled = false; btnEl.style.opacity = '1'; }
                         showKiwiToast(resp.message || "Não foi possível aceitar o pedido.");
                         return;
                     }
@@ -3887,9 +3689,7 @@
                     if (card) {
                         card.classList.add('accepted');
                         const actionsEl = card.querySelector('.friend-req-actions');
-                        if (actionsEl) {
-                            actionsEl.innerHTML = `<span class="friend-req-status">✓ Pedido aceito</span>`;
-                        }
+                        if (actionsEl) actionsEl.innerHTML = `<span class="friend-req-status">✓ Pedido aceito</span>`;
 
                         setTimeout(() => {
                             card.classList.add('fading-out');
@@ -3900,21 +3700,15 @@
                                     renderEmptyFriendRequests(container);
                                 }
                                 const amigosTab = document.querySelector('.social-tab[data-tab="amigos"]');
-                                if (amigosTab && amigosTab.classList.contains('active') && typeof fetchFriendsList === 'function') {
-                                    fetchFriendsList();
-                                }
+                                if (amigosTab && amigosTab.classList.contains('active')) fetchFriendsList();
                             }, 360);
                         }, 1050);
                     } else {
                         fetchFriendRequests();
                     }
                 })
-                .catch(err => {
-                    console.error("Erro ao aceitar pedido:", err);
-                    if (btnEl) {
-                        btnEl.disabled = false;
-                        btnEl.style.opacity = '1';
-                    }
+                .catch(() => {
+                    if (btnEl) { btnEl.disabled = false; btnEl.style.opacity = '1'; }
                     showKiwiToast("Não foi possível aceitar o pedido.");
                 });
             };
@@ -3942,11 +3736,8 @@
                     closeBtn.onclick = function(e) {
                         e.stopPropagation();
                         openDmTabs.delete(uname);
-                        if (currentView === 'dm' && currentDmUser === uname) {
-                            switchToGeral();
-                        } else {
-                            renderDmTabs();
-                        }
+                        if (currentView === 'dm' && currentDmUser === uname) switchToGeral();
+                        else renderDmTabs();
                     };
 
                     item.appendChild(av);
@@ -3959,10 +3750,7 @@
             window.switchToGeral = function() {
                 currentView = 'geral';
                 currentDmUser = null;
-                if (dmSocket) {
-                    dmSocket.close();
-                    dmSocket = null;
-                }
+                if (dmSocket) { dmSocket.close(); dmSocket = null; }
 
                 tabGeralEl.classList.add('active');
                 renderDmTabs();
@@ -4000,7 +3788,7 @@
                     options.avatarUrl ||
                     data.avatar ||
                     data.avatarUrl ||
-                    (canDelete ? profileData.avatarUrl : '') ||
+                    (canDelete ? myProfileData.avatarUrl : '') ||
                     '';
                 const avatarInitial = msgUsername.charAt(0).toUpperCase() || 'K';
                 const timeText = data.time || 'Agora';
@@ -4008,9 +3796,7 @@
                 const group = document.createElement('div');
                 group.className = 'message-group';
                 group.setAttribute('data-can-delete', canDelete ? '1' : '0');
-                if (data.id) {
-                    group.setAttribute(isDm ? 'data-dm-id' : 'data-msg-id', data.id);
-                }
+                if (data.id) group.setAttribute(isDm ? 'data-dm-id' : 'data-msg-id', data.id);
 
                 const avatar = document.createElement('div');
                 avatar.className = 'avatar';
@@ -4078,9 +3864,7 @@
             function appendGeralMessageToSnapshot(data, avatarUrl = '') {
                 const tempContainer = document.createElement('div');
                 tempContainer.innerHTML = geralSnapshotHTML;
-                if (data.id && tempContainer.querySelector(`.message-group[data-msg-id="${data.id}"]`)) {
-                    return;
-                }
+                if (data.id && tempContainer.querySelector(`.message-group[data-msg-id="${data.id}"]`)) return;
                 const newEl = buildMessageDomElement(data, { isDm: false, avatarUrl });
                 tempContainer.appendChild(newEl);
                 geralSnapshotHTML = tempContainer.innerHTML;
@@ -4094,7 +3878,7 @@
                     options.avatarUrl ||
                     data.avatar ||
                     data.avatarUrl ||
-                    (canDelete ? profileData.avatarUrl : '') ||
+                    (canDelete ? myProfileData.avatarUrl : '') ||
                     '';
 
                 if (data.id) {
@@ -4104,9 +3888,7 @@
 
                 const group = buildMessageDomElement(data, { isDm, avatarUrl: avatarSrc });
                 chatLog.appendChild(group);
-                if (!isDm && currentView === 'geral') {
-                    geralSnapshotHTML = chatLog.innerHTML;
-                }
+                if (!isDm && currentView === 'geral') geralSnapshotHTML = chatLog.innerHTML;
                 chatLog.scrollTop = chatLog.scrollHeight;
             }
 
@@ -4141,16 +3923,13 @@
 
                         chatLog.innerHTML = '';
                         (data.messages || []).forEach(m => {
-                            const msgAvatar = (m.sender === activeUsername) ? profileData.avatarUrl : friendAvatar;
+                            const msgAvatar = (m.sender === activeUsername) ? myProfileData.avatarUrl : friendAvatar;
                             appendMessageElement(m, { isDm: true, avatarUrl: msgAvatar });
                         });
 
                         window.openMobileChatView();
 
-                        if (dmSocket) {
-                            dmSocket.close();
-                            dmSocket = null;
-                        }
+                        if (dmSocket) { dmSocket.close(); dmSocket = null; }
 
                         const scheme = window.location.protocol === 'https:' ? 'wss://' : 'ws://';
                         dmSocket = new WebSocket(`${scheme}${window.location.host}/ws/dm/${encodeURIComponent(targetUsername)}/`);
@@ -4177,7 +3956,7 @@
                             }
 
                             if (payload.type === 'dm_message' || payload.message || payload.attachment_url) {
-                                const senderAvatar = (payload.sender === activeUsername) ? profileData.avatarUrl : friendAvatar;
+                                const senderAvatar = (payload.sender === activeUsername) ? myProfileData.avatarUrl : friendAvatar;
                                 appendMessageElement({
                                     id: payload.id,
                                     sender: payload.sender,
@@ -4203,107 +3982,6 @@
                 .catch(err => {
                     console.error("Erro ao abrir DM:", err);
                     showKiwiToast("Não foi possível abrir o chat privado.");
-                });
-            };
-
-            window.openUserProfile = function(username) {
-                if (username === activeUsername) {
-                    applySpecialProfileEffects(
-                        aestheticModal ? aestheticModal.querySelector('.aesthetic-profile-card') : null,
-                        profileUsernameEl,
-                        profileAdminBadge,
-                        activeUsername,
-                        profileData.is_admin
-                    );
-                    applyMusicPlacement();
-                    aestheticModal.classList.add('open');
-                    return;
-                }
-
-                fetch('/api/profile/' + encodeURIComponent(username) + '/')
-                .then(res => res.json())
-                .then(otherData => {
-                    const resolvedName = otherData.username || username;
-                    otherProfileUsernameEl.textContent = resolvedName;
-                    applySpecialProfileEffects(
-                        otherProfileModal ? otherProfileModal.querySelector('.aesthetic-profile-card') : null,
-                        otherProfileUsernameEl,
-                        otherProfileAdminBadge,
-                        resolvedName,
-                        Boolean(otherData.is_admin || otherData.is_staff || otherData.is_superuser)
-                    );
-                    document.getElementById('other-profile-status-bubble').textContent = otherData.bubble || '🌸 Olá, estou no Kiwi Chat!';
-                    document.getElementById('other-profile-pronouns').textContent = otherData.pronouns || 'utilizador • 🥝';
-                    document.getElementById('other-profile-bio').innerHTML = formatSafeBioHtml(otherData.bio || 'Perfil estético ativo.');
-
-                    const oAvatar = document.getElementById('other-profile-avatar');
-                    const oBanner = document.getElementById('other-profile-banner');
-
-                    setAvatarStyle(oAvatar, otherData.avatarUrl, username);
-
-                    if (otherData.bannerUrl && otherData.bannerUrl.trim() !== '' && isSafeAssetUrl(otherData.bannerUrl)) {
-                        oBanner.style.backgroundImage = `url("${encodeURI(otherData.bannerUrl.trim())}")`;
-                        oBanner.style.backgroundSize = 'cover';
-                        oBanner.style.backgroundPosition = 'center';
-                    } else {
-                        oBanner.style.backgroundImage = 'var(--auth-artwork)';
-                        oBanner.style.backgroundColor = otherData.accent_color || '#ff9de2';
-                    }
-
-                    const addFriendBtn = document.getElementById('add-friend-btn');
-                    addFriendBtn.style.display = otherData.is_friend ? 'none' : 'flex';
-                    addFriendBtn.onclick = function() {
-                        fetch('/api/friend-request/send/', {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json',
-                                'X-CSRFToken': getCookie('csrftoken')
-                            },
-                            body: JSON.stringify({ username: username })
-                        })
-                        .then(r => r.json())
-                        .then(resp => {
-                            showKiwiToast(resp.message || "Pedido de amizade enviado!");
-                            otherProfileModal.classList.remove('open');
-                        })
-                        .catch(err => {
-                            console.error("Erro ao enviar pedido:", err);
-                            showKiwiToast("Não foi possível enviar o pedido de amizade.");
-                        });
-                    };
-
-                    const dmBtn = document.getElementById('dm-btn');
-                    dmBtn.style.display = otherData.is_friend ? 'flex' : 'none';
-                    dmBtn.onclick = function() {
-                        otherProfileModal.classList.remove('open');
-                        openPrivateChat(username, otherData.avatarUrl || '');
-                    };
-
-                    const callFriendBtn = document.getElementById('call-friend-btn');
-                    callFriendBtn.style.display = otherData.is_friend ? 'flex' : 'none';
-                    callFriendBtn.onclick = function() {
-                        otherProfileModal.classList.remove('open');
-                        startVoiceCall(username);
-                    };
-
-                    const watchFriendBtn = document.getElementById('watch-friend-btn');
-                    watchFriendBtn.style.display = otherData.is_friend ? 'flex' : 'none';
-                    watchFriendBtn.onclick = function() {
-                        otherProfileModal.classList.remove('open');
-                        watchUserStream(username, otherData.avatarUrl || '');
-                    };
-
-                    const removeFriendBtn = document.getElementById('remove-friend-btn');
-                    removeFriendBtn.style.display = otherData.is_friend ? 'flex' : 'none';
-                    removeFriendBtn.onclick = function() {
-                        removeFriend(username);
-                    };
-
-                    otherProfileModal.classList.add('open');
-                })
-                .catch(err => {
-                    console.error("Erro ao carregar perfil de terceiros:", err);
-                    showKiwiToast("Não foi possível carregar o perfil do utilizador.");
                 });
             };
 
@@ -4342,7 +4020,7 @@
                 const av = document.createElement('div');
                 av.className = 'mini-avatar';
                 av.style.cssText = 'width:28px; height:28px; font-size:12px;';
-                setAvatarStyle(av, profileData.avatarUrl, activeUsername);
+                setAvatarStyle(av, myProfileData.avatarUrl, activeUsername);
 
                 const info = document.createElement('div');
                 const nameDiv = document.createElement('div');
@@ -4504,9 +4182,7 @@
             );
 
             document.addEventListener('click', function(e) {
-                if (!e.target.closest('.message-group')) {
-                    closeAllMessagePopovers();
-                }
+                if (!e.target.closest('.message-group')) closeAllMessagePopovers();
             });
 
             chatLog.addEventListener('click', function(e) {
@@ -4527,15 +4203,13 @@
 
                 const reactionChip = e.target.closest('.msg-reaction-chip');
                 if (reactionChip) {
-                    const group = reactionChip.closest('.message-group');
-                    toggleMessageReaction(group, reactionChip.getAttribute('data-emoji'));
+                    toggleMessageReaction(reactionChip.closest('.message-group'), reactionChip.getAttribute('data-emoji'));
                     return;
                 }
 
                 const reactBtn = e.target.closest('[data-react-emoji]');
                 if (reactBtn) {
-                    const group = reactBtn.closest('.message-group');
-                    toggleMessageReaction(group, reactBtn.getAttribute('data-react-emoji'));
+                    toggleMessageReaction(reactBtn.closest('.message-group'), reactBtn.getAttribute('data-react-emoji'));
                     closeAllMessagePopovers();
                     return;
                 }
@@ -4585,9 +4259,7 @@
                     const group = copyBtn.closest('.message-group');
                     const textContent = group ? group.querySelector('.message-text')?.textContent?.trim() : '';
                     if (textContent && navigator.clipboard) {
-                        navigator.clipboard.writeText(textContent).then(() => {
-                            showKiwiToast("Texto copiado!");
-                        }).catch(() => {});
+                        navigator.clipboard.writeText(textContent).then(() => showKiwiToast("Texto copiado!")).catch(() => {});
                     }
                     closeAllMessagePopovers();
                     return;
@@ -4632,9 +4304,7 @@
 
                 if (data.type === 'message_deleted') {
                     const msgEl = chatLog.querySelector(`.message-group[data-msg-id="${data.message_id}"]`);
-                    if (msgEl) {
-                        msgEl.remove();
-                    }
+                    if (msgEl) msgEl.remove();
                     const snapTemp = document.createElement('div');
                     snapTemp.innerHTML = geralSnapshotHTML;
                     const snapEl = snapTemp.querySelector(`.message-group[data-msg-id="${data.message_id}"]`);
@@ -4649,21 +4319,16 @@
                 const resolvedAvatar =
                     data.avatar ||
                     data.avatarUrl ||
-                    (msgUser === activeUsername ? profileData.avatarUrl : '');
+                    (msgUser === activeUsername ? myProfileData.avatarUrl : '');
 
                 if (currentView === 'geral') {
-                    appendMessageElement(data, {
-                        isDm: false,
-                        avatarUrl: resolvedAvatar
-                    });
+                    appendMessageElement(data, { isDm: false, avatarUrl: resolvedAvatar });
                 } else {
                     appendGeralMessageToSnapshot(data, resolvedAvatar);
                 }
             };
 
-            function closeAttachMenu() {
-                attachMenu.classList.remove('open');
-            }
+            function closeAttachMenu() { attachMenu.classList.remove('open'); }
 
             clipMenuBtn.addEventListener('click', function(e) {
                 e.stopPropagation();
@@ -4671,36 +4336,18 @@
             });
 
             document.addEventListener('click', function(e) {
-                if (!attachMenu.contains(e.target) && e.target !== clipMenuBtn) {
-                    closeAttachMenu();
-                }
+                if (!attachMenu.contains(e.target) && e.target !== clipMenuBtn) closeAttachMenu();
             });
 
-            pickPhotoBtn.addEventListener('click', () => {
-                closeAttachMenu();
-                photoFileInput.value = '';
-                photoFileInput.click();
-            });
-
-            pickAudioBtn.addEventListener('click', () => {
-                closeAttachMenu();
-                audioFileInput.value = '';
-                audioFileInput.click();
-            });
-
-            pickDocBtn.addEventListener('click', () => {
-                closeAttachMenu();
-                docFileInput.value = '';
-                docFileInput.click();
-            });
+            pickPhotoBtn.addEventListener('click', () => { closeAttachMenu(); photoFileInput.value = ''; photoFileInput.click(); });
+            pickAudioBtn.addEventListener('click', () => { closeAttachMenu(); audioFileInput.value = ''; audioFileInput.click(); });
+            pickDocBtn.addEventListener('click', () => { closeAttachMenu(); docFileInput.value = ''; docFileInput.click(); });
 
             function clearPendingAttachment() {
                 pendingAttachmentFile = null;
                 pendingAttachmentCategory = 'file';
                 allFileInputs.forEach(input => { input.value = ''; });
-                if (previewImg.src && previewImg.src.startsWith('blob:')) {
-                    URL.revokeObjectURL(previewImg.src);
-                }
+                if (previewImg.src && previewImg.src.startsWith('blob:')) URL.revokeObjectURL(previewImg.src);
                 previewImg.src = '';
                 previewImg.style.display = 'none';
                 previewBadge.style.display = 'none';
@@ -4710,7 +4357,6 @@
 
             function handleFileSelected(file, category) {
                 if (!file) return;
-
                 clearPendingAttachment();
                 pendingAttachmentFile = file;
                 pendingAttachmentCategory = category;
@@ -4730,18 +4376,9 @@
                 }
             }
 
-            photoFileInput.addEventListener('change', function() {
-                handleFileSelected(this.files && this.files[0], 'image');
-            });
-
-            audioFileInput.addEventListener('change', function() {
-                handleFileSelected(this.files && this.files[0], 'audio');
-            });
-
-            docFileInput.addEventListener('change', function() {
-                handleFileSelected(this.files && this.files[0], 'document');
-            });
-
+            photoFileInput.addEventListener('change', function() { handleFileSelected(this.files && this.files[0], 'image'); });
+            audioFileInput.addEventListener('change', function() { handleFileSelected(this.files && this.files[0], 'audio'); });
+            docFileInput.addEventListener('change', function() { handleFileSelected(this.files && this.files[0], 'document'); });
             clearAttachmentBtn.addEventListener('click', clearPendingAttachment);
 
             async function uploadAndBroadcastAttachment(file, categoryHint = 'file') {
@@ -4758,19 +4395,13 @@
                 try {
                     const res = await fetch('/api/upload-attachment/', {
                         method: 'POST',
-                        headers: {
-                            'X-CSRFToken': csrfToken
-                        },
+                        headers: { 'X-CSRFToken': csrfToken },
                         body: formData
                     });
 
                     const rawText = await res.text();
                     let resp = {};
-                    try {
-                        resp = JSON.parse(rawText);
-                    } catch (_) {
-                        throw new Error(`HTTP ${res.status} ao contactar /api/upload-attachment/`);
-                    }
+                    try { resp = JSON.parse(rawText); } catch (_) { throw new Error(`HTTP ${res.status}`); }
 
                     if (!res.ok || resp.status !== 'success') {
                         showKiwiToast(resp.message || `Falha ao enviar anexo (HTTP ${res.status}).`);
@@ -4790,8 +4421,8 @@
                                 'attachment_type': resolvedType,
                                 'attachment_name': resolvedName,
                                 'username': activeUsername,
-                                'avatar': profileData.avatarUrl || '',
-                                'avatarUrl': profileData.avatarUrl || ''
+                                'avatar': myProfileData.avatarUrl || '',
+                                'avatarUrl': myProfileData.avatarUrl || ''
                             }));
                         } else {
                             appendMessageElement({
@@ -4801,10 +4432,10 @@
                                 attachment_url: resp.attachment_url,
                                 attachment_type: resolvedType,
                                 attachment_name: resolvedName,
-                                avatar: profileData.avatarUrl || '',
-                                avatarUrl: profileData.avatarUrl || '',
+                                avatar: myProfileData.avatarUrl || '',
+                                avatarUrl: myProfileData.avatarUrl || '',
                                 time: 'Agora'
-                            }, { isDm: false, avatarUrl: profileData.avatarUrl || '' });
+                            }, { isDm: false, avatarUrl: myProfileData.avatarUrl || '' });
                         }
                     } else {
                         if (dmSocket && dmSocket.readyState === WebSocket.OPEN) {
@@ -4824,7 +4455,7 @@
                                 attachment_type: resolvedType,
                                 attachment_name: resolvedName,
                                 time: 'Agora'
-                            }, { isDm: true, avatarUrl: profileData.avatarUrl || '' });
+                            }, { isDm: true, avatarUrl: myProfileData.avatarUrl || '' });
                         }
                     }
                 } catch (err) {
@@ -4850,9 +4481,7 @@
                     mediaRecorder = new MediaRecorder(stream);
 
                     mediaRecorder.ondataavailable = (e) => {
-                        if (e.data && e.data.size > 0) {
-                            audioChunks.push(e.data);
-                        }
+                        if (e.data && e.data.size > 0) audioChunks.push(e.data);
                     };
 
                     mediaRecorder.onstop = async () => {
@@ -4895,9 +4524,7 @@
                         showKiwiToast("A ligação da conversa privada está fechada. Abra a DM novamente.");
                         return;
                     }
-                    dmSocket.send(JSON.stringify({
-                        'message': message
-                    }));
+                    dmSocket.send(JSON.stringify({ 'message': message }));
                     messageInput.value = '';
                     return;
                 }
@@ -4910,8 +4537,8 @@
                 chatSocket.send(JSON.stringify({
                     'message': message,
                     'username': activeUsername,
-                    'avatar': profileData.avatarUrl || '',
-                    'avatarUrl': profileData.avatarUrl || ''
+                    'avatar': myProfileData.avatarUrl || '',
+                    'avatarUrl': myProfileData.avatarUrl || ''
                 }));
 
                 messageInput.value = '';
@@ -4919,9 +4546,7 @@
 
             submitButton.addEventListener('click', sendMessage);
             messageInput.addEventListener('keyup', function(e) {
-                if (e.key === 'Enter') {
-                    sendMessage();
-                }
+                if (e.key === 'Enter') sendMessage();
             });
             } catch (fatalErr) {
                 console.error("Erro na inicialização do Kiwi:", fatalErr);
