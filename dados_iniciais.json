@@ -77,6 +77,13 @@
     }
   },
   {
+    "model": "chat.channel",
+    "pk": 1,
+    "fields": {
+      "name": "geral"
+    }
+  },
+  {
     "model": "chat.message",
     "pk": 17,
     "fields": {
