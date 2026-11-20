@@ -1,162 +1,162 @@
 [
-{
-  "model": "auth.user",
-  "pk": 1,
-  "fields": {
-    "password": "pbkdf2_sha256$1500000$qKBqqoxsLgNky2TLhcFKeZ$Rg3IRhF+vwfVDWr5j66Sbbxy7O6W2BKdpzcJBGxSRb8=",
-    "last_login": "2026-11-19T19:43:44.643Z",
-    "is_superuser": false,
-    "username": "AkiiraPW",
-    "first_name": "",
-    "last_name": "",
-    "email": "",
-    "is_staff": false,
-    "is_active": true,
-    "date_joined": "2026-11-19T16:33:03.861Z",
-    "groups": [],
-    "user_permissions": []
+  {
+    "model": "auth.user",
+    "pk": 1,
+    "fields": {
+      "password": "pbkdf2_sha256$1500000$qKBqqoxsLgNky2TLhcFKeZ$Rg3IRhF+vwfVDWr5j66Sbbxy7O6W2BKdpzcJBGxSRb8=",
+      "last_login": "2026-11-19T19:43:44.643Z",
+      "is_superuser": false,
+      "username": "AkiiraPW",
+      "first_name": "",
+      "last_name": "",
+      "email": "",
+      "is_staff": false,
+      "is_active": true,
+      "date_joined": "2026-11-19T16:33:03.861Z",
+      "groups": [],
+      "user_permissions": []
+    }
+  },
+  {
+    "model": "auth.user",
+    "pk": 2,
+    "fields": {
+      "password": "pbkdf2_sha256$1500000$LengnCNN6k7V8JMd99pGqa$EpXSID/8XUinBM3KSZ0vCiXVjfcltlHfFKuFrFcVI9w=",
+      "last_login": "2026-11-19T21:02:36.453Z",
+      "is_superuser": false,
+      "username": "Hollow29",
+      "first_name": "",
+      "last_name": "",
+      "email": "",
+      "is_staff": false,
+      "is_active": true,
+      "date_joined": "2026-11-19T16:36:26.683Z",
+      "groups": [],
+      "user_permissions": []
+    }
+  },
+  {
+    "model": "chat.userprofile",
+    "pk": 1,
+    "fields": {
+      "user": 1,
+      "avatar": "avatars/1000192324.jpg",
+      "banner": "banners/download_2.jpeg",
+      "bubble": "私は今、深い闇の中にいる。",
+      "pronouns": "ele/he",
+      "bio": "人間は鳥のようなものだ。巣を作る鳥もいれば、ただ空を飛ぶ鳥もいる。好きなゲーム：フォートナイト、マインクラフト、トゥームレイダー、香港。好きなアニメ：Re:ゼロとチェンソーマン。",
+      "spotify_song": "rap/trap",
+      "spotify_artist": "Ado",
+      "accent_color": "#d4af37"
+    }
+  },
+  {
+    "model": "chat.userprofile",
+    "pk": 2,
+    "fields": {
+      "user": 2,
+      "avatar": "avatars/download.jpeg",
+      "banner": "banners/download_1.jpeg",
+      "bubble": "trash",
+      "pronouns": "ele/he",
+      "bio": "i like a trash",
+      "spotify_song": "rap",
+      "spotify_artist": "anirap",
+      "accent_color": "#ff9de2"
+    }
+  },
+  {
+    "model": "chat.friendrequest",
+    "pk": 3,
+    "fields": {
+      "sender": 1,
+      "receiver": 2,
+      "status": "accepted",
+      "created_at": "2026-11-19T19:43:48.452Z"
+    }
+  },
+  {
+    "model": "chat.message",
+    "pk": 17,
+    "fields": {
+      "user": 2,
+      "room": "geral",
+      "content": "oi",
+      "attachment": "",
+      "attachment_type": "",
+      "timestamp": "2026-11-19T19:43:31.025Z"
+    }
+  },
+  {
+    "model": "chat.message",
+    "pk": 18,
+    "fields": {
+      "user": 1,
+      "room": "geral",
+      "content": "",
+      "attachment": "chat_attachments/kris_deltarune.jpeg",
+      "attachment_type": "image",
+      "timestamp": "2026-11-19T19:44:22.845Z"
+    }
+  },
+  {
+    "model": "chat.message",
+    "pk": 19,
+    "fields": {
+      "user": 1,
+      "room": "geral",
+      "content": "",
+      "attachment": "chat_attachments/s21_IA.docx",
+      "attachment_type": "document",
+      "timestamp": "2026-11-19T19:47:58.622Z"
+    }
+  },
+  {
+    "model": "chat.privatemessage",
+    "pk": 1,
+    "fields": {
+      "sender": 1,
+      "receiver": 2,
+      "content": "oi",
+      "attachment": "",
+      "attachment_type": "",
+      "timestamp": "2026-11-19T19:42:34.346Z"
+    }
+  },
+  {
+    "model": "chat.privatemessage",
+    "pk": 2,
+    "fields": {
+      "sender": 1,
+      "receiver": 2,
+      "content": "oi",
+      "attachment": "",
+      "attachment_type": "",
+      "timestamp": "2026-11-19T19:45:15.128Z"
+    }
+  },
+  {
+    "model": "chat.privatemessage",
+    "pk": 3,
+    "fields": {
+      "sender": 2,
+      "receiver": 1,
+      "content": "oi",
+      "attachment": "",
+      "attachment_type": "",
+      "timestamp": "2026-11-19T19:45:23.529Z"
+    }
+  },
+  {
+    "model": "chat.privatemessage",
+    "pk": 8,
+    "fields": {
+      "sender": 1,
+      "receiver": 2,
+      "content": "",
+      "attachment": "chat_attachments/Captura_de_tela_2025-11-05_132934.png",
+      "attachment_type": "image",
+      "timestamp": "2026-11-19T20:57:33.734Z"
+    }
   }
-},
-{
-  "model": "auth.user",
-  "pk": 2,
-  "fields": {
-    "password": "pbkdf2_sha256$1500000$LengnCNN6k7V8JMd99pGqa$EpXSID/8XUinBM3KSZ0vCiXVjfcltlHfFKuFrFcVI9w=",
-    "last_login": "2026-11-19T21:02:36.453Z",
-    "is_superuser": false,
-    "username": "Hollow29",
-    "first_name": "",
-    "last_name": "",
-    "email": "",
-    "is_staff": false,
-    "is_active": true,
-    "date_joined": "2026-11-19T16:36:26.683Z",
-    "groups": [],
-    "user_permissions": []
-  }
-},
-{
-  "model": "chat.userprofile",
-  "pk": 1,
-  "fields": {
-    "user": 1,
-    "avatar": "avatars/1000192324.jpg",
-    "banner": "banners/download_2.jpeg",
-    "bubble": "私は今、深い闇の中にいる。",
-    "pronouns": "ele/he",
-    "bio": "人間は鳥のようなものだ。巣を作る鳥もいれば、ただ空を飛ぶ鳥もいる。好きなゲーム：フォートナイト、マインクラフト、トゥームレイダー、香港。好きなアニメ：Re:ゼロとチェンソーマン。",
-    "spotify_song": "rap/trap",
-    "spotify_artist": "Ado",
-    "accent_color": "#2b2d31"
-  }
-},
-{
-  "model": "chat.userprofile",
-  "pk": 2,
-  "fields": {
-    "user": 2,
-    "avatar": "avatars/download.jpeg",
-    "banner": "banners/download_1.jpeg",
-    "bubble": "trash",
-    "pronouns": "ele/he",
-    "bio": "i like a trash",
-    "spotify_song": "rap",
-    "spotify_artist": "anirap",
-    "accent_color": "#ff9de2"
-  }
-},
-{
-  "model": "chat.friendrequest",
-  "pk": 3,
-  "fields": {
-    "sender": 1,
-    "receiver": 2,
-    "status": "accepted",
-    "created_at": "2026-11-19T19:43:48.452Z"
-  }
-},
-{
-  "model": "chat.message",
-  "pk": 17,
-  "fields": {
-    "user": 2,
-    "room": "geral",
-    "content": "oi",
-    "attachment": "",
-    "attachment_type": "",
-    "timestamp": "2026-11-19T19:43:31.025Z"
-  }
-},
-{
-  "model": "chat.message",
-  "pk": 18,
-  "fields": {
-    "user": 1,
-    "room": "geral",
-    "content": "",
-    "attachment": "chat_attachments/kris_deltarune.jpeg",
-    "attachment_type": "image",
-    "timestamp": "2026-11-19T19:44:22.845Z"
-  }
-},
-{
-  "model": "chat.message",
-  "pk": 19,
-  "fields": {
-    "user": 1,
-    "room": "geral",
-    "content": "",
-    "attachment": "chat_attachments/s21_IA.docx",
-    "attachment_type": "document",
-    "timestamp": "2026-11-19T19:47:58.622Z"
-  }
-},
-{
-  "model": "chat.privatemessage",
-  "pk": 1,
-  "fields": {
-    "sender": 1,
-    "receiver": 2,
-    "content": "oi",
-    "attachment": "",
-    "attachment_type": "",
-    "timestamp": "2026-11-19T19:42:34.346Z"
-  }
-},
-{
-  "model": "chat.privatemessage",
-  "pk": 2,
-  "fields": {
-    "sender": 1,
-    "receiver": 2,
-    "content": "oi",
-    "attachment": "",
-    "attachment_type": "",
-    "timestamp": "2026-11-19T19:45:15.128Z"
-  }
-},
-{
-  "model": "chat.privatemessage",
-  "pk": 3,
-  "fields": {
-    "sender": 2,
-    "receiver": 1,
-    "content": "oi",
-    "attachment": "",
-    "attachment_type": "",
-    "timestamp": "2026-11-19T19:45:23.529Z"
-  }
-},
-{
-  "model": "chat.privatemessage",
-  "pk": 8,
-  "fields": {
-    "sender": 1,
-    "receiver": 2,
-    "content": "",
-    "attachment": "chat_attachments/Captura_de_tela_2025-11-05_132934.png",
-    "attachment_type": "image",
-    "timestamp": "2026-11-19T20:57:33.734Z"
-  }
-}
 ]
