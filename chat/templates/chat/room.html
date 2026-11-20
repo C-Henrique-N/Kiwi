@@ -2058,11 +2058,188 @@
                 transition-duration: 0.01ms !important;
             }
         }
+    
+        /* === DISCORD-STYLE SERVER RAIL, ADMIN CONTROLS & FRIEND SEARCH === */
+        .kiwi-app-shell {
+            display: flex;
+            width: 100%;
+            height: 100%;
+            min-width: 0;
+            overflow: hidden;
+        }
+        .server-rail {
+            width: 68px;
+            background: var(--bg-darkest);
+            border-right: 1px solid var(--border-subtle);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 12px 0;
+            gap: 8px;
+            flex-shrink: 0;
+            overflow-y: auto;
+        }
+        .server-rail-btn {
+            width: 44px;
+            height: 44px;
+            border-radius: 16px;
+            border: 1px solid var(--border-subtle);
+            background: var(--bg-card);
+            color: var(--text-main);
+            font-size: 15px;
+            font-weight: 800;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            text-decoration: none;
+            background-size: cover;
+            background-position: center;
+            transition: border-radius 0.2s var(--ease-kiwi), transform 0.18s var(--ease-kiwi), background 0.2s ease;
+            flex-shrink: 0;
+        }
+        .server-rail-btn:hover {
+            border-radius: 12px;
+            transform: translateY(-1px);
+            background: var(--bg-soft);
+        }
+        .server-rail-btn.active {
+            border-radius: 12px;
+            background: #5865f2;
+            color: #ffffff;
+            border-color: #5865f2;
+        }
+        .server-rail-divider {
+            width: 30px;
+            height: 2px;
+            border-radius: 999px;
+            background: var(--border-subtle);
+            margin: 2px 0;
+            flex-shrink: 0;
+        }
+        .server-rail-add-btn {
+            border-style: dashed;
+            color: #23a55a;
+            font-size: 20px;
+        }
+        .section-row-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 6px;
+            margin: 12px 0 8px 0;
+        }
+        .section-row-header .section-label {
+            margin: 0;
+        }
+        .section-mini-action-btn {
+            background: var(--bg-card);
+            border: 1px solid var(--border-subtle);
+            color: var(--text-main);
+            border-radius: 6px;
+            padding: 2px 7px;
+            font-size: 11px;
+            font-weight: 700;
+            cursor: pointer;
+        }
+        .section-mini-action-btn:hover {
+            background: var(--bg-soft);
+        }
+        .friend-music-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-subtle);
+            border-radius: 10px;
+            padding: 10px;
+            margin-bottom: 8px;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+        .friend-music-top {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .friend-music-play-btn {
+            background: #23a55a;
+            color: #ffffff;
+            border: none;
+            border-radius: 6px;
+            padding: 5px 9px;
+            font-size: 11px;
+            font-weight: 700;
+            cursor: pointer;
+            align-self: flex-start;
+        }
+        .mobile-bottom-nav {
+            display: none;
+        }
+        @media (max-width: 768px) {
+            .server-rail {
+                width: 54px;
+                padding: 10px 0 72px 0;
+            }
+            .server-rail-btn {
+                width: 38px;
+                height: 38px;
+                font-size: 13px;
+            }
+            .sidebar-left {
+                width: calc(100% - 54px);
+                max-width: calc(100% - 54px);
+                padding-bottom: 58px;
+            }
+            body.mobile-chat-open .server-rail,
+            body.mobile-chat-open .sidebar-left {
+                display: none;
+            }
+            body.mobile-chat-open .chat-area {
+                width: 100%;
+                padding-bottom: 58px;
+            }
+            .mobile-bottom-nav {
+                display: flex;
+                position: fixed;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                height: 54px;
+                background: var(--bg-darkest);
+                border-top: 1px solid var(--border-subtle);
+                z-index: 1200;
+                align-items: center;
+                justify-content: space-around;
+                padding: 0 6px;
+            }
+            .mobile-nav-btn {
+                flex: 1;
+                height: 42px;
+                background: transparent;
+                border: none;
+                color: var(--text-muted);
+                font-size: 11px;
+                font-weight: 700;
+                border-radius: 8px;
+                cursor: pointer;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
+                gap: 2px;
+            }
+            .mobile-nav-btn.active {
+                color: var(--text-main);
+                background: rgba(128, 128, 128, 0.14);
+            }
+        }
+
     </style>
 </head>
 <body>
     {{ username|json_script:"kiwi-username-data" }}
-    {{ room_name|default:"geral"|json_script:"kiwi-room-name-data" }}
+    {{ is_admin|default:False|json_script:"kiwi-is-admin-data" }}
+    {% if active_channel %}{{ active_channel.id|json_script:"kiwi-channel-id-data" }}{% else %}<script id="kiwi-channel-id-data" type="application/json">null</script>{% endif %}
+    {% if active_server %}{{ active_server.id|json_script:"kiwi-server-id-data" }}{% else %}<script id="kiwi-server-id-data" type="application/json">null</script>{% endif %}
 
     <div id="kiwi-splash" aria-hidden="true">
         <div class="kiwi-splash-stage">
@@ -2088,13 +2265,47 @@
     <audio id="remote-call-audio" autoplay playsinline></audio>
     <form id="csrf-helper-form" style="display:none;">{% csrf_token %}</form>
 
-    <div class="sidebar-left">
-        <div class="server-header">🥝 Kiwi Server</div>
-        <div class="channels-list">
-            <div class="section-label">Canais de Texto</div>
-            <div class="channel-item active" id="tab-geral" onclick="switchToGeral()"># geral</div>
+    <div class="kiwi-app-shell">
+    <nav class="server-rail" aria-label="Servidores e Amizades">
+        <a href="{% url 'room' %}" class="server-rail-btn {% if not active_server %}active{% endif %}" title="Amizades e Mensagens Privadas">🥝</a>
+        <div class="server-rail-divider"></div>
+        {% for srv in servers %}
+        <a href="{% url 'server_view' srv.id %}" class="server-rail-btn {% if active_server and active_server.id == srv.id %}active{% endif %}" title="{{ srv.name }}"{% if srv.icon %} style="background-image: url('{{ srv.icon.url }}'); color: transparent;"{% endif %}>{% if not srv.icon %}{{ srv.name|slice:":2"|upper }}{% endif %}</a>
+        {% endfor %}
+        {% if is_admin %}
+        <button type="button" id="open-create-server-btn" class="server-rail-btn server-rail-add-btn" title="Criar servidor (Admin)">+</button>
+        {% endif %}
+    </nav>
 
-            <div class="section-label">Mensagens Privadas</div>
+    <div class="sidebar-left">
+        <div class="server-header" style="display:flex; align-items:center; justify-content:space-between; gap:8px;">
+            <span style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">{% if active_server %}🥝 {{ active_server.name }}{% else %}🥝 Kiwi • Amizades{% endif %}</span>
+            <button type="button" id="open-add-friend-btn" class="section-mini-action-btn" title="Buscar e adicionar amigos">+ Amigo</button>
+        </div>
+        <div class="channels-list">
+            {% if active_server %}
+            <div class="section-row-header">
+                <div class="section-label">Canais do Servidor</div>
+                {% if is_admin %}
+                <button type="button" id="open-create-channel-btn" class="section-mini-action-btn" title="Criar canal neste servidor">+ Canal</button>
+                {% endif %}
+            </div>
+            <div id="server-channels-list">
+                {% for ch in active_server.channels.all %}
+                <a href="{% url 'channel_view' active_server.id ch.id %}" class="channel-item {% if active_channel and active_channel.id == ch.id %}active{% endif %}" style="text-decoration:none;">
+                    <span>{% if ch.channel_type == 'audio' %}🎵{% else %}#{% endif %}</span>
+                    <span style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">{{ ch.name }}</span>
+                </a>
+                {% empty %}
+                <div style="font-size:12px; color:var(--text-muted); padding:6px 4px;">Nenhum canal criado ainda.</div>
+                {% endfor %}
+            </div>
+            {% endif %}
+
+            <div class="section-row-header">
+                <div class="section-label">Mensagens Privadas</div>
+                <button type="button" id="sidebar-search-friend-btn" class="section-mini-action-btn">🔍 Buscar</button>
+            </div>
             <div id="dm-tabs-list"></div>
         </div>
         <div class="my-user-panel">
@@ -2116,12 +2327,12 @@
     <div class="chat-area">
         <div class="chat-header">
             <div class="header-title-group">
-                <button type="button" class="back-geral-btn" id="mobile-back-list-btn" onclick="closeMobileChatView()" title="Voltar à lista de canais">☰ Canais</button>
+                <button type="button" class="back-geral-btn" id="mobile-back-list-btn" onclick="closeMobileChatView()" title="Voltar à lista">☰ Menu</button>
                 <div id="header-dm-avatar" class="header-dm-avatar" title="Ver perfil"></div>
-                <div id="header-main-title"># geral</div>
-                <span class="sub" id="header-sub-label">| Chat oficial em tempo real</span>
+                <div id="header-main-title">{% if active_channel %}{% if active_channel.channel_type == 'audio' %}🎵 {{ active_channel.name }}{% else %}# {{ active_channel.name }}{% endif %}{% else %}🥝 Amizades &amp; DMs{% endif %}</div>
+                <span class="sub" id="header-sub-label">{% if active_server %}| {{ active_server.name }}{% else %}| Selecione um amigo ou abra um servidor{% endif %}</span>
                 <button type="button" class="header-call-btn" id="header-call-btn">📞 Call</button>
-                <button type="button" class="back-geral-btn" id="back-to-geral-btn" onclick="switchToGeral()">← # geral</button>
+                <button type="button" class="back-geral-btn" id="back-to-geral-btn" onclick="switchToAmigosHome()">← Amizades</button>
             </div>
         </div>
 
@@ -2606,6 +2817,77 @@
                 </div>
             </form>
         </div>
+    </div>
+
+
+    <!-- MODAL PESQUISAR E ADICIONAR AMIGOS -->
+    <div id="add-friend-modal" class="modal-overlay">
+        <div class="aesthetic-profile-card" style="padding: 20px; width: 420px; max-height: 85vh; overflow-y: auto;">
+            <button type="button" class="close-modal-btn" id="close-add-friend-btn">×</button>
+            <h3 style="color: var(--text-main); margin-bottom: 12px; font-size: 16px;">👥 Buscar &amp; Adicionar Amigos</h3>
+            <div class="form-group">
+                <label for="friend-search-input">Nome de usuário</label>
+                <input type="text" id="friend-search-input" placeholder="Digite o @username do seu amigo...">
+            </div>
+            <div id="friend-search-results" style="display:flex; flex-direction:column; gap:8px; margin-top:10px;">
+                <div style="font-size:12px; color:var(--text-muted); text-align:center; padding:10px; background:var(--bg-soft); border-radius:8px;">
+                    Digite um nome para pesquisar usuários.
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL CRIAR SERVIDOR (SOMENTE ADMIN) -->
+    <div id="create-server-modal" class="modal-overlay">
+        <div class="aesthetic-profile-card" style="padding: 20px; width: 420px; max-height: 85vh; overflow-y: auto;">
+            <button type="button" class="close-modal-btn" id="close-create-server-btn">×</button>
+            <h3 style="color: var(--text-main); margin-bottom: 12px; font-size: 16px;">👑 Criar Novo Servidor</h3>
+            <form id="create-server-form" enctype="multipart/form-data">
+                <div class="form-group">
+                    <label for="new-server-name">Nome do servidor</label>
+                    <input type="text" id="new-server-name" name="name" required placeholder="Ex: Tropa do Kiwi">
+                </div>
+                <div class="form-group">
+                    <label for="new-server-channels">Canais iniciais (separados por vírgula)</label>
+                    <input type="text" id="new-server-channels" name="channels" value="chat, musica, clipes" placeholder="chat, musica, avisos">
+                </div>
+                <div class="form-group">
+                    <label for="new-server-icon">Ícone do servidor (opcional)</label>
+                    <input type="file" id="new-server-icon" name="icon" accept="image/*">
+                </div>
+                <button type="submit" class="btn-aesthetic-edit">Criar Servidor</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL CRIAR CANAL (SOMENTE ADMIN) -->
+    <div id="create-channel-modal" class="modal-overlay">
+        <div class="aesthetic-profile-card" style="padding: 20px; width: 400px; max-height: 85vh; overflow-y: auto;">
+            <button type="button" class="close-modal-btn" id="close-create-channel-btn">×</button>
+            <h3 style="color: var(--text-main); margin-bottom: 12px; font-size: 16px;">#️⃣ Novo Canal</h3>
+            <form id="create-channel-form">
+                <div class="form-group">
+                    <label for="new-channel-name">Nome do canal</label>
+                    <input type="text" id="new-channel-name" name="name" required placeholder="Ex: playlist-do-dia">
+                </div>
+                <div class="form-group">
+                    <label for="new-channel-type">Tipo de canal</label>
+                    <select id="new-channel-type" name="channel_type">
+                        <option value="text">Texto (#)</option>
+                        <option value="audio">Áudio / Música (🎵)</option>
+                    </select>
+                </div>
+                <button type="submit" class="btn-aesthetic-edit">Criar Canal</button>
+            </form>
+        </div>
+    </div>
+
+    <nav class="mobile-bottom-nav" aria-label="Navegação Mobile">
+        <button type="button" class="mobile-nav-btn active" id="mob-nav-friends">💬 Amigos</button>
+        <button type="button" class="mobile-nav-btn" id="mob-nav-search">➕ Buscar</button>
+        <button type="button" class="mobile-nav-btn" id="mob-nav-music">🎵 Música</button>
+        <button type="button" class="mobile-nav-btn" id="mob-nav-profile">👤 Perfil</button>
+    </nav>
     </div>
 
     <script>
@@ -5447,7 +5729,7 @@
 
             const wsScheme = window.location.protocol === "https:" ? "wss://" : "ws://";
             const chatSocket = new WebSocket(
-                wsScheme + window.location.host + "/ws/chat/" + encodeURIComponent(roomName) + "/"
+                wsScheme + window.location.host + "/ws/chat/" + encodeURIComponent(activeChannelId || roomName) + "/"
             );
 
             document.addEventListener('click', function(e) {
@@ -5711,6 +5993,338 @@
                         console.error("Erro ao gravar áudio:", err);
                         showKiwiToast("Não foi possível aceder ao microfone.");
                     }
+                });
+            }
+
+
+            const isAdminSession = Boolean(readJsonScript('kiwi-is-admin-data', false));
+            const activeChannelId = readJsonScript('kiwi-channel-id-data', null);
+            const activeServerId = readJsonScript('kiwi-server-id-data', null);
+            myProfileData.is_admin = myProfileData.is_admin || isAdminSession;
+
+            const addFriendModal = document.getElementById('add-friend-modal');
+            const openAddFriendBtn = document.getElementById('open-add-friend-btn');
+            const sidebarSearchFriendBtn = document.getElementById('sidebar-search-friend-btn');
+            const closeAddFriendBtn = document.getElementById('close-add-friend-btn');
+            const friendSearchInput = document.getElementById('friend-search-input');
+            const friendSearchResults = document.getElementById('friend-search-results');
+
+            function runUserSearch(q) {
+                if (!friendSearchResults) return;
+                const trimmed = (q || '').trim();
+                if (!trimmed) {
+                    friendSearchResults.innerHTML = '<div style="font-size:12px; color:var(--text-muted); text-align:center; padding:10px; background:var(--bg-soft); border-radius:8px;">Digite um nome para pesquisar usuários.</div>';
+                    return;
+                }
+                fetch('/api/users/search/?q=' + encodeURIComponent(trimmed))
+                    .then(r => r.json())
+                    .then(data => {
+                        const list = Array.isArray(data.users) ? data.users : [];
+                        friendSearchResults.innerHTML = '';
+                        if (!list.length) {
+                            friendSearchResults.innerHTML = '<div style="font-size:12px; color:var(--text-muted); text-align:center; padding:10px; background:var(--bg-soft); border-radius:8px;">Nenhum usuário encontrado.</div>';
+                            return;
+                        }
+                        list.forEach(u => {
+                            const row = document.createElement('div');
+                            row.className = 'social-list-item';
+                            row.style.cursor = 'default';
+
+                            const av = document.createElement('div');
+                            av.className = 'mini-avatar';
+                            av.style.cssText = 'width:32px; height:32px; font-size:13px;';
+                            setAvatarStyle(av, u.avatarUrl, u.username);
+
+                            const info = document.createElement('div');
+                            info.style.cssText = 'min-width:0; flex:1;';
+                            const nameEl = document.createElement('div');
+                            nameEl.style.cssText = 'font-size:13px; font-weight:700;';
+                            nameEl.textContent = u.username;
+                            const subEl = document.createElement('div');
+                            subEl.style.cssText = 'font-size:11px; color:var(--text-muted); overflow:hidden; text-overflow:ellipsis; white-space:nowrap;';
+                            subEl.textContent = u.bubble || 'Usuário do Kiwi';
+                            info.appendChild(nameEl);
+                            info.appendChild(subEl);
+
+                            const actionBtn = document.createElement('button');
+                            actionBtn.type = 'button';
+                            actionBtn.className = 'dm-quick-btn';
+                            if (u.is_friend) {
+                                actionBtn.textContent = '💬 DM';
+                                actionBtn.onclick = () => {
+                                    closeModalAnimated(addFriendModal);
+                                    openPrivateChat(u.username, u.avatarUrl || '');
+                                };
+                            } else if (u.pending_sent) {
+                                actionBtn.textContent = 'Enviado';
+                                actionBtn.disabled = true;
+                                actionBtn.style.opacity = '0.65';
+                            } else {
+                                actionBtn.textContent = '+ Adicionar';
+                                actionBtn.style.background = '#23a55a';
+                                actionBtn.onclick = () => {
+                                    fetch('/api/friend-request/send/', {
+                                        method: 'POST',
+                                        headers: {
+                                            'Content-Type': 'application/json',
+                                            'X-CSRFToken': getCookie('csrftoken')
+                                        },
+                                        body: JSON.stringify({ username: u.username })
+                                    })
+                                    .then(res => res.json())
+                                    .then(resp => {
+                                        showKiwiToast(resp.message || 'Pedido enviado!');
+                                        actionBtn.textContent = 'Enviado';
+                                        actionBtn.disabled = true;
+                                    })
+                                    .catch(() => showKiwiToast('Erro ao enviar pedido.'));
+                                };
+                            }
+
+                            row.appendChild(av);
+                            row.appendChild(info);
+                            row.appendChild(actionBtn);
+                            friendSearchResults.appendChild(row);
+                        });
+                    })
+                    .catch(() => {
+                        friendSearchResults.innerHTML = '<div style="font-size:12px; color:var(--text-muted); text-align:center;">Erro ao buscar usuários.</div>';
+                    });
+            }
+
+            if (openAddFriendBtn && addFriendModal) {
+                openAddFriendBtn.addEventListener('click', () => {
+                    openModalAnimated(addFriendModal);
+                    if (friendSearchInput) setTimeout(() => friendSearchInput.focus(), 120);
+                });
+            }
+            if (sidebarSearchFriendBtn && addFriendModal) {
+                sidebarSearchFriendBtn.addEventListener('click', () => {
+                    openModalAnimated(addFriendModal);
+                    if (friendSearchInput) setTimeout(() => friendSearchInput.focus(), 120);
+                });
+            }
+            if (closeAddFriendBtn && addFriendModal) {
+                closeAddFriendBtn.addEventListener('click', () => closeModalAnimated(addFriendModal));
+            }
+            if (addFriendModal) {
+                addFriendModal.addEventListener('click', (e) => {
+                    if (e.target === addFriendModal) closeModalAnimated(addFriendModal);
+                });
+            }
+            if (friendSearchInput) {
+                let searchTimer = null;
+                friendSearchInput.addEventListener('input', () => {
+                    clearTimeout(searchTimer);
+                    searchTimer = setTimeout(() => runUserSearch(friendSearchInput.value), 220);
+                });
+            }
+
+            const createServerModal = document.getElementById('create-server-modal');
+            const openCreateServerBtn = document.getElementById('open-create-server-btn');
+            const closeCreateServerBtn = document.getElementById('close-create-server-btn');
+            const createServerForm = document.getElementById('create-server-form');
+
+            if (openCreateServerBtn && createServerModal) {
+                openCreateServerBtn.addEventListener('click', () => openModalAnimated(createServerModal));
+            }
+            if (closeCreateServerBtn && createServerModal) {
+                closeCreateServerBtn.addEventListener('click', () => closeModalAnimated(createServerModal));
+            }
+            if (createServerModal) {
+                createServerModal.addEventListener('click', (e) => {
+                    if (e.target === createServerModal) closeModalAnimated(createServerModal);
+                });
+            }
+            if (createServerForm) {
+                createServerForm.addEventListener('submit', (e) => {
+                    e.preventDefault();
+                    const fd = new FormData(createServerForm);
+                    fetch('/api/servers/create/', {
+                        method: 'POST',
+                        headers: { 'X-CSRFToken': getCookie('csrftoken') },
+                        body: fd
+                    })
+                    .then(r => r.json().then(d => ({ ok: r.ok, d })))
+                    .then(({ ok, d }) => {
+                        if (!ok || d.status === 'error') {
+                            showKiwiToast(d.message || 'Não foi possível criar o servidor.');
+                            return;
+                        }
+                        showKiwiToast('Servidor criado com sucesso!');
+                        window.location.href = `/server/${d.server.id}/`;
+                    })
+                    .catch(() => showKiwiToast('Erro ao criar servidor.'));
+                });
+            }
+
+            const createChannelModal = document.getElementById('create-channel-modal');
+            const openCreateChannelBtn = document.getElementById('open-create-channel-btn');
+            const closeCreateChannelBtn = document.getElementById('close-create-channel-btn');
+            const createChannelForm = document.getElementById('create-channel-form');
+
+            if (openCreateChannelBtn && createChannelModal) {
+                openCreateChannelBtn.addEventListener('click', () => openModalAnimated(createChannelModal));
+            }
+            if (closeCreateChannelBtn && createChannelModal) {
+                closeCreateChannelBtn.addEventListener('click', () => closeModalAnimated(createChannelModal));
+            }
+            if (createChannelModal) {
+                createChannelModal.addEventListener('click', (e) => {
+                    if (e.target === createChannelModal) closeModalAnimated(createChannelModal);
+                });
+            }
+            if (createChannelForm && activeServerId) {
+                createChannelForm.addEventListener('submit', (e) => {
+                    e.preventDefault();
+                    const fd = new FormData(createChannelForm);
+                    fetch(`/api/servers/${activeServerId}/channels/create/`, {
+                        method: 'POST',
+                        headers: { 'X-CSRFToken': getCookie('csrftoken') },
+                        body: fd
+                    })
+                    .then(r => r.json().then(d => ({ ok: r.ok, d })))
+                    .then(({ ok, d }) => {
+                        if (!ok || d.status === 'error') {
+                            showKiwiToast(d.message || 'Não foi possível criar o canal.');
+                            return;
+                        }
+                        showKiwiToast('Canal criado!');
+                        window.location.href = `/server/${activeServerId}/channel/${d.channel.id}/`;
+                    })
+                    .catch(() => showKiwiToast('Erro ao criar canal.'));
+                });
+            }
+
+            window.switchToAmigosHome = function() {
+                if (activeServerId) {
+                    window.location.href = '/';
+                    return;
+                }
+                if (typeof window.switchToGeral === 'function') {
+                    window.switchToGeral();
+                }
+                if (headerMainTitle) headerMainTitle.textContent = '🥝 Amizades & DMs';
+                if (headerSubLabel) headerSubLabel.textContent = '| Selecione um amigo ou abra um servidor';
+                if (messageInput) messageInput.placeholder = 'Selecione um amigo ao lado para conversar...';
+            };
+
+            function renderFriendMusicFeed() {
+                if (!socialContentContainer) return;
+                socialContentContainer.innerHTML = '<div style="font-size:12px; color:var(--text-muted); text-align:center; padding:12px;">Carregando músicas dos amigos...</div>';
+                fetch('/api/friends/music/')
+                    .then(r => r.json())
+                    .then(data => {
+                        const items = Array.isArray(data.friends_music) ? data.friends_music : [];
+                        socialContentContainer.innerHTML = '';
+                        const heading = document.createElement('div');
+                        heading.style.cssText = 'font-size:11px; font-weight:bold; text-transform:uppercase; margin-bottom:10px;';
+                        heading.textContent = '🎵 Músicas dos Amigos';
+                        socialContentContainer.appendChild(heading);
+
+                        if (!items.length) {
+                            const empty = document.createElement('div');
+                            empty.style.cssText = 'font-size:12px; color:var(--text-muted); text-align:center; margin-top:16px;';
+                            empty.textContent = 'Adicione amigos para ver e ouvir as músicas deles.';
+                            socialContentContainer.appendChild(empty);
+                            return;
+                        }
+
+                        items.forEach(fm => {
+                            const card = document.createElement('div');
+                            card.className = 'friend-music-card';
+
+                            const top = document.createElement('div');
+                            top.className = 'friend-music-top';
+
+                            const av = document.createElement('div');
+                            av.className = 'mini-avatar';
+                            av.style.cssText = 'width:26px; height:26px; font-size:11px;';
+                            setAvatarStyle(av, fm.avatarUrl, fm.username);
+                            av.onclick = () => openUserProfile(fm.username);
+
+                            const meta = document.createElement('div');
+                            meta.style.cssText = 'min-width:0; flex:1;';
+                            const uEl = document.createElement('div');
+                            uEl.style.cssText = 'font-size:12px; font-weight:700; color:var(--text-main);';
+                            uEl.textContent = fm.username;
+                            const sEl = document.createElement('div');
+                            sEl.style.cssText = 'font-size:11px; color:var(--text-muted); overflow:hidden; text-overflow:ellipsis; white-space:nowrap;';
+                            sEl.textContent = `${fm.spotify_song || 'Sem faixa'} • ${fm.spotify_artist || ''}`;
+                            meta.appendChild(uEl);
+                            meta.appendChild(sEl);
+
+                            top.appendChild(av);
+                            top.appendChild(meta);
+                            card.appendChild(top);
+
+                            const audioSrc = fm.music_audio_url || (fm.saved_musics && fm.saved_musics[0] && fm.saved_musics[0].audio_url) || '';
+                            if (audioSrc && isSafeAssetUrl(audioSrc)) {
+                                const audioEl = document.createElement('audio');
+                                audioEl.controls = true;
+                                audioEl.preload = 'none';
+                                audioEl.src = audioSrc;
+                                audioEl.style.cssText = 'width:100%; height:30px;';
+                                card.appendChild(audioEl);
+                            } else if (fm.music_url && isSafeAssetUrl(fm.music_url)) {
+                                const linkEl = document.createElement('a');
+                                linkEl.href = fm.music_url;
+                                linkEl.target = '_blank';
+                                linkEl.rel = 'noopener noreferrer';
+                                linkEl.style.cssText = 'font-size:11px; color:#5865f2; font-weight:700; text-decoration:none;';
+                                linkEl.textContent = '↗ Abrir link de música';
+                                card.appendChild(linkEl);
+                            }
+
+                            const playBtn = document.createElement('button');
+                            playBtn.type = 'button';
+                            playBtn.className = 'friend-music-play-btn';
+                            playBtn.textContent = 'Ver perfil e player';
+                            playBtn.onclick = () => openUserProfile(fm.username);
+                            card.appendChild(playBtn);
+
+                            socialContentContainer.appendChild(card);
+                        });
+                    })
+                    .catch(() => {
+                        socialContentContainer.innerHTML = '<div style="font-size:12px; color:var(--text-muted); text-align:center;">Erro ao carregar músicas dos amigos.</div>';
+                    });
+            }
+
+            const mobNavFriends = document.getElementById('mob-nav-friends');
+            const mobNavSearch = document.getElementById('mob-nav-search');
+            const mobNavMusic = document.getElementById('mob-nav-music');
+            const mobNavProfile = document.getElementById('mob-nav-profile');
+
+            function setActiveMobNav(btn) {
+                document.querySelectorAll('.mobile-nav-btn').forEach(b => b.classList.remove('active'));
+                if (btn) btn.classList.add('active');
+            }
+
+            if (mobNavFriends) {
+                mobNavFriends.addEventListener('click', () => {
+                    closeMobileChatView();
+                    setActiveMobNav(mobNavFriends);
+                    fetchFriendsList(true);
+                });
+            }
+            if (mobNavSearch) {
+                mobNavSearch.addEventListener('click', () => {
+                    setActiveMobNav(mobNavSearch);
+                    if (addFriendModal) openModalAnimated(addFriendModal);
+                });
+            }
+            if (mobNavMusic) {
+                mobNavMusic.addEventListener('click', () => {
+                    closeMobileChatView();
+                    setActiveMobNav(mobNavMusic);
+                    renderFriendMusicFeed();
+                });
+            }
+            if (mobNavProfile) {
+                mobNavProfile.addEventListener('click', () => {
+                    setActiveMobNav(mobNavProfile);
+                    openUserProfile(activeUsername);
                 });
             }
 

@@ -1,5 +1,6 @@
 from django.contrib.auth.models import User
 from django.db import models
+from django.db.models import Q
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 
@@ -20,15 +21,97 @@ class UserProfile(models.Model):
     music_cover_file = models.ImageField(upload_to='music_covers/', blank=True, null=True)
     music_cover_url = models.TextField(blank=True, default='')
 
+    @property
+    def is_admin_user(self):
+        return bool(self.user.is_staff or self.user.is_superuser)
+
+    def get_music_audio_src(self):
+        if self.music_audio_file:
+            return self.music_audio_file.url
+        return self.music_audio_url or ''
+
+    def get_music_cover_src(self):
+        if self.music_cover_file:
+            return self.music_cover_file.url
+        return self.music_cover_url or ''
+
     def __str__(self):
         return self.user.username
 
 
+class Server(models.Model):
+    name = models.CharField(max_length=120)
+    icon = models.ImageField(upload_to='server_icons/', blank=True, null=True)
+    owner = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name='owned_servers',
+    )
+    members = models.ManyToManyField(
+        User,
+        related_name='joined_servers',
+        blank=True,
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['created_at']
+
+    def save(self, *args, **kwargs):
+        is_new = self.pk is None
+        super().save(*args, **kwargs)
+        if is_new and self.owner_id:
+            self.members.add(self.owner)
+
+    def __str__(self):
+        return self.name
+
+
+class Channel(models.Model):
+    CHANNEL_TYPES = [
+        ('text', 'Texto'),
+        ('audio', 'Áudio / Música'),
+    ]
+
+    server = models.ForeignKey(Server, on_delete=models.CASCADE, related_name='channels')
+    name = models.CharField(max_length=100)
+    channel_type = models.CharField(max_length=16, choices=CHANNEL_TYPES, default='text')
+    position = models.PositiveIntegerField(default=0)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['position', 'id']
+        unique_together = ('server', 'name')
+
+    def __str__(self):
+        return f'{self.server.name} / #{self.name}'
+
+
 class FriendRequest(models.Model):
+    STATUS_CHOICES = [
+        ('pending', 'Pendente'),
+        ('accepted', 'Aceito'),
+        ('rejected', 'Recusado'),
+    ]
+
     sender = models.ForeignKey(User, on_delete=models.CASCADE, related_name='sent_friend_requests')
     receiver = models.ForeignKey(User, on_delete=models.CASCADE, related_name='received_friend_requests')
-    status = models.CharField(max_length=20, default='pending')  # pending, accepted, rejected
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
     created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ('sender', 'receiver')
+        ordering = ['-created_at']
+
+    @staticmethod
+    def are_friends(user_a, user_b):
+        if not user_a or not user_b or user_a.pk == user_b.pk:
+            return False
+        return FriendRequest.objects.filter(
+            status='accepted'
+        ).filter(
+            Q(sender=user_a, receiver=user_b) | Q(sender=user_b, receiver=user_a)
+        ).exists()
 
     def __str__(self):
         return f'{self.sender} -> {self.receiver} ({self.status})'
@@ -36,14 +119,24 @@ class FriendRequest(models.Model):
 
 class Message(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='messages')
-    room = models.CharField(max_length=255, default='geral')
+    channel = models.ForeignKey(
+        Channel,
+        on_delete=models.CASCADE,
+        related_name='messages',
+        null=True,
+        blank=True,
+    )
     content = models.TextField(blank=True)
     attachment = models.FileField(upload_to='chat_attachments/', blank=True, null=True)
     attachment_type = models.CharField(max_length=20, blank=True)  # 'image', 'audio' ou 'document'
     timestamp = models.DateTimeField(auto_now_add=True)
 
+    class Meta:
+        ordering = ['timestamp']
+
     def __str__(self):
-        return f'{self.user.username}: {self.content[:30]}'
+        target = self.channel.name if self.channel else 'sem-canal'
+        return f'[{target}] {self.user.username}: {self.content[:30]}'
 
 
 class PrivateMessage(models.Model):
@@ -60,11 +153,6 @@ class PrivateMessage(models.Model):
     def __str__(self):
         return f'DM {self.sender.username} -> {self.receiver.username}: {self.content[:30]}'
 
-
-@receiver(post_save, sender=User)
-def create_user_profile(sender, instance, created, **kwargs):
-    if created:
-        UserProfile.objects.create(user=instance)
 
 class SavedMusic(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='saved_musics')
@@ -92,3 +180,9 @@ class SavedMusic(models.Model):
 
     def __str__(self):
         return f'{self.user.username}: {self.title or "Música"}'
+
+
+@receiver(post_save, sender=User)
+def create_user_profile(sender, instance, created, **kwargs):
+    if created:
+        UserProfile.objects.create(user=instance)

@@ -7,7 +7,15 @@ from django.db import models
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.http import require_POST
-from .models import UserProfile, FriendRequest, Message, PrivateMessage, SavedMusic
+from .models import (
+    Channel,
+    FriendRequest,
+    Message,
+    PrivateMessage,
+    SavedMusic,
+    Server,
+    UserProfile,
+)
 
 IMAGE_EXTS = {'.png', '.jpg', '.jpeg', '.gif', '.webp'}
 AUDIO_EXTS = {'.mp3', '.wav', '.ogg', '.webm', '.m4a'}
@@ -15,25 +23,156 @@ DOC_EXTS = {'.pdf', '.doc', '.docx', '.txt', '.zip', '.rar', '.csv', '.xls', '.x
 MAX_FILE_SIZE = 10 * 1024 * 1024  # 10 MB
 
 
+def is_admin_user(user):
+    return bool(user and user.is_authenticated and (user.is_staff or user.is_superuser))
+
+
 def are_friends(user1, user2):
-    return FriendRequest.objects.filter(
-        (models.Q(sender=user1, receiver=user2) | models.Q(sender=user2, receiver=user1)) &
+    return FriendRequest.are_friends(user1, user2)
+
+
+def _get_accepted_friend_users(user):
+    accepted = FriendRequest.objects.filter(
+        (models.Q(sender=user) | models.Q(receiver=user)) &
         models.Q(status='accepted')
-    ).exists()
+    ).select_related('sender', 'receiver', 'sender__profile', 'receiver__profile')
+
+    friends = []
+    seen_ids = set()
+    for req in accepted:
+        friend = req.receiver if req.sender_id == user.id else req.sender
+        if friend.id not in seen_ids:
+            seen_ids.add(friend.id)
+            UserProfile.objects.get_or_create(user=friend)
+            friends.append(friend)
+    return friends
 
 
 @login_required(login_url='login')
-def room_view(request, room_name='geral'):
+def room_view(request, server_id=None, channel_id=None):
     UserProfile.objects.get_or_create(user=request.user)
-    messages = Message.objects.select_related('user', 'user__profile').order_by('timestamp')[:50]
+    servers = Server.objects.filter(members=request.user).prefetch_related('channels')
+
+    active_server = None
+    active_channel = None
+    messages = []
+
+    if server_id is not None:
+        active_server = get_object_or_404(Server, id=server_id, members=request.user)
+        channels = list(active_server.channels.all())
+        if channel_id is not None:
+            active_channel = get_object_or_404(Channel, id=channel_id, server=active_server)
+        elif channels:
+            active_channel = channels[0]
+
+        if active_channel:
+            messages = list(
+                Message.objects.filter(channel=active_channel)
+                .select_related('user', 'user__profile')
+                .order_by('timestamp')[:50]
+            )
 
     return render(
-        request, 'chat/room.html', {
-            'room_name': room_name,
+        request,
+        'chat/room.html',
+        {
             'username': request.user.username,
-            'messages': messages
-        }
+            'is_admin': is_admin_user(request.user),
+            'servers': servers,
+            'active_server': active_server,
+            'active_channel': active_channel,
+            'messages': messages,
+        },
     )
+
+
+@login_required
+@require_POST
+def create_server(request):
+    if not is_admin_user(request.user):
+        return JsonResponse(
+            {'status': 'error', 'message': 'Apenas administradores podem criar servidores no momento.'},
+            status=403,
+        )
+
+    name = (request.POST.get('name') or '').strip()
+    icon = request.FILES.get('icon')
+    raw_channels = (request.POST.get('channels') or '').strip()
+
+    if not name:
+        return JsonResponse({'status': 'error', 'message': 'Informe o nome do servidor.'}, status=400)
+
+    server = Server.objects.create(name=name, icon=icon, owner=request.user)
+
+    # Adiciona automaticamente todos os amigos atuais do admin como membros do servidor
+    friends = _get_accepted_friend_users(request.user)
+    if friends:
+        server.members.add(*friends)
+
+    # Cria canais iniciais (ex.: separados por vírgula) ou pelo menos 1 canal padrão
+    channel_names = [c.strip().lstrip('#').lower().replace(' ', '-') for c in raw_channels.split(',') if c.strip()]
+    if not channel_names:
+        channel_names = ['chat', 'musica']
+
+    created_channels = []
+    for idx, ch_name in enumerate(channel_names):
+        ch_type = 'audio' if ch_name in {'musica', 'música', 'audio', 'voz', 'call'} else 'text'
+        ch, _ = Channel.objects.get_or_create(
+            server=server,
+            name=ch_name[:100],
+            defaults={'channel_type': ch_type, 'position': idx},
+        )
+        created_channels.append({'id': ch.id, 'name': ch.name, 'channel_type': ch.channel_type})
+
+    icon_url = request.build_absolute_uri(server.icon.url) if server.icon else ''
+    return JsonResponse({
+        'status': 'success',
+        'server': {
+            'id': server.id,
+            'name': server.name,
+            'icon_url': icon_url,
+            'channels': created_channels,
+        },
+    })
+
+
+@login_required
+@require_POST
+def create_channel(request, server_id):
+    if not is_admin_user(request.user):
+        return JsonResponse(
+            {'status': 'error', 'message': 'Apenas administradores podem criar canais.'},
+            status=403,
+        )
+
+    server = get_object_or_404(Server, id=server_id, owner=request.user)
+    raw_name = (request.POST.get('name') or '').strip().lstrip('#').lower().replace(' ', '-')
+    channel_type = (request.POST.get('channel_type') or 'text').strip()
+    if channel_type not in {'text', 'audio'}:
+        channel_type = 'text'
+
+    if not raw_name:
+        return JsonResponse({'status': 'error', 'message': 'Informe o nome do canal.'}, status=400)
+
+    if Channel.objects.filter(server=server, name=raw_name).exists():
+        return JsonResponse({'status': 'error', 'message': 'Já existe um canal com esse nome neste servidor.'}, status=400)
+
+    next_pos = server.channels.count()
+    channel = Channel.objects.create(
+        server=server,
+        name=raw_name[:100],
+        channel_type=channel_type,
+        position=next_pos,
+    )
+
+    return JsonResponse({
+        'status': 'success',
+        'channel': {
+            'id': channel.id,
+            'name': channel.name,
+            'channel_type': channel.channel_type,
+        },
+    })
 
 
 def _build_music_payload(request, profile):
@@ -59,7 +198,7 @@ def _build_music_payload(request, profile):
 @login_required
 def update_profile(request):
     if request.method == 'POST':
-        profile = request.user.profile
+        profile, _ = UserProfile.objects.get_or_create(user=request.user)
         profile.bubble = request.POST.get('bubble', profile.bubble)
         profile.pronouns = request.POST.get('pronouns', profile.pronouns)
         profile.bio = request.POST.get('bio', profile.bio)
@@ -97,7 +236,6 @@ def update_profile(request):
 
         profile.save()
 
-        # Guarda automaticamente no acervo de músicas do utilizador se houver faixa/áudio/capa
         has_track_data = any([
             profile.spotify_song.strip(),
             profile.spotify_artist.strip(),
@@ -132,7 +270,7 @@ def update_profile(request):
 @login_required
 def get_user_profile(request, username):
     target_user = get_object_or_404(User, username=username)
-    profile, created = UserProfile.objects.get_or_create(user=target_user)
+    profile, _ = UserProfile.objects.get_or_create(user=target_user)
     music_data = _build_music_payload(request, profile)
 
     data = {
@@ -149,6 +287,38 @@ def get_user_profile(request, username):
         **music_data,
     }
     return JsonResponse(data)
+
+
+@login_required
+def friend_music_feed(request):
+    friends = _get_accepted_friend_users(request.user)
+    feed = []
+    for friend in friends:
+        profile = friend.profile
+        music_data = _build_music_payload(request, profile)
+        recent_tracks = []
+        for m in SavedMusic.objects.filter(user=friend)[:10]:
+            a_url = request.build_absolute_uri(m.audio_file.url) if m.audio_file else (m.audio_url or '')
+            c_url = request.build_absolute_uri(m.cover_file.url) if m.cover_file else (m.cover_url or '')
+            recent_tracks.append({
+                'id': m.id,
+                'title': m.title or 'Faixa sem título',
+                'artist': m.artist or 'Artista',
+                'music_url': m.music_url or '',
+                'audio_url': a_url,
+                'cover_url': c_url,
+            })
+
+        feed.append({
+            'username': friend.username,
+            'avatarUrl': request.build_absolute_uri(profile.avatar.url) if profile.avatar else '',
+            'spotify_song': profile.spotify_song,
+            'spotify_artist': profile.spotify_artist,
+            **music_data,
+            'saved_musics': recent_tracks,
+        })
+
+    return JsonResponse({'status': 'success', 'friends_music': feed})
 
 
 @login_required
@@ -221,7 +391,7 @@ def delete_saved_music(request, music_id):
 
 def register_view(request):
     if request.method == 'POST':
-        username = request.POST.get('username')
+        username = (request.POST.get('username') or '').strip()
         password = request.POST.get('password')
         if username and password:
             if not User.objects.filter(username=username).exists():
@@ -233,7 +403,7 @@ def register_view(request):
 
 def login_view(request):
     if request.method == 'POST':
-        username = request.POST.get('username')
+        username = (request.POST.get('username') or '').strip()
         password = request.POST.get('password')
         user = authenticate(request, username=username, password=password)
         if user is not None:
@@ -248,69 +418,108 @@ def logout_view(request):
 
 
 @login_required
+def search_users(request):
+    query = (request.GET.get('q') or '').strip()
+    if not query:
+        return JsonResponse({'status': 'success', 'users': []})
+
+    matches = User.objects.filter(username__icontains=query).exclude(id=request.user.id)[:15]
+    results = []
+    for candidate in matches:
+        profile, _ = UserProfile.objects.get_or_create(user=candidate)
+        already_friends = are_friends(request.user, candidate)
+        pending_sent = FriendRequest.objects.filter(
+            sender=request.user, receiver=candidate, status='pending'
+        ).exists()
+        pending_received = FriendRequest.objects.filter(
+            sender=candidate, receiver=request.user, status='pending'
+        ).exists()
+
+        results.append({
+            'username': candidate.username,
+            'avatarUrl': request.build_absolute_uri(profile.avatar.url) if profile.avatar else '',
+            'bubble': profile.bubble or '',
+            'is_friend': already_friends,
+            'pending_sent': pending_sent,
+            'pending_received': pending_received,
+        })
+
+    return JsonResponse({'status': 'success', 'users': results})
+
+
+@login_required
+@require_POST
 def send_friend_request(request):
-    if request.method == 'POST':
-        try:
-            data = json.loads(request.body)
-            receiver_username = data.get('username')
-            receiver = get_object_or_404(User, username=receiver_username)
+    try:
+        if request.content_type and 'application/json' in request.content_type:
+            data = json.loads(request.body or '{}')
+            receiver_username = (data.get('username') or '').strip()
+        else:
+            receiver_username = (request.POST.get('username') or '').strip()
 
-            if receiver == request.user:
-                return JsonResponse({'status': 'error', 'message': 'Não podes enviar pedido para ti mesmo.'}, status=400)
+        if not receiver_username:
+            return JsonResponse({'status': 'error', 'message': 'Digite o nome de usuário.'}, status=400)
 
-            existing = FriendRequest.objects.filter(sender=request.user, receiver=receiver, status='pending').exists()
-            if not existing:
-                FriendRequest.objects.create(sender=request.user, receiver=receiver)
+        receiver = get_object_or_404(User, username=receiver_username)
 
-            return JsonResponse({'status': 'success', 'message': f'Pedido de amizade enviado para {receiver_username}!'})
-        except Exception as e:
-            return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
+        if receiver == request.user:
+            return JsonResponse({'status': 'error', 'message': 'Não podes enviar pedido para ti mesmo.'}, status=400)
 
-    return JsonResponse({'status': 'error', 'message': 'Método inválido.'}, status=400)
+        if are_friends(request.user, receiver):
+            return JsonResponse({'status': 'error', 'message': f'{receiver.username} já é teu amigo.'}, status=400)
+
+        existing = FriendRequest.objects.filter(sender=request.user, receiver=receiver, status='pending').exists()
+        if not existing:
+            FriendRequest.objects.create(sender=request.user, receiver=receiver)
+
+        return JsonResponse({'status': 'success', 'message': f'Pedido de amizade enviado para {receiver.username}!'})
+    except Exception as e:
+        return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
 
 
 @login_required
 def get_friend_requests(request):
-    requests = FriendRequest.objects.filter(receiver=request.user, status='pending')
+    requests = FriendRequest.objects.filter(receiver=request.user, status='pending').select_related('sender')
     data = [{'id': req.id, 'sender': req.sender.username} for req in requests]
     return JsonResponse({'status': 'success', 'requests': data})
 
 
 @login_required
+@require_POST
 def accept_friend_request(request):
-    if request.method == 'POST':
-        try:
-            data = json.loads(request.body)
+    try:
+        if request.content_type and 'application/json' in request.content_type:
+            data = json.loads(request.body or '{}')
             request_id = data.get('request_id')
-            friend_req = get_object_or_404(FriendRequest, id=request_id, receiver=request.user)
-            friend_req.status = 'accepted'
-            friend_req.save()
-            return JsonResponse({'status': 'success', 'message': 'Amizade aceite com sucesso!'})
-        except Exception as e:
-            return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
-    return JsonResponse({'status': 'error', 'message': 'Método inválido.'}, status=400)
+        else:
+            request_id = request.POST.get('request_id')
+
+        friend_req = get_object_or_404(FriendRequest, id=request_id, receiver=request.user)
+        friend_req.status = 'accepted'
+        friend_req.save()
+
+        # Se o usuário que aceitou for admin, adiciona o novo amigo nos servidores que ele administra
+        if is_admin_user(request.user):
+            owned = Server.objects.filter(owner=request.user)
+            for srv in owned:
+                srv.members.add(friend_req.sender)
+
+        return JsonResponse({'status': 'success', 'message': 'Amizade aceite com sucesso!'})
+    except Exception as e:
+        return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
 
 
 @login_required
 def get_friends_list(request):
     try:
-        accepted_requests = FriendRequest.objects.filter(
-            (models.Q(sender=request.user) | models.Q(receiver=request.user)) &
-            models.Q(status='accepted')
-        ).distinct()
-
-        friends_set = set()
-        friends = []
-        for req in accepted_requests:
-            friend_user = req.receiver if req.sender == request.user else req.sender
-            if friend_user.username not in friends_set:
-                friends_set.add(friend_user.username)
-                profile, _ = UserProfile.objects.get_or_create(user=friend_user)
-                friends.append({
-                    'username': friend_user.username,
-                    'avatarUrl': request.build_absolute_uri(profile.avatar.url) if profile.avatar else ''
-                })
-
+        friend_users = _get_accepted_friend_users(request.user)
+        friends = [
+            {
+                'username': u.username,
+                'avatarUrl': request.build_absolute_uri(u.profile.avatar.url) if u.profile.avatar else '',
+            }
+            for u in friend_users
+        ]
         return JsonResponse({'status': 'success', 'friends': friends})
     except Exception as e:
         return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
@@ -367,26 +576,29 @@ def upload_attachment(request):
     else:
         return JsonResponse(
             {'status': 'error', 'message': 'Formato não suportado (use imagem/GIF, áudio ou documento).'},
-            status=400
+            status=400,
         )
 
-    target = request.POST.get('target', 'geral').strip()
-    content = request.POST.get('content', '').strip()
+    target = (request.POST.get('target') or '').strip()
+    channel_id = request.POST.get('channel_id')
+    content = (request.POST.get('content') or '').strip()
 
     try:
-        if target == 'geral' or not target:
+        if channel_id:
+            channel = get_object_or_404(Channel, id=channel_id, server__members=request.user)
             msg = Message.objects.create(
                 user=request.user,
+                channel=channel,
                 content=content,
                 attachment=file,
                 attachment_type=att_type,
             )
-        else:
+        elif target:
             other_user = get_object_or_404(User, username=target)
             if not are_friends(request.user, other_user):
                 return JsonResponse(
                     {'status': 'error', 'message': 'Precisam de ser amigos para enviar anexos em DM.'},
-                    status=403
+                    status=403,
                 )
 
             private_kwargs = {
@@ -404,6 +616,8 @@ def upload_attachment(request):
                 private_kwargs['attachment_type'] = att_type
 
             msg = PrivateMessage.objects.create(**private_kwargs)
+        else:
+            return JsonResponse({'status': 'error', 'message': 'Selecione um amigo ou canal.'}, status=400)
 
         att_field = getattr(msg, 'attachment', None) or getattr(msg, 'file', None)
         att_url = request.build_absolute_uri(att_field.url) if att_field else ''
@@ -434,8 +648,12 @@ def profile_page_view(request):
 @require_POST
 def remove_friend(request):
     try:
-        data = json.loads(request.body)
-        target_username = (data.get('username') or '').strip()
+        if request.content_type and 'application/json' in request.content_type:
+            data = json.loads(request.body or '{}')
+            target_username = (data.get('username') or '').strip()
+        else:
+            target_username = (request.POST.get('username') or '').strip()
+
         if not target_username:
             return JsonResponse({'status': 'error', 'message': 'Utilizador inválido.'}, status=400)
 

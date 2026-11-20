@@ -1,14 +1,14 @@
 import json
-from channels.generic.websocket import AsyncWebsocketConsumer
 from channels.db import database_sync_to_async
+from channels.generic.websocket import AsyncWebsocketConsumer
 from django.contrib.auth.models import User
 from django.db.models import Q
-from .models import Message, PrivateMessage, FriendRequest
+from .models import Channel, FriendRequest, Message, PrivateMessage
 
 
 class ChatConsumer(AsyncWebsocketConsumer):
     async def connect(self):
-        self.room_name = self.scope['url_route']['kwargs']['room_name']
+        self.room_name = str(self.scope['url_route']['kwargs']['room_name'])
         self.room_group_name = f'chat_{self.room_name}'
         self.user = self.scope.get('user')
         self.user_group_name = (
@@ -16,6 +16,15 @@ class ChatConsumer(AsyncWebsocketConsumer):
             if self.user and self.user.is_authenticated
             else None
         )
+
+        if not self.user or not self.user.is_authenticated:
+            await self.close()
+            return
+
+        self.channel_obj = await self.get_allowed_channel(self.user, self.room_name)
+        if not self.channel_obj:
+            await self.close()
+            return
 
         await self.channel_layer.group_add(
             self.room_group_name,
@@ -29,10 +38,11 @@ class ChatConsumer(AsyncWebsocketConsumer):
         await self.accept()
 
     async def disconnect(self, close_code):
-        await self.channel_layer.group_discard(
-            self.room_group_name,
-            self.channel_name
-        )
+        if hasattr(self, 'room_group_name'):
+            await self.channel_layer.group_discard(
+                self.room_group_name,
+                self.channel_name
+            )
         if getattr(self, 'user_group_name', None):
             await self.channel_layer.group_discard(
                 self.user_group_name,
@@ -47,13 +57,16 @@ class ChatConsumer(AsyncWebsocketConsumer):
         }))
 
     async def receive(self, text_data):
-        data = json.loads(text_data)
+        try:
+            data = json.loads(text_data)
+        except json.JSONDecodeError:
+            return
+
         action = data.get('action')
 
         if action == 'delete_message':
             message_id = data.get('message_id')
-            username = data.get('username', '')
-            deleted = await self.delete_message(message_id, username)
+            deleted = await self.delete_message(message_id)
 
             if deleted:
                 await self.channel_layer.group_send(
@@ -65,13 +78,11 @@ class ChatConsumer(AsyncWebsocketConsumer):
                 )
             return
 
-        scope_user = self.scope.get('user')
-        default_username = scope_user.username if scope_user and scope_user.is_authenticated else ''
-        username = data.get('username') or default_username
+        username = self.user.username
         avatar_url = data.get('avatarUrl') or data.get('avatar') or ''
         attachment_url = data.get('attachment_url', '')
         attachment_type = data.get('attachment_type', '')
-        message = data.get('message', '').strip()
+        message = (data.get('message') or '').strip()
 
         if attachment_url:
             await self.channel_layer.group_send(
@@ -91,7 +102,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
         if not message:
             return
 
-        msg = await self.save_message(username, self.room_name, message)
+        msg = await self.save_message(self.user, self.channel_obj, message)
         if not msg:
             return
 
@@ -126,26 +137,30 @@ class ChatConsumer(AsyncWebsocketConsumer):
         }))
 
     @database_sync_to_async
-    def save_message(self, username, room, message):
-        user = User.objects.filter(username=username).first()
-        if not user:
-            return None
-        return Message.objects.create(user=user, room=room, content=message)
+    def get_allowed_channel(self, user, room_identifier):
+        if str(room_identifier).isdigit():
+            return Channel.objects.filter(
+                id=int(room_identifier),
+                server__members=user,
+            ).select_related('server').first()
+        return None
 
     @database_sync_to_async
-    def delete_message(self, message_id, username):
+    def save_message(self, user, channel_obj, message):
+        if not user or not channel_obj:
+            return None
+        return Message.objects.create(user=user, channel=channel_obj, content=message)
+
+    @database_sync_to_async
+    def delete_message(self, message_id):
         if not message_id:
             return False
 
-        msg = Message.objects.filter(id=message_id).first()
+        msg = Message.objects.filter(id=message_id, channel=self.channel_obj).first()
         if not msg:
             return False
 
-        request_user = self.scope.get('user')
-        if request_user and request_user.is_authenticated:
-            if msg.user != request_user and not request_user.is_staff:
-                return False
-        elif username and msg.user.username != username:
+        if msg.user != self.user and not (self.user.is_staff or self.user.is_superuser):
             return False
 
         msg.delete()
@@ -183,7 +198,11 @@ class DMConsumer(AsyncWebsocketConsumer):
             )
 
     async def receive(self, text_data):
-        data = json.loads(text_data)
+        try:
+            data = json.loads(text_data)
+        except json.JSONDecodeError:
+            return
+
         msg_type = data.get('type')
         action = data.get('action')
 
@@ -194,6 +213,7 @@ class DMConsumer(AsyncWebsocketConsumer):
                 {
                     'type': 'call_signal',
                     'sender': self.user.username,
+                    'sender_channel': self.channel_name,
                     'signal': signal,
                 }
             )
@@ -214,6 +234,19 @@ class DMConsumer(AsyncWebsocketConsumer):
                 {
                     'type': 'call_hangup',
                     'sender': self.user.username,
+                    'sender_channel': self.channel_name,
+                }
+            )
+            return
+
+        if msg_type == 'music_sync':
+            await self.channel_layer.group_send(
+                self.room_group_name,
+                {
+                    'type': 'music_sync',
+                    'sender': self.user.username,
+                    'sender_channel': self.channel_name,
+                    'music': data.get('music') or {},
                 }
             )
             return
@@ -232,7 +265,7 @@ class DMConsumer(AsyncWebsocketConsumer):
 
         attachment_url = data.get('attachment_url', '')
         attachment_type = data.get('attachment_type', '')
-        message = data.get('message', '').strip()
+        message = (data.get('message') or '').strip()
 
         if attachment_url:
             await self.channel_layer.group_send(
@@ -266,6 +299,8 @@ class DMConsumer(AsyncWebsocketConsumer):
         )
 
     async def call_signal(self, event):
+        if event.get('sender_channel') == self.channel_name:
+            return
         await self.send(text_data=json.dumps({
             'type': 'call_signal',
             'sender': event.get('sender', ''),
@@ -273,9 +308,20 @@ class DMConsumer(AsyncWebsocketConsumer):
         }))
 
     async def call_hangup(self, event):
+        if event.get('sender_channel') == self.channel_name:
+            return
         await self.send(text_data=json.dumps({
             'type': 'call_hangup',
             'sender': event.get('sender', ''),
+        }))
+
+    async def music_sync(self, event):
+        if event.get('sender_channel') == self.channel_name:
+            return
+        await self.send(text_data=json.dumps({
+            'type': 'music_sync',
+            'sender': event.get('sender', ''),
+            'music': event.get('music') or {},
         }))
 
     async def dm_message(self, event):
