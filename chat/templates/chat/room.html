@@ -23,6 +23,7 @@
             --text-muted: #57606a;
             --border-subtle: rgba(0, 0, 0, 0.08);
             --auth-artwork: url('https://i.pinimg.com/736x/cb/a2/98/cba29832d5a423e62dc7ed952df60762.jpg');
+            --ease-kiwi: cubic-bezier(0.22, 1, 0.36, 1);
         }
 
         * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -63,7 +64,7 @@
             justify-content: center;
             opacity: 0.12;
             transform: translateY(-18px) scale(0.9);
-            animation: kiwiDropIn 0.85s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+            animation: kiwiDropIn 0.85s var(--ease-kiwi) forwards;
         }
         .kiwi-splash-ring {
             position: absolute;
@@ -167,7 +168,7 @@
             display: flex;
             flex-direction: column;
             border-right: 1px solid var(--border-subtle);
-            transition: background 0.3s ease;
+            transition: background 0.3s ease, transform 0.32s var(--ease-kiwi), opacity 0.28s ease;
         }
         .server-header {
             padding: 18px 20px;
@@ -198,9 +199,9 @@
             display: flex;
             align-items: center;
             gap: 8px;
-            transition: 0.15s;
+            transition: background 0.18s ease, transform 0.2s var(--ease-kiwi), border-color 0.2s ease;
         }
-        .channel-item:hover { background: rgba(128, 128, 128, 0.2); }
+        .channel-item:hover { background: rgba(128, 128, 128, 0.2); transform: translateX(2px); }
         .channel-item.active {
             background: rgba(128, 128, 128, 0.26);
             border-left-color: var(--accent);
@@ -279,18 +280,28 @@
             padding: 5px;
             border-radius: 4px;
             position: relative;
+            transition: transform 0.16s var(--ease-kiwi), background 0.16s ease, color 0.16s ease;
         }
         .icon-btn:hover { background: rgba(128, 128, 128, 0.16); color: var(--text-main); }
+        .icon-btn:active { transform: scale(0.92); }
 
         .chat-area {
             flex: 1;
             display: flex;
             flex-direction: column;
             background: var(--bg-main);
-            transition: background 0.3s ease;
+            transition: background 0.3s ease, transform 0.34s var(--ease-kiwi), opacity 0.28s ease;
             min-width: 0;
             position: relative;
         }
+        @keyframes roomSwitchIn {
+            0% { opacity: 0.2; transform: translateX(18px) scale(0.992); }
+            100% { opacity: 1; transform: translateX(0) scale(1); }
+        }
+        .chat-area.room-entering {
+            animation: roomSwitchIn 0.32s var(--ease-kiwi) both;
+        }
+
         .chat-header {
             padding: 12px 20px;
             background: var(--bg-main);
@@ -338,7 +349,9 @@
             font-weight: 600;
             cursor: pointer;
             display: none;
+            transition: transform 0.18s var(--ease-kiwi), filter 0.15s ease;
         }
+        .back-geral-btn:active, .header-call-btn:active { transform: scale(0.94); }
         .back-geral-btn.visible, .header-call-btn.visible { display: inline-flex; align-items: center; gap: 5px; }
         .back-geral-btn:hover, .header-call-btn:hover { filter: brightness(0.96); }
         .header-call-btn {
@@ -425,7 +438,7 @@
             border-radius: 50%;
             cursor: pointer;
             border: 2px solid rgba(0, 0, 0, 0.25);
-            transition: 0.2s;
+            transition: transform 0.2s var(--ease-kiwi), box-shadow 0.2s ease;
         }
         .theme-ball:hover { transform: scale(1.15); }
         .theme-ball.active {
@@ -442,6 +455,10 @@
             flex-direction: column;
             gap: 16px;
         }
+        @keyframes msgSlideFadeIn {
+            from { opacity: 0; transform: translateY(8px) scale(0.985); }
+            to { opacity: 1; transform: translateY(0) scale(1); }
+        }
         .message-group {
             position: relative;
             display: flex;
@@ -450,6 +467,7 @@
             padding: 4px 8px;
             border-radius: 8px;
             transition: background 0.15s ease;
+            animation: msgSlideFadeIn 0.24s var(--ease-kiwi) both;
         }
         .message-group:hover { background: rgba(128, 128, 128, 0.06); }
         .message-group:hover .msg-hover-toolbar,
@@ -656,15 +674,20 @@
             justify-content: center;
             z-index: 25000;
             padding: 24px;
+            opacity: 0;
+            transition: opacity 0.22s ease;
         }
-        .image-lightbox-overlay.open { display: flex; }
+        .image-lightbox-overlay.open { display: flex; opacity: 1; }
         .image-lightbox-img {
             max-width: 92vw;
             max-height: 88vh;
             border-radius: 10px;
             box-shadow: 0 20px 50px rgba(0, 0, 0, 0.55);
             object-fit: contain;
+            transform: scale(0.95);
+            transition: transform 0.26s var(--ease-kiwi);
         }
+        .image-lightbox-overlay.open .image-lightbox-img { transform: scale(1); }
         .image-lightbox-close {
             position: fixed;
             top: 18px;
@@ -750,7 +773,7 @@
             gap: 3px;
             min-width: 200px;
         }
-        .attach-menu.open { display: flex; }
+        .attach-menu.open { display: flex; animation: msgSlideFadeIn 0.18s var(--ease-kiwi) both; }
         .attach-menu-item {
             background: transparent;
             border: none;
@@ -822,10 +845,11 @@
             border-radius: 5px;
             font-weight: bold;
             cursor: pointer;
-            transition: background 0.3s ease;
+            transition: background 0.3s ease, transform 0.15s var(--ease-kiwi);
             flex-shrink: 0;
         }
         #chat-message-submit:hover { filter: brightness(0.95); }
+        #chat-message-submit:active { transform: scale(0.95); }
 
         .sidebar-right {
             width: 260px;
@@ -898,9 +922,9 @@
             background: var(--bg-card);
             border: 1px solid var(--border-subtle);
             cursor: pointer;
-            transition: 0.2s;
+            transition: transform 0.2s var(--ease-kiwi), filter 0.2s ease;
         }
-        .social-list-item:hover { filter: brightness(0.97); }
+        .social-list-item:hover { filter: brightness(0.97); transform: translateX(2px); }
         .dm-quick-btn, .remove-friend-mini-btn {
             background: #5865f2;
             color: #fff;
@@ -920,16 +944,42 @@
         .remove-friend-mini-btn:hover { background: rgba(231, 76, 60, 0.28); }
         .dm-quick-btn:hover { filter: brightness(0.92); }
 
+        @keyframes modalCardEnter {
+            0% { opacity: 0; transform: translateY(18px) scale(0.96); }
+            100% { opacity: 1; transform: translateY(0) scale(1); }
+        }
+        @keyframes modalCardExit {
+            0% { opacity: 1; transform: translateY(0) scale(1); }
+            100% { opacity: 0; transform: translateY(14px) scale(0.96); }
+        }
+
         .modal-overlay {
             position: fixed;
             inset: 0;
             background: rgba(0,0,0,0.55);
+            backdrop-filter: blur(2px);
             display: none;
             align-items: center;
             justify-content: center;
             z-index: 9999;
+            opacity: 0;
+            transition: opacity 0.22s ease;
         }
-        .modal-overlay.open { display: flex; }
+        .modal-overlay.open {
+            display: flex;
+            opacity: 1;
+        }
+        .modal-overlay.open > .aesthetic-profile-card {
+            animation: modalCardEnter 0.28s var(--ease-kiwi) both;
+        }
+        .modal-overlay.closing {
+            display: flex;
+            opacity: 0;
+            pointer-events: none;
+        }
+        .modal-overlay.closing > .aesthetic-profile-card {
+            animation: modalCardExit 0.2s ease forwards;
+        }
 
         .aesthetic-profile-card {
             width: 380px;
@@ -1171,6 +1221,7 @@
             vertical-align: middle;
         }
 
+        /* Dourado restrito ao admin ou a quem ativou o visual dourado explicitamente */
         .aesthetic-profile-card.gold-profile-theme {
             background: linear-gradient(155deg, #2b2108 0%, #4b380c 42%, #8a6614 100%) !important;
             color: #fff8dc !important;
@@ -1504,10 +1555,10 @@
                 overflow-y: auto;
             }
         }
-    
+
         /* === EDITOR ESTÉTICO EM 2 COLUNAS (NA COR DO TEMA) === */
         #edit-modal .aesthetic-profile-card.kiwi-editor-card {
-            width: min(840px, 95vw);
+            width: min(860px, 95vw);
             max-height: 92vh;
             padding: 0;
             overflow-y: auto;
@@ -1595,6 +1646,13 @@
             font-size: 28px;
             font-weight: 800;
             color: #fff;
+            transition: transform 0.25s var(--ease-kiwi), box-shadow 0.25s ease, border-radius 0.25s ease;
+        }
+        .kiwi-editor-avatar-preview.fx-glow {
+            box-shadow: 0 0 0 3px #a855f7, 0 0 20px rgba(168, 85, 247, 0.65);
+        }
+        .kiwi-editor-avatar-preview.fx-pulse {
+            animation: kiwiBounce 1.5s ease-in-out infinite;
         }
         .kiwi-editor-avatar-badge-btn {
             position: absolute;
@@ -1612,7 +1670,9 @@
             align-items: center;
             justify-content: center;
             box-shadow: 0 3px 8px rgba(0, 0, 0, 0.22);
+            transition: transform 0.15s var(--ease-kiwi);
         }
+        .kiwi-editor-avatar-badge-btn:hover { transform: scale(1.08); }
         .kiwi-editor-banner-preview {
             flex: 1;
             min-width: 0;
@@ -1641,10 +1701,11 @@
             align-items: center;
             justify-content: center;
             gap: 6px;
-            transition: filter 0.15s ease, background 0.15s ease;
+            transition: filter 0.15s ease, background 0.15s ease, transform 0.15s var(--ease-kiwi);
         }
         .kiwi-editor-action-pill:hover {
             filter: brightness(0.96);
+            transform: translateY(-1px);
         }
         .kiwi-editor-panel {
             background: var(--bg-soft);
@@ -1698,7 +1759,8 @@
             gap: 8px;
         }
         .kiwi-effect-slot {
-            height: 70px;
+            min-height: 70px;
+            padding: 6px;
             border-radius: 10px;
             border: 1.5px dashed var(--border-subtle);
             background: var(--bg-card);
@@ -1707,11 +1769,12 @@
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            gap: 4px;
+            gap: 3px;
             font-size: 11px;
             font-weight: 700;
             cursor: pointer;
-            transition: border-color 0.15s ease, background 0.15s ease;
+            text-align: center;
+            transition: border-color 0.15s ease, background 0.15s ease, transform 0.15s var(--ease-kiwi);
         }
         .kiwi-effect-slot:hover,
         .kiwi-effect-slot.active {
@@ -1741,7 +1804,9 @@
             justify-content: space-between;
             gap: 8px;
             cursor: pointer;
+            transition: transform 0.15s var(--ease-kiwi);
         }
+        .kiwi-name-style-card:hover { transform: translateX(2px); }
         .kiwi-name-style-sample {
             font-size: 15px;
             font-weight: 800;
@@ -1779,9 +1844,11 @@
             display: flex;
             align-items: center;
             justify-content: space-between;
+            transition: transform 0.15s var(--ease-kiwi), filter 0.15s ease;
         }
         .kiwi-nitro-btn:hover {
             filter: brightness(0.96);
+            transform: translateX(2px);
         }
         .kiwi-live-banner-mini {
             height: 86px;
@@ -1880,9 +1947,11 @@
             font-size: 13px;
             font-weight: 700;
             cursor: pointer;
+            transition: transform 0.15s var(--ease-kiwi), filter 0.15s ease;
         }
         .kiwi-btn-guardar:hover {
             filter: brightness(0.95);
+            transform: translateY(-1px);
         }
         .kiwi-btn-cancelar {
             flex: 1;
@@ -1894,6 +1963,7 @@
             font-size: 13px;
             font-weight: 700;
             cursor: pointer;
+            transition: transform 0.15s var(--ease-kiwi), filter 0.15s ease;
         }
         .kiwi-btn-cancelar:hover {
             filter: brightness(0.96);
@@ -1908,7 +1978,6 @@
                 grid-template-columns: 1fr;
             }
         }
-
 
         .kiwi-file-picker-wrap {
             display: flex;
@@ -1981,7 +2050,15 @@
             background: rgba(231, 76, 60, 0.15);
             color: #e74c3c;
         }
-</style>
+
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after {
+                animation-duration: 0.01ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: 0.01ms !important;
+            }
+        }
+    </style>
 </head>
 <body>
     {{ username|json_script:"kiwi-username-data" }}
@@ -2178,7 +2255,7 @@
                     <div class="theme-ball" style="background: #23a55a;" data-color="#23a55a" data-label="Verde Kiwi" title="Verde Kiwi"></div>
                     <div class="theme-ball" style="background: #5865f2;" data-color="#5865f2" data-label="Azul Discord" title="Azul Discord"></div>
                     <div class="theme-ball" style="background: #95a5a6;" data-color="#95a5a6" data-label="Cinza Elegante" title="Cinza Elegante"></div>
-                    <div class="theme-ball" style="background: linear-gradient(135deg, #b8860b, #ffd700);" data-color="#d4af37" data-label="Dourado Real" title="Dourado Real"></div>
+                    <div class="theme-ball admin-only-gold-ball" style="background: linear-gradient(135deg, #b8860b, #ffd700); display: none;" data-color="#d4af37" data-label="Dourado Admin" title="Dourado Admin"></div>
                 </div>
             </div>
 
@@ -2295,9 +2372,9 @@
             <div>
                 <h4 style="font-size: 12px; text-transform: uppercase; color: var(--text-muted); margin-bottom: 8px;">Notas de Atualizações (Changelog)</h4>
                 <div style="background: var(--bg-soft); padding: 12px; border-radius: 8px; font-size: 12px; line-height: 1.5; color: var(--text-main);">
-                    <div style="font-weight: bold; color: #5865f2; margin-bottom: 4px;">✨ Versão 3.5 - Perfil Dourado &amp; Persistência de Áudio</div>
-                    • O estado do perfil dourado respeita desmarcação e sincroniza com servidor e cache.<br>
-                    • Suporte a link direto de áudio, YouTube/Spotify e persistência por utilizador.
+                    <div style="font-weight: bold; color: #5865f2; margin-bottom: 4px;">✨ Versão 3.6 - Tema Dourado Exclusivo Admin &amp; Editor Funcional</div>
+                    • Tema dourado restrito a contas admin (outros usuários são redirecionados para o tema padrão).<br>
+                    • Botões de avatar, banner, cor da faixa, efeitos/molduras, estilo do nome, prévia, áudio e músicas salvas operacionais.
                 </div>
             </div>
         </div>
@@ -2350,7 +2427,7 @@
                                 <option value="#23a55a">Verde Kiwi</option>
                                 <option value="#5865f2">Azul Discord</option>
                                 <option value="#95a5a6">Cinza Elegante</option>
-                                <option value="#d4af37">Dourado Real</option>
+                                <option value="#d4af37" id="editor-gold-option" style="display: none;">Dourado Admin</option>
                             </select>
                         </div>
 
@@ -2358,12 +2435,12 @@
                             <span class="kiwi-editor-panel-label">Efeitos de perfil e molduras</span>
                             <div class="kiwi-effects-pair">
                                 <button type="button" id="editor-effect-frame-btn" class="kiwi-effect-slot" title="Alternar brilho e moldura especial">
-                                    <span class="kiwi-effect-plus">+</span>
-                                    <span>Efeito</span>
+                                    <span class="kiwi-effect-plus" id="editor-frame-icon">+</span>
+                                    <span id="editor-frame-label">Moldura Brilho</span>
                                 </button>
-                                <button type="button" id="editor-effect-gold-btn" class="kiwi-effect-slot" title="Alternar fundo dourado">
-                                    <span class="kiwi-effect-plus">+</span>
-                                    <span>Dourado</span>
+                                <button type="button" id="editor-effect-gold-btn" class="kiwi-effect-slot" title="Alternar animação e borda do avatar">
+                                    <span class="kiwi-effect-plus" id="editor-pulse-icon">+</span>
+                                    <span id="editor-pulse-label">Avatar Pulso</span>
                                 </button>
                             </div>
                         </div>
@@ -2373,15 +2450,15 @@
                                 <span class="kiwi-editor-panel-label" style="margin:0;">Estilo do nome exibido</span>
                                 <span style="background:#7c3aed; color:#fff; font-size:10px; font-weight:800; padding:2px 7px; border-radius:999px;">Novo!</span>
                             </div>
-                            <div style="font-size:11px; color:#c4b5fd; margin-bottom:8px;">Experimente o estilo visual do Kiwi</div>
+                            <div style="font-size:11px; color:var(--text-muted); margin-bottom:8px;">Clique para alternar fonte e estilo do nome</div>
                             <div id="editor-name-style-toggle" class="kiwi-name-style-card" title="Alternar estilo de destaque do nome">
                                 <span id="editor-live-name-sample" class="kiwi-name-style-sample">Akiira</span>
-                                <span style="color:#d8b4fe; font-weight:800;">›</span>
+                                <span style="font-weight:800;">›</span>
                             </div>
                         </div>
 
                         <div class="kiwi-nitro-promo-card">
-                            <div style="font-size:12px; font-weight:800; color:#fff;">✨ Eleve seu visual no Kiwi</div>
+                            <div style="font-size:12px; font-weight:800; color:var(--text-main);">✨ Eleve seu visual no Kiwi</div>
                             <button type="button" id="editor-preview-profile-btn" class="kiwi-nitro-btn">
                                 <span>◎ Prévia do Perfil</span>
                                 <span>›</span>
@@ -2395,13 +2472,13 @@
 
                         <div class="kiwi-live-identity-box">
                             <div>
-                                <div id="editor-live-display-name" style="font-size:18px; font-weight:900; color:#fff; display:flex; align-items:center; gap:6px;">
+                                <div id="editor-live-display-name" style="font-size:18px; font-weight:900; color:var(--text-main); display:flex; align-items:center; gap:6px;">
                                     <span>Utilizador</span>
                                     <span style="color:#a855f7; font-size:14px;">✔</span>
                                 </div>
-                                <div id="editor-live-sub-meta" style="font-size:12px; color:#c4b5fd;">@kiwi • he / him • 🎀</div>
+                                <div id="editor-live-sub-meta" style="font-size:12px; color:var(--text-muted);">@kiwi • he / him • 🎀</div>
                             </div>
-                            <span style="background:rgba(255,255,255,0.09); border:1px solid rgba(255,255,255,0.16); color:#f3e8ff; font-size:11px; font-weight:700; padding:5px 10px; border-radius:8px;">
+                            <span style="background:rgba(128,128,128,0.12); border:1px solid var(--border-subtle); color:var(--text-main); font-size:11px; font-weight:700; padding:5px 10px; border-radius:8px;">
                                 Perfil Estético
                             </span>
                         </div>
@@ -2410,7 +2487,7 @@
                             <div>
                                 Seu perfil completo está sendo compartilhado com seus amigos no Kiwi. Personalize sua faixa, bio e música a qualquer momento.
                             </div>
-                            <button type="button" id="editor-dismiss-privacy-btn" style="background:none; border:none; color:#e9d5ff; font-size:15px; font-weight:bold; cursor:pointer; line-height:1;" title="Fechar aviso">×</button>
+                            <button type="button" id="editor-dismiss-privacy-btn" style="background:none; border:none; color:var(--text-main); font-size:15px; font-weight:bold; cursor:pointer; line-height:1;" title="Fechar aviso">×</button>
                         </div>
 
                         <div class="form-group" style="display:none;">
@@ -2447,7 +2524,7 @@
                             </div>
                             <input type="text" name="spotify_song" id="edit-spotify-song" value="Drama" style="margin-top:6px;">
 
-                            <div id="saved-music-box" style="display:none; margin-top:8px; background:#18191c; border:1px solid rgba(255,255,255,0.16); border-radius:10px; padding:10px; max-height:240px; overflow-y:auto;">
+                            <div id="saved-music-box" style="display:none; margin-top:8px; background:#18191c; color:#fff; border:1px solid rgba(255,255,255,0.16); border-radius:10px; padding:10px; max-height:240px; overflow-y:auto;">
                                 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
                                     <strong style="font-size:12px;">Minhas músicas no banco</strong>
                                     <button type="button" id="quick-add-music-toggle" style="background:#5865f2; color:#fff; border:none; border-radius:5px; padding:3px 8px; font-size:11px; cursor:pointer;">+ Adicionar</button>
@@ -2456,9 +2533,11 @@
                                 <div id="quick-add-music-form" style="display:none; background:#232429; padding:8px; border-radius:8px; margin-bottom:8px;">
                                     <input type="text" id="qm-title" placeholder="Nome da música" style="width:100%; margin-bottom:6px; padding:6px; font-size:12px;">
                                     <input type="text" id="qm-artist" placeholder="Artista" style="width:100%; margin-bottom:6px; padding:6px; font-size:12px;">
-                                    <label style="font-size:11px; display:block; margin-bottom:2px;">MP3 / Áudio</label>
+                                    <input type="text" id="qm-audio-url" placeholder="URL do áudio (.mp3/.ogg) opcional" style="width:100%; margin-bottom:6px; padding:6px; font-size:12px;">
+                                    <input type="text" id="qm-cover-url" placeholder="URL da capa (foto) opcional" style="width:100%; margin-bottom:6px; padding:6px; font-size:12px;">
+                                    <label style="font-size:11px; display:block; margin-bottom:2px;">MP3 / Áudio (arquivo)</label>
                                     <input type="file" id="qm-audio-file" accept="audio/*" style="width:100%; margin-bottom:6px; font-size:11px;">
-                                    <label style="font-size:11px; display:block; margin-bottom:2px;">Capa (foto)</label>
+                                    <label style="font-size:11px; display:block; margin-bottom:2px;">Capa (arquivo)</label>
                                     <input type="file" id="qm-cover-file" accept="image/*" style="width:100%; margin-bottom:6px; font-size:11px;">
                                     <button type="button" id="qm-save-btn" style="width:100%; background:#23a55a; color:#fff; border:none; border-radius:6px; padding:7px; font-size:12px; font-weight:bold; cursor:pointer;">
                                         Guardar música no banco
@@ -2498,9 +2577,9 @@
                             </div>
                         </div>
 
-                        <div class="form-group" style="display: flex; align-items: center; gap: 8px; background: rgba(255, 215, 0, 0.08); padding: 8px 12px; border-radius: 9px; border: 1px solid rgba(255, 215, 0, 0.25);">
+                        <div id="admin-gold-toggle-row" class="form-group" style="display: none; align-items: center; gap: 8px; background: rgba(255, 215, 0, 0.08); padding: 8px 12px; border-radius: 9px; border: 1px solid rgba(255, 215, 0, 0.25);">
                             <input type="checkbox" id="edit-gold-profile-bg" name="gold_profile_bg" style="width: auto; accent-color: #d4af37; cursor: pointer;">
-                            <label for="edit-gold-profile-bg" style="margin: 0; cursor: pointer; color: #ffe885;">✨ Fundo do meu perfil Dourado</label>
+                            <label for="edit-gold-profile-bg" style="margin: 0; cursor: pointer; color: #ffe885;">👑 Fundo do meu perfil Dourado (Admin)</label>
                         </div>
 
                         <div class="kiwi-editor-two-col-fields">
@@ -2611,6 +2690,7 @@
                 if (!src || !isSafeAssetUrl(src) || !lightboxEl || !lightboxImgEl) return;
                 lightboxImgEl.src = src;
                 lightboxImgEl.alt = altText;
+                lightboxEl.classList.remove('closing');
                 lightboxEl.classList.add('open');
             }
 
@@ -2629,6 +2709,27 @@
             document.addEventListener('keydown', function(e) {
                 if (e.key === 'Escape') closeImageLightbox();
             });
+
+            function openModalAnimated(modalEl) {
+                if (!modalEl) return;
+                modalEl.classList.remove('closing');
+                modalEl.classList.add('open');
+            }
+
+            function closeModalAnimated(modalEl, onAfterClose) {
+                if (!modalEl) return;
+                if (!modalEl.classList.contains('open') && !modalEl.classList.contains('closing')) {
+                    if (typeof onAfterClose === 'function') onAfterClose();
+                    return;
+                }
+                modalEl.classList.remove('open');
+                modalEl.classList.add('closing');
+                clearTimeout(modalEl._closeTimer);
+                modalEl._closeTimer = setTimeout(() => {
+                    modalEl.classList.remove('closing');
+                    if (typeof onAfterClose === 'function') onAfterClose();
+                }, 200);
+            }
 
             try {
             function readJsonScript(id, fallbackVal) {
@@ -2659,10 +2760,45 @@
                 coverUrl: '',
                 accentColor: '#ffffff',
                 goldProfileBg: false,
+                frameEffect: false,
+                avatarPulse: false,
+                nameSpecialStyle: false,
                 avatarUrl: '',
                 bannerUrl: '',
                 is_admin: false
             };
+
+            function isAdminIdentity(username, isAdminFlag) {
+                const clean = (username || '').trim().toLowerCase();
+                return Boolean(isAdminFlag) || clean === 'akiirapw' || clean === 'admin';
+            }
+
+            function sanitizeThemeForUser(colorKey, username, isAdminFlag) {
+                if (!colorKey || !themesMap) return '#ffffff';
+                if (colorKey === '#d4af37' && !isAdminIdentity(username, isAdminFlag)) {
+                    return '#ffffff';
+                }
+                return themesMap[colorKey] ? colorKey : '#ffffff';
+            }
+
+            function syncAdminVisualRestrictions() {
+                const canGold = isAdminIdentity(activeUsername, myProfileData.is_admin);
+                document.querySelectorAll('.admin-only-gold-ball').forEach(el => {
+                    el.style.display = canGold ? 'inline-block' : 'none';
+                });
+                const goldOpt = document.getElementById('editor-gold-option');
+                if (goldOpt) goldOpt.style.display = canGold ? 'block' : 'none';
+                const goldRow = document.getElementById('admin-gold-toggle-row');
+                if (goldRow) goldRow.style.display = canGold ? 'flex' : 'none';
+
+                if (!canGold) {
+                    myProfileData.goldProfileBg = false;
+                    if (myProfileData.accentColor === '#d4af37') {
+                        myProfileData.accentColor = '#ffffff';
+                        try { localStorage.setItem(THEME_STORAGE_KEY, '#ffffff'); } catch (_) {}
+                    }
+                }
+            }
 
             const miniAvatar = document.getElementById('my-mini-avatar');
             const themeBalls = document.querySelectorAll('.theme-ball');
@@ -2707,9 +2843,17 @@
             const editMusicCoverFile = document.getElementById('edit-music-cover-file');
             const editMusicCoverUrl = document.getElementById('edit-music-cover-url');
 
+            const chatAreaEl = document.querySelector('.chat-area');
             const chatLog = document.getElementById('chat-log');
             const messageInput = document.getElementById('chat-message-input');
             const submitButton = document.getElementById('chat-message-submit');
+
+            function triggerChatAreaTransition() {
+                if (!chatAreaEl) return;
+                chatAreaEl.classList.remove('room-entering');
+                void chatAreaEl.offsetWidth;
+                chatAreaEl.classList.add('room-entering');
+            }
 
             const clipMenuBtn = document.getElementById('clip-menu-btn');
             const attachMenu = document.getElementById('attach-menu');
@@ -3025,7 +3169,7 @@
             function applySpecialProfileEffects(cardEl, nameEl, badgeEl, username, isAdminFlag = false) {
                 const cleanName = (username || '').trim().toLowerCase();
                 const isAkiira = cleanName === 'akiirapw';
-                const showAdmin = isAkiira || Boolean(isAdminFlag);
+                const showAdmin = isAdminIdentity(username, isAdminFlag);
 
                 if (nameEl) nameEl.classList.toggle('akiira-special-font', isAkiira);
                 if (cardEl) cardEl.classList.toggle('akiira-shimmer-card', showAdmin);
@@ -3075,7 +3219,10 @@
                         audioSrc: safeAudio,
                         audioFileName: musicObj.audioFileName || '',
                         coverUrl: safeCover,
-                        goldProfileBg: Boolean(musicObj.goldProfileBg)
+                        goldProfileBg: Boolean(musicObj.goldProfileBg),
+                        frameEffect: Boolean(musicObj.frameEffect),
+                        avatarPulse: Boolean(musicObj.avatarPulse),
+                        nameSpecialStyle: Boolean(musicObj.nameSpecialStyle)
                     };
                     localStorage.setItem(getUserMusicStorageKey(username), JSON.stringify(payload));
                 } catch (_) {}
@@ -3836,11 +3983,12 @@
             let geralSnapshotHTML = chatLog.innerHTML;
 
             function persistThemePreference(colorKey) {
-                try { localStorage.setItem(THEME_STORAGE_KEY, colorKey); } catch (_) {}
+                const safeTheme = sanitizeThemeForUser(colorKey, activeUsername, myProfileData.is_admin);
+                try { localStorage.setItem(THEME_STORAGE_KEY, safeTheme); } catch (_) {}
                 const csrfToken = getCookie('csrftoken');
                 if (!csrfToken) return;
                 const fd = new FormData();
-                fd.append('accent_color', colorKey);
+                fd.append('accent_color', safeTheme);
                 fetch('/api/profile/update/', {
                     method: 'POST',
                     headers: { 'X-CSRFToken': csrfToken },
@@ -3849,7 +3997,8 @@
             }
 
             function applyTheme(colorKey) {
-                const t = themesMap[colorKey] || themesMap['#ffffff'];
+                const safeKey = sanitizeThemeForUser(colorKey, activeUsername, myProfileData.is_admin);
+                const t = themesMap[safeKey] || themesMap['#ffffff'];
                 document.documentElement.style.setProperty('--accent', t.accent);
                 document.documentElement.style.setProperty('--bg-main', t.main);
                 document.documentElement.style.setProperty('--bg-sidebar', t.sidebar);
@@ -3876,7 +4025,8 @@
                 }
             }
 
-            function parseExplicitGoldFlag(rawData, cachedMusic) {
+            function parseExplicitGoldFlag(rawData, cachedMusic, uname, isAdminFlag) {
+                if (!isAdminIdentity(uname, isAdminFlag)) return false;
                 if (typeof rawData.gold_profile_bg === 'boolean') return rawData.gold_profile_bg;
                 if (typeof rawData.gold_profile_bg === 'string') {
                     const lower = rawData.gold_profile_bg.trim().toLowerCase();
@@ -3886,18 +4036,20 @@
                 if (cachedMusic && typeof cachedMusic.goldProfileBg === 'boolean') {
                     return cachedMusic.goldProfileBg;
                 }
-                return rawData.accent_color === '#d4af37';
+                return false;
             }
 
             function normalizeProfilePayload(rawData, fallbackUsername) {
                 const uname = (rawData.username || fallbackUsername || '').trim();
                 const cachedMusic = loadUserMusicFromLocalCache(uname);
+                const isAdminVal = Boolean(rawData.is_admin || rawData.is_staff || rawData.is_superuser);
 
                 const resolvedSong = (rawData.spotify_song ?? (cachedMusic && cachedMusic.song) ?? '').trim();
                 const resolvedArtist = (rawData.spotify_artist ?? (cachedMusic && cachedMusic.artist) ?? '').trim();
                 const resolvedMusicUrl = (rawData.music_url ?? rawData.youtube_url ?? rawData.spotify_url ?? (cachedMusic && cachedMusic.musicUrl) ?? '').trim();
                 const resolvedAudioSrc = (rawData.music_audio_url ?? rawData.audio_url ?? (cachedMusic && cachedMusic.audioSrc) ?? '').trim();
                 const resolvedCoverUrl = (rawData.music_cover_url ?? rawData.cover_url ?? (cachedMusic && cachedMusic.coverUrl) ?? '').trim();
+                const resolvedAccent = sanitizeThemeForUser(rawData.accent_color || '#ffffff', uname, isAdminVal);
 
                 return {
                     username: uname,
@@ -3910,11 +4062,14 @@
                     audioSrc: resolvedAudioSrc,
                     audioFileName: (cachedMusic && cachedMusic.audioFileName) || '',
                     coverUrl: resolvedCoverUrl,
-                    accentColor: rawData.accent_color || '#ffffff',
-                    goldProfileBg: parseExplicitGoldFlag(rawData, cachedMusic),
+                    accentColor: resolvedAccent,
+                    goldProfileBg: parseExplicitGoldFlag(rawData, cachedMusic, uname, isAdminVal),
+                    frameEffect: Boolean(cachedMusic && cachedMusic.frameEffect),
+                    avatarPulse: Boolean(cachedMusic && cachedMusic.avatarPulse),
+                    nameSpecialStyle: Boolean(cachedMusic && cachedMusic.nameSpecialStyle),
                     avatarUrl: rawData.avatarUrl || '',
                     bannerUrl: rawData.bannerUrl || '',
-                    is_admin: Boolean(rawData.is_admin || rawData.is_staff || rawData.is_superuser),
+                    is_admin: isAdminVal,
                     is_friend: Boolean(rawData.is_friend)
                 };
             }
@@ -3936,11 +4091,10 @@
                         audioSrc: normalized.audioSrc || cached.audioSrc || myProfileData.audioSrc || '',
                         audioFileName: normalized.audioFileName || cached.audioFileName || myProfileData.audioFileName || '',
                         coverUrl: normalized.coverUrl || cached.coverUrl || myProfileData.coverUrl || '',
-                        goldProfileBg: parseExplicitGoldFlag(data, cached)
+                        accentColor: sanitizeThemeForUser(data.accent_color || myProfileData.accentColor || '#ffffff', activeUsername, normalized.is_admin),
+                        goldProfileBg: parseExplicitGoldFlag(data, cached, activeUsername, normalized.is_admin)
                     };
-                    if (data.accent_color && themesMap[data.accent_color]) {
-                        myProfileData.accentColor = data.accent_color;
-                    }
+                    syncAdminVisualRestrictions();
                     saveUserMusicToLocalCache(activeUsername, myProfileData);
                     profilesByUsername.set(activeUsername.toLowerCase(), { ...myProfileData });
                     updateMySidebarUI();
@@ -3954,14 +4108,20 @@
                     myProfileData.accentColor = savedTheme;
                 }
                 const initialCached = loadUserMusicFromLocalCache(activeUsername);
-                if (initialCached && typeof initialCached.goldProfileBg === 'boolean') {
-                    myProfileData.goldProfileBg = initialCached.goldProfileBg;
+                if (initialCached) {
+                    if (typeof initialCached.goldProfileBg === 'boolean') myProfileData.goldProfileBg = initialCached.goldProfileBg;
+                    if (typeof initialCached.frameEffect === 'boolean') myProfileData.frameEffect = initialCached.frameEffect;
+                    if (typeof initialCached.avatarPulse === 'boolean') myProfileData.avatarPulse = initialCached.avatarPulse;
+                    if (typeof initialCached.nameSpecialStyle === 'boolean') myProfileData.nameSpecialStyle = initialCached.nameSpecialStyle;
                 }
             } catch (_) {}
+            syncAdminVisualRestrictions();
             applyTheme(myProfileData.accentColor);
             loadMyProfile();
 
             function updateMySidebarUI() {
+                syncAdminVisualRestrictions();
+                myProfileData.accentColor = sanitizeThemeForUser(myProfileData.accentColor, activeUsername, myProfileData.is_admin);
                 applyTheme(myProfileData.accentColor);
                 themeBalls.forEach(ball => {
                     ball.classList.toggle('active', ball.getAttribute('data-color') === myProfileData.accentColor);
@@ -3977,7 +4137,7 @@
             function closeUnifiedProfileModal() {
                 stopProfileMusicPlayback();
                 currentViewedProfileUser = '';
-                unifiedProfileModal.classList.remove('open');
+                closeModalAnimated(unifiedProfileModal);
             }
 
             function renderUnifiedProfileModal(profileObj) {
@@ -3985,7 +4145,8 @@
                 currentViewedProfileUser = profileObj.username;
 
                 upUsername.textContent = profileObj.username;
-                const useGoldBg = Boolean(profileObj.goldProfileBg) || profileObj.accentColor === '#d4af37';
+                const canGold = isAdminIdentity(profileObj.username, profileObj.is_admin);
+                const useGoldBg = canGold && Boolean(profileObj.goldProfileBg);
                 if (unifiedProfileCard) {
                     unifiedProfileCard.classList.toggle('gold-profile-theme', useGoldBg);
                 }
@@ -4005,7 +4166,7 @@
                     upBanner.style.backgroundPosition = 'center';
                 } else {
                     upBanner.style.backgroundImage = 'var(--auth-artwork)';
-                    upBanner.style.backgroundColor = profileObj.accentColor || '#ff9de2';
+                    upBanner.style.backgroundColor = sanitizeThemeForUser(profileObj.accentColor, profileObj.username, profileObj.is_admin) || '#ff9de2';
                 }
 
                 upStatusBubble.textContent = profileObj.bubble;
@@ -4076,7 +4237,7 @@
                     };
                 }
 
-                unifiedProfileModal.classList.add('open');
+                openModalAnimated(unifiedProfileModal);
             }
 
             window.openUserProfile = function(username) {
@@ -4105,8 +4266,10 @@
                             audioSrc: normalized.audioSrc || cached.audioSrc || myProfileData.audioSrc || '',
                             audioFileName: normalized.audioFileName || cached.audioFileName || myProfileData.audioFileName || '',
                             coverUrl: normalized.coverUrl || cached.coverUrl || myProfileData.coverUrl || '',
-                            goldProfileBg: parseExplicitGoldFlag(rawData, cached)
+                            accentColor: sanitizeThemeForUser(rawData.accent_color || myProfileData.accentColor || '#ffffff', activeUsername, normalized.is_admin),
+                            goldProfileBg: parseExplicitGoldFlag(rawData, cached, activeUsername, normalized.is_admin)
                         };
+                        syncAdminVisualRestrictions();
                         saveUserMusicToLocalCache(activeUsername, myProfileData);
                         profilesByUsername.set(activeUsername.toLowerCase(), { ...myProfileData });
                         updateMySidebarUI();
@@ -4132,14 +4295,18 @@
 
             themeBalls.forEach(ball => {
                 ball.addEventListener('click', () => {
-                    const chosenColor = ball.getAttribute('data-color');
-                    if (!chosenColor || !themesMap[chosenColor]) return;
-                    myProfileData.accentColor = chosenColor;
+                    const rawColor = ball.getAttribute('data-color');
+                    if (!rawColor || !themesMap[rawColor]) return;
+                    if (rawColor === '#d4af37' && !isAdminIdentity(activeUsername, myProfileData.is_admin)) {
+                        showKiwiToast("O tema dourado é exclusivo para administradores.");
+                        return;
+                    }
+                    myProfileData.accentColor = rawColor;
                     if (settingsActiveColorName) {
-                        settingsActiveColorName.textContent = ball.getAttribute('data-label') || chosenColor;
+                        settingsActiveColorName.textContent = ball.getAttribute('data-label') || rawColor;
                     }
                     updateMySidebarUI();
-                    persistThemePreference(chosenColor);
+                    persistThemePreference(rawColor);
                 });
             });
 
@@ -4147,26 +4314,32 @@
                 openTrigger.addEventListener('click', () => openUserProfile(activeUsername));
             }
             if (settingsBtn && settingsColorsModal) {
-                settingsBtn.addEventListener('click', () => settingsColorsModal.classList.add('open'));
+                settingsBtn.addEventListener('click', () => {
+                    syncAdminVisualRestrictions();
+                    openModalAnimated(settingsColorsModal);
+                });
             }
             if (closeSettingsColorsBtn && settingsColorsModal) {
-                closeSettingsColorsBtn.addEventListener('click', () => settingsColorsModal.classList.remove('open'));
+                closeSettingsColorsBtn.addEventListener('click', () => closeModalAnimated(settingsColorsModal));
+            }
+            if (settingsColorsModal) {
+                settingsColorsModal.addEventListener('click', (e) => {
+                    if (e.target === settingsColorsModal) closeModalAnimated(settingsColorsModal);
+                });
             }
             if (openProfileFromSettingsBtn && settingsColorsModal) {
                 openProfileFromSettingsBtn.addEventListener('click', () => {
-                    settingsColorsModal.classList.remove('open');
-                    openUserProfile(activeUsername);
+                    closeModalAnimated(settingsColorsModal, () => openUserProfile(activeUsername));
                 });
             }
             if (openEditFromSettingsBtn && settingsColorsModal) {
                 openEditFromSettingsBtn.addEventListener('click', () => {
-                    settingsColorsModal.classList.remove('open');
-                    switchToEditBtn.click();
+                    closeModalAnimated(settingsColorsModal, () => switchToEditBtn.click());
                 });
             }
             if (mailboxBtn && mailboxModal) {
                 mailboxBtn.addEventListener('click', () => {
-                    mailboxModal.classList.add('open');
+                    openModalAnimated(mailboxModal);
                     fetchFriendRequests();
                 });
             }
@@ -4176,42 +4349,16 @@
                 if (e.target === unifiedProfileModal) closeUnifiedProfileModal();
             });
 
-            closeEditBtn.addEventListener('click', () => editModal.classList.remove('open'));
-            closeMailboxBtn.addEventListener('click', () => mailboxModal.classList.remove('open'));
-            cancelEditBtn.addEventListener('click', () => editModal.classList.remove('open'));
-
-            switchToEditBtn.addEventListener('click', () => {
-                closeUnifiedProfileModal();
-                editBubble.value = myProfileData.bubble;
-                editPronouns.value = myProfileData.pronouns;
-                editBio.value = myProfileData.bio.replace(/<br\s*\/?>/gi, '\n');
-                editSong.value = myProfileData.song;
-                editArtist.value = myProfileData.artist;
-                if (editYtUrl) editYtUrl.value = myProfileData.musicUrl || '';
-                if (editLocalAudioUrl) {
-                    const directAudioVal = myProfileData.audioSrc || '';
-                    editLocalAudioUrl.value = (directAudioVal && !directAudioVal.startsWith('blob:') && !directAudioVal.startsWith('data:'))
-                        ? directAudioVal
-                        : '';
-                }
-                if (editLocalAudioFile) editLocalAudioFile.value = '';
-                if (editGoldCheckbox) editGoldCheckbox.checked = Boolean(myProfileData.goldProfileBg);
-                if (editMusicCoverUrl) {
-                    editMusicCoverUrl.value = (myProfileData.coverUrl && !myProfileData.coverUrl.startsWith('blob:') && !myProfileData.coverUrl.startsWith('data:'))
-                        ? myProfileData.coverUrl
-                        : '';
-                }
-                if (editMusicCoverFile) editMusicCoverFile.value = '';
-                if (typeof syncCustomFilePickers === 'function') syncCustomFilePickers();
-                if (tempEditorAvatarUrl && tempEditorAvatarUrl.startsWith('blob:')) URL.revokeObjectURL(tempEditorAvatarUrl);
-                if (tempEditorBannerUrl && tempEditorBannerUrl.startsWith('blob:')) URL.revokeObjectURL(tempEditorBannerUrl);
-                tempEditorAvatarUrl = '';
-                tempEditorBannerUrl = '';
-                refreshEditorLivePreview();
-                editModal.classList.add('open');
+            closeEditBtn.addEventListener('click', () => closeModalAnimated(editModal));
+            editModal.addEventListener('click', (e) => {
+                if (e.target === editModal) closeModalAnimated(editModal);
             });
+            closeMailboxBtn.addEventListener('click', () => closeModalAnimated(mailboxModal));
+            mailboxModal.addEventListener('click', (e) => {
+                if (e.target === mailboxModal) closeModalAnimated(mailboxModal);
+            });
+            cancelEditBtn.addEventListener('click', () => closeModalAnimated(editModal));
 
-            
             const editorLiveAvatar = document.getElementById('editor-live-avatar');
             const editorLiveBannerThumb = document.getElementById('editor-live-banner-thumb');
             const editorLiveBannerTop = document.getElementById('editor-live-banner-top');
@@ -4226,6 +4373,8 @@
             const editorBandSwatch = document.getElementById('editor-band-swatch');
             const editorEffectFrameBtn = document.getElementById('editor-effect-frame-btn');
             const editorEffectGoldBtn = document.getElementById('editor-effect-gold-btn');
+            const editorFrameLabel = document.getElementById('editor-frame-label');
+            const editorPulseLabel = document.getElementById('editor-pulse-label');
             const editorNameStyleToggle = document.getElementById('editor-name-style-toggle');
             const editorPreviewProfileBtn = document.getElementById('editor-preview-profile-btn');
             const editorDismissPrivacyBtn = document.getElementById('editor-dismiss-privacy-btn');
@@ -4235,14 +4384,55 @@
             let tempEditorAvatarUrl = '';
             let tempEditorBannerUrl = '';
 
+            switchToEditBtn.addEventListener('click', () => {
+                closeUnifiedProfileModal();
+                syncAdminVisualRestrictions();
+                editBubble.value = myProfileData.bubble;
+                editPronouns.value = myProfileData.pronouns;
+                editBio.value = myProfileData.bio.replace(/<br\s*\/?>/gi, '\n');
+                editSong.value = myProfileData.song;
+                editArtist.value = myProfileData.artist;
+                if (editYtUrl) editYtUrl.value = myProfileData.musicUrl || '';
+                if (editLocalAudioUrl) {
+                    const directAudioVal = myProfileData.audioSrc || '';
+                    editLocalAudioUrl.value = (directAudioVal && !directAudioVal.startsWith('blob:') && !directAudioVal.startsWith('data:'))
+                        ? directAudioVal
+                        : '';
+                }
+                if (editLocalAudioFile) editLocalAudioFile.value = '';
+                if (editGoldCheckbox) {
+                    editGoldCheckbox.checked = isAdminIdentity(activeUsername, myProfileData.is_admin) && Boolean(myProfileData.goldProfileBg);
+                }
+                if (editMusicCoverUrl) {
+                    editMusicCoverUrl.value = (myProfileData.coverUrl && !myProfileData.coverUrl.startsWith('blob:') && !myProfileData.coverUrl.startsWith('data:'))
+                        ? myProfileData.coverUrl
+                        : '';
+                }
+                if (editMusicCoverFile) editMusicCoverFile.value = '';
+                if (typeof syncCustomFilePickers === 'function') syncCustomFilePickers();
+                if (tempEditorAvatarUrl && tempEditorAvatarUrl.startsWith('blob:')) URL.revokeObjectURL(tempEditorAvatarUrl);
+                if (tempEditorBannerUrl && tempEditorBannerUrl.startsWith('blob:')) URL.revokeObjectURL(tempEditorBannerUrl);
+                tempEditorAvatarUrl = '';
+                tempEditorBannerUrl = '';
+                refreshEditorLivePreview();
+                openModalAnimated(editModal);
+            });
+
             function refreshEditorLivePreview() {
+                syncAdminVisualRestrictions();
                 const owner = (activeUsername || myProfileData.username || 'Utilizador').trim() || 'Utilizador';
                 const prn = (editPronouns && editPronouns.value.trim()) ? editPronouns.value.trim() : 'he / him • 🎀';
-                const isGold = Boolean(editGoldCheckbox && editGoldCheckbox.checked);
+                const canGold = isAdminIdentity(owner, myProfileData.is_admin);
+                const isGold = canGold && Boolean(editGoldCheckbox && editGoldCheckbox.checked);
+                const isFrameActive = Boolean(myProfileData.frameEffect);
+                const isPulseActive = Boolean(myProfileData.avatarPulse);
+                const isSpecialName = Boolean(myProfileData.nameSpecialStyle) || owner.toLowerCase() === 'akiirapw';
 
                 const avatarSrc = tempEditorAvatarUrl || (isSafeAssetUrl(myProfileData.avatarUrl) ? myProfileData.avatarUrl : '');
                 if (editorLiveAvatar) {
                     setAvatarStyle(editorLiveAvatar, avatarSrc, owner);
+                    editorLiveAvatar.classList.toggle('fx-glow', isFrameActive);
+                    editorLiveAvatar.classList.toggle('fx-pulse', isPulseActive);
                 }
 
                 const bannerSrc = tempEditorBannerUrl || (isSafeAssetUrl(myProfileData.bannerUrl) ? myProfileData.bannerUrl : '');
@@ -4254,7 +4444,7 @@
                         el.style.backgroundPosition = 'center';
                     } else {
                         el.style.backgroundImage = 'var(--auth-artwork)';
-                        el.style.backgroundColor = myProfileData.accentColor || '#4c1d95';
+                        el.style.backgroundColor = sanitizeThemeForUser(myProfileData.accentColor, owner, myProfileData.is_admin) || '#4c1d95';
                     }
                 };
                 applyBannerBg(editorLiveBannerThumb);
@@ -4262,7 +4452,7 @@
 
                 if (editorLiveNameSample) {
                     editorLiveNameSample.textContent = owner;
-                    editorLiveNameSample.classList.toggle('special-preview', owner.toLowerCase() === 'akiirapw' || isGold);
+                    editorLiveNameSample.classList.toggle('special-preview', isSpecialName);
                 }
                 if (editorLiveDisplayName) {
                     editorLiveDisplayName.innerHTML = `<span>${escapeHtmlText(owner)}</span><span style="color:#a855f7; font-size:14px;">✔</span>`;
@@ -4270,41 +4460,53 @@
                 if (editorLiveSubMeta) {
                     editorLiveSubMeta.textContent = `@${owner.toLowerCase()} • ${prn}`;
                 }
+                const safeAccent = sanitizeThemeForUser(myProfileData.accentColor, owner, myProfileData.is_admin);
                 if (editorBandColorSelect) {
-                    editorBandColorSelect.value = themesMap[myProfileData.accentColor] ? myProfileData.accentColor : '#ffffff';
+                    editorBandColorSelect.value = safeAccent;
                 }
                 if (editorBandColorLabel && editorBandColorSelect) {
                     const opt = editorBandColorSelect.options[editorBandColorSelect.selectedIndex];
                     editorBandColorLabel.textContent = opt ? opt.text : 'Padrão';
                 }
                 if (editorBandSwatch) {
-                    editorBandSwatch.style.background = myProfileData.accentColor === '#d4af37'
+                    editorBandSwatch.style.background = safeAccent === '#d4af37'
                         ? 'linear-gradient(90deg, #b8860b 0%, #ffd700 100%)'
-                        : `linear-gradient(90deg, #7c3aed 0%, ${myProfileData.accentColor || '#c084fc'} 100%)`;
+                        : `linear-gradient(90deg, var(--bg-darkest) 0%, ${safeAccent || '#c084fc'} 100%)`;
+                }
+                if (editorEffectFrameBtn) {
+                    editorEffectFrameBtn.classList.toggle('active', isFrameActive);
+                }
+                if (editorFrameLabel) {
+                    editorFrameLabel.textContent = isFrameActive ? 'Brilho: On' : 'Moldura Brilho';
                 }
                 if (editorEffectGoldBtn) {
-                    editorEffectGoldBtn.classList.toggle('active', isGold);
+                    editorEffectGoldBtn.classList.toggle('active', isPulseActive);
+                }
+                if (editorPulseLabel) {
+                    editorPulseLabel.textContent = isPulseActive ? 'Pulso: On' : 'Avatar Pulso';
                 }
                 if (kiwiEditorCard) {
                     kiwiEditorCard.classList.toggle('gold-profile-theme', isGold);
+                    kiwiEditorCard.classList.toggle('akiira-shimmer-card', canGold || isFrameActive);
                 }
-            }
-
-            if (editorTriggerAvatarBtn && editAvatarFile) {
-                editorTriggerAvatarBtn.addEventListener('click', () => editAvatarFile.click());
-            }
-            if (editorAvatarPencilBtn && editAvatarFile) {
-                editorAvatarPencilBtn.addEventListener('click', () => editAvatarFile.click());
-            }
-            if (editorTriggerBannerBtn && editBannerFile) {
-                editorTriggerBannerBtn.addEventListener('click', () => editBannerFile.click());
-            }
-            if (editorLiveBannerThumb && editBannerFile) {
-                editorLiveBannerThumb.addEventListener('click', () => editBannerFile.click());
             }
 
             const editAvatarFileEl = document.getElementById('edit-avatar-file');
             const editBannerFileEl = document.getElementById('edit-banner-file');
+
+            if (editorTriggerAvatarBtn && editAvatarFileEl) {
+                editorTriggerAvatarBtn.addEventListener('click', () => editAvatarFileEl.click());
+            }
+            if (editorAvatarPencilBtn && editAvatarFileEl) {
+                editorAvatarPencilBtn.addEventListener('click', () => editAvatarFileEl.click());
+            }
+            if (editorTriggerBannerBtn && editBannerFileEl) {
+                editorTriggerBannerBtn.addEventListener('click', () => editBannerFileEl.click());
+            }
+            if (editorLiveBannerThumb && editBannerFileEl) {
+                editorLiveBannerThumb.addEventListener('click', () => editBannerFileEl.click());
+            }
+
             if (editAvatarFileEl) {
                 editAvatarFileEl.addEventListener('change', () => {
                     const f = editAvatarFileEl.files && editAvatarFileEl.files[0];
@@ -4324,8 +4526,7 @@
 
             if (editorBandColorSelect) {
                 editorBandColorSelect.addEventListener('change', () => {
-                    const chosen = editorBandColorSelect.value;
-                    if (!chosen || !themesMap[chosen]) return;
+                    const chosen = sanitizeThemeForUser(editorBandColorSelect.value, activeUsername, myProfileData.is_admin);
                     myProfileData.accentColor = chosen;
                     updateMySidebarUI();
                     persistThemePreference(chosen);
@@ -4334,7 +4535,8 @@
             }
             if (editorBandSwatch && editorBandColorSelect) {
                 editorBandSwatch.addEventListener('click', () => {
-                    const opts = Array.from(editorBandColorSelect.options);
+                    const opts = Array.from(editorBandColorSelect.options).filter(o => o.style.display !== 'none');
+                    if (!opts.length) return;
                     const idx = opts.findIndex(o => o.value === editorBandColorSelect.value);
                     const nextOpt = opts[(idx + 1) % opts.length];
                     if (nextOpt) {
@@ -4343,10 +4545,20 @@
                     }
                 });
             }
-            if (editorEffectGoldBtn && editGoldCheckbox) {
-                editorEffectGoldBtn.addEventListener('click', () => {
-                    editGoldCheckbox.checked = !editGoldCheckbox.checked;
+            if (editorEffectFrameBtn) {
+                editorEffectFrameBtn.addEventListener('click', () => {
+                    myProfileData.frameEffect = !myProfileData.frameEffect;
+                    saveUserMusicToLocalCache(activeUsername, myProfileData);
                     refreshEditorLivePreview();
+                    showKiwiToast(myProfileData.frameEffect ? "Efeito de brilho ativado!" : "Efeito de brilho desativado.");
+                });
+            }
+            if (editorEffectGoldBtn) {
+                editorEffectGoldBtn.addEventListener('click', () => {
+                    myProfileData.avatarPulse = !myProfileData.avatarPulse;
+                    saveUserMusicToLocalCache(activeUsername, myProfileData);
+                    refreshEditorLivePreview();
+                    showKiwiToast(myProfileData.avatarPulse ? "Animação de pulso no avatar ativada!" : "Animação de pulso desativada.");
                 });
             }
             if (editGoldCheckbox) {
@@ -4355,21 +4567,17 @@
             if (editPronouns) {
                 editPronouns.addEventListener('input', refreshEditorLivePreview);
             }
-            if (editorEffectFrameBtn && kiwiEditorCard) {
-                editorEffectFrameBtn.addEventListener('click', () => {
-                    const active = editorEffectFrameBtn.classList.toggle('active');
-                    kiwiEditorCard.classList.toggle('akiira-shimmer-card', active);
-                });
-            }
-            if (editorNameStyleToggle && editorLiveNameSample) {
+            if (editorNameStyleToggle) {
                 editorNameStyleToggle.addEventListener('click', () => {
-                    editorLiveNameSample.classList.toggle('special-preview');
+                    myProfileData.nameSpecialStyle = !myProfileData.nameSpecialStyle;
+                    saveUserMusicToLocalCache(activeUsername, myProfileData);
+                    refreshEditorLivePreview();
+                    showKiwiToast(myProfileData.nameSpecialStyle ? "Estilo especial do nome ativado!" : "Estilo do nome redefinido.");
                 });
             }
             if (editorPreviewProfileBtn) {
                 editorPreviewProfileBtn.addEventListener('click', () => {
-                    editModal.classList.remove('open');
-                    openUserProfile(activeUsername || myProfileData.username);
+                    closeModalAnimated(editModal, () => openUserProfile(activeUsername || myProfileData.username));
                 });
             }
             if (editorDismissPrivacyBtn && editorPrivacyNotice) {
@@ -4378,7 +4586,6 @@
                 });
             }
 
-            
             const openMusicBoxBtn = document.getElementById('open-music-box-btn');
             const savedMusicBox = document.getElementById('saved-music-box');
             const quickAddMusicToggle = document.getElementById('quick-add-music-toggle');
@@ -4386,12 +4593,76 @@
             const qmSaveBtn = document.getElementById('qm-save-btn');
             const savedMusicList = document.getElementById('saved-music-list');
 
+            function getSavedTracksStorageKey() {
+                const safeUser = (activeUsername || 'anon').trim().toLowerCase();
+                return `kiwi_saved_tracks_v1_${safeUser}`;
+            }
+
+            function loadSavedTracksList() {
+                try {
+                    const raw = localStorage.getItem(getSavedTracksStorageKey());
+                    const arr = raw ? JSON.parse(raw) : [];
+                    return Array.isArray(arr) ? arr : [];
+                } catch (_) {
+                    return [];
+                }
+            }
+
+            function persistSavedTracksList(tracks) {
+                try {
+                    localStorage.setItem(getSavedTracksStorageKey(), JSON.stringify(tracks.slice(0, 30)));
+                } catch (_) {}
+            }
+
+            function applyTrackToEditor(track) {
+                if (!track) return;
+                if (editSong) editSong.value = track.title || '';
+                if (editArtist) editArtist.value = track.artist || '';
+                if (editLocalAudioUrl) editLocalAudioUrl.value = track.audioUrl || '';
+                if (editMusicCoverUrl) editMusicCoverUrl.value = track.coverUrl || '';
+                myProfileData.song = track.title || '';
+                myProfileData.artist = track.artist || '';
+                if (track.audioUrl) myProfileData.audioSrc = track.audioUrl;
+                if (track.coverUrl) myProfileData.coverUrl = track.coverUrl;
+                showKiwiToast(`Música "${track.title || 'Faixa'}" aplicada ao editor!`);
+            }
+
+            function renderSavedTracksList() {
+                if (!savedMusicList) return;
+                const tracks = loadSavedTracksList();
+                savedMusicList.innerHTML = '';
+                if (!tracks.length) {
+                    const empty = document.createElement('div');
+                    empty.style.opacity = '0.75';
+                    empty.textContent = 'Nenhuma música salva ainda. Clique em "+ Adicionar".';
+                    savedMusicList.appendChild(empty);
+                    return;
+                }
+                tracks.forEach((tr) => {
+                    const row = document.createElement('div');
+                    row.style.cssText = 'display:flex; justify-content:space-between; align-items:center; gap:8px; background:#2b2d31; color:#fff; padding:7px 9px; border-radius:7px; cursor:pointer;';
+                    const label = document.createElement('span');
+                    label.style.cssText = 'overflow:hidden; text-overflow:ellipsis; white-space:nowrap;';
+                    label.innerHTML = `<strong>${escapeHtmlText(tr.title || 'Faixa')}</strong> — ${escapeHtmlText(tr.artist || 'Artista')}`;
+                    const useBtn = document.createElement('span');
+                    useBtn.style.cssText = 'color:#23a55a; font-weight:bold; flex-shrink:0;';
+                    useBtn.textContent = 'Usar';
+                    row.appendChild(label);
+                    row.appendChild(useBtn);
+                    row.addEventListener('click', () => applyTrackToEditor(tr));
+                    savedMusicList.appendChild(row);
+                });
+            }
+
+            renderSavedTracksList();
+
             if (openMusicBoxBtn && savedMusicBox) {
                 openMusicBoxBtn.addEventListener('click', function(e) {
                     e.preventDefault();
                     e.stopPropagation();
                     const isOpen = savedMusicBox.style.display === 'block';
                     savedMusicBox.style.display = isOpen ? 'none' : 'block';
+                    if (!isOpen) renderSavedTracksList();
                 });
             }
             if (quickAddMusicToggle && quickAddMusicForm) {
@@ -4402,35 +4673,57 @@
                 });
             }
             if (qmSaveBtn && savedMusicList) {
-                qmSaveBtn.addEventListener('click', function(e) {
+                qmSaveBtn.addEventListener('click', async function(e) {
                     e.preventDefault();
                     e.stopPropagation();
                     const titleEl = document.getElementById('qm-title');
                     const artistEl = document.getElementById('qm-artist');
+                    const audioUrlEl = document.getElementById('qm-audio-url');
+                    const coverUrlEl = document.getElementById('qm-cover-url');
+                    const audioFileEl = document.getElementById('qm-audio-file');
+                    const coverFileEl = document.getElementById('qm-cover-file');
+
                     const titleVal = (titleEl && titleEl.value.trim()) || 'Faixa salva';
                     const artistVal = (artistEl && artistEl.value.trim()) || 'Artista';
-                    if (editSong) editSong.value = titleVal;
-                    if (editArtist) editArtist.value = artistVal;
-                    const row = document.createElement('div');
-                    row.style.cssText = 'display:flex; justify-content:space-between; align-items:center; background:#2b2d31; color:#fff; padding:6px 8px; border-radius:6px; cursor:pointer;';
-                    row.innerHTML = `<span><strong>${escapeHtmlText(titleVal)}</strong> — ${escapeHtmlText(artistVal)}</span><span style="color:#23a55a; font-weight:bold;">Usar</span>`;
-                    row.addEventListener('click', function() {
-                        if (editSong) editSong.value = titleVal;
-                        if (editArtist) editArtist.value = artistVal;
-                        showKiwiToast(`Música "${titleVal}" selecionada!`);
-                    });
-                    if (savedMusicList.textContent && savedMusicList.textContent.includes('Nenhuma música salva ainda')) {
-                        savedMusicList.innerHTML = '';
+                    let audioVal = (audioUrlEl && audioUrlEl.value.trim()) || '';
+                    let coverVal = (coverUrlEl && coverUrlEl.value.trim()) || '';
+
+                    const qmAudioFile = audioFileEl && audioFileEl.files && audioFileEl.files[0];
+                    if (qmAudioFile) {
+                        if (qmAudioFile.size <= 3.5 * 1024 * 1024) {
+                            try { audioVal = await readFileAsDataUrl(qmAudioFile); } catch (_) { audioVal = URL.createObjectURL(qmAudioFile); }
+                        } else {
+                            audioVal = URL.createObjectURL(qmAudioFile);
+                        }
                     }
-                    savedMusicList.prepend(row);
+
+                    const qmCoverFile = coverFileEl && coverFileEl.files && coverFileEl.files[0];
+                    if (qmCoverFile) {
+                        if (qmCoverFile.size <= 2 * 1024 * 1024) {
+                            try { coverVal = await readFileAsDataUrl(qmCoverFile); } catch (_) { coverVal = URL.createObjectURL(qmCoverFile); }
+                        } else {
+                            coverVal = URL.createObjectURL(qmCoverFile);
+                        }
+                    }
+
+                    const newTrack = { title: titleVal, artist: artistVal, audioUrl: audioVal, coverUrl: coverVal };
+                    const existing = loadSavedTracksList().filter(item => !(item.title === titleVal && item.artist === artistVal));
+                    existing.unshift(newTrack);
+                    persistSavedTracksList(existing);
+                    renderSavedTracksList();
+                    applyTrackToEditor(newTrack);
+
                     if (titleEl) titleEl.value = '';
                     if (artistEl) artistEl.value = '';
+                    if (audioUrlEl) audioUrlEl.value = '';
+                    if (coverUrlEl) coverUrlEl.value = '';
+                    if (audioFileEl) audioFileEl.value = '';
+                    if (coverFileEl) coverFileEl.value = '';
                     if (quickAddMusicForm) quickAddMusicForm.style.display = 'none';
-                    showKiwiToast(`"${titleVal}" adicionada às músicas salvas!`);
+                    showKiwiToast(`"${titleVal}" salva e aplicada!`);
                 });
             }
 
-            
             function syncCustomFilePickers() {
                 document.querySelectorAll('.kiwi-file-picker-wrap').forEach(wrap => {
                     const inputId = wrap.getAttribute('data-file-picker-for');
@@ -4486,6 +4779,7 @@
                 e.preventDefault();
 
                 const ownerName = (activeUsername || myProfileData.username || '').trim();
+                const canGold = isAdminIdentity(ownerName, myProfileData.is_admin);
                 myProfileData.username = ownerName;
                 myProfileData.bubble = editBubble.value;
                 myProfileData.pronouns = editPronouns.value;
@@ -4493,7 +4787,15 @@
                 myProfileData.song = editSong.value.trim();
                 myProfileData.artist = editArtist.value.trim();
                 myProfileData.musicUrl = editYtUrl ? editYtUrl.value.trim() : '';
-                myProfileData.goldProfileBg = editGoldCheckbox ? Boolean(editGoldCheckbox.checked) : false;
+                myProfileData.goldProfileBg = canGold && editGoldCheckbox ? Boolean(editGoldCheckbox.checked) : false;
+                myProfileData.accentColor = sanitizeThemeForUser(myProfileData.accentColor, ownerName, myProfileData.is_admin);
+
+                if (tempEditorAvatarUrl) {
+                    myProfileData.avatarUrl = tempEditorAvatarUrl;
+                }
+                if (tempEditorBannerUrl) {
+                    myProfileData.bannerUrl = tempEditorBannerUrl;
+                }
 
                 const pickedAudioFile = editLocalAudioFile && editLocalAudioFile.files && editLocalAudioFile.files[0];
                 const typedAudioUrl = editLocalAudioUrl ? editLocalAudioUrl.value.trim() : '';
@@ -4567,7 +4869,7 @@
                     try { return JSON.parse(txt); } catch (_) { return { status: res.ok ? 'success' : 'error', message: txt }; }
                 })
                 .then(resp => {
-                    editModal.classList.remove('open');
+                    closeModalAnimated(editModal);
                     if (resp && resp.status === 'success') {
                         if (resp.avatarUrl) myProfileData.avatarUrl = resp.avatarUrl;
                         if (resp.bannerUrl) myProfileData.bannerUrl = resp.bannerUrl;
@@ -4582,7 +4884,7 @@
                 })
                 .catch(err => {
                     console.error("Erro ao comunicar com /api/profile/update/:", err);
-                    editModal.classList.remove('open');
+                    closeModalAnimated(editModal);
                     updateMySidebarUI();
                     showKiwiToast("Alterações guardadas localmente no perfil!");
                 });
@@ -4730,6 +5032,7 @@
 
                 chatLog.innerHTML = geralSnapshotHTML;
                 enhanceExistingMessagesInLog();
+                triggerChatAreaTransition();
                 chatLog.scrollTop = chatLog.scrollHeight;
                 window.openMobileChatView();
             };
@@ -4892,6 +5195,7 @@
                             appendMessageElement(m, { isDm: true, avatarUrl: msgAvatar });
                         });
 
+                        triggerChatAreaTransition();
                         window.openMobileChatView();
 
                         if (dmSocket) { dmSocket.close(); dmSocket = null; }
@@ -5174,145 +5478,169 @@
 
                 const reactBtn = e.target.closest('[data-react-emoji]');
                 if (reactBtn) {
-                    toggleMessageReaction(reactBtn.closest('.message-group'), reactBtn.getAttribute('data-react-emoji'));
+                    const group = reactBtn.closest('.message-group');
+                    toggleMessageReaction(group, reactBtn.getAttribute('data-react-emoji'));
                     closeAllMessagePopovers();
                     return;
                 }
 
-                const togglePickerBtn = e.target.closest('[data-toggle-picker]');
+                const togglePickerBtn = e.target.closest('[data-toggle-picker="1"]');
                 if (togglePickerBtn) {
-                    e.stopPropagation();
                     const group = togglePickerBtn.closest('.message-group');
                     const picker = group ? group.querySelector('.msg-emoji-picker') : null;
-                    const wasOpen = picker && picker.classList.contains('open');
+                    const willOpen = picker && !picker.classList.contains('open');
                     closeAllMessagePopovers();
-                    if (picker && !wasOpen) {
+                    if (willOpen && picker) {
                         picker.classList.add('open');
                         group.classList.add('menu-open');
                     }
                     return;
                 }
 
-                const toggleMoreBtn = e.target.closest('[data-toggle-more]');
+                const toggleMoreBtn = e.target.closest('[data-toggle-more="1"]');
                 if (toggleMoreBtn) {
-                    e.stopPropagation();
                     const group = toggleMoreBtn.closest('.message-group');
                     const popover = group ? group.querySelector('.msg-more-popover') : null;
-                    const wasOpen = popover && popover.classList.contains('open');
+                    const willOpen = popover && !popover.classList.contains('open');
                     closeAllMessagePopovers();
-                    if (popover && !wasOpen) {
+                    if (willOpen && popover) {
                         popover.classList.add('open');
                         group.classList.add('menu-open');
                     }
                     return;
                 }
 
-                const replyBtn = e.target.closest('[data-reply-msg]');
+                const copyBtn = e.target.closest('[data-copy-msg="1"]');
+                if (copyBtn) {
+                    const group = copyBtn.closest('.message-group');
+                    const textEl = group ? group.querySelector('.message-text') : null;
+                    const txt = textEl ? textEl.textContent.trim() : '';
+                    if (txt && navigator.clipboard) {
+                        navigator.clipboard.writeText(txt).then(() => showKiwiToast("Mensagem copiada!")).catch(() => {});
+                    }
+                    closeAllMessagePopovers();
+                    return;
+                }
+
+                const replyBtn = e.target.closest('[data-reply-msg="1"]');
                 if (replyBtn) {
                     const group = replyBtn.closest('.message-group');
-                    const senderName = group ? group.querySelector('.username')?.textContent?.trim() : '';
-                    if (senderName) {
-                        messageInput.value = `@${senderName} ${messageInput.value}`.trimStart();
+                    const authorEl = group ? group.querySelector('.username') : null;
+                    const author = authorEl ? authorEl.textContent.trim() : '';
+                    if (author) {
+                        messageInput.value = `@${author} ${messageInput.value}`.trimStart();
                         messageInput.focus();
                     }
                     closeAllMessagePopovers();
                     return;
                 }
 
-                const copyBtn = e.target.closest('[data-copy-msg]');
-                if (copyBtn) {
-                    const group = copyBtn.closest('.message-group');
-                    const textContent = group ? group.querySelector('.message-text')?.textContent?.trim() : '';
-                    if (textContent && navigator.clipboard) {
-                        navigator.clipboard.writeText(textContent).then(() => showKiwiToast("Texto copiado!")).catch(() => {});
-                    }
+                const delGeneralBtn = e.target.closest('[data-delete-id]');
+                if (delGeneralBtn) {
+                    const msgId = delGeneralBtn.getAttribute('data-delete-id');
                     closeAllMessagePopovers();
-                    return;
-                }
-
-                const delGeralBtn = e.target.closest('[data-delete-id]');
-                if (delGeralBtn) {
-                    const msgId = delGeralBtn.getAttribute('data-delete-id');
-                    if (msgId && chatSocket.readyState === WebSocket.OPEN) {
-                        chatSocket.send(JSON.stringify({
-                            'action': 'delete_message',
-                            'message_id': Number(msgId),
-                            'username': activeUsername
-                        }));
-                    }
-                    closeAllMessagePopovers();
+                    fetch(`/api/message/${msgId}/delete/`, {
+                        method: 'POST',
+                        headers: { 'X-CSRFToken': getCookie('csrftoken') }
+                    })
+                    .then(r => r.json())
+                    .then(resp => {
+                        if (resp.status === 'success') {
+                            const el = chatLog.querySelector(`.message-group[data-msg-id="${msgId}"]`);
+                            if (el) el.remove();
+                            const temp = document.createElement('div');
+                            temp.innerHTML = geralSnapshotHTML;
+                            const snapEl = temp.querySelector(`.message-group[data-msg-id="${msgId}"]`);
+                            if (snapEl) snapEl.remove();
+                            geralSnapshotHTML = temp.innerHTML;
+                            showKiwiToast("Mensagem apagada.");
+                        }
+                    })
+                    .catch(() => {});
                     return;
                 }
 
                 const delDmBtn = e.target.closest('[data-delete-dm-id]');
                 if (delDmBtn) {
                     const dmId = delDmBtn.getAttribute('data-delete-dm-id');
-                    if (dmId && dmSocket && dmSocket.readyState === WebSocket.OPEN) {
-                        dmSocket.send(JSON.stringify({
-                            'action': 'delete_dm',
-                            'message_id': Number(dmId)
-                        }));
-                    }
                     closeAllMessagePopovers();
+                    fetch(`/api/dm/message/${dmId}/delete/`, {
+                        method: 'POST',
+                        headers: { 'X-CSRFToken': getCookie('csrftoken') }
+                    })
+                    .then(r => r.json())
+                    .then(resp => {
+                        if (resp.status === 'success') {
+                            const el = chatLog.querySelector(`.message-group[data-dm-id="${dmId}"]`);
+                            if (el) el.remove();
+                            if (dmSocket && dmSocket.readyState === WebSocket.OPEN) {
+                                dmSocket.send(JSON.stringify({ type: 'delete_dm', message_id: dmId }));
+                            }
+                            showKiwiToast("Mensagem apagada.");
+                        }
+                    })
+                    .catch(() => {});
                 }
             });
 
             chatSocket.onmessage = function(e) {
                 const data = JSON.parse(e.data);
-
-                if (data.type === 'incoming_call' && data.caller && data.caller !== activeUsername) {
-                    pendingIncomingOffer = data.signal && data.signal.offer ? data.signal.offer : null;
-                    pendingIncomingSender = data.caller;
-                    startRinging(data.caller);
+                if (data.type === 'chat_deleted') {
+                    const el = chatLog.querySelector(`.message-group[data-msg-id="${data.message_id}"]`);
+                    if (el) el.remove();
+                    const temp = document.createElement('div');
+                    temp.innerHTML = geralSnapshotHTML;
+                    const snapEl = temp.querySelector(`.message-group[data-msg-id="${data.message_id}"]`);
+                    if (snapEl) snapEl.remove();
+                    geralSnapshotHTML = temp.innerHTML;
                     return;
                 }
-
-                if (data.type === 'message_deleted') {
-                    const msgEl = chatLog.querySelector(`.message-group[data-msg-id="${data.message_id}"]`);
-                    if (msgEl) msgEl.remove();
-                    const snapTemp = document.createElement('div');
-                    snapTemp.innerHTML = geralSnapshotHTML;
-                    const snapEl = snapTemp.querySelector(`.message-group[data-msg-id="${data.message_id}"]`);
-                    if (snapEl) {
-                        snapEl.remove();
-                        geralSnapshotHTML = snapTemp.innerHTML;
-                    }
-                    return;
-                }
-
-                const msgUser = data.sender || data.username || 'Anônimo';
-                const resolvedAvatar =
-                    data.avatar ||
-                    data.avatarUrl ||
-                    (msgUser === activeUsername ? myProfileData.avatarUrl : '');
-
+                const msgData = {
+                    id: data.id,
+                    sender: data.username,
+                    message: data.message || '',
+                    attachment_url: data.attachment_url || '',
+                    attachment_type: data.attachment_type || '',
+                    attachment_name: data.attachment_name || '',
+                    avatar: data.avatar || data.avatarUrl || '',
+                    time: 'Agora'
+                };
                 if (currentView === 'geral') {
-                    appendMessageElement(data, { isDm: false, avatarUrl: resolvedAvatar });
+                    appendMessageElement(msgData, { isDm: false });
                 } else {
-                    appendGeralMessageToSnapshot(data, resolvedAvatar);
+                    appendGeralMessageToSnapshot(msgData);
                 }
             };
 
-            function closeAttachMenu() { attachMenu.classList.remove('open'); }
+            function setPendingAttachment(file, category = 'file') {
+                if (!file) return;
+                pendingAttachmentFile = file;
+                pendingAttachmentCategory = category;
 
-            clipMenuBtn.addEventListener('click', function(e) {
-                e.stopPropagation();
-                attachMenu.classList.toggle('open');
-            });
-
-            document.addEventListener('click', function(e) {
-                if (!attachMenu.contains(e.target) && e.target !== clipMenuBtn) closeAttachMenu();
-            });
-
-            pickPhotoBtn.addEventListener('click', () => { closeAttachMenu(); photoFileInput.value = ''; photoFileInput.click(); });
-            pickAudioBtn.addEventListener('click', () => { closeAttachMenu(); audioFileInput.value = ''; audioFileInput.click(); });
-            pickDocBtn.addEventListener('click', () => { closeAttachMenu(); docFileInput.value = ''; docFileInput.click(); });
+                if (category === 'image' || file.type.startsWith('image/')) {
+                    const reader = new FileReader();
+                    reader.onload = function(ev) {
+                        previewImg.src = ev.target.result;
+                        previewImg.style.display = 'block';
+                        previewBadge.style.display = 'none';
+                        previewName.textContent = file.name;
+                        previewBar.style.display = 'flex';
+                    };
+                    reader.readAsDataURL(file);
+                } else {
+                    previewImg.style.display = 'none';
+                    previewImg.src = '';
+                    previewBadge.textContent = category === 'audio' ? '🎵' : '📄';
+                    previewBadge.style.display = 'flex';
+                    previewName.textContent = file.name;
+                    previewBar.style.display = 'flex';
+                }
+            }
 
             function clearPendingAttachment() {
                 pendingAttachmentFile = null;
                 pendingAttachmentCategory = 'file';
-                allFileInputs.forEach(input => { input.value = ''; });
-                if (previewImg.src && previewImg.src.startsWith('blob:')) URL.revokeObjectURL(previewImg.src);
+                allFileInputs.forEach(inp => { if (inp) inp.value = ''; });
                 previewImg.src = '';
                 previewImg.style.display = 'none';
                 previewBadge.style.display = 'none';
@@ -5320,213 +5648,188 @@
                 previewBar.style.display = 'none';
             }
 
-            function handleFileSelected(file, category) {
-                if (!file) return;
-                clearPendingAttachment();
-                pendingAttachmentFile = file;
-                pendingAttachmentCategory = category;
-                previewName.textContent = file.name;
-                previewBar.style.display = 'flex';
-
-                const isImg = category === 'image' || file.type.startsWith('image/') || /\.(png|jpe?g|gif|webp)$/i.test(file.name);
-                if (isImg) {
-                    previewImg.src = URL.createObjectURL(file);
-                    previewImg.style.display = 'block';
-                } else if (category === 'audio' || file.type.startsWith('audio/')) {
-                    previewBadge.textContent = '🎵';
-                    previewBadge.style.display = 'flex';
-                } else {
-                    previewBadge.textContent = '📄';
-                    previewBadge.style.display = 'flex';
-                }
+            if (clipMenuBtn && attachMenu) {
+                clipMenuBtn.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    attachMenu.classList.toggle('open');
+                });
+                document.addEventListener('click', function(e) {
+                    if (!attachMenu.contains(e.target) && e.target !== clipMenuBtn) {
+                        attachMenu.classList.remove('open');
+                    }
+                });
             }
 
-            photoFileInput.addEventListener('change', function() { handleFileSelected(this.files && this.files[0], 'image'); });
-            audioFileInput.addEventListener('change', function() { handleFileSelected(this.files && this.files[0], 'audio'); });
-            docFileInput.addEventListener('change', function() { handleFileSelected(this.files && this.files[0], 'document'); });
-            clearAttachmentBtn.addEventListener('click', clearPendingAttachment);
+            if (pickPhotoBtn && photoFileInput) {
+                pickPhotoBtn.addEventListener('click', () => { attachMenu.classList.remove('open'); photoFileInput.click(); });
+            }
+            if (pickAudioBtn && audioFileInput) {
+                pickAudioBtn.addEventListener('click', () => { attachMenu.classList.remove('open'); audioFileInput.click(); });
+            }
+            if (pickDocBtn && docFileInput) {
+                pickDocBtn.addEventListener('click', () => { attachMenu.classList.remove('open'); docFileInput.click(); });
+            }
 
-            async function uploadAndBroadcastAttachment(file, categoryHint = 'file') {
-                const textVal = messageInput.value.trim();
-                const targetVal = (currentView === 'dm' && currentDmUser) ? currentDmUser : 'geral';
-                const csrfToken = getCookie('csrftoken') || document.querySelector('[name=csrfmiddlewaretoken]')?.value || '';
+            if (photoFileInput) photoFileInput.addEventListener('change', function() { if (this.files && this.files[0]) setPendingAttachment(this.files[0], 'image'); });
+            if (audioFileInput) audioFileInput.addEventListener('change', function() { if (this.files && this.files[0]) setPendingAttachment(this.files[0], 'audio'); });
+            if (docFileInput) docFileInput.addEventListener('change', function() { if (this.files && this.files[0]) setPendingAttachment(this.files[0], 'doc'); });
+            if (clearAttachmentBtn) clearAttachmentBtn.addEventListener('click', clearPendingAttachment);
 
-                const formData = new FormData();
-                formData.append('file', file);
-                formData.append('target', targetVal);
-                formData.append('room', roomName);
-                formData.append('content', textVal);
-
-                try {
-                    const res = await fetch('/api/upload-attachment/', {
-                        method: 'POST',
-                        headers: { 'X-CSRFToken': csrfToken },
-                        body: formData
-                    });
-
-                    const rawText = await res.text();
-                    let resp = {};
-                    try { resp = JSON.parse(rawText); } catch (_) { throw new Error(`HTTP ${res.status}`); }
-
-                    if (!res.ok || resp.status !== 'success') {
-                        showKiwiToast(resp.message || `Falha ao enviar anexo (HTTP ${res.status}).`);
+            if (recordAudioBtn) {
+                recordAudioBtn.addEventListener('click', async function() {
+                    if (mediaRecorder && mediaRecorder.state === 'recording') {
+                        mediaRecorder.stop();
                         return;
                     }
-
-                    messageInput.value = '';
-                    const resolvedType = resp.attachment_type || categoryHint || 'file';
-                    const resolvedName = resp.attachment_name || file.name;
-
-                    if (targetVal === 'geral') {
-                        if (chatSocket && chatSocket.readyState === WebSocket.OPEN) {
-                            chatSocket.send(JSON.stringify({
-                                'id': resp.id,
-                                'message': textVal,
-                                'attachment_url': resp.attachment_url,
-                                'attachment_type': resolvedType,
-                                'attachment_name': resolvedName,
-                                'username': activeUsername,
-                                'avatar': myProfileData.avatarUrl || '',
-                                'avatarUrl': myProfileData.avatarUrl || ''
-                            }));
-                        } else {
-                            appendMessageElement({
-                                id: resp.id,
-                                sender: activeUsername,
-                                message: textVal,
-                                attachment_url: resp.attachment_url,
-                                attachment_type: resolvedType,
-                                attachment_name: resolvedName,
-                                avatar: myProfileData.avatarUrl || '',
-                                avatarUrl: myProfileData.avatarUrl || '',
-                                time: 'Agora'
-                            }, { isDm: false, avatarUrl: myProfileData.avatarUrl || '' });
+                    try {
+                        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia || typeof MediaRecorder === 'undefined') {
+                            showKiwiToast("Gravação de áudio não suportada neste navegador.");
+                            return;
                         }
-                    } else {
-                        if (dmSocket && dmSocket.readyState === WebSocket.OPEN) {
-                            dmSocket.send(JSON.stringify({
-                                'id': resp.id,
-                                'message': textVal,
-                                'attachment_url': resp.attachment_url,
-                                'attachment_type': resolvedType,
-                                'attachment_name': resolvedName
-                            }));
-                        } else {
-                            appendMessageElement({
-                                id: resp.id,
-                                sender: activeUsername,
-                                message: textVal,
-                                attachment_url: resp.attachment_url,
-                                attachment_type: resolvedType,
-                                attachment_name: resolvedName,
-                                time: 'Agora'
-                            }, { isDm: true, avatarUrl: myProfileData.avatarUrl || '' });
-                        }
+                        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                        audioChunks = [];
+                        mediaRecorder = new MediaRecorder(stream);
+                        mediaRecorder.ondataavailable = function(ev) {
+                            if (ev.data && ev.data.size > 0) audioChunks.push(ev.data);
+                        };
+                        mediaRecorder.onstop = function() {
+                            stream.getTracks().forEach(track => track.stop());
+                            recordAudioBtn.classList.remove('recording');
+                            recordAudioBtn.title = "Gravar Áudio";
+                            if (audioChunks.length > 0) {
+                                const audioBlob = new Blob(audioChunks, { type: mediaRecorder.mimeType || 'audio/webm' });
+                                const ext = audioBlob.type.includes('ogg') ? 'ogg' : (audioBlob.type.includes('mp4') ? 'm4a' : 'webm');
+                                const recordedFile = new File([audioBlob], `gravacao_${Date.now()}.${ext}`, { type: audioBlob.type });
+                                setPendingAttachment(recordedFile, 'audio');
+                            }
+                            mediaRecorder = null;
+                        };
+                        mediaRecorder.start();
+                        recordAudioBtn.classList.add('recording');
+                        recordAudioBtn.title = "Clique novamente para parar a gravação";
+                    } catch (err) {
+                        console.error("Erro ao gravar áudio:", err);
+                        showKiwiToast("Não foi possível aceder ao microfone.");
                     }
-                } catch (err) {
-                    console.error('Erro ao enviar anexo:', err);
-                    showKiwiToast('Erro ao enviar o ficheiro: ' + (err.message || err));
-                }
+                });
             }
-
-            recordAudioBtn.addEventListener('click', async function() {
-                if (mediaRecorder && mediaRecorder.state === 'recording') {
-                    mediaRecorder.stop();
-                    return;
-                }
-
-                if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-                    showKiwiToast('O teu navegador não suporta gravação de áudio.');
-                    return;
-                }
-
-                try {
-                    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-                    audioChunks = [];
-                    mediaRecorder = new MediaRecorder(stream);
-
-                    mediaRecorder.ondataavailable = (e) => {
-                        if (e.data && e.data.size > 0) audioChunks.push(e.data);
-                    };
-
-                    mediaRecorder.onstop = async () => {
-                        stream.getTracks().forEach(track => track.stop());
-                        recordAudioBtn.classList.remove('recording');
-                        recordAudioBtn.textContent = '🎙️';
-                        recordAudioBtn.title = 'Gravar Áudio';
-
-                        if (audioChunks.length > 0) {
-                            const blob = new Blob(audioChunks, { type: 'audio/webm' });
-                            const file = new File([blob], `voz_${Date.now()}.webm`, { type: 'audio/webm' });
-                            await uploadAndBroadcastAttachment(file, 'audio');
-                        }
-                    };
-
-                    mediaRecorder.start();
-                    recordAudioBtn.classList.add('recording');
-                    recordAudioBtn.textContent = '⏹️';
-                    recordAudioBtn.title = 'Parar e Enviar Áudio';
-                } catch (err) {
-                    console.error('Erro no microfone:', err);
-                    showKiwiToast('Não foi possível aceder ao microfone.');
-                }
-            });
 
             async function sendMessage() {
-                if (pendingAttachmentFile) {
-                    const fileToSend = pendingAttachmentFile;
-                    const categoryToSend = pendingAttachmentCategory;
-                    clearPendingAttachment();
-                    await uploadAndBroadcastAttachment(fileToSend, categoryToSend);
-                    return;
-                }
+                const textVal = messageInput.value.trim();
+                const fileToSend = pendingAttachmentFile;
+                if (!textVal && !fileToSend) return;
 
-                const message = messageInput.value.trim();
-                if (!message) return;
-
-                if (currentView === 'dm') {
-                    if (!dmSocket || dmSocket.readyState !== WebSocket.OPEN || !currentDmUser) {
-                        showKiwiToast("A ligação da conversa privada está fechada. Abra a DM novamente.");
+                if (currentView === 'dm' && currentDmUser) {
+                    if (fileToSend) {
+                        const fd = new FormData();
+                        fd.append('recipient', currentDmUser);
+                        fd.append('message', textVal);
+                        fd.append('attachment', fileToSend);
+                        fetch('/api/dm/upload/', {
+                            method: 'POST',
+                            headers: { 'X-CSRFToken': getCookie('csrftoken') },
+                            body: fd
+                        })
+                        .then(r => r.json())
+                        .then(data => {
+                            if (data.status === 'success') {
+                                appendMessageElement({
+                                    id: data.id,
+                                    sender: activeUsername,
+                                    message: data.message || '',
+                                    attachment_url: data.attachment_url || '',
+                                    attachment_type: data.attachment_type || '',
+                                    attachment_name: data.attachment_name || '',
+                                    time: 'Agora'
+                                }, { isDm: true, avatarUrl: myProfileData.avatarUrl });
+                                if (dmSocket && dmSocket.readyState === WebSocket.OPEN) {
+                                    dmSocket.send(JSON.stringify({
+                                        type: 'dm_message',
+                                        id: data.id,
+                                        sender: activeUsername,
+                                        message: data.message || '',
+                                        attachment_url: data.attachment_url || '',
+                                        attachment_type: data.attachment_type || '',
+                                        attachment_name: data.attachment_name || ''
+                                    }));
+                                }
+                                messageInput.value = '';
+                                clearPendingAttachment();
+                            } else {
+                                showKiwiToast(data.message || "Erro ao enviar anexo na DM.");
+                            }
+                        })
+                        .catch(() => showKiwiToast("Erro ao enviar anexo na DM."));
                         return;
                     }
-                    dmSocket.send(JSON.stringify({ 'message': message }));
-                    messageInput.value = '';
+
+                    if (dmSocket && dmSocket.readyState === WebSocket.OPEN) {
+                        dmSocket.send(JSON.stringify({ type: 'dm_message', message: textVal, sender: activeUsername }));
+                        messageInput.value = '';
+                    } else {
+                        showKiwiToast("Ligação DM indisponível.");
+                    }
                     return;
                 }
 
-                if (chatSocket.readyState !== WebSocket.OPEN) {
-                    showKiwiToast("A ligação WebSocket está fechada. Atualize a página.");
+                if (fileToSend) {
+                    const fd = new FormData();
+                    fd.append('room', roomName);
+                    fd.append('message', textVal);
+                    fd.append('attachment', fileToSend);
+                    fetch('/api/chat/upload/', {
+                        method: 'POST',
+                        headers: { 'X-CSRFToken': getCookie('csrftoken') },
+                        body: fd
+                    })
+                    .then(r => r.json())
+                    .then(data => {
+                        if (data.status === 'success') {
+                            const payloadObj = {
+                                id: data.id,
+                                username: activeUsername,
+                                message: data.message || '',
+                                attachment_url: data.attachment_url || '',
+                                attachment_type: data.attachment_type || '',
+                                attachment_name: data.attachment_name || '',
+                                avatar: myProfileData.avatarUrl || ''
+                            };
+                            appendMessageElement({
+                                id: data.id,
+                                sender: activeUsername,
+                                message: data.message || '',
+                                attachment_url: data.attachment_url || '',
+                                attachment_type: data.attachment_type || '',
+                                attachment_name: data.attachment_name || '',
+                                avatar: myProfileData.avatarUrl || '',
+                                time: 'Agora'
+                            }, { isDm: false });
+                            if (chatSocket && chatSocket.readyState === WebSocket.OPEN) {
+                                chatSocket.send(JSON.stringify(payloadObj));
+                            }
+                            messageInput.value = '';
+                            clearPendingAttachment();
+                        } else {
+                            showKiwiToast(data.message || "Erro ao enviar anexo.");
+                        }
+                    })
+                    .catch(() => showKiwiToast("Erro ao enviar anexo."));
                     return;
                 }
 
-                chatSocket.send(JSON.stringify({
-                    'message': message,
-                    'username': activeUsername,
-                    'avatar': myProfileData.avatarUrl || '',
-                    'avatarUrl': myProfileData.avatarUrl || ''
-                }));
-
+                chatSocket.send(JSON.stringify({ message: textVal, username: activeUsername, avatar: myProfileData.avatarUrl || '' }));
                 messageInput.value = '';
             }
 
-            submitButton.addEventListener('click', sendMessage);
-            messageInput.addEventListener('keyup', function(e) {
-                if (e.key === 'Enter') sendMessage();
+            submitButton.onclick = sendMessage;
+            messageInput.addEventListener("keypress", function(e) {
+                if (e.key === "Enter") { e.preventDefault(); sendMessage(); }
             });
-            } catch (fatalErr) {
-                console.error("Erro na inicialização do Kiwi:", fatalErr);
+            } catch (err) {
+                console.error("Erro na inicialização do Kiwi Chat:", err);
                 dismissKiwiSplash();
             }
         });
-    </script>
-    <script>
-      if ("serviceWorker" in navigator) {
-        window.addEventListener("load", () => {
-          navigator.serviceWorker.register("/static/service-worker.js").catch((err) => {
-            console.error("Erro ao registar Service Worker:", err);
-          });
-        });
-      }
     </script>
 </body>
 </html>
