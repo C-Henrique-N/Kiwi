@@ -1493,6 +1493,11 @@
             transform: translateY(0);
         }
 
+        /* Esconde botão mobile de canais no desktop */
+        #mobile-back-list-btn {
+            display: none;
+        }
+
         /* Layout Responsivo Mobile (<= 768px) */
         @media (max-width: 768px) {
             body {
@@ -1527,7 +1532,8 @@
                 display: flex;
             }
 
-            .back-geral-btn {
+            #mobile-back-list-btn,
+            .back-geral-btn.visible {
                 display: inline-flex;
                 align-items: center;
                 gap: 4px;
@@ -1644,7 +1650,7 @@
     <div class="chat-area">
         <div class="chat-header">
             <div class="header-title-group">
-                <button type="button" class="back-geral-btn visible" id="mobile-back-list-btn" onclick="closeMobileChatView()" title="Voltar à lista de canais">☰ Canais</button>
+                <button type="button" class="back-geral-btn" id="mobile-back-list-btn" onclick="closeMobileChatView()" title="Voltar à lista de canais">☰ Canais</button>
                 <div id="header-dm-avatar" class="header-dm-avatar" title="Ver perfil"></div>
                 <div id="header-main-title"># geral</div>
                 <span class="sub" id="header-sub-label">| Chat oficial em tempo real</span>
@@ -1704,14 +1710,14 @@
             {% with msg_profile=msg.user.profile %}
             <div class="message-group" data-msg-id="{{ msg.id }}" data-can-delete="{% if msg.user.username == username %}1{% else %}0{% endif %}">
                 {% if msg_profile.avatar %}
-                <div class="avatar" style="background-image: url('{{ msg_profile.avatar.url }}'); background-size: cover; background-position: center; color: transparent;" onclick="openUserProfile('{{ msg.user.username|escapejs }}')"></div>
+                <div class="avatar" style="background-image: url('{{ msg_profile.avatar.url }}'); background-size: cover; background-position: center; color: transparent;" data-profile-user="{{ msg.user.username }}"></div>
                 {% else %}
-                <div class="avatar" style="background: #5865f2;" onclick="openUserProfile('{{ msg.user.username|escapejs }}')">{{ msg.user.username|slice:":1"|upper }}</div>
+                <div class="avatar" style="background: #5865f2;" data-profile-user="{{ msg.user.username }}">{{ msg.user.username|slice:":1"|upper }}</div>
                 {% endif %}
 
                 <div class="message-content">
                     <div class="message-header">
-                        <span class="username" onclick="openUserProfile('{{ msg.user.username|escapejs }}')">{{ msg.user.username }}</span>
+                        <span class="username" data-profile-user="{{ msg.user.username }}">{{ msg.user.username }}</span>
                         <span class="timestamp">{{ msg.timestamp|date:"H:i" }}</span>
                     </div>
                     {% if msg.content %}
@@ -2029,8 +2035,35 @@
             const lightboxImgEl = document.getElementById('image-lightbox-img');
             const lightboxCloseEl = document.getElementById('image-lightbox-close');
 
+            function escapeHtmlText(str) {
+                return String(str ?? '')
+                    .replace(/&/g, '&amp;')
+                    .replace(/</g, '&lt;')
+                    .replace(/>/g, '&gt;')
+                    .replace(/"/g, '&quot;')
+                    .replace(/'/g, '&#39;');
+            }
+
+            function formatSafeBioHtml(rawBio) {
+                const escaped = escapeHtmlText(rawBio || '');
+                return escaped.replace(/
+?
+|<br\s*\/?>/gi, '<br>');
+            }
+
+            function isSafeAssetUrl(url) {
+                if (!url || typeof url !== 'string') return false;
+                const trimmed = url.trim();
+                if (!trimmed) return false;
+                if (trimmed.startsWith('/') && !trimmed.startsWith('//')) return true;
+                if (/^https?:\/\//i.test(trimmed)) return true;
+                if (/^data:image\/(png|jpe?g|gif|webp|avif);base64,/i.test(trimmed)) return true;
+                if (/^blob:/i.test(trimmed)) return true;
+                return false;
+            }
+
             function openImageLightbox(src, altText = 'Imagem em tela cheia') {
-                if (!src || !lightboxEl || !lightboxImgEl) return;
+                if (!src || !isSafeAssetUrl(src) || !lightboxEl || !lightboxImgEl) return;
                 lightboxImgEl.src = src;
                 lightboxImgEl.alt = altText;
                 lightboxEl.classList.add('open');
@@ -2070,6 +2103,7 @@
             }
 
             let activeUsername = readJsonScript('kiwi-username-data', '') || '';
+            const THEME_STORAGE_KEY = 'kiwi_theme_color_v1';
             let profileData = {
                 bubble: '🌸 a testar o novo kiwi chat...',
                 pronouns: 'he / him • 🎀',
@@ -2309,6 +2343,9 @@
                     return;
                 }
                 try {
+                    if (screenStream) {
+                        stopScreenShare(false);
+                    }
                     screenStream = await navigator.mediaDevices.getDisplayMedia({
                         video: true,
                         audio: false
@@ -2324,12 +2361,11 @@
 
                     const offer = await peerConnection.createOffer();
                     await peerConnection.setLocalDescription(offer);
-                    if (dmSocket && dmSocket.readyState === WebSocket.OPEN) {
-                        dmSocket.send(JSON.stringify({
-                            type: 'call_signal',
-                            signal: { offer: offer }
-                        }));
-                    }
+                    const sock = await waitForDmSocketOpen();
+                    sock.send(JSON.stringify({
+                        type: 'call_signal',
+                        signal: { offer: offer }
+                    }));
 
                     videoTrack.onended = () => {
                         stopScreenShare(true);
@@ -2337,6 +2373,7 @@
                     showKiwiToast('🖥️ Compartilhando tela...');
                 } catch (err) {
                     console.error('Erro ao compartilhar tela:', err);
+                    stopScreenShare(false);
                     showKiwiToast('Compartilhamento de tela cancelado ou bloqueado.');
                 }
             };
@@ -2372,7 +2409,7 @@
                 }
             };
 
-            function waitForDmSocketOpen(timeoutMs = 3000) {
+            function waitForDmSocketOpen(timeoutMs = 3500) {
                 return new Promise((resolve, reject) => {
                     if (dmSocket && dmSocket.readyState === WebSocket.OPEN) {
                         resolve(dmSocket);
@@ -2739,7 +2776,7 @@
                         onStateChange: (ev) => {
                             isYtPlaying = ev.data === window.YT.PlayerState.PLAYING;
                             if (ytPlayPauseBtn) {
-                                ytPlayPauseBtn.textContent = isYtPlaying ? 'Pause' : 'Play';
+                                ytPlayPauseBtn.textContent = isYtPlaying ? '⏸' : '▶';
                             }
                         }
                     }
@@ -2801,8 +2838,8 @@
                 }
                 if (musicCoverThumb) {
                     const coverVal = (musicSettings.coverUrl || '').trim();
-                    if (coverVal) {
-                        musicCoverThumb.style.backgroundImage = `url('${coverVal}')`;
+                    if (coverVal && isSafeAssetUrl(coverVal)) {
+                        musicCoverThumb.style.backgroundImage = `url("${encodeURI(coverVal)}")`;
                         musicCoverThumb.textContent = '';
                     } else {
                         musicCoverThumb.style.backgroundImage = 'none';
@@ -3148,18 +3185,13 @@
                     return;
                 }
 
-                if (currentView !== 'dm' || currentDmUser !== peerName) {
-                    openPrivateChat(peerName);
-                    showKiwiToast(`Abrindo conversa com ${peerName} para iniciar a call...`);
-                    return;
-                }
-
-                if (!dmSocket || dmSocket.readyState !== WebSocket.OPEN) {
-                    showKiwiToast("Conectando à DM... tente clicar em Call novamente.");
-                    return;
-                }
-
                 try {
+                    if (currentView !== 'dm' || currentDmUser !== peerName) {
+                        openPrivateChat(peerName);
+                        showKiwiToast(`A abrir conversa com ${peerName} para iniciar a call...`);
+                    }
+
+                    const sock = await waitForDmSocketOpen();
                     callTargetUser = peerName;
                     isCallMuted = false;
                     callMuteBtn.classList.remove('mute-active');
@@ -3171,7 +3203,7 @@
                     const offer = await peerConnection.createOffer();
                     await peerConnection.setLocalDescription(offer);
 
-                    dmSocket.send(JSON.stringify({
+                    sock.send(JSON.stringify({
                         type: 'call_signal',
                         signal: { offer: offer }
                     }));
@@ -3420,28 +3452,31 @@
                     chip.className = 'msg-reaction-chip active';
                     chip.setAttribute('data-emoji', emoji);
                     chip.setAttribute('data-count', '1');
-                    chip.innerHTML = `<span>${emoji}</span><span class="reaction-count">1</span>`;
+                    chip.innerHTML = `<span>${escapeHtmlText(emoji)}</span><span class="reaction-count">1</span>`;
                     reactionsRow.appendChild(chip);
-                    return;
-                }
+                } else {
+                    const isActive = chip.classList.contains('active');
+                    let count = Number(chip.getAttribute('data-count') || '1');
 
-                const isActive = chip.classList.contains('active');
-                let count = Number(chip.getAttribute('data-count') || '1');
-
-                if (isActive) {
-                    count -= 1;
-                    if (count <= 0) {
-                        chip.remove();
+                    if (isActive) {
+                        count -= 1;
+                        if (count <= 0) {
+                            chip.remove();
+                        } else {
+                            chip.classList.remove('active');
+                            chip.setAttribute('data-count', String(count));
+                            chip.querySelector('.reaction-count').textContent = String(count);
+                        }
                     } else {
-                        chip.classList.remove('active');
+                        count += 1;
+                        chip.classList.add('active');
                         chip.setAttribute('data-count', String(count));
                         chip.querySelector('.reaction-count').textContent = String(count);
                     }
-                } else {
-                    count += 1;
-                    chip.classList.add('active');
-                    chip.setAttribute('data-count', String(count));
-                    chip.querySelector('.reaction-count').textContent = String(count);
+                }
+
+                if (currentView === 'geral') {
+                    geralSnapshotHTML = chatLog.innerHTML;
                 }
             }
 
@@ -3455,6 +3490,21 @@
 
             enhanceExistingMessagesInLog();
             let geralSnapshotHTML = chatLog.innerHTML;
+
+            function persistThemePreference(colorKey) {
+                try {
+                    localStorage.setItem(THEME_STORAGE_KEY, colorKey);
+                } catch (_) {}
+                const csrfToken = getCookie('csrftoken');
+                if (!csrfToken) return;
+                const fd = new FormData();
+                fd.append('accent_color', colorKey);
+                fetch('/api/profile/update/', {
+                    method: 'POST',
+                    headers: { 'X-CSRFToken': csrfToken },
+                    body: fd
+                }).catch(() => {});
+            }
 
             function applyTheme(colorKey) {
                 const t = themesMap[colorKey] || themesMap['#ffffff'];
@@ -3471,8 +3521,8 @@
             }
 
             function setAvatarStyle(el, avatarUrl, fallbackLetter) {
-                if (avatarUrl && avatarUrl.trim() !== '') {
-                    el.style.backgroundImage = `url('${avatarUrl}')`;
+                if (avatarUrl && avatarUrl.trim() !== '' && isSafeAssetUrl(avatarUrl)) {
+                    el.style.backgroundImage = `url("${encodeURI(avatarUrl.trim())}")`;
                     el.style.backgroundSize = 'cover';
                     el.style.backgroundPosition = 'center';
                     el.style.color = 'transparent';
@@ -3505,6 +3555,12 @@
                 })
                 .catch(err => console.error("Erro ao carregar perfil:", err));
             }
+            try {
+                const savedTheme = localStorage.getItem(THEME_STORAGE_KEY);
+                if (savedTheme && themesMap[savedTheme]) {
+                    profileData.accentColor = savedTheme;
+                }
+            } catch (_) {}
             applyTheme(profileData.accentColor);
             applySpecialProfileEffects(
                 aestheticModal ? aestheticModal.querySelector('.aesthetic-profile-card') : null,
@@ -3543,8 +3599,8 @@
                 setAvatarStyle(miniAvatar, profileData.avatarUrl, activeUsername);
                 setAvatarStyle(profileAvatar, profileData.avatarUrl, activeUsername);
 
-                if (profileData.bannerUrl && profileData.bannerUrl.trim() !== '') {
-                    profileBanner.style.backgroundImage = `url('${profileData.bannerUrl}')`;
+                if (profileData.bannerUrl && profileData.bannerUrl.trim() !== '' && isSafeAssetUrl(profileData.bannerUrl)) {
+                    profileBanner.style.backgroundImage = `url("${encodeURI(profileData.bannerUrl.trim())}")`;
                     profileBanner.style.backgroundSize = 'cover';
                     profileBanner.style.backgroundPosition = 'center';
                 } else {
@@ -3554,7 +3610,7 @@
 
                 profileBubble.textContent = profileData.bubble;
                 profilePronouns.textContent = profileData.pronouns;
-                profileBio.innerHTML = profileData.bio;
+                profileBio.innerHTML = formatSafeBioHtml(profileData.bio);
                 if (dockMusicTitle) {
                     dockMusicTitle.textContent = profileData.song || 'YouTube';
                 }
@@ -3562,8 +3618,11 @@
 
             themeBalls.forEach(ball => {
                 ball.addEventListener('click', () => {
-                    profileData.accentColor = ball.getAttribute('data-color');
+                    const chosenColor = ball.getAttribute('data-color');
+                    if (!chosenColor || !themesMap[chosenColor]) return;
+                    profileData.accentColor = chosenColor;
                     updateUI();
+                    persistThemePreference(chosenColor);
                 });
             });
 
@@ -3600,7 +3659,8 @@
                 aestheticModal.classList.remove('open');
                 editBubble.value = profileData.bubble;
                 editPronouns.value = profileData.pronouns;
-                editBio.value = profileData.bio.replace(/<br>/g, '\n');
+                editBio.value = profileData.bio.replace(/<br\s*\/?>/gi, '
+');
                 editSong.value = profileData.song;
                 editArtist.value = profileData.artist;
                 if (editYtUrl) editYtUrl.value = musicSettings.url;
@@ -3714,14 +3774,32 @@
                 .then(res => res.json())
                 .then(data => {
                     if (data.requests && data.requests.length > 0) {
-                        container.innerHTML = data.requests.map(req => `
-                            <div class="friend-req-card" id="friend-req-card-${req.id}">
-                                <span class="friend-req-name" style="font-weight: bold; font-size: 13px;">${req.sender}</span>
-                                <div class="friend-req-actions" style="display: flex; gap: 6px;">
-                                    <button type="button" onclick="acceptRequest(${req.id}, this)" style="background: #23a55a; color: #fff; border: none; padding: 6px 10px; border-radius: 4px; font-size: 11px; font-weight: bold; cursor: pointer;">Aceitar</button>
-                                </div>
-                            </div>
-                        `).join('');
+                        container.innerHTML = '';
+                        data.requests.forEach(req => {
+                            const card = document.createElement('div');
+                            card.className = 'friend-req-card';
+                            card.id = `friend-req-card-${req.id}`;
+
+                            const nameSpan = document.createElement('span');
+                            nameSpan.className = 'friend-req-name';
+                            nameSpan.style.cssText = 'font-weight: bold; font-size: 13px;';
+                            nameSpan.textContent = req.sender || '';
+
+                            const actionsDiv = document.createElement('div');
+                            actionsDiv.className = 'friend-req-actions';
+                            actionsDiv.style.cssText = 'display: flex; gap: 6px;';
+
+                            const acceptBtn = document.createElement('button');
+                            acceptBtn.type = 'button';
+                            acceptBtn.textContent = 'Aceitar';
+                            acceptBtn.style.cssText = 'background: #23a55a; color: #fff; border: none; padding: 6px 10px; border-radius: 4px; font-size: 11px; font-weight: bold; cursor: pointer;';
+                            acceptBtn.addEventListener('click', () => window.acceptRequest(req.id, acceptBtn));
+
+                            actionsDiv.appendChild(acceptBtn);
+                            card.appendChild(nameSpan);
+                            card.appendChild(actionsDiv);
+                            container.appendChild(card);
+                        });
                     } else {
                         renderEmptyFriendRequests(container);
                     }
@@ -3865,7 +3943,7 @@
                 }
             }
 
-            function appendMessageElement(data, options = {}) {
+            function buildMessageDomElement(data, options = {}) {
                 const isDm = Boolean(options.isDm);
                 const msgUsername = data.sender || data.username || 'Anônimo';
                 const canDelete = msgUsername === activeUsername;
@@ -3878,11 +3956,6 @@
                 const avatarInitial = msgUsername.charAt(0).toUpperCase() || 'K';
                 const timeText = data.time || 'Agora';
 
-                if (data.id) {
-                    const selector = isDm ? `.message-group[data-dm-id="${data.id}"]` : `.message-group[data-msg-id="${data.id}"]`;
-                    if (chatLog.querySelector(selector)) return;
-                }
-
                 const group = document.createElement('div');
                 group.className = 'message-group';
                 group.setAttribute('data-can-delete', canDelete ? '1' : '0');
@@ -3893,7 +3966,7 @@
                 const avatar = document.createElement('div');
                 avatar.className = 'avatar';
                 setAvatarStyle(avatar, avatarSrc, avatarInitial);
-                avatar.onclick = () => openUserProfile(msgUsername);
+                avatar.setAttribute('data-profile-user', msgUsername);
 
                 const content = document.createElement('div');
                 content.className = 'message-content';
@@ -3904,7 +3977,7 @@
                 const userSpan = document.createElement('span');
                 userSpan.className = 'username';
                 userSpan.textContent = msgUsername;
-                userSpan.onclick = () => openUserProfile(msgUsername);
+                userSpan.setAttribute('data-profile-user', msgUsername);
 
                 const timeSpan = document.createElement('span');
                 timeSpan.className = 'timestamp';
@@ -3921,7 +3994,7 @@
                     content.appendChild(textDiv);
                 }
 
-                if (data.attachment_url) {
+                if (data.attachment_url && isSafeAssetUrl(data.attachment_url)) {
                     if (data.attachment_type === 'image') {
                         const img = document.createElement('img');
                         img.src = data.attachment_url;
@@ -3950,7 +4023,37 @@
                 group.appendChild(avatar);
                 group.appendChild(content);
                 enhanceMessageGroup(group, { isSystem: false });
+                return group;
+            }
 
+            function appendGeralMessageToSnapshot(data, avatarUrl = '') {
+                const tempContainer = document.createElement('div');
+                tempContainer.innerHTML = geralSnapshotHTML;
+                if (data.id && tempContainer.querySelector(`.message-group[data-msg-id="${data.id}"]`)) {
+                    return;
+                }
+                const newEl = buildMessageDomElement(data, { isDm: false, avatarUrl });
+                tempContainer.appendChild(newEl);
+                geralSnapshotHTML = tempContainer.innerHTML;
+            }
+
+            function appendMessageElement(data, options = {}) {
+                const isDm = Boolean(options.isDm);
+                const msgUsername = data.sender || data.username || 'Anônimo';
+                const canDelete = msgUsername === activeUsername;
+                const avatarSrc =
+                    options.avatarUrl ||
+                    data.avatar ||
+                    data.avatarUrl ||
+                    (canDelete ? profileData.avatarUrl : '') ||
+                    '';
+
+                if (data.id) {
+                    const selector = isDm ? `.message-group[data-dm-id="${data.id}"]` : `.message-group[data-msg-id="${data.id}"]`;
+                    if (chatLog.querySelector(selector)) return;
+                }
+
+                const group = buildMessageDomElement(data, { isDm, avatarUrl: avatarSrc });
                 chatLog.appendChild(group);
                 if (!isDm && currentView === 'geral') {
                     geralSnapshotHTML = chatLog.innerHTML;
@@ -4082,15 +4185,15 @@
                     );
                     document.getElementById('other-profile-status-bubble').textContent = otherData.bubble || '🌸 Olá, estou no Kiwi Chat!';
                     document.getElementById('other-profile-pronouns').textContent = otherData.pronouns || 'utilizador • 🥝';
-                    document.getElementById('other-profile-bio').innerHTML = otherData.bio || 'Perfil estético ativo.';
+                    document.getElementById('other-profile-bio').innerHTML = formatSafeBioHtml(otherData.bio || 'Perfil estético ativo.');
 
                     const oAvatar = document.getElementById('other-profile-avatar');
                     const oBanner = document.getElementById('other-profile-banner');
 
                     setAvatarStyle(oAvatar, otherData.avatarUrl, username);
 
-                    if (otherData.bannerUrl && otherData.bannerUrl.trim() !== '') {
-                        oBanner.style.backgroundImage = `url('${otherData.bannerUrl}')`;
+                    if (otherData.bannerUrl && otherData.bannerUrl.trim() !== '' && isSafeAssetUrl(otherData.bannerUrl)) {
+                        oBanner.style.backgroundImage = `url("${encodeURI(otherData.bannerUrl.trim())}")`;
                         oBanner.style.backgroundSize = 'cover';
                         oBanner.style.backgroundPosition = 'center';
                     } else {
@@ -4131,8 +4234,7 @@
                     callFriendBtn.style.display = otherData.is_friend ? 'flex' : 'none';
                     callFriendBtn.onclick = function() {
                         otherProfileModal.classList.remove('open');
-                        openPrivateChat(username, otherData.avatarUrl || '');
-                        setTimeout(() => startVoiceCall(username), 250);
+                        startVoiceCall(username);
                     };
 
                     const watchFriendBtn = document.getElementById('watch-friend-btn');
@@ -4179,94 +4281,151 @@
             const socialContentContainer = document.getElementById('social-content-container');
 
             function getOnlineContent() {
-                let avatarStyleHtml = profileData.avatarUrl ? `background-image: url('${profileData.avatarUrl}'); background-size: cover; background-position: center; color: transparent;` : '';
-                let avatarText = profileData.avatarUrl ? '' : activeUsername.charAt(0).toUpperCase();
+                const wrap = document.createElement('div');
+                const heading = document.createElement('div');
+                heading.style.cssText = 'font-size: 11px; font-weight: bold; text-transform: uppercase; margin-bottom: 10px;';
+                heading.textContent = 'Online — 1';
 
-                return `
-                    <div style="font-size: 11px; font-weight: bold; text-transform: uppercase; margin-bottom: 10px;">Online — 1</div>
-                    <div class="social-list-item" onclick="openUserProfile('${activeUsername}')">
-                        <div class="mini-avatar" style="width:28px; height:28px; font-size:12px; ${avatarStyleHtml}">${avatarText}</div>
-                        <div>
-                            <div style="font-size:13px; font-weight:600;">${activeUsername}</div>
-                            <div style="font-size:10px; color:#23a55a;">● Online</div>
-                        </div>
-                    </div>
-                `;
+                const item = document.createElement('div');
+                item.className = 'social-list-item';
+                item.addEventListener('click', () => openUserProfile(activeUsername));
+
+                const av = document.createElement('div');
+                av.className = 'mini-avatar';
+                av.style.cssText = 'width:28px; height:28px; font-size:12px;';
+                setAvatarStyle(av, profileData.avatarUrl, activeUsername);
+
+                const info = document.createElement('div');
+                const nameDiv = document.createElement('div');
+                nameDiv.style.cssText = 'font-size:13px; font-weight:600;';
+                nameDiv.textContent = activeUsername;
+
+                const statusDiv = document.createElement('div');
+                statusDiv.style.cssText = 'font-size:10px; color:#23a55a;';
+                statusDiv.textContent = '● Online';
+
+                info.appendChild(nameDiv);
+                info.appendChild(statusDiv);
+                item.appendChild(av);
+                item.appendChild(info);
+                wrap.appendChild(heading);
+                wrap.appendChild(item);
+                return wrap;
             }
 
-            function fetchFriendsList() {
+            let friendsCacheList = null;
+
+            function syncFriendsToDmTabs(friends) {
+                if (!Array.isArray(friends)) return;
+                friends.forEach(friend => {
+                    if (friend.username && !openDmTabs.has(friend.username)) {
+                        openDmTabs.set(friend.username, {
+                            username: friend.username,
+                            avatarUrl: friend.avatarUrl || ''
+                        });
+                    }
+                });
+                renderDmTabs();
+            }
+
+            function renderFriendsIntoContainer(container, friends) {
+                container.innerHTML = '';
+                const heading = document.createElement('div');
+                heading.style.cssText = 'font-size: 11px; font-weight: bold; text-transform: uppercase; margin-bottom: 10px;';
+                heading.textContent = 'A tua lista de amigos';
+                container.appendChild(heading);
+
+                if (friends && friends.length > 0) {
+                    const list = document.createElement('div');
+                    list.style.cssText = 'display: flex; flex-direction: column; gap: 6px;';
+
+                    friends.forEach(friend => {
+                        const fname = friend.username || '';
+                        const favatar = friend.avatarUrl || '';
+
+                        const item = document.createElement('div');
+                        item.className = 'social-list-item';
+                        item.addEventListener('click', () => openUserProfile(fname));
+
+                        const av = document.createElement('div');
+                        av.className = 'mini-avatar';
+                        av.style.cssText = 'width:28px; height:28px; font-size:12px;';
+                        setAvatarStyle(av, favatar, fname);
+
+                        const meta = document.createElement('div');
+                        meta.style.cssText = 'min-width: 0; overflow: hidden;';
+                        const nameDiv = document.createElement('div');
+                        nameDiv.style.cssText = 'font-size:13px; font-weight:600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;';
+                        nameDiv.textContent = fname;
+                        const subDiv = document.createElement('div');
+                        subDiv.style.cssText = 'font-size:10px; color:#23a55a;';
+                        subDiv.textContent = '● Amigo';
+                        meta.appendChild(nameDiv);
+                        meta.appendChild(subDiv);
+
+                        const dmBtn = document.createElement('button');
+                        dmBtn.type = 'button';
+                        dmBtn.className = 'dm-quick-btn';
+                        dmBtn.title = 'Mensagem Privada';
+                        dmBtn.textContent = '💬';
+                        dmBtn.addEventListener('click', (ev) => {
+                            ev.stopPropagation();
+                            openPrivateChat(fname, favatar);
+                        });
+
+                        const rmBtn = document.createElement('button');
+                        rmBtn.type = 'button';
+                        rmBtn.className = 'remove-friend-mini-btn';
+                        rmBtn.title = 'Remover amizade';
+                        rmBtn.textContent = '✕';
+                        rmBtn.addEventListener('click', (ev) => {
+                            ev.stopPropagation();
+                            removeFriend(fname);
+                        });
+
+                        item.appendChild(av);
+                        item.appendChild(meta);
+                        item.appendChild(dmBtn);
+                        item.appendChild(rmBtn);
+                        list.appendChild(item);
+                    });
+
+                    container.appendChild(list);
+                } else {
+                    const empty = document.createElement('div');
+                    empty.style.cssText = 'font-size:12px; color:var(--text-muted); text-align:center; margin-top:20px;';
+                    empty.textContent = 'Ainda não tens amigos adicionados no Kiwi.';
+                    container.appendChild(empty);
+                }
+            }
+
+            function fetchFriendsList(forceRefresh = false) {
                 const container = document.getElementById('friends-list-container');
                 if (!container) return;
+                if (!forceRefresh && Array.isArray(friendsCacheList)) {
+                    syncFriendsToDmTabs(friendsCacheList);
+                    renderFriendsIntoContainer(container, friendsCacheList);
+                    return;
+                }
                 fetch('/api/friends/list/')
                 .then(res => res.json())
                 .then(data => {
-                    if (data.friends && data.friends.length > 0) {
-                        data.friends.forEach(friend => {
-                            if (friend.username && !openDmTabs.has(friend.username)) {
-                                openDmTabs.set(friend.username, {
-                                    username: friend.username,
-                                    avatarUrl: friend.avatarUrl || ''
-                                });
-                            }
-                        });
-                        renderDmTabs();
-                    }
-                    if (data.friends && data.friends.length > 0) {
-                        container.innerHTML = `
-                            <div style="font-size: 11px; font-weight: bold; text-transform: uppercase; margin-bottom: 10px;">A tua lista de amigos</div>
-                            <div style="display: flex; flex-direction: column; gap: 6px;">
-                                ${data.friends.map(friend => {
-                                    let avatarStyle = friend.avatarUrl ? `background-image: url('${friend.avatarUrl}'); background-size: cover; background-position: center; color: transparent;` : '';
-                                    let avatarText = friend.avatarUrl ? '' : friend.username.charAt(0).toUpperCase();
-                                    const safeAvatar = encodeURIComponent(friend.avatarUrl || '');
-
-                                    return `
-                                        <div class="social-list-item" onclick="openUserProfile('${friend.username}')">
-                                            <div class="mini-avatar" style="width:28px; height:28px; font-size:12px; ${avatarStyle}">${avatarText}</div>
-                                            <div style="min-width: 0; overflow: hidden;">
-                                                <div style="font-size:13px; font-weight:600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${friend.username}</div>
-                                                <div style="font-size:10px; color:#23a55a;">● Amigo</div>
-                                            </div>
-                                            <button type="button" class="dm-quick-btn" title="Mensagem Privada" onclick="event.stopPropagation(); openPrivateChat('${friend.username}', decodeURIComponent('${safeAvatar}'))">💬</button>
-                                            <button type="button" class="remove-friend-mini-btn" title="Remover amizade" onclick="event.stopPropagation(); removeFriend('${friend.username}')">✕</button>
-                                        </div>
-                                    `;
-                                }).join('')}
-                            </div>
-                        `;
-                    } else {
-                        container.innerHTML = `<div style="font-size:12px; color:var(--text-muted); text-align:center; margin-top:20px;">Ainda não tens amigos adicionados no Kiwi.</div>`;
-                    }
+                    friendsCacheList = Array.isArray(data.friends) ? data.friends : [];
+                    syncFriendsToDmTabs(friendsCacheList);
+                    renderFriendsIntoContainer(container, friendsCacheList);
                 })
                 .catch(() => {
                     container.innerHTML = `<div style="font-size:12px; color:var(--text-muted); text-align:center; margin-top:20px;">Erro ao carregar amigos.</div>`;
                 });
             }
 
-            const tabContents = {
-                'online': getOnlineContent(),
-                'amigos': `<div id="friends-list-container" style="font-size:12px; color:var(--text-muted); text-align:center; margin-top:20px;">A carregar amigos...</div>`,
-                'seguidores': `
-                    <div style="font-size: 11px; font-weight: bold; text-transform: uppercase; margin-bottom: 10px;">Seguidores recentes</div>
-                    <div style="font-size:12px; color:var(--text-muted); text-align:center; margin-top:20px;">Nenhum seguidor por enquanto.</div>
-                `
-            };
-
-            socialContentContainer.innerHTML = tabContents['online'];
+            socialContentContainer.innerHTML = '';
+            socialContentContainer.appendChild(getOnlineContent());
             fetch('/api/friends/list/')
                 .then(res => res.json())
                 .then(data => {
-                    if (data && Array.isArray(data.friends)) {
-                        data.friends.forEach(friend => {
-                            if (friend.username && !openDmTabs.has(friend.username)) {
-                                openDmTabs.set(friend.username, {
-                                    username: friend.username,
-                                    avatarUrl: friend.avatarUrl || ''
-                                });
-                            }
-                        });
-                        renderDmTabs();
-                    }
+                    friendsCacheList = Array.isArray(data.friends) ? data.friends : [];
+                    syncFriendsToDmTabs(friendsCacheList);
                 })
                 .catch(() => {});
 
@@ -4276,12 +4435,16 @@
                     tab.classList.add('active');
                     let target = tab.getAttribute('data-tab');
                     if (target === 'online') {
-                        socialContentContainer.innerHTML = getOnlineContent();
+                        socialContentContainer.innerHTML = '';
+                        socialContentContainer.appendChild(getOnlineContent());
                     } else if (target === 'amigos') {
-                        socialContentContainer.innerHTML = tabContents['amigos'];
-                        fetchFriendsList();
+                        socialContentContainer.innerHTML = `<div id="friends-list-container" style="font-size:12px; color:var(--text-muted); text-align:center; margin-top:20px;">A carregar amigos...</div>`;
+                        fetchFriendsList(true);
                     } else {
-                        socialContentContainer.innerHTML = tabContents[target];
+                        socialContentContainer.innerHTML = `
+                            <div style="font-size: 11px; font-weight: bold; text-transform: uppercase; margin-bottom: 10px;">Seguidores recentes</div>
+                            <div style="font-size:12px; color:var(--text-muted); text-align:center; margin-top:20px;">Nenhum seguidor por enquanto.</div>
+                        `;
                     }
                 });
             });
@@ -4298,6 +4461,15 @@
             });
 
             chatLog.addEventListener('click', function(e) {
+                const profileTrigger = e.target.closest('[data-profile-user]');
+                if (profileTrigger && !e.target.closest('.msg-hover-toolbar, .msg-more-popover, .msg-emoji-picker')) {
+                    const targetUser = profileTrigger.getAttribute('data-profile-user');
+                    if (targetUser) {
+                        openUserProfile(targetUser);
+                        return;
+                    }
+                }
+
                 const imgEl = e.target.closest('img.msg-attachment-img');
                 if (imgEl) {
                     openImageLightbox(imgEl.currentSrc || imgEl.src, imgEl.alt || 'Imagem em tela cheia');
@@ -4413,24 +4585,30 @@
                     const msgEl = chatLog.querySelector(`.message-group[data-msg-id="${data.message_id}"]`);
                     if (msgEl) {
                         msgEl.remove();
-                        if (currentView === 'geral') {
-                            geralSnapshotHTML = chatLog.innerHTML;
-                        }
+                    }
+                    const snapTemp = document.createElement('div');
+                    snapTemp.innerHTML = geralSnapshotHTML;
+                    const snapEl = snapTemp.querySelector(`.message-group[data-msg-id="${data.message_id}"]`);
+                    if (snapEl) {
+                        snapEl.remove();
+                        geralSnapshotHTML = snapTemp.innerHTML;
                     }
                     return;
                 }
 
-                if (currentView === 'geral') {
-                    const msgUser = data.sender || data.username || 'Anônimo';
-                    const resolvedAvatar =
-                        data.avatar ||
-                        data.avatarUrl ||
-                        (msgUser === activeUsername ? profileData.avatarUrl : '');
+                const msgUser = data.sender || data.username || 'Anônimo';
+                const resolvedAvatar =
+                    data.avatar ||
+                    data.avatarUrl ||
+                    (msgUser === activeUsername ? profileData.avatarUrl : '');
 
+                if (currentView === 'geral') {
                     appendMessageElement(data, {
                         isDm: false,
                         avatarUrl: resolvedAvatar
                     });
+                } else {
+                    appendGeralMessageToSnapshot(data, resolvedAvatar);
                 }
             };
 
