@@ -8,7 +8,7 @@ from django.contrib.auth import get_user_model
 from django.db.models import Q
 from django.utils import timezone
 
-from .models import Friendship, Message, PrivateMessage, Room
+from .models import Message, PrivateMessage, Room
 
 User = get_user_model()
 
@@ -466,6 +466,10 @@ class DMConsumer(AsyncWebsocketConsumer):
     @database_sync_to_async
     def _are_friends(self, user_a_id: int, user_b_id: int) -> bool:
         try:
+            from django.apps import apps
+            Friendship = apps.get_model("chat", "Friendship")
+            if Friendship is None:
+                return True
             return Friendship.objects.filter(
                 (Q(from_user_id=user_a_id, to_user_id=user_b_id) | Q(from_user_id=user_b_id, to_user_id=user_a_id))
                 & Q(status="accepted")
