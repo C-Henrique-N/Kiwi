@@ -1537,7 +1537,6 @@
             }
         }
 
-        /* === EDITOR ESTÉTICO EM 2 COLUNAS (NA COR DO TEMA) === */
         #edit-modal .aesthetic-profile-card.kiwi-editor-card {
             width: min(860px, 95vw);
             max-height: 92vh;
@@ -2189,9 +2188,6 @@
     </style>
 </head>
 <body>
-    <!-- Quando renderizado pelo Django, injete os valores reais do servidor nestes scripts JSON:
-         Ex.: <script id="kiwi-username-data" type="application/json">"{{ request.user.username|escapejs }}"</script>
-         Se ficar null/vazio (ex.: abrindo o HTML direto sem Django), o JS usa o usuário digitado/salvo por você. -->
     <script id="kiwi-username-data" type="application/json">null</script>
     <script id="kiwi-is-admin-data" type="application/json">false</script>
     <script id="kiwi-channel-id-data" type="application/json">null</script>
@@ -2263,7 +2259,7 @@
                 </div>
             </div>
             <div class="user-panel-actions">
-                <button type="button" class="icon-btn" id="mailbox-btn" title="Caixa de Mensagens & Atualizações">📬</button>
+                <button type="button" class="icon-btn" id="mailbox-btn" title="Caixa de Mensagens &amp; Atualizações">📬</button>
                 <button type="button" class="icon-btn" id="settings-btn" title="Definições e Cores">⚙️</button>
             </div>
         </div>
@@ -2837,10 +2833,7 @@
 
             function formatSafeBioHtml(rawBio) {
                 const escaped = escapeHtmlText(rawBio || '');
-                return escaped.replace(/(?:
-|
-|
-|<br\s*\/?>)/gi, '<br>');
+                return escaped.replace(/(?:\r\n|\r|\n|<br\s*\/?>)/gi, '<br>');
             }
 
             function isSafeAssetUrl(url) {
@@ -4204,8 +4197,7 @@
                 if (editUsernameInput) editUsernameInput.value = activeUsername || myProfileData.username || '';
                 editBubble.value = myProfileData.bubble || '';
                 editPronouns.value = myProfileData.pronouns || '';
-                editBio.value = (myProfileData.bio || '').replace(/<br\s*\/?>/gi, '
-');
+                editBio.value = (myProfileData.bio || '').replace(/<br\s*\/?>/gi, '\n');
                 editSong.value = myProfileData.song || '';
                 editArtist.value = myProfileData.artist || '';
                 if (editYtUrl) editYtUrl.value = myProfileData.musicUrl || '';
@@ -5453,24 +5445,51 @@
                 createServerForm.addEventListener('submit', (e) => {
                     e.preventDefault();
                     const nameInput = document.getElementById('new-server-name');
-                    const serverName = nameInput ? nameInput.value.trim() : '';
-                    if (!serverName) return;
+                    const channelsInput = document.getElementById('new-server-channels');
+                    const sName = ((nameInput && nameInput.value) || '').trim();
+                    if (!sName) return;
 
                     const rail = document.querySelector('.server-rail');
-                    const addBtn = document.getElementById('open-create-server-btn');
-                    const btn = document.createElement('button');
-                    btn.type = 'button';
-                    btn.className = 'server-rail-btn active';
-                    btn.title = serverName;
-                    btn.textContent = serverName.charAt(0).toUpperCase();
-                    if (rail && addBtn) {
-                        rail.querySelectorAll('.server-rail-btn').forEach(b => b.classList.remove('active'));
-                        rail.insertBefore(btn, addBtn);
+                    if (rail) {
+                        const btn = document.createElement('button');
+                        btn.type = 'button';
+                        btn.className = 'server-rail-btn active';
+                        btn.title = sName;
+                        btn.textContent = sName.charAt(0).toUpperCase();
+                        document.querySelectorAll('.server-rail-btn').forEach(b => b.classList.remove('active'));
+                        rail.insertBefore(btn, openCreateServerBtn);
+                        btn.addEventListener('click', () => {
+                            document.querySelectorAll('.server-rail-btn').forEach(b => b.classList.remove('active'));
+                            btn.classList.add('active');
+                            if (sidebarServerTitle) sidebarServerTitle.textContent = `🥝 ${sName}`;
+                            window.switchToGeral('geral', 'text');
+                        });
                     }
-                    if (sidebarServerTitle) sidebarServerTitle.textContent = `🥝 ${serverName}`;
+
+                    if (sidebarServerTitle) sidebarServerTitle.textContent = `🥝 ${sName}`;
+
+                    const channelsListEl = document.getElementById('server-channels-list');
+                    if (channelsListEl) {
+                        const rawChans = ((channelsInput && channelsInput.value) || 'geral, música')
+                            .split(',').map(c => c.trim()).filter(Boolean);
+                        const finalChans = rawChans.length ? rawChans : ['geral'];
+                        channelsListEl.innerHTML = '';
+                        finalChans.forEach((chName, idx) => {
+                            const isAudio = chName.toLowerCase().includes('músic') || chName.toLowerCase().includes('music') || chName.toLowerCase().includes('voz');
+                            const item = document.createElement('div');
+                            item.className = `channel-item ${idx === 0 ? 'active' : ''}`;
+                            item.setAttribute('data-channel-name', chName);
+                            item.setAttribute('data-channel-type', isAudio ? 'audio' : 'text');
+                            item.innerHTML = `<span>${isAudio ? '🎵' : '#'}</span><span style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${escapeHtmlText(chName)}</span>`;
+                            item.addEventListener('click', () => window.switchToGeral(chName, isAudio ? 'audio' : 'text'));
+                            channelsListEl.appendChild(item);
+                        });
+                    }
+
+                    if (nameInput) nameInput.value = '';
                     closeModalAnimated(createServerModal);
-                    createServerForm.reset();
-                    showKiwiToast(`Servidor "${serverName}" criado!`);
+                    window.switchToGeral('geral', 'text');
+                    showKiwiToast(`Servidor "${sName}" criado!`);
                 });
             }
 
@@ -5478,7 +5497,6 @@
             const openCreateChannelBtn = document.getElementById('open-create-channel-btn');
             const closeCreateChannelBtn = document.getElementById('close-create-channel-btn');
             const createChannelForm = document.getElementById('create-channel-form');
-            const serverChannelsListEl = document.getElementById('server-channels-list');
 
             if (openCreateChannelBtn && createChannelModal) openCreateChannelBtn.addEventListener('click', () => openModalAnimated(createChannelModal));
             if (closeCreateChannelBtn && createChannelModal) closeCreateChannelBtn.addEventListener('click', () => closeModalAnimated(createChannelModal));
@@ -5487,30 +5505,35 @@
             if (createChannelForm) {
                 createChannelForm.addEventListener('submit', (e) => {
                     e.preventDefault();
-                    const chNameInput = document.getElementById('new-channel-name');
-                    const chTypeSelect = document.getElementById('new-channel-type');
-                    const chName = chNameInput ? chNameInput.value.trim().toLowerCase().replace(/\s+/g, '-') : '';
-                    const chType = chTypeSelect ? chTypeSelect.value : 'text';
-                    if (!chName || !serverChannelsListEl) return;
+                    const chNameEl = document.getElementById('new-channel-name');
+                    const chTypeEl = document.getElementById('new-channel-type');
+                    const chName = ((chNameEl && chNameEl.value) || '').trim();
+                    const chType = (chTypeEl && chTypeEl.value) || 'text';
+                    if (!chName) return;
 
-                    const item = document.createElement('div');
-                    item.className = 'channel-item';
-                    item.setAttribute('data-channel-name', chName);
-                    item.setAttribute('data-channel-type', chType);
-                    const iconSpan = document.createElement('span');
-                    iconSpan.textContent = chType === 'audio' ? '🎵' : '#';
-                    const nameSpan = document.createElement('span');
-                    nameSpan.style.cssText = 'overflow:hidden; text-overflow:ellipsis; white-space:nowrap;';
-                    nameSpan.textContent = chName;
-                    item.appendChild(iconSpan);
-                    item.appendChild(nameSpan);
-                    item.addEventListener('click', () => window.switchToGeral(chName, chType));
-                    serverChannelsListEl.appendChild(item);
+                    const channelsListEl = document.getElementById('server-channels-list');
+                    if (channelsListEl) {
+                        const item = document.createElement('div');
+                        item.className = 'channel-item';
+                        item.setAttribute('data-channel-name', chName);
+                        item.setAttribute('data-channel-type', chType);
+                        item.innerHTML = `<span>${chType === 'audio' ? '🎵' : '#'}</span><span style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${escapeHtmlText(chName)}</span>`;
+                        item.addEventListener('click', () => window.switchToGeral(chName, chType));
+                        channelsListEl.appendChild(item);
+                    }
 
+                    if (chNameEl) chNameEl.value = '';
                     closeModalAnimated(createChannelModal);
-                    createChannelForm.reset();
                     window.switchToGeral(chName, chType);
-                    showKiwiToast(`Canal ${chType === 'audio' ? '🎵' : '#'} ${chName} criado!`);
+                    showKiwiToast(`Canal "${chName}" criado!`);
+                });
+            }
+
+            if (headerCallBtn) {
+                headerCallBtn.addEventListener('click', () => {
+                    if (currentView === 'dm' && currentDmUser) {
+                        window.startVoiceCall(currentDmUser);
+                    }
                 });
             }
 
@@ -5518,41 +5541,34 @@
             const mobNavSearch = document.getElementById('mob-nav-search');
             const mobNavMusic = document.getElementById('mob-nav-music');
             const mobNavProfile = document.getElementById('mob-nav-profile');
+            const allMobNavBtns = [mobNavFriends, mobNavSearch, mobNavMusic, mobNavProfile].filter(Boolean);
 
-            function setMobileNavActive(btn) {
-                document.querySelectorAll('.mobile-nav-btn').forEach(b => b.classList.remove('active'));
-                if (btn) btn.classList.add('active');
+            function setActiveMobNav(activeBtn) {
+                allMobNavBtns.forEach(b => b.classList.toggle('active', b === activeBtn));
             }
 
             if (mobNavFriends) {
                 mobNavFriends.addEventListener('click', () => {
-                    setMobileNavActive(mobNavFriends);
+                    setActiveMobNav(mobNavFriends);
                     window.closeMobileChatView();
                 });
             }
             if (mobNavSearch) {
                 mobNavSearch.addEventListener('click', () => {
-                    setMobileNavActive(mobNavSearch);
+                    setActiveMobNav(mobNavSearch);
                     openFriendSearchModal();
                 });
             }
             if (mobNavMusic) {
                 mobNavMusic.addEventListener('click', () => {
-                    setMobileNavActive(mobNavMusic);
+                    setActiveMobNav(mobNavMusic);
                     window.switchToGeral('música', 'audio');
                 });
             }
             if (mobNavProfile) {
                 mobNavProfile.addEventListener('click', () => {
-                    setMobileNavActive(mobNavProfile);
+                    setActiveMobNav(mobNavProfile);
                     openUserProfile(activeUsername);
-                });
-            }
-
-            if (headerCallBtn) {
-                headerCallBtn.addEventListener('click', () => {
-                    if (currentView === 'dm' && currentDmUser) startVoiceCall(currentDmUser);
-                    else showKiwiToast('Selecione uma conversa privada (DM) para ligar.');
                 });
             }
         });
