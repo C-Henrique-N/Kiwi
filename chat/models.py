@@ -15,6 +15,10 @@ class UserProfile(models.Model):
     spotify_song = models.CharField(max_length=150, blank=True, default='Drama')
     spotify_artist = models.CharField(max_length=150, blank=True, default='Lala Sadii')
     accent_color = models.CharField(max_length=50, default='#ff9de2')
+    frame_effect = models.CharField(max_length=50, blank=True, default='none')
+    profile_glow = models.BooleanField(default=False)
+    avatar_pulse = models.BooleanField(default=False)
+    name_style = models.CharField(max_length=50, blank=True, default='')
     music_url = models.URLField(blank=True, default='')
     music_audio_file = models.FileField(upload_to='music_audios/', blank=True, null=True)
     music_audio_url = models.TextField(blank=True, default='')
@@ -24,6 +28,26 @@ class UserProfile(models.Model):
     @property
     def is_admin_user(self):
         return bool(self.user.is_staff or self.user.is_superuser)
+
+    @property
+    def is_akiira_admin(self):
+        return bool(
+            self.user
+            and self.user.username.lower() == 'akiirapw'
+            and (self.user.is_staff or self.user.is_superuser)
+        )
+
+    def get_active_frame_effect(self):
+        return (self.frame_effect or 'none') if self.is_akiira_admin else 'none'
+
+    def has_active_profile_glow(self):
+        return bool(self.profile_glow) if self.is_akiira_admin else False
+
+    def has_active_avatar_pulse(self):
+        return bool(self.avatar_pulse) if self.is_akiira_admin else False
+
+    def get_active_name_style(self):
+        return (self.name_style or '') if self.is_akiira_admin else ''
 
     def get_music_audio_src(self):
         if self.music_audio_file:
@@ -256,4 +280,4 @@ class SavedMusic(models.Model):
 @receiver(post_save, sender=User)
 def create_user_profile(sender, instance, created, **kwargs):
     if created:
-        UserProfile.objects.create(user=instance)
+        UserProfile.objects.get_or_create(user=instance)

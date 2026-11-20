@@ -35,6 +35,96 @@
             transition: background 0.3s ease, color 0.3s ease;
         }
 
+        /* === ABA E EFEITOS EXCLUSIVOS AKIIRAPW ADMIN === */
+        .akiira-gold-tab {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 14px;
+            border-radius: 10px;
+            border: 1.5px solid rgba(255, 223, 107, 0.85);
+            background: linear-gradient(135deg, rgba(255, 215, 0, 0.24), rgba(184, 134, 11, 0.16));
+            color: #ffe885;
+            font-weight: 700;
+            font-size: 12px;
+            cursor: pointer;
+            box-shadow:
+                0 0 12px rgba(255, 215, 0, 0.45),
+                inset 0 0 10px rgba(255, 240, 160, 0.25);
+            animation: akiiraGoldTabGlow 2.4s ease-in-out infinite;
+            transition: transform 0.18s var(--ease-kiwi), box-shadow 0.2s ease, background 0.2s ease;
+        }
+        .akiira-gold-tab.is-active,
+        .akiira-gold-tab:hover {
+            background: linear-gradient(135deg, rgba(255, 224, 102, 0.38), rgba(212, 175, 55, 0.24));
+            box-shadow:
+                0 0 18px rgba(255, 215, 0, 0.8),
+                0 0 32px rgba(212, 175, 55, 0.45);
+            transform: translateY(-1px);
+        }
+        .akiira-gold-panel {
+            background: linear-gradient(145deg, rgba(255, 215, 0, 0.14), rgba(184, 134, 11, 0.08));
+            border: 1.5px solid rgba(255, 215, 0, 0.55);
+            border-radius: 12px;
+            padding: 11px 12px;
+            box-shadow: 0 0 16px rgba(255, 215, 0, 0.2);
+        }
+        .akiira-gold-frame {
+            position: relative;
+            border-radius: 50% !important;
+            box-shadow:
+                0 0 12px rgba(255, 215, 0, 0.9),
+                0 0 26px rgba(212, 175, 55, 0.65),
+                inset 0 0 8px rgba(255, 245, 177, 0.6) !important;
+            animation: akiiraAvatarGoldPulse 2.2s ease-in-out infinite;
+        }
+        .akiira-gold-frame::after {
+            content: "";
+            position: absolute;
+            inset: -4px;
+            border-radius: 50%;
+            padding: 3px;
+            background: conic-gradient(
+                from 0deg,
+                #fff3a1,
+                #d4af37,
+                #ffe680,
+                #b8860b,
+                #fff3a1
+            );
+            -webkit-mask:
+                linear-gradient(#000 0 0) content-box,
+                linear-gradient(#000 0 0);
+            -webkit-mask-composite: xor;
+            mask-composite: exclude;
+            pointer-events: none;
+            animation: akiiraRingSpin 4.5s linear infinite;
+        }
+        .akiira-profile-gold-glow {
+            border-color: #ffd700 !important;
+            box-shadow:
+                0 0 20px rgba(255, 215, 0, 0.55),
+                0 0 42px rgba(212, 175, 55, 0.3) !important;
+        }
+        .akiira-avatar-pulse {
+            animation: akiiraAvatarScalePulse 1.9s ease-in-out infinite;
+        }
+        @keyframes akiiraRingSpin {
+            to { transform: rotate(360deg); }
+        }
+        @keyframes akiiraGoldTabGlow {
+            0%, 100% { filter: brightness(1); }
+            50% { filter: brightness(1.16); }
+        }
+        @keyframes akiiraAvatarGoldPulse {
+            0%, 100% { filter: brightness(1); }
+            50% { filter: brightness(1.18); }
+        }
+        @keyframes akiiraAvatarScalePulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
         #kiwi-splash {
             position: fixed;
             inset: 0;
@@ -2189,9 +2279,6 @@
     </style>
 </head>
 <body>
-    <!-- Quando renderizado pelo Django, injete os valores reais do servidor nestes scripts JSON:
-         Ex.: <script id="kiwi-username-data" type="application/json">"{{ request.user.username|escapejs }}"</script>
-         Se ficar null/vazio (ex.: abrindo o HTML direto sem Django), o JS usa o usuário digitado/salvo por você. -->
     <script id="kiwi-username-data" type="application/json">null</script>
     <script id="kiwi-is-admin-data" type="application/json">false</script>
     <script id="kiwi-channel-id-data" type="application/json">null</script>
@@ -2256,7 +2343,7 @@
         </div>
         <div class="my-user-panel">
             <div class="my-user-info" id="open-profile-trigger">
-                <div id="my-mini-avatar" class="mini-avatar">U</div>
+                <div id="my-mini-avatar" class="mini-avatar" data-current-user-avatar="true">U</div>
                 <div style="min-width: 0;">
                     <div id="my-name-label" style="font-size: 14px; font-weight: 600; color: var(--text-main); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">Usuário</div>
                     <div style="font-size: 11px; color: #23a55a;">● Online</div>
@@ -2488,6 +2575,7 @@
                 <h4 style="font-size: 12px; text-transform: uppercase; color: var(--text-muted); margin-bottom: 8px;">Notas de Atualizações</h4>
                 <div style="background: var(--bg-soft); padding: 12px; border-radius: 8px; font-size: 12px; line-height: 1.5; color: var(--text-main);">
                     • Identidade sem nomes fixos forçados: respeita o usuário logado/configurado.<br>
+                    • Aba dourada brilhante exclusiva para AkiiraPW admin no editor e no perfil.<br>
                     • Perfil estético, editor em 2 colunas, temas, DMs, reações e anexos prontos.
                 </div>
             </div>
@@ -2502,6 +2590,10 @@
                     <span>🖌️</span>
                     <span>Editar <span style="color: #c084fc;">Perfil</span> Estético</span>
                 </div>
+                <!-- ABA EXCLUSIVA AKIIRAPW ADMIN NO ROOM -->
+                <button type="button" id="akiira-gold-exclusive-tab" class="akiira-gold-tab" data-akiira-exclusive="true" hidden style="display: none;">
+                    👑 AkiiraPW Gold • Exclusivo
+                </button>
             </div>
 
             <form id="edit-profile-form">
@@ -2510,7 +2602,7 @@
                         <div class="kiwi-preview-media-box">
                             <div class="kiwi-preview-media-row">
                                 <div class="kiwi-editor-avatar-wrap">
-                                    <div id="editor-live-avatar" class="kiwi-editor-avatar-preview">U</div>
+                                    <div id="editor-live-avatar" class="kiwi-editor-avatar-preview" data-avatar-preview="true" data-current-user-avatar="true">U</div>
                                     <button type="button" id="editor-avatar-pencil-btn" class="kiwi-editor-avatar-badge-btn" title="Alterar foto de perfil">✏️</button>
                                 </div>
                                 <div id="editor-live-banner-thumb" class="kiwi-editor-banner-preview" title="Clique para alterar o banner"></div>
@@ -2546,13 +2638,29 @@
                         <div class="kiwi-editor-panel">
                             <span class="kiwi-editor-panel-label">Efeitos de perfil e molduras</span>
                             <div class="kiwi-effects-pair">
-                                <button type="button" id="editor-effect-frame-btn" class="kiwi-effect-slot" title="Alternar brilho e moldura especial">
+                                <button type="button" id="editor-effect-frame-btn" class="kiwi-effect-slot" data-frame-option="gold_glow_frame" title="Alternar brilho e moldura especial">
                                     <span class="kiwi-effect-plus" id="editor-frame-icon">+</span>
                                     <span id="editor-frame-label">Moldura Brilho</span>
                                 </button>
-                                <button type="button" id="editor-effect-gold-btn" class="kiwi-effect-slot" title="Alternar animação e borda do avatar">
+                                <button type="button" id="editor-effect-gold-btn" class="kiwi-effect-slot" data-toggle-avatar-pulse="true" title="Alternar animação e borda do avatar">
                                     <span class="kiwi-effect-plus" id="editor-pulse-icon">+</span>
                                     <span id="editor-pulse-label">Avatar Pulso</span>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- PAINEL EXCLUSIVO AKIIRAPW ADMIN -->
+                        <div id="akiira-gold-exclusive-panel" class="akiira-gold-panel" data-akiira-exclusive="true" hidden style="display: none;">
+                            <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:8px;">
+                                <span style="font-size:11px; font-weight:800; color:#ffe885; text-transform:uppercase; letter-spacing:0.05em;">👑 Aba AkiiraPW Admin</span>
+                                <span class="admin-gold-badge">EXCLUSIVO</span>
+                            </div>
+                            <div style="display:flex; flex-direction:column; gap:7px;">
+                                <button type="button" id="akiira-gold-frame-btn" class="kiwi-editor-action-pill" data-frame-option="gold_glow_frame" style="background: rgba(255,215,0,0.22); border-color: rgba(255,215,0,0.65); color:#fff6cc;">
+                                    ✨ Moldura Dourada Brilhante
+                                </button>
+                                <button type="button" id="akiira-profile-glow-btn" class="kiwi-editor-action-pill" data-toggle-profile-glow="true" style="background: rgba(255,215,0,0.14); border-color: rgba(255,215,0,0.45); color:#fff6cc;">
+                                    🌟 Aura Dourada no Card
                                 </button>
                             </div>
                         </div>
@@ -2838,7 +2946,10 @@
 
             function formatSafeBioHtml(rawBio) {
                 const escaped = escapeHtmlText(rawBio || '');
-                return escaped.replace(/(?:\r\n|\r|\n|<br\s*\/?>)/gi, '<br>');
+                return escaped.replace(/(?:
+|
+|
+|<br\s*\/?>)/gi, '<br>');
             }
 
             function isSafeAssetUrl(url) {
@@ -2957,6 +3068,8 @@
                 accentColor: '#ffffff',
                 goldProfileBg: false,
                 frameEffect: false,
+                goldGlowFrame: false,
+                profileGlow: false,
                 avatarPulse: false,
                 nameSpecialStyle: false,
                 avatarUrl: '',
@@ -2988,31 +3101,17 @@
                 return Boolean(isAdminFlag) || clean === 'akiirapw' || clean === 'admin';
             }
 
+            function isAkiiraAdminIdentity(username, isAdminFlag) {
+                const clean = (username || '').trim().toLowerCase();
+                return clean === 'akiirapw' && (Boolean(isAdminFlag) || clean === 'akiirapw');
+            }
+
             function sanitizeThemeForUser(colorKey, username, isAdminFlag) {
                 if (!colorKey || !themesMap) return '#ffffff';
                 if (colorKey === '#d4af37' && !isAdminIdentity(username, isAdminFlag)) {
                     return '#ffffff';
                 }
                 return themesMap[colorKey] ? colorKey : '#ffffff';
-            }
-
-            function syncAdminVisualRestrictions() {
-                const canGold = isAdminIdentity(activeUsername, myProfileData.is_admin);
-                document.querySelectorAll('.admin-only-gold-ball').forEach(el => {
-                    el.style.display = canGold ? 'inline-block' : 'none';
-                });
-                const goldOpt = document.getElementById('editor-gold-option');
-                if (goldOpt) goldOpt.style.display = canGold ? 'block' : 'none';
-                const goldRow = document.getElementById('admin-gold-toggle-row');
-                if (goldRow) goldRow.style.display = canGold ? 'flex' : 'none';
-
-                if (!canGold) {
-                    myProfileData.goldProfileBg = false;
-                    if (myProfileData.accentColor === '#d4af37') {
-                        myProfileData.accentColor = '#ffffff';
-                        try { localStorage.setItem(THEME_STORAGE_KEY, '#ffffff'); } catch (_) {}
-                    }
-                }
             }
 
             const miniAvatar = document.getElementById('my-mini-avatar');
@@ -3058,6 +3157,57 @@
             const editGoldCheckbox = document.getElementById('edit-gold-profile-bg');
             const editMusicCoverFile = document.getElementById('edit-music-cover-file');
             const editMusicCoverUrl = document.getElementById('edit-music-cover-url');
+
+            const akiiraGoldTab = document.getElementById('akiira-gold-exclusive-tab');
+            const akiiraGoldPanel = document.getElementById('akiira-gold-exclusive-panel');
+            const akiiraGoldFrameBtn = document.getElementById('akiira-gold-frame-btn');
+            const akiiraProfileGlowBtn = document.getElementById('akiira-profile-glow-btn');
+
+            function syncAkiiraExclusiveRoomUI(targetUsername = activeUsername, targetAdminFlag = myProfileData.is_admin) {
+                const isAkiira = isAkiiraAdminIdentity(targetUsername, targetAdminFlag);
+                document.querySelectorAll('[data-akiira-exclusive="true"]').forEach(el => {
+                    el.hidden = !isAkiira;
+                    el.style.display = isAkiira ? (el.classList.contains('akiira-gold-tab') ? 'inline-flex' : 'block') : 'none';
+                    if (!isAkiira) {
+                        el.classList.remove('is-active', 'active', 'selected');
+                    }
+                });
+
+                if (!isAkiira) {
+                    myProfileData.goldGlowFrame = false;
+                    myProfileData.profileGlow = false;
+                } else {
+                    if (akiiraGoldTab) akiiraGoldTab.classList.toggle('is-active', Boolean(myProfileData.goldGlowFrame));
+                    if (akiiraGoldFrameBtn) akiiraGoldFrameBtn.classList.toggle('active', Boolean(myProfileData.goldGlowFrame));
+                    if (akiiraProfileGlowBtn) akiiraProfileGlowBtn.classList.toggle('active', Boolean(myProfileData.profileGlow));
+                }
+
+                if (miniAvatar) {
+                    const showGoldRing = isAkiira && Boolean(myProfileData.goldGlowFrame);
+                    miniAvatar.classList.toggle('akiira-gold-frame', showGoldRing);
+                    miniAvatar.classList.toggle('akiira-avatar-pulse', isAkiira && Boolean(myProfileData.avatarPulse));
+                }
+            }
+
+            function syncAdminVisualRestrictions() {
+                const canGold = isAdminIdentity(activeUsername, myProfileData.is_admin);
+                document.querySelectorAll('.admin-only-gold-ball').forEach(el => {
+                    el.style.display = canGold ? 'inline-block' : 'none';
+                });
+                const goldOpt = document.getElementById('editor-gold-option');
+                if (goldOpt) goldOpt.style.display = canGold ? 'block' : 'none';
+                const goldRow = document.getElementById('admin-gold-toggle-row');
+                if (goldRow) goldRow.style.display = canGold ? 'flex' : 'none';
+
+                if (!canGold) {
+                    myProfileData.goldProfileBg = false;
+                    if (myProfileData.accentColor === '#d4af37') {
+                        myProfileData.accentColor = '#ffffff';
+                        try { localStorage.setItem(THEME_STORAGE_KEY, '#ffffff'); } catch (_) {}
+                    }
+                }
+                syncAkiiraExclusiveRoomUI(activeUsername, myProfileData.is_admin);
+            }
 
             const chatAreaEl = document.querySelector('.chat-area');
             const chatLog = document.getElementById('chat-log');
@@ -3127,13 +3277,20 @@
             const quickReactions = ['👍', '❤️', '💩'];
             const extraReactions = ['😂', '🥝', '🔥', '🥺', '✨'];
 
-            function applySpecialProfileEffects(cardEl, nameEl, badgeEl, username, isAdminFlag = false) {
+            function applySpecialProfileEffects(cardEl, nameEl, badgeEl, username, isAdminFlag = false, profileObj = null) {
                 const cleanName = (username || '').trim().toLowerCase();
                 const isAkiira = cleanName === 'akiirapw';
                 const showAdmin = isAdminIdentity(username, isAdminFlag);
 
                 if (nameEl) nameEl.classList.toggle('akiira-special-font', isAkiira);
-                if (cardEl) cardEl.classList.toggle('akiira-shimmer-card', showAdmin);
+                if (cardEl) {
+                    cardEl.classList.toggle('akiira-shimmer-card', showAdmin);
+                    cardEl.classList.toggle('akiira-profile-gold-glow', Boolean(isAkiira && profileObj && profileObj.profileGlow));
+                }
+                if (upAvatar) {
+                    upAvatar.classList.toggle('akiira-gold-frame', Boolean(isAkiira && profileObj && profileObj.goldGlowFrame));
+                    upAvatar.classList.toggle('akiira-avatar-pulse', Boolean(isAkiira && profileObj && profileObj.avatarPulse));
+                }
                 if (badgeEl) badgeEl.style.display = showAdmin ? 'inline-flex' : 'none';
             }
 
@@ -3515,6 +3672,8 @@
                         bannerUrl: safeBanner,
                         goldProfileBg: Boolean(musicObj.goldProfileBg),
                         frameEffect: Boolean(musicObj.frameEffect),
+                        goldGlowFrame: Boolean(musicObj.goldGlowFrame),
+                        profileGlow: Boolean(musicObj.profileGlow),
                         avatarPulse: Boolean(musicObj.avatarPulse),
                         nameSpecialStyle: Boolean(musicObj.nameSpecialStyle)
                     };
@@ -4029,7 +4188,7 @@
                 if (unifiedProfileCard) {
                     unifiedProfileCard.classList.toggle('gold-profile-theme', useGoldBg);
                 }
-                applySpecialProfileEffects(unifiedProfileCard, upUsername, upAdminBadge, profileObj.username, profileObj.is_admin);
+                applySpecialProfileEffects(unifiedProfileCard, upUsername, upAdminBadge, profileObj.username, profileObj.is_admin, profileObj);
                 setAvatarStyle(upAvatar, profileObj.avatarUrl, profileObj.username);
 
                 if (profileObj.bannerUrl && profileObj.bannerUrl.trim() !== '' && isSafeAssetUrl(profileObj.bannerUrl)) {
@@ -4234,7 +4393,8 @@
                 if (editUsernameInput) editUsernameInput.value = activeUsername || myProfileData.username || '';
                 editBubble.value = myProfileData.bubble || '';
                 editPronouns.value = myProfileData.pronouns || '';
-                editBio.value = (myProfileData.bio || '').replace(/<br\s*\/?>/gi, '\n');
+                editBio.value = (myProfileData.bio || '').replace(/<br\s*\/?>/gi, '
+');
                 editSong.value = myProfileData.song || '';
                 editArtist.value = myProfileData.artist || '';
                 if (editYtUrl) editYtUrl.value = myProfileData.musicUrl || '';
@@ -4266,15 +4426,21 @@
                 const owner = ((editUsernameInput && editUsernameInput.value.trim()) || activeUsername || myProfileData.username || 'Usuário').trim();
                 const prn = (editPronouns && editPronouns.value.trim()) || '';
                 const canGold = isAdminIdentity(owner, myProfileData.is_admin);
+                const isAkiira = isAkiiraAdminIdentity(owner, myProfileData.is_admin);
                 const isGold = canGold && Boolean(editGoldCheckbox && editGoldCheckbox.checked);
                 const isFrameActive = Boolean(myProfileData.frameEffect);
+                const isGoldFrameActive = isAkiira && Boolean(myProfileData.goldGlowFrame);
+                const isProfileGlowActive = isAkiira && Boolean(myProfileData.profileGlow);
                 const isPulseActive = Boolean(myProfileData.avatarPulse);
                 const isSpecialName = Boolean(myProfileData.nameSpecialStyle) || owner.toLowerCase() === 'akiirapw';
+
+                syncAkiiraExclusiveRoomUI(owner, myProfileData.is_admin);
 
                 const avatarSrc = tempEditorAvatarUrl || (isSafeAssetUrl(myProfileData.avatarUrl) ? myProfileData.avatarUrl : '');
                 if (editorLiveAvatar) {
                     setAvatarStyle(editorLiveAvatar, avatarSrc, owner);
                     editorLiveAvatar.classList.toggle('fx-glow', isFrameActive);
+                    editorLiveAvatar.classList.toggle('akiira-gold-frame', isGoldFrameActive);
                     editorLiveAvatar.classList.toggle('fx-pulse', isPulseActive);
                 }
 
@@ -4320,11 +4486,48 @@
                 if (editorPulseLabel) editorPulseLabel.textContent = isPulseActive ? 'Pulso: On' : 'Avatar Pulso';
                 if (kiwiEditorCard) {
                     kiwiEditorCard.classList.toggle('gold-profile-theme', isGold);
-                    kiwiEditorCard.classList.toggle('akiira-shimmer-card', canGold || isFrameActive);
+                    kiwiEditorCard.classList.toggle('akiira-shimmer-card', canGold || isFrameActive || isGoldFrameActive);
+                    kiwiEditorCard.classList.toggle('akiira-profile-gold-glow', isProfileGlowActive);
                 }
             }
 
-            if (editUsernameInput) editUsernameInput.addEventListener('input', refreshEditorLivePreview);
+            if (editUsernameInput) {
+                editUsernameInput.addEventListener('input', () => {
+                    activeUsername = (editUsernameInput.value || '').trim() || 'Usuário';
+                    myProfileData.username = activeUsername;
+                    refreshEditorLivePreview();
+                });
+            }
+
+            if (akiiraGoldTab) {
+                akiiraGoldTab.addEventListener('click', () => {
+                    if (!isAkiiraAdminIdentity(activeUsername, myProfileData.is_admin)) return;
+                    myProfileData.goldGlowFrame = !myProfileData.goldGlowFrame;
+                    saveUserMusicToLocalCache(activeUsername, myProfileData);
+                    refreshEditorLivePreview();
+                    showKiwiToast(myProfileData.goldGlowFrame ? '👑 Moldura dourada AkiiraPW ativada!' : 'Moldura dourada desativada.');
+                });
+            }
+
+            if (akiiraGoldFrameBtn) {
+                akiiraGoldFrameBtn.addEventListener('click', () => {
+                    if (!isAkiiraAdminIdentity(activeUsername, myProfileData.is_admin)) return;
+                    myProfileData.goldGlowFrame = !myProfileData.goldGlowFrame;
+                    saveUserMusicToLocalCache(activeUsername, myProfileData);
+                    refreshEditorLivePreview();
+                    showKiwiToast(myProfileData.goldGlowFrame ? '✨ Moldura dourada brilhante ativada!' : 'Moldura dourada desativada.');
+                });
+            }
+
+            if (akiiraProfileGlowBtn) {
+                akiiraProfileGlowBtn.addEventListener('click', () => {
+                    if (!isAkiiraAdminIdentity(activeUsername, myProfileData.is_admin)) return;
+                    myProfileData.profileGlow = !myProfileData.profileGlow;
+                    saveUserMusicToLocalCache(activeUsername, myProfileData);
+                    refreshEditorLivePreview();
+                    showKiwiToast(myProfileData.profileGlow ? '🌟 Aura dourada ativada!' : 'Aura dourada desativada.');
+                });
+            }
 
             const editAvatarFileEl = document.getElementById('edit-avatar-file');
             const editBannerFileEl = document.getElementById('edit-banner-file');
@@ -4593,6 +4796,7 @@
                 try { localStorage.setItem(USERNAME_STORAGE_KEY, activeUsername); } catch (_) {}
                 const ownerName = activeUsername;
                 const canGold = isAdminIdentity(ownerName, myProfileData.is_admin);
+                const isAkiira = isAkiiraAdminIdentity(ownerName, myProfileData.is_admin);
                 myProfileData.username = ownerName;
                 myProfileData.bubble = editBubble.value;
                 myProfileData.pronouns = editPronouns.value;
@@ -4601,6 +4805,8 @@
                 myProfileData.artist = editArtist.value.trim();
                 myProfileData.musicUrl = editYtUrl ? editYtUrl.value.trim() : '';
                 myProfileData.goldProfileBg = canGold && editGoldCheckbox ? Boolean(editGoldCheckbox.checked) : false;
+                myProfileData.goldGlowFrame = isAkiira ? Boolean(myProfileData.goldGlowFrame) : false;
+                myProfileData.profileGlow = isAkiira ? Boolean(myProfileData.profileGlow) : false;
                 myProfileData.accentColor = sanitizeThemeForUser(myProfileData.accentColor, ownerName, myProfileData.is_admin);
 
                 const pickedAvatarFile = editAvatarFileEl && editAvatarFileEl.files && editAvatarFileEl.files[0];
@@ -4671,6 +4877,9 @@
                     apiFormData.append('spotify_artist', myProfileData.artist || '');
                     apiFormData.append('music_url', myProfileData.musicUrl || '');
                     apiFormData.append('accent_color', myProfileData.accentColor || '#ff9de2');
+                    apiFormData.append('frame_effect', myProfileData.goldGlowFrame ? 'gold_glow_frame' : 'none');
+                    apiFormData.append('profile_glow', myProfileData.profileGlow ? '1' : '0');
+                    apiFormData.append('avatar_pulse', myProfileData.avatarPulse ? '1' : '0');
 
                     if (pickedAvatarFile) {
                         apiFormData.append('avatar', pickedAvatarFile);
@@ -5122,389 +5331,309 @@
 
             async function sendMessage() {
                 const text = messageInput.value.trim();
-                const fileToSend = pendingAttachmentFile;
-                if (!text && !fileToSend) return;
+                if (!text && !pendingAttachmentFile) return;
 
-                const targetViewAtSend = currentView;
-                const targetDmAtSend = currentDmUser;
-                const nowClock = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-                const uniqueId = 'msg-' + Date.now() + '-' + Math.random().toString(36).slice(2, 6);
-
+                const timeNow = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
                 let attachmentUrl = '';
                 let attachmentType = '';
                 let attachmentName = '';
 
-                if (fileToSend) {
-                    attachmentName = fileToSend.name;
-                    if (pendingAttachmentCategory === 'image' || fileToSend.type.startsWith('image/')) {
-                        attachmentType = 'image';
-                    } else if (pendingAttachmentCategory === 'audio' || fileToSend.type.startsWith('audio/')) {
-                        attachmentType = 'audio';
+                if (pendingAttachmentFile) {
+                    attachmentName = pendingAttachmentFile.name;
+                    if (pendingAttachmentCategory === 'image' || pendingAttachmentFile.type.startsWith('image/')) attachmentType = 'image';
+                    else if (pendingAttachmentCategory === 'audio' || pendingAttachmentFile.type.startsWith('audio/')) attachmentType = 'audio';
+                    else attachmentType = 'file';
+
+                    if (pendingAttachmentFile.size <= 2.5 * 1024 * 1024) {
+                        try {
+                            attachmentUrl = await readFileAsDataUrl(pendingAttachmentFile);
+                        } catch (_) {
+                            attachmentUrl = URL.createObjectURL(pendingAttachmentFile);
+                        }
                     } else {
-                        attachmentType = 'file';
-                    }
-                    if (fileToSend.size <= 3 * 1024 * 1024) {
-                        try { attachmentUrl = await readFileAsDataUrl(fileToSend); } catch (_) { attachmentUrl = URL.createObjectURL(fileToSend); }
-                    } else {
-                        attachmentUrl = URL.createObjectURL(fileToSend);
+                        attachmentUrl = URL.createObjectURL(pendingAttachmentFile);
                     }
                 }
 
+                const localId = `local_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`;
                 const payload = {
-                    id: uniqueId,
+                    id: localId,
                     sender: activeUsername,
                     username: activeUsername,
                     message: text,
-                    time: nowClock,
+                    time: timeNow,
                     attachment_url: attachmentUrl,
                     attachment_type: attachmentType,
-                    attachment_name: attachmentName,
-                    avatar: myProfileData.avatarUrl
+                    attachment_name: attachmentName
                 };
 
-                clearPendingAttachment();
-                messageInput.value = '';
-
-                if (targetViewAtSend === 'dm' && targetDmAtSend) {
-                    if (!dmHistoryStore[targetDmAtSend]) dmHistoryStore[targetDmAtSend] = [];
-                    dmHistoryStore[targetDmAtSend].push({
-                        id: uniqueId,
+                if (currentView === 'dm' && currentDmUser) {
+                    if (!dmHistoryStore[currentDmUser]) dmHistoryStore[currentDmUser] = [];
+                    dmHistoryStore[currentDmUser].push({
+                        id: localId,
                         sender: activeUsername,
+                        receiver: currentDmUser,
                         content: text,
-                        time: nowClock,
+                        time: timeNow,
                         attachment_url: attachmentUrl,
                         attachment_type: attachmentType,
                         attachment_name: attachmentName
                     });
-                    writeStorageJson(DM_HISTORY_STORAGE_KEY, dmHistoryStore);
-
-                    if (currentView === 'dm' && currentDmUser === targetDmAtSend) {
-                        const emptyHint = chatLog.querySelector('div[style*="Nenhuma mensagem ainda"]');
-                        if (emptyHint) emptyHint.remove();
-                        const el = buildMessageDomElement(payload, { isDm: true, avatarUrl: myProfileData.avatarUrl });
-                        chatLog.appendChild(el);
-                        chatLog.scrollTop = chatLog.scrollHeight;
+                    if (!attachmentUrl.startsWith('blob:')) {
+                        writeStorageJson(DM_HISTORY_STORAGE_KEY, dmHistoryStore);
                     }
+
+                    const emptyHint = chatLog.querySelector('div[style*="text-align:center"]');
+                    if (emptyHint) emptyHint.remove();
+
+                    const dmGroup = buildMessageDomElement(payload, { isDm: true, avatarUrl: myProfileData.avatarUrl });
+                    chatLog.appendChild(dmGroup);
+                    chatLog.scrollTop = chatLog.scrollHeight;
                 } else {
-                    appendMessageElement(payload, { isDm: false });
+                    appendMessageElement(payload, { isDm: false, avatarUrl: myProfileData.avatarUrl });
                 }
+
+                messageInput.value = '';
+                clearPendingAttachment();
             }
 
             submitButton.addEventListener('click', sendMessage);
-            messageInput.addEventListener('keypress', function(e) {
-                if (e.key === 'Enter') sendMessage();
+            messageInput.addEventListener('keydown', function(e) {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    sendMessage();
+                }
             });
 
             chatLog.addEventListener('click', function(e) {
-                const reactBtn = e.target.closest('[data-react-emoji]');
+                const target = e.target;
+
+                const zoomImg = target.closest('.msg-attachment-img');
+                if (zoomImg && zoomImg.src) {
+                    e.preventDefault();
+                    openImageLightbox(zoomImg.src, zoomImg.alt || 'Imagem enviada no chat');
+                    return;
+                }
+
+                const profileTrigger = target.closest('[data-profile-user]');
+                if (profileTrigger) {
+                    const uname = profileTrigger.getAttribute('data-profile-user');
+                    if (uname) { openUserProfile(uname); return; }
+                }
+
+                const group = target.closest('.message-group');
+                if (!group) return;
+
+                const reactBtn = target.closest('[data-react-emoji]');
                 if (reactBtn) {
-                    e.stopPropagation();
                     const emoji = reactBtn.getAttribute('data-react-emoji');
-                    const grp = reactBtn.closest('.message-group');
-                    toggleMessageReaction(grp, emoji);
+                    toggleMessageReaction(group, emoji);
                     closeAllMessagePopovers();
                     return;
                 }
 
-                const chipBtn = e.target.closest('.msg-reaction-chip');
-                if (chipBtn) {
-                    e.stopPropagation();
-                    const emoji = chipBtn.getAttribute('data-emoji');
-                    const grp = chipBtn.closest('.message-group');
-                    toggleMessageReaction(grp, emoji);
+                const chip = target.closest('.msg-reaction-chip');
+                if (chip) {
+                    const emoji = chip.getAttribute('data-emoji');
+                    toggleMessageReaction(group, emoji);
                     return;
                 }
 
-                const pickerToggle = e.target.closest('[data-toggle-picker]');
-                if (pickerToggle) {
-                    e.stopPropagation();
-                    const grp = pickerToggle.closest('.message-group');
-                    const picker = grp ? grp.querySelector('.msg-emoji-picker') : null;
+                const pickerBtn = target.closest('[data-toggle-picker="1"]');
+                if (pickerBtn) {
+                    const picker = group.querySelector('.msg-emoji-picker');
                     const wasOpen = picker && picker.classList.contains('open');
                     closeAllMessagePopovers();
                     if (picker && !wasOpen) {
                         picker.classList.add('open');
-                        grp.classList.add('menu-open');
+                        group.classList.add('menu-open');
                     }
                     return;
                 }
 
-                const moreToggle = e.target.closest('[data-toggle-more]');
-                if (moreToggle) {
-                    e.stopPropagation();
-                    const grp = moreToggle.closest('.message-group');
-                    const popover = grp ? grp.querySelector('.msg-more-popover') : null;
+                const moreBtn = target.closest('[data-toggle-more="1"]');
+                if (moreBtn) {
+                    const popover = group.querySelector('.msg-more-popover');
                     const wasOpen = popover && popover.classList.contains('open');
                     closeAllMessagePopovers();
                     if (popover && !wasOpen) {
                         popover.classList.add('open');
-                        grp.classList.add('menu-open');
+                        group.classList.add('menu-open');
                     }
                     return;
                 }
 
-                const replyBtn = e.target.closest('[data-reply-msg]');
+                const replyBtn = target.closest('[data-reply-msg="1"]');
                 if (replyBtn) {
-                    e.stopPropagation();
-                    const grp = replyBtn.closest('.message-group');
-                    const author = grp ? (grp.querySelector('.username')?.textContent || 'alguém') : 'alguém';
-                    messageInput.focus();
-                    if (!messageInput.value.startsWith(`@${author} `)) {
-                        messageInput.value = `@${author} ${messageInput.value}`;
+                    const author = (group.querySelector('.username')?.textContent || '').trim();
+                    const snippet = (group.querySelector('.message-text')?.textContent || '').trim();
+                    if (messageInput) {
+                        const prefix = author ? `@${author}: ` : '';
+                        const quote = snippet ? `«${snippet.slice(0, 60)}» ` : '';
+                        messageInput.value = `${prefix}${quote}${messageInput.value}`.trimStart();
+                        messageInput.focus();
                     }
                     closeAllMessagePopovers();
                     return;
                 }
 
-                const copyBtn = e.target.closest('[data-copy-msg]');
+                const copyBtn = target.closest('[data-copy-msg="1"]');
                 if (copyBtn) {
-                    e.stopPropagation();
-                    const grp = copyBtn.closest('.message-group');
-                    const txt = grp ? (grp.querySelector('.message-text')?.textContent || '') : '';
-                    if (txt && navigator.clipboard) navigator.clipboard.writeText(txt).catch(() => {});
+                    const textToCopy = (group.querySelector('.message-text')?.textContent || '').trim();
+                    if (textToCopy && navigator.clipboard) {
+                        navigator.clipboard.writeText(textToCopy).then(() => showKiwiToast('Texto copiado!')).catch(() => {});
+                    }
                     closeAllMessagePopovers();
-                    showKiwiToast('Texto copiado!');
                     return;
                 }
 
-                const delBtn = e.target.closest('[data-delete-id], [data-delete-dm-id]');
+                const delBtn = target.closest('[data-delete-id], [data-delete-dm-id]');
                 if (delBtn) {
-                    e.stopPropagation();
-                    const msgId = delBtn.getAttribute('data-delete-id');
-                    const dmId = delBtn.getAttribute('data-delete-dm-id');
-                    const grp = delBtn.closest('.message-group');
+                    group.remove();
+                    if (currentView === 'geral') geralSnapshotHTML = chatLog.innerHTML;
                     closeAllMessagePopovers();
-                    if (grp) grp.remove();
-                    if (msgId) {
-                        const tempDiv = document.createElement('div');
-                        tempDiv.innerHTML = geralSnapshotHTML;
-                        const snapTarget = tempDiv.querySelector(`.message-group[data-msg-id="${msgId}"]`);
-                        if (snapTarget) snapTarget.remove();
-                        geralSnapshotHTML = tempDiv.innerHTML;
-                    }
-                    if (dmId && currentDmUser && dmHistoryStore[currentDmUser]) {
-                        dmHistoryStore[currentDmUser] = dmHistoryStore[currentDmUser].filter(m => String(m.id) !== String(dmId));
-                        writeStorageJson(DM_HISTORY_STORAGE_KEY, dmHistoryStore);
-                    }
                     showKiwiToast('Mensagem removida.');
-                    return;
-                }
-
-                const attImg = e.target.closest('.msg-attachment-img');
-                if (attImg && attImg.src) {
-                    openImageLightbox(attImg.src, attImg.alt || 'Anexo');
-                    return;
-                }
-
-                const profileTarget = e.target.closest('[data-profile-user]');
-                if (profileTarget) {
-                    const uname = profileTarget.getAttribute('data-profile-user');
-                    if (uname) openUserProfile(uname);
                 }
             });
 
             document.addEventListener('click', function(e) {
-                if (!e.target.closest('.message-group')) closeAllMessagePopovers();
+                if (!e.target.closest('.msg-hover-toolbar') && !e.target.closest('.msg-emoji-picker') && !e.target.closest('.msg-more-popover')) {
+                    closeAllMessagePopovers();
+                }
             });
 
-            const socialTabs = document.querySelectorAll('.social-tab');
-            const socialContent = document.getElementById('social-content-container');
-
-            function renderSocialMessage(text) {
-                socialContent.innerHTML = '';
-                const div = document.createElement('div');
-                div.style.cssText = 'text-align: center; padding: 12px; color: var(--text-muted);';
-                div.textContent = text;
-                socialContent.appendChild(div);
+            if (headerCallBtn) {
+                headerCallBtn.addEventListener('click', function() {
+                    if (currentView === 'dm' && currentDmUser) startVoiceCall(currentDmUser);
+                });
             }
 
-            function renderUserSocialList(users, emptyText, isFriendsTab = false) {
-                socialContent.innerHTML = '';
-                if (!users || users.length === 0) {
-                    renderSocialMessage(emptyText);
-                    return;
-                }
+            const socialTabs = document.querySelectorAll('.social-tab');
+            const socialContainer = document.getElementById('social-content-container');
 
-                users.forEach(u => {
-                    const item = document.createElement('div');
-                    item.className = 'social-list-item';
+            function renderEmptySocialHint(msg) {
+                socialContainer.innerHTML = `<div style="text-align:center; padding:16px 8px; opacity:0.8; font-size:12px;">${escapeHtmlText(msg)}</div>`;
+            }
 
-                    const av = document.createElement('div');
-                    av.className = 'dm-channel-avatar';
-                    setAvatarStyle(av, u.avatarUrl || '', u.username);
+            function renderOnlineUsers() {
+                socialContainer.innerHTML = '';
+                const selfRow = document.createElement('div');
+                selfRow.className = 'social-list-item';
+                selfRow.innerHTML = `<span style="color:#23a55a;">●</span> <strong style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${escapeHtmlText(activeUsername)}</strong> <span style="font-size:10px; opacity:0.7; margin-left:auto;">você</span>`;
+                selfRow.addEventListener('click', () => openUserProfile(activeUsername));
+                socialContainer.appendChild(selfRow);
 
-                    const nameSpan = document.createElement('span');
-                    nameSpan.textContent = u.username;
-                    nameSpan.style.cssText = 'overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex: 1;';
-
-                    item.appendChild(av);
-                    item.appendChild(nameSpan);
-
-                    item.addEventListener('click', () => openUserProfile(u.username));
-
-                    if (isFriendsTab && u.username !== activeUsername) {
+                if (friendsList.length > 0) {
+                    friendsList.forEach(friendName => {
+                        const row = document.createElement('div');
+                        row.className = 'social-list-item';
+                        row.innerHTML = `<span style="color:#23a55a;">●</span> <span style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${escapeHtmlText(friendName)}</span>`;
+                        row.addEventListener('click', () => openUserProfile(friendName));
                         const dmBtn = document.createElement('button');
                         dmBtn.type = 'button';
                         dmBtn.className = 'dm-quick-btn';
                         dmBtn.textContent = 'DM';
-                        dmBtn.addEventListener('click', (ev) => {
-                            ev.stopPropagation();
-                            openPrivateChat(u.username, u.avatarUrl || '');
-                        });
-
-                        const rmBtn = document.createElement('button');
-                        rmBtn.type = 'button';
-                        rmBtn.className = 'remove-friend-mini-btn';
-                        rmBtn.title = 'Remover amizade';
-                        rmBtn.textContent = '✕';
-                        rmBtn.addEventListener('click', (ev) => {
-                            ev.stopPropagation();
-                            removeFriend(u.username);
-                        });
-
-                        item.appendChild(dmBtn);
-                        item.appendChild(rmBtn);
-                    }
-
-                    socialContent.appendChild(item);
-                });
+                        dmBtn.addEventListener('click', (e) => { e.stopPropagation(); openPrivateChat(friendName); });
+                        row.appendChild(dmBtn);
+                        socialContainer.appendChild(row);
+                    });
+                } else {
+                    const hint = document.createElement('div');
+                    hint.style.cssText = 'text-align:center; padding:10px 6px; opacity:0.75; font-size:11px;';
+                    hint.textContent = 'Adicione amigos para conversar em DM ou chamada.';
+                    socialContainer.appendChild(hint);
+                }
             }
 
             function fetchFriendsList() {
-                const listObjs = friendsList.map(name => profilesByUsername.get(name.toLowerCase()) || { username: name, avatarUrl: '' });
-                renderUserSocialList(listObjs, 'Ainda não tem amigos adicionados.', true);
-            }
+                socialContainer.innerHTML = '';
+                if (!friendsList || friendsList.length === 0) {
+                    renderEmptySocialHint('Nenhum amigo adicionado ainda.');
+                    return;
+                }
+                friendsList.forEach(friendName => {
+                    const div = document.createElement('div');
+                    div.className = 'social-list-item';
+                    div.innerHTML = `<span style="color:#23a55a;">●</span> <span style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${escapeHtmlText(friendName)}</span>`;
+                    div.addEventListener('click', () => openUserProfile(friendName));
 
-            function fetchOnlineUsers() {
-                const listObjs = friendsList.map(name => profilesByUsername.get(name.toLowerCase()) || { username: name, avatarUrl: '' });
-                renderUserSocialList(listObjs, 'Nenhum amigo na lista no momento.', false);
+                    const dmBtn = document.createElement('button');
+                    dmBtn.type = 'button';
+                    dmBtn.className = 'dm-quick-btn';
+                    dmBtn.textContent = 'DM';
+                    dmBtn.addEventListener('click', (e) => { e.stopPropagation(); openPrivateChat(friendName); });
+
+                    const remBtn = document.createElement('button');
+                    remBtn.type = 'button';
+                    remBtn.className = 'remove-friend-mini-btn';
+                    remBtn.title = 'Remover amizade';
+                    remBtn.textContent = '✕';
+                    remBtn.addEventListener('click', (e) => { e.stopPropagation(); removeFriend(friendName); });
+
+                    div.appendChild(dmBtn);
+                    div.appendChild(remBtn);
+                    socialContainer.appendChild(div);
+                });
             }
 
             function fetchFollowersList() {
-                renderUserSocialList([], 'Nenhum seguidor listado.', false);
-            }
-
-            function handleSocialTabSelection(tabName) {
-                if (tabName === 'amigos') fetchFriendsList();
-                else if (tabName === 'seguidores') fetchFollowersList();
-                else fetchOnlineUsers();
+                renderEmptySocialHint('Nenhum seguidor registado ainda.');
             }
 
             socialTabs.forEach(tab => {
                 tab.addEventListener('click', () => {
                     socialTabs.forEach(t => t.classList.remove('active'));
                     tab.classList.add('active');
-                    handleSocialTabSelection(tab.getAttribute('data-tab'));
+                    const tabName = tab.getAttribute('data-tab');
+                    if (tabName === 'online') renderOnlineUsers();
+                    else if (tabName === 'amigos') fetchFriendsList();
+                    else if (tabName === 'seguidores') fetchFollowersList();
                 });
             });
 
-            handleSocialTabSelection('online');
-
-            window.switchToAmigosHome = function() {
-                window.switchToGeral('geral', 'text');
-                window.closeMobileChatView();
-            };
-
-            const railHomeBtn = document.getElementById('rail-home-btn');
-            const sidebarServerTitle = document.getElementById('sidebar-server-title');
-            if (railHomeBtn) {
-                railHomeBtn.addEventListener('click', () => {
-                    document.querySelectorAll('.server-rail-btn').forEach(b => b.classList.remove('active'));
-                    railHomeBtn.classList.add('active');
-                    if (sidebarServerTitle) sidebarServerTitle.textContent = '🥝 Kiwi • Amizades';
-                    window.switchToGeral('geral', 'text');
-                });
-            }
+            renderOnlineUsers();
 
             const addFriendModal = document.getElementById('add-friend-modal');
             const openAddFriendBtn = document.getElementById('open-add-friend-btn');
             const sidebarSearchFriendBtn = document.getElementById('sidebar-search-friend-btn');
             const closeAddFriendBtn = document.getElementById('close-add-friend-btn');
+            const addFriendDirectForm = document.getElementById('add-friend-direct-form');
             const friendSearchInput = document.getElementById('friend-search-input');
             const friendSearchResults = document.getElementById('friend-search-results');
-            const addFriendDirectForm = document.getElementById('add-friend-direct-form');
 
-            function addFriendByName(rawName) {
-                const cleanName = (rawName || '').trim();
-                if (!cleanName) return;
-                if (cleanName.toLowerCase() === activeUsername.toLowerCase()) {
-                    showKiwiToast('Você não pode adicionar a si mesmo.');
-                    return;
-                }
-                if (!isFriendName(cleanName)) {
-                    friendsList.push(cleanName);
-                    writeStorageJson(FRIENDS_STORAGE_KEY, friendsList);
-                    showKiwiToast(`${cleanName} adicionado aos amigos!`);
-                } else {
-                    showKiwiToast(`${cleanName} já está na sua lista de amigos.`);
-                }
-                renderFriendSearchMatches(friendSearchInput ? friendSearchInput.value : '');
-                const activeTab = document.querySelector('.social-tab.active')?.getAttribute('data-tab') || 'online';
-                handleSocialTabSelection(activeTab);
-            }
-
-            function renderFriendSearchMatches(queryText = '') {
-                if (!friendSearchResults) return;
-                const q = (queryText || '').trim().toLowerCase();
-                friendSearchResults.innerHTML = '';
-
-                if (q) {
-                    const row = document.createElement('div');
-                    row.className = 'social-list-item';
-                    row.style.cursor = 'default';
-
-                    const av = document.createElement('div');
-                    av.className = 'dm-channel-avatar';
-                    setAvatarStyle(av, '', queryText.trim());
-
-                    const nameEl = document.createElement('span');
-                    nameEl.textContent = queryText.trim();
-                    nameEl.style.fontWeight = '700';
-
-                    const alreadyFriend = isFriendName(queryText.trim());
-                    const actionBtn = document.createElement('button');
-                    actionBtn.type = 'button';
-                    actionBtn.className = 'dm-quick-btn';
-                    actionBtn.textContent = alreadyFriend ? 'Amigo ✓' : '+ Adicionar';
-                    if (alreadyFriend) actionBtn.style.background = '#23a55a';
-                    actionBtn.addEventListener('click', () => {
-                        if (!alreadyFriend) {
-                            addFriendByName(queryText.trim());
-                        } else {
-                            openPrivateChat(queryText.trim());
-                            closeModalAnimated(addFriendModal);
-                        }
-                    });
-
-                    row.appendChild(av);
-                    row.appendChild(nameEl);
-                    row.appendChild(actionBtn);
-                    friendSearchResults.appendChild(row);
-                } else {
-                    friendSearchResults.innerHTML = `<div style="font-size:12px; color:var(--text-muted); text-align:center; padding:8px;">Digite o nome de usuário para adicionar.</div>`;
-                }
-            }
-
-            function openFriendSearchModal() {
-                if (!addFriendModal) return;
+            function openAddFriendModal() {
+                if (friendSearchResults) friendSearchResults.innerHTML = '';
                 if (friendSearchInput) friendSearchInput.value = '';
-                renderFriendSearchMatches('');
                 openModalAnimated(addFriendModal);
-                setTimeout(() => { if (friendSearchInput) friendSearchInput.focus(); }, 60);
+                if (friendSearchInput) setTimeout(() => friendSearchInput.focus(), 60);
             }
 
-            if (openAddFriendBtn) openAddFriendBtn.addEventListener('click', openFriendSearchModal);
-            if (sidebarSearchFriendBtn) sidebarSearchFriendBtn.addEventListener('click', openFriendSearchModal);
-            if (closeAddFriendBtn && addFriendModal) closeAddFriendBtn.addEventListener('click', () => closeModalAnimated(addFriendModal));
+            if (openAddFriendBtn) openAddFriendBtn.addEventListener('click', openAddFriendModal);
+            if (sidebarSearchFriendBtn) sidebarSearchFriendBtn.addEventListener('click', openAddFriendModal);
+            if (closeAddFriendBtn) closeAddFriendBtn.addEventListener('click', () => closeModalAnimated(addFriendModal));
             if (addFriendModal) addFriendModal.addEventListener('click', (e) => { if (e.target === addFriendModal) closeModalAnimated(addFriendModal); });
-            if (friendSearchInput) friendSearchInput.addEventListener('input', () => renderFriendSearchMatches(friendSearchInput.value));
+
             if (addFriendDirectForm) {
-                addFriendDirectForm.addEventListener('submit', (e) => {
+                addFriendDirectForm.addEventListener('submit', function(e) {
                     e.preventDefault();
-                    if (!friendSearchInput || !friendSearchInput.value.trim()) return;
-                    addFriendByName(friendSearchInput.value);
-                    friendSearchInput.value = '';
-                    renderFriendSearchMatches('');
+                    const targetUser = (friendSearchInput ? friendSearchInput.value : '').trim();
+                    if (!targetUser) return;
+                    if (targetUser.toLowerCase() === (activeUsername || '').toLowerCase()) {
+                        showKiwiToast('Você já está na sua própria lista.');
+                        return;
+                    }
+                    if (!isFriendName(targetUser)) {
+                        friendsList.push(targetUser);
+                        writeStorageJson(FRIENDS_STORAGE_KEY, friendsList);
+                    }
+                    showKiwiToast(`${targetUser} adicionado aos seus amigos!`);
+                    closeModalAnimated(addFriendModal);
+                    const amigosTab = document.querySelector('.social-tab[data-tab="amigos"]');
+                    if (amigosTab) {
+                        socialTabs.forEach(t => t.classList.remove('active'));
+                        amigosTab.classList.add('active');
+                        fetchFriendsList();
+                    }
                 });
             }
 
@@ -5512,53 +5641,54 @@
             const openCreateServerBtn = document.getElementById('open-create-server-btn');
             const closeCreateServerBtn = document.getElementById('close-create-server-btn');
             const createServerForm = document.getElementById('create-server-form');
+            const serverRail = document.querySelector('.server-rail');
+            const railHomeBtn = document.getElementById('rail-home-btn');
+            const sidebarServerTitle = document.getElementById('sidebar-server-title');
 
-            if (openCreateServerBtn && createServerModal) openCreateServerBtn.addEventListener('click', () => openModalAnimated(createServerModal));
-            if (closeCreateServerBtn && createServerModal) closeCreateServerBtn.addEventListener('click', () => closeModalAnimated(createServerModal));
+            const customServers = [];
+
+            function renderCustomServersRail() {
+                if (!serverRail || !openCreateServerBtn) return;
+                serverRail.querySelectorAll('.custom-server-rail-btn').forEach(el => el.remove());
+                customServers.forEach(srv => {
+                    const btn = document.createElement('button');
+                    btn.type = 'button';
+                    btn.className = 'server-rail-btn custom-server-rail-btn';
+                    btn.title = srv.name;
+                    btn.textContent = (srv.name || 'S').charAt(0).toUpperCase();
+                    btn.addEventListener('click', () => {
+                        serverRail.querySelectorAll('.server-rail-btn').forEach(b => b.classList.remove('active'));
+                        btn.classList.add('active');
+                        if (sidebarServerTitle) sidebarServerTitle.textContent = `🥝 ${srv.name}`;
+                        showKiwiToast(`Servidor "${srv.name}" selecionado.`);
+                    });
+                    serverRail.insertBefore(btn, openCreateServerBtn);
+                });
+            }
+
+            if (railHomeBtn) {
+                railHomeBtn.addEventListener('click', () => {
+                    serverRail.querySelectorAll('.server-rail-btn').forEach(b => b.classList.remove('active'));
+                    railHomeBtn.classList.add('active');
+                    if (sidebarServerTitle) sidebarServerTitle.textContent = '🥝 Kiwi • Amizades';
+                    window.switchToGeral('geral', 'text');
+                });
+            }
+            if (openCreateServerBtn) openCreateServerBtn.addEventListener('click', () => openModalAnimated(createServerModal));
+            if (closeCreateServerBtn) closeCreateServerBtn.addEventListener('click', () => closeModalAnimated(createServerModal));
             if (createServerModal) createServerModal.addEventListener('click', (e) => { if (e.target === createServerModal) closeModalAnimated(createServerModal); });
 
             if (createServerForm) {
-                createServerForm.addEventListener('submit', (e) => {
+                createServerForm.addEventListener('submit', function(e) {
                     e.preventDefault();
-                    const sName = (document.getElementById('new-server-name')?.value || '').trim();
-                    const rawChans = (document.getElementById('new-server-channels')?.value || 'geral').split(',');
-                    if (!sName) return;
-
-                    const serverRail = document.querySelector('.server-rail');
-                    const addBtn = document.getElementById('open-create-server-btn');
-                    const btn = document.createElement('button');
-                    btn.type = 'button';
-                    btn.className = 'server-rail-btn active';
-                    btn.title = sName;
-                    btn.textContent = sName.charAt(0).toUpperCase();
-
-                    document.querySelectorAll('.server-rail-btn').forEach(b => b.classList.remove('active'));
-                    btn.classList.add('active');
-                    if (serverRail && addBtn) serverRail.insertBefore(btn, addBtn);
-
-                    if (sidebarServerTitle) sidebarServerTitle.textContent = `🥝 ${sName}`;
-
-                    const chanList = document.getElementById('server-channels-list');
-                    if (chanList) {
-                        chanList.innerHTML = '';
-                        const cleanedChans = rawChans.map(c => c.trim()).filter(Boolean);
-                        (cleanedChans.length ? cleanedChans : ['geral']).forEach((cname, idx) => {
-                            const ctype = cname.toLowerCase().includes('mús') || cname.toLowerCase().includes('mus') ? 'audio' : 'text';
-                            const item = document.createElement('div');
-                            item.className = `channel-item ${idx === 0 ? 'active' : ''}`;
-                            item.setAttribute('data-channel-name', cname);
-                            item.setAttribute('data-channel-type', ctype);
-                            item.innerHTML = `<span>${ctype === 'audio' ? '🎵' : '#'}</span><span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${escapeHtmlText(cname)}</span>`;
-                            item.addEventListener('click', () => window.switchToGeral(cname, ctype));
-                            chanList.appendChild(item);
-                        });
-                    }
-
-                    const firstChan = (rawChans.map(c => c.trim()).filter(Boolean)[0]) || 'geral';
-                    window.switchToGeral(firstChan, 'text');
+                    const nameInput = document.getElementById('new-server-name');
+                    const nameVal = (nameInput ? nameInput.value : '').trim();
+                    if (!nameVal) return;
+                    customServers.push({ id: `srv_${Date.now()}`, name: nameVal });
+                    renderCustomServersRail();
+                    if (nameInput) nameInput.value = '';
                     closeModalAnimated(createServerModal);
-                    showKiwiToast(`Servidor "${sName}" criado!`);
-                    createServerForm.reset();
+                    showKiwiToast(`Servidor "${nameVal}" criado!`);
                 });
             }
 
@@ -5566,69 +5696,53 @@
             const openCreateChannelBtn = document.getElementById('open-create-channel-btn');
             const closeCreateChannelBtn = document.getElementById('close-create-channel-btn');
             const createChannelForm = document.getElementById('create-channel-form');
+            const serverChannelsList = document.getElementById('server-channels-list');
 
-            if (openCreateChannelBtn && createChannelModal) openCreateChannelBtn.addEventListener('click', () => openModalAnimated(createChannelModal));
-            if (closeCreateChannelBtn && createChannelModal) closeCreateChannelBtn.addEventListener('click', () => closeModalAnimated(createChannelModal));
+            if (openCreateChannelBtn) openCreateChannelBtn.addEventListener('click', () => openModalAnimated(createChannelModal));
+            if (closeCreateChannelBtn) closeCreateChannelBtn.addEventListener('click', () => closeModalAnimated(createChannelModal));
             if (createChannelModal) createChannelModal.addEventListener('click', (e) => { if (e.target === createChannelModal) closeModalAnimated(createChannelModal); });
 
-            if (createChannelForm) {
-                createChannelForm.addEventListener('submit', (e) => {
+            if (createChannelForm && serverChannelsList) {
+                createChannelForm.addEventListener('submit', function(e) {
                     e.preventDefault();
-                    const cName = (document.getElementById('new-channel-name')?.value || '').trim();
-                    const cType = document.getElementById('new-channel-type')?.value || 'text';
-                    if (!cName) return;
+                    const nameInput = document.getElementById('new-channel-name');
+                    const typeSelect = document.getElementById('new-channel-type');
+                    const chName = (nameInput ? nameInput.value : '').trim();
+                    const chType = (typeSelect ? typeSelect.value : 'text') || 'text';
+                    if (!chName) return;
 
-                    const chanList = document.getElementById('server-channels-list');
-                    if (chanList) {
-                        const item = document.createElement('div');
-                        item.className = 'channel-item';
-                        item.setAttribute('data-channel-name', cName);
-                        item.setAttribute('data-channel-type', cType);
-                        item.innerHTML = `<span>${cType === 'audio' ? '🎵' : '#'}</span><span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${escapeHtmlText(cName)}</span>`;
-                        item.addEventListener('click', () => window.switchToGeral(cName, cType));
-                        chanList.appendChild(item);
-                    }
+                    const item = document.createElement('div');
+                    item.className = 'channel-item';
+                    item.setAttribute('data-channel-name', chName);
+                    item.setAttribute('data-channel-type', chType);
+                    item.innerHTML = `<span>${chType === 'audio' ? '🎵' : '#'}</span><span style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${escapeHtmlText(chName)}</span>`;
+                    item.addEventListener('click', () => window.switchToGeral(chName, chType));
+                    serverChannelsList.appendChild(item);
 
+                    if (nameInput) nameInput.value = '';
                     closeModalAnimated(createChannelModal);
-                    showKiwiToast(`Canal "${cName}" criado!`);
-                    createChannelForm.reset();
+                    window.switchToGeral(chName, chType);
                 });
             }
+
+            window.switchToAmigosHome = function() {
+                window.switchToGeral('geral', 'text');
+            };
 
             const mobNavFriends = document.getElementById('mob-nav-friends');
             const mobNavSearch = document.getElementById('mob-nav-search');
             const mobNavMusic = document.getElementById('mob-nav-music');
             const mobNavProfile = document.getElementById('mob-nav-profile');
+            const mobileNavBtns = [mobNavFriends, mobNavSearch, mobNavMusic, mobNavProfile].filter(Boolean);
 
             function setMobileNavActive(btn) {
-                document.querySelectorAll('.mobile-nav-btn').forEach(b => b.classList.remove('active'));
+                mobileNavBtns.forEach(b => b.classList.remove('active'));
                 if (btn) btn.classList.add('active');
             }
-
-            if (mobNavFriends) {
-                mobNavFriends.addEventListener('click', () => {
-                    setMobileNavActive(mobNavFriends);
-                    window.closeMobileChatView();
-                });
-            }
-            if (mobNavSearch) {
-                mobNavSearch.addEventListener('click', () => {
-                    setMobileNavActive(mobNavSearch);
-                    openFriendSearchModal();
-                });
-            }
-            if (mobNavMusic) {
-                mobNavMusic.addEventListener('click', () => {
-                    setMobileNavActive(mobNavMusic);
-                    window.switchToGeral('música', 'audio');
-                });
-            }
-            if (mobNavProfile) {
-                mobNavProfile.addEventListener('click', () => {
-                    setMobileNavActive(mobNavProfile);
-                    openUserProfile(activeUsername);
-                });
-            }
+            if (mobNavFriends) mobNavFriends.addEventListener('click', () => { setMobileNavActive(mobNavFriends); window.closeMobileChatView(); });
+            if (mobNavSearch) mobNavSearch.addEventListener('click', () => { setMobileNavActive(mobNavSearch); openAddFriendModal(); });
+            if (mobNavMusic) mobNavMusic.addEventListener('click', () => { setMobileNavActive(mobNavMusic); window.switchToGeral('música', 'audio'); });
+            if (mobNavProfile) mobNavProfile.addEventListener('click', () => { setMobileNavActive(mobNavProfile); openUserProfile(activeUsername); });
         });
     </script>
 </body>

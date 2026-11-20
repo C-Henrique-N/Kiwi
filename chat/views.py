@@ -37,9 +37,43 @@ STANDARD_ACCENT_COLORS = {
 }
 ADMIN_ACCENT_COLORS = STANDARD_ACCENT_COLORS | {'#d4af37'}
 
+ALLOWED_FRAME_EFFECTS = {
+    'none',
+    'gold_glow_frame',
+    'neon_ring',
+    'galaxy_ring',
+    'fire_ring',
+    'ufo_orbit',
+    'helmet_ring',
+    'sakura_hearts',
+    'cat_ears',
+    'lightning_ring',
+    'rain_drops',
+    'sparks_burst',
+    'bubbles_ring',
+    'thunder_purple',
+    'ghost_pop',
+    'profile_sakura',
+    'profile_aurora',
+    'profile_stars',
+    'profile_cats',
+    'profile_butterflies',
+    'profile_window',
+    'profile_moon',
+}
+
 
 def is_admin_user(user):
     return bool(user and user.is_authenticated and (user.is_staff or user.is_superuser))
+
+
+def is_akiira_admin(user):
+    return bool(
+        user
+        and user.is_authenticated
+        and user.username.lower() == 'akiirapw'
+        and (user.is_staff or user.is_superuser)
+    )
 
 
 def are_friends(user1, user2):
@@ -50,6 +84,13 @@ def _sanitize_accent_color(color_value, user, fallback='#ff9de2'):
     raw = (color_value or '').strip().lower()
     allowed = ADMIN_ACCENT_COLORS if is_admin_user(user) else STANDARD_ACCENT_COLORS
     return raw if raw in allowed else fallback
+
+
+def _sanitize_frame_effect(frame_value, user):
+    if not is_akiira_admin(user):
+        return 'none'
+    raw = (frame_value or 'none').strip().lower()
+    return raw if raw in ALLOWED_FRAME_EFFECTS else 'none'
 
 
 def _get_accepted_friend_users(user):
@@ -91,7 +132,7 @@ def _parse_request_data(request):
 
 @login_required(login_url='login')
 def room_view(request, server_id=None, channel_id=None):
-    UserProfile.objects.get_or_create(user=request.user)
+    profile, _ = UserProfile.objects.get_or_create(user=request.user)
     servers = Server.objects.filter(members=request.user).prefetch_related('channels')
 
     active_server = None
@@ -113,12 +154,23 @@ def room_view(request, server_id=None, channel_id=None):
                 .order_by('timestamp')[:50]
             )
 
+    akiira_admin = is_akiira_admin(request.user)
+    frame_effect = _sanitize_frame_effect(getattr(profile, 'frame_effect', 'none'), request.user)
+    profile_glow = bool(getattr(profile, 'profile_glow', False)) if akiira_admin else False
+    avatar_pulse = bool(getattr(profile, 'avatar_pulse', False)) if akiira_admin else False
+    name_style = (getattr(profile, 'name_style', '') or '') if akiira_admin else ''
+
     return render(
         request,
         'chat/room.html',
         {
             'username': request.user.username,
             'is_admin': is_admin_user(request.user),
+            'is_akiira_admin': akiira_admin,
+            'frame_effect': frame_effect,
+            'profile_glow': profile_glow,
+            'avatar_pulse': avatar_pulse,
+            'name_style': name_style,
             'servers': servers,
             'active_server': active_server,
             'active_channel': active_channel,
@@ -265,6 +317,31 @@ def update_profile(request):
     else:
         profile.accent_color = _sanitize_accent_color(profile.accent_color, request.user)
 
+    akiira_admin = is_akiira_admin(request.user)
+    if akiira_admin:
+        if 'frame_effect' in request.POST and hasattr(profile, 'frame_effect'):
+            profile.frame_effect = _sanitize_frame_effect(request.POST.get('frame_effect'), request.user)
+        elif hasattr(profile, 'frame_effect'):
+            profile.frame_effect = _sanitize_frame_effect(profile.frame_effect, request.user)
+
+        if 'profile_glow' in request.POST and hasattr(profile, 'profile_glow'):
+            profile.profile_glow = request.POST.get('profile_glow') in {'1', 'true', 'True', 'on'}
+
+        if 'avatar_pulse' in request.POST and hasattr(profile, 'avatar_pulse'):
+            profile.avatar_pulse = request.POST.get('avatar_pulse') in {'1', 'true', 'True', 'on'}
+
+        if 'name_style' in request.POST and hasattr(profile, 'name_style'):
+            profile.name_style = (request.POST.get('name_style') or '').strip()[:50]
+    else:
+        if hasattr(profile, 'frame_effect'):
+            profile.frame_effect = 'none'
+        if hasattr(profile, 'profile_glow'):
+            profile.profile_glow = False
+        if hasattr(profile, 'avatar_pulse'):
+            profile.avatar_pulse = False
+        if hasattr(profile, 'name_style'):
+            profile.name_style = ''
+
     if 'music_url' in request.POST:
         profile.music_url = (request.POST.get('music_url') or '').strip()
 
@@ -340,6 +417,11 @@ def update_profile(request):
         'message': 'Perfil atualizado com sucesso!',
         'username': request.user.username,
         'accent_color': profile.accent_color,
+        'is_akiira_admin': akiira_admin,
+        'frame_effect': _sanitize_frame_effect(getattr(profile, 'frame_effect', 'none'), request.user),
+        'profile_glow': bool(getattr(profile, 'profile_glow', False)) if akiira_admin else False,
+        'avatar_pulse': bool(getattr(profile, 'avatar_pulse', False)) if akiira_admin else False,
+        'name_style': (getattr(profile, 'name_style', '') or '') if akiira_admin else '',
         **music_data,
     })
 
@@ -350,6 +432,7 @@ def get_user_profile(request, username):
     profile, _ = UserProfile.objects.get_or_create(user=target_user)
     music_data = _build_music_payload(request, profile)
     safe_color = _sanitize_accent_color(profile.accent_color, target_user)
+    akiira_admin = is_akiira_admin(target_user)
 
     data = {
         'username': target_user.username,
@@ -360,6 +443,11 @@ def get_user_profile(request, username):
         'spotify_artist': profile.spotify_artist,
         'accent_color': safe_color,
         'is_admin': is_admin_user(target_user),
+        'is_akiira_admin': akiira_admin,
+        'frame_effect': _sanitize_frame_effect(getattr(profile, 'frame_effect', 'none'), target_user),
+        'profile_glow': bool(getattr(profile, 'profile_glow', False)) if akiira_admin else False,
+        'avatar_pulse': bool(getattr(profile, 'avatar_pulse', False)) if akiira_admin else False,
+        'name_style': (getattr(profile, 'name_style', '') or '') if akiira_admin else '',
         'avatarUrl': request.build_absolute_uri(profile.avatar.url) if profile.avatar else '',
         'bannerUrl': request.build_absolute_uri(profile.banner.url) if profile.banner else '',
         'is_friend': are_friends(request.user, target_user) if target_user != request.user else False,
@@ -848,10 +936,21 @@ def upload_attachment(request):
 def profile_page_view(request):
     username = request.GET.get('user', request.user.username)
     target_user = get_object_or_404(User, username=username)
-    UserProfile.objects.get_or_create(user=target_user)
+    target_profile, _ = UserProfile.objects.get_or_create(user=target_user)
+    viewer_profile, _ = UserProfile.objects.get_or_create(user=request.user)
+    viewer_is_akiira = is_akiira_admin(request.user)
+    target_is_akiira = is_akiira_admin(target_user)
+
     return render(request, 'chat/profile.html', {
         'target_username': target_user.username,
         'is_self': target_user == request.user,
+        'is_akiira_admin': viewer_is_akiira,
+        'viewer_is_akiira_admin': viewer_is_akiira,
+        'target_is_akiira_admin': target_is_akiira,
+        'frame_effect': _sanitize_frame_effect(getattr(target_profile, 'frame_effect', 'none'), target_user),
+        'profile_glow': bool(getattr(target_profile, 'profile_glow', False)) if target_is_akiira else False,
+        'avatar_pulse': bool(getattr(target_profile, 'avatar_pulse', False)) if target_is_akiira else False,
+        'name_style': (getattr(target_profile, 'name_style', '') or '') if target_is_akiira else '',
     })
 
 
