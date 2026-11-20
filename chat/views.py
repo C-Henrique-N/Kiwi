@@ -413,7 +413,8 @@ def update_profile(request):
         bool(profile.music_audio_url.strip()),
     ])
 
-    should_save_library = request.POST.get('save_to_library', '0') == '1'
+    raw_save_lib = request.POST.get('save_to_library')
+    should_save_library = (raw_save_lib == '1') or (raw_save_lib is None and track_changed and has_track_data)
     if should_save_library and track_changed and has_track_data:
         SavedMusic.objects.create(
             user=request.user,
@@ -432,6 +433,8 @@ def update_profile(request):
         'message': 'Perfil atualizado com sucesso!',
         'username': request.user.username,
         'accent_color': profile.accent_color,
+        'avatarUrl': request.build_absolute_uri(profile.avatar.url) if profile.avatar else '',
+        'bannerUrl': request.build_absolute_uri(profile.banner.url) if profile.banner else '',
         'is_akiira_admin': akiira_admin,
         'frame_effect': _sanitize_frame_effect(getattr(profile, 'frame_effect', 'none'), request.user),
         'profile_glow': bool(getattr(profile, 'profile_glow', False)) if akiira_admin else False,

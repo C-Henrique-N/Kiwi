@@ -3760,13 +3760,20 @@
                 return `kiwi_user_profile_v2_${safeUser}`;
             }
 
+            function sanitizeCacheAssetUrl(val) {
+                const str = String(val || '').trim();
+                if (!str || str.startsWith('blob:')) return '';
+                if (str.startsWith('data:') && str.length > 350000) return '';
+                return str;
+            }
+
             function saveUserMusicToLocalCache(username, musicObj) {
                 if (!username) return;
                 try {
-                    const safeCover = (musicObj.coverUrl || '').startsWith('blob:') ? '' : (musicObj.coverUrl || '');
-                    const safeAudio = (musicObj.audioSrc || '').startsWith('blob:') ? '' : (musicObj.audioSrc || '');
-                    const safeAvatar = (musicObj.avatarUrl || '').startsWith('blob:') ? '' : (musicObj.avatarUrl || '');
-                    const safeBanner = (musicObj.bannerUrl || '').startsWith('blob:') ? '' : (musicObj.bannerUrl || '');
+                    const safeCover = sanitizeCacheAssetUrl(musicObj.coverUrl);
+                    const safeAudio = sanitizeCacheAssetUrl(musicObj.audioSrc);
+                    const safeAvatar = sanitizeCacheAssetUrl(musicObj.avatarUrl);
+                    const safeBanner = sanitizeCacheAssetUrl(musicObj.bannerUrl);
                     const payload = {
                         username: musicObj.username || username,
                         bubble: musicObj.bubble || '',
@@ -4985,6 +4992,16 @@
                     apiFormData.append('spotify_song', myProfileData.song || '');
                     apiFormData.append('spotify_artist', myProfileData.artist || '');
                     apiFormData.append('music_url', myProfileData.musicUrl || '');
+                    const hasTrackInput = Boolean(
+                        (myProfileData.song || '').trim() ||
+                        (myProfileData.artist || '').trim() ||
+                        (myProfileData.musicUrl || '').trim() ||
+                        pickedAudioFile ||
+                        ((myProfileData.audioSrc || '').trim() && !(myProfileData.audioSrc || '').startsWith('blob:'))
+                    );
+                    if (hasTrackInput) {
+                        apiFormData.append('save_to_library', '1');
+                    }
                     apiFormData.append('accent_color', myProfileData.accentColor || '#ff9de2');
                     apiFormData.append('frame_effect', myProfileData.goldGlowFrame ? 'gold_glow_frame' : 'none');
                     apiFormData.append('profile_glow', myProfileData.profileGlow ? '1' : '0');
@@ -5010,21 +5027,25 @@
                     const csrfCookie = document.cookie.split('; ').find(row => row.startsWith('csrftoken='));
                     const csrfToken = csrfCookie ? decodeURIComponent(csrfCookie.split('=')[1]) : '';
 
-                    fetch('/api/profile/update/', {
+                    const resp = await fetch('/api/profile/update/', {
                         method: 'POST',
                         headers: csrfToken ? { 'X-CSRFToken': csrfToken } : {},
                         body: apiFormData,
                         credentials: 'same-origin'
-                    })
-                    .then(r => r.ok ? r.json() : null)
-                    .then(resData => {
-                        if (!resData || resData.status !== 'success') return;
-                        if (resData.music_audio_url) myProfileData.audioSrc = resData.music_audio_url;
-                        if (resData.music_cover_url) myProfileData.coverUrl = resData.music_cover_url;
-                        saveUserMusicToLocalCache(ownerName, myProfileData);
-                        updateMySidebarUI();
-                    })
-                    .catch(() => {});
+                    });
+                    if (resp.ok) {
+                        const resData = await resp.json().catch(() => null);
+                        if (resData && resData.status === 'success') {
+                            if (resData.avatarUrl) myProfileData.avatarUrl = resData.avatarUrl;
+                            if (resData.bannerUrl) myProfileData.bannerUrl = resData.bannerUrl;
+                            if (resData.music_audio_url) myProfileData.audioSrc = resData.music_audio_url;
+                            if (resData.music_cover_url) myProfileData.coverUrl = resData.music_cover_url;
+                            if (resData.accent_color && themesMap[resData.accent_color]) {
+                                myProfileData.accentColor = sanitizeThemeForUser(resData.accent_color, ownerName, myProfileData.is_admin);
+                            }
+                            saveUserMusicToLocalCache(ownerName, myProfileData);
+                        }
+                    }
                 } catch (_) {}
 
                 updateMySidebarUI();
