@@ -4204,7 +4204,8 @@
                 if (editUsernameInput) editUsernameInput.value = activeUsername || myProfileData.username || '';
                 editBubble.value = myProfileData.bubble || '';
                 editPronouns.value = myProfileData.pronouns || '';
-                editBio.value = (myProfileData.bio || '').replace(/<br\s*\/?>/gi, '\n');
+                editBio.value = (myProfileData.bio || '').replace(/<br\s*\/?>/gi, '
+');
                 editSong.value = myProfileData.song || '';
                 editArtist.value = myProfileData.artist || '';
                 if (editYtUrl) editYtUrl.value = myProfileData.musicUrl || '';
@@ -5451,47 +5452,24 @@
             if (createServerForm) {
                 createServerForm.addEventListener('submit', (e) => {
                     e.preventDefault();
-                    const nameInp = document.getElementById('new-server-name');
-                    const chInp = document.getElementById('new-server-channels');
-                    const serverName = (nameInp && nameInp.value.trim()) || 'Novo Servidor';
-                    const rawCh = (chInp && chInp.value.trim()) || 'geral, música';
-                    const chList = rawCh.split(',').map(s => s.trim()).filter(Boolean);
+                    const nameInput = document.getElementById('new-server-name');
+                    const serverName = nameInput ? nameInput.value.trim() : '';
+                    if (!serverName) return;
 
                     const rail = document.querySelector('.server-rail');
-                    if (rail && openCreateServerBtn) {
-                        const btn = document.createElement('button');
-                        btn.type = 'button';
-                        btn.className = 'server-rail-btn';
-                        btn.textContent = serverName.charAt(0).toUpperCase() || 'S';
-                        btn.title = serverName;
-                        btn.addEventListener('click', () => {
-                            rail.querySelectorAll('.server-rail-btn').forEach(b => b.classList.remove('active'));
-                            btn.classList.add('active');
-                            if (sidebarServerTitle) sidebarServerTitle.textContent = `🥝 ${serverName}`;
-                            window.switchToGeral(chList[0] || 'geral', 'text');
-                        });
-                        rail.insertBefore(btn, openCreateServerBtn);
+                    const addBtn = document.getElementById('open-create-server-btn');
+                    const btn = document.createElement('button');
+                    btn.type = 'button';
+                    btn.className = 'server-rail-btn active';
+                    btn.title = serverName;
+                    btn.textContent = serverName.charAt(0).toUpperCase();
+                    if (rail && addBtn) {
+                        rail.querySelectorAll('.server-rail-btn').forEach(b => b.classList.remove('active'));
+                        rail.insertBefore(btn, addBtn);
                     }
-
-                    const chContainer = document.getElementById('server-channels-list');
-                    if (chContainer && chList.length > 0) {
-                        chContainer.innerHTML = '';
-                        chList.forEach((cname, idx) => {
-                            const ctype = cname.toLowerCase().includes('música') || cname.toLowerCase().includes('audio') ? 'audio' : 'text';
-                            const item = document.createElement('div');
-                            item.className = `channel-item ${idx === 0 ? 'active' : ''}`;
-                            item.setAttribute('data-channel-name', cname);
-                            item.setAttribute('data-channel-type', ctype);
-                            item.innerHTML = `<span>${ctype === 'audio' ? '🎵' : '#'}</span><span style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${escapeHtmlText(cname)}</span>`;
-                            item.addEventListener('click', () => window.switchToGeral(cname, ctype));
-                            chContainer.appendChild(item);
-                        });
-                    }
-
                     if (sidebarServerTitle) sidebarServerTitle.textContent = `🥝 ${serverName}`;
-                    window.switchToGeral(chList[0] || 'geral', 'text');
                     closeModalAnimated(createServerModal);
-                    if (nameInp) nameInp.value = '';
+                    createServerForm.reset();
                     showKiwiToast(`Servidor "${serverName}" criado!`);
                 });
             }
@@ -5500,6 +5478,7 @@
             const openCreateChannelBtn = document.getElementById('open-create-channel-btn');
             const closeCreateChannelBtn = document.getElementById('close-create-channel-btn');
             const createChannelForm = document.getElementById('create-channel-form');
+            const serverChannelsListEl = document.getElementById('server-channels-list');
 
             if (openCreateChannelBtn && createChannelModal) openCreateChannelBtn.addEventListener('click', () => openModalAnimated(createChannelModal));
             if (closeCreateChannelBtn && createChannelModal) closeCreateChannelBtn.addEventListener('click', () => closeModalAnimated(createChannelModal));
@@ -5508,32 +5487,30 @@
             if (createChannelForm) {
                 createChannelForm.addEventListener('submit', (e) => {
                     e.preventDefault();
-                    const nameInp = document.getElementById('new-channel-name');
-                    const typeSel = document.getElementById('new-channel-type');
-                    const cname = (nameInp && nameInp.value.trim()) || 'novo-canal';
-                    const ctype = (typeSel && typeSel.value) || 'text';
-                    const chContainer = document.getElementById('server-channels-list');
+                    const chNameInput = document.getElementById('new-channel-name');
+                    const chTypeSelect = document.getElementById('new-channel-type');
+                    const chName = chNameInput ? chNameInput.value.trim().toLowerCase().replace(/\s+/g, '-') : '';
+                    const chType = chTypeSelect ? chTypeSelect.value : 'text';
+                    if (!chName || !serverChannelsListEl) return;
 
-                    if (chContainer) {
-                        const item = document.createElement('div');
-                        item.className = 'channel-item';
-                        item.setAttribute('data-channel-name', cname);
-                        item.setAttribute('data-channel-type', ctype);
-                        item.innerHTML = `<span>${ctype === 'audio' ? '🎵' : '#'}</span><span style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${escapeHtmlText(cname)}</span>`;
-                        item.addEventListener('click', () => window.switchToGeral(cname, ctype));
-                        chContainer.appendChild(item);
-                    }
+                    const item = document.createElement('div');
+                    item.className = 'channel-item';
+                    item.setAttribute('data-channel-name', chName);
+                    item.setAttribute('data-channel-type', chType);
+                    const iconSpan = document.createElement('span');
+                    iconSpan.textContent = chType === 'audio' ? '🎵' : '#';
+                    const nameSpan = document.createElement('span');
+                    nameSpan.style.cssText = 'overflow:hidden; text-overflow:ellipsis; white-space:nowrap;';
+                    nameSpan.textContent = chName;
+                    item.appendChild(iconSpan);
+                    item.appendChild(nameSpan);
+                    item.addEventListener('click', () => window.switchToGeral(chName, chType));
+                    serverChannelsListEl.appendChild(item);
 
                     closeModalAnimated(createChannelModal);
-                    if (nameInp) nameInp.value = '';
-                    window.switchToGeral(cname, ctype);
-                    showKiwiToast(`Canal "${cname}" criado!`);
-                });
-            }
-
-            if (headerCallBtn) {
-                headerCallBtn.addEventListener('click', function() {
-                    if (currentView === 'dm' && currentDmUser) startVoiceCall(currentDmUser);
+                    createChannelForm.reset();
+                    window.switchToGeral(chName, chType);
+                    showKiwiToast(`Canal ${chType === 'audio' ? '🎵' : '#'} ${chName} criado!`);
                 });
             }
 
@@ -5542,38 +5519,43 @@
             const mobNavMusic = document.getElementById('mob-nav-music');
             const mobNavProfile = document.getElementById('mob-nav-profile');
 
-            function setActiveMobileNav(btn) {
+            function setMobileNavActive(btn) {
                 document.querySelectorAll('.mobile-nav-btn').forEach(b => b.classList.remove('active'));
                 if (btn) btn.classList.add('active');
             }
 
             if (mobNavFriends) {
                 mobNavFriends.addEventListener('click', () => {
-                    setActiveMobileNav(mobNavFriends);
+                    setMobileNavActive(mobNavFriends);
                     window.closeMobileChatView();
-                    const amigosTab = document.querySelector('.social-tab[data-tab="amigos"]');
-                    if (amigosTab) amigosTab.click();
                 });
             }
             if (mobNavSearch) {
                 mobNavSearch.addEventListener('click', () => {
-                    setActiveMobileNav(mobNavSearch);
+                    setMobileNavActive(mobNavSearch);
                     openFriendSearchModal();
                 });
             }
             if (mobNavMusic) {
                 mobNavMusic.addEventListener('click', () => {
-                    setActiveMobileNav(mobNavMusic);
+                    setMobileNavActive(mobNavMusic);
                     window.switchToGeral('música', 'audio');
                 });
             }
             if (mobNavProfile) {
                 mobNavProfile.addEventListener('click', () => {
-                    setActiveMobileNav(mobNavProfile);
+                    setMobileNavActive(mobNavProfile);
                     openUserProfile(activeUsername);
+                });
+            }
+
+            if (headerCallBtn) {
+                headerCallBtn.addEventListener('click', () => {
+                    if (currentView === 'dm' && currentDmUser) startVoiceCall(currentDmUser);
+                    else showKiwiToast('Selecione uma conversa privada (DM) para ligar.');
                 });
             }
         });
     </script>
 </body>
-</html
+</html>
