@@ -2,12 +2,14 @@ import json
 import os
 from asgiref.sync import async_to_sync
 from channels.layers import get_channel_layer
+from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.db import models
-from django.http import JsonResponse
+from django.http import Http404, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
+from django.utils.http import url_has_allowed_host_and_scheme
 from django.views.decorators.http import require_POST
 from .models import (
     Channel,
@@ -24,6 +26,17 @@ AUDIO_EXTS = {'.mp3', '.wav', '.ogg', '.webm', '.m4a'}
 DOC_EXTS = {'.pdf', '.doc', '.docx', '.txt', '.zip', '.rar', '.csv', '.xls', '.xlsx', '.ppt', '.pptx'}
 MAX_FILE_SIZE = 10 * 1024 * 1024  # 10 MB
 
+STANDARD_ACCENT_COLORS = {
+    '#ffffff',
+    '#2b2d31',
+    '#ff9de2',
+    '#e74c3c',
+    '#23a55a',
+    '#5865f2',
+    '#95a5a6',
+}
+ADMIN_ACCENT_COLORS = STANDARD_ACCENT_COLORS | {'#d4af37'}
+
 
 def is_admin_user(user):
     return bool(user and user.is_authenticated and (user.is_staff or user.is_superuser))
@@ -31,6 +44,12 @@ def is_admin_user(user):
 
 def are_friends(user1, user2):
     return FriendRequest.are_friends(user1, user2)
+
+
+def _sanitize_accent_color(color_value, user, fallback='#ff9de2'):
+    raw = (color_value or '').strip().lower()
+    allowed = ADMIN_ACCENT_COLORS if is_admin_user(user) else STANDARD_ACCENT_COLORS
+    return raw if raw in allowed else fallback
 
 
 def _get_accepted_friend_users(user):
@@ -64,6 +83,12 @@ def _notify_user_group(user_id, event_type, payload):
     )
 
 
+def _parse_request_data(request):
+    if request.content_type and 'application/json' in request.content_type:
+        return json.loads(request.body or '{}')
+    return request.POST
+
+
 @login_required(login_url='login')
 def room_view(request, server_id=None, channel_id=None):
     UserProfile.objects.get_or_create(user=request.user)
@@ -71,7 +96,7 @@ def room_view(request, server_id=None, channel_id=None):
 
     active_server = None
     active_channel = None
-    messages = []
+    chat_messages = []
 
     if server_id is not None:
         active_server = get_object_or_404(Server, id=server_id, members=request.user)
@@ -82,7 +107,7 @@ def room_view(request, server_id=None, channel_id=None):
             active_channel = channels[0]
 
         if active_channel:
-            messages = list(
+            chat_messages = list(
                 Message.objects.filter(channel=active_channel)
                 .select_related('user', 'user__profile')
                 .order_by('timestamp')[:50]
@@ -97,7 +122,7 @@ def room_view(request, server_id=None, channel_id=None):
             'servers': servers,
             'active_server': active_server,
             'active_channel': active_channel,
-            'messages': messages,
+            'messages': chat_messages,
         },
     )
 
@@ -118,13 +143,18 @@ def create_server(request):
     if not name:
         return JsonResponse({'status': 'error', 'message': 'Informe o nome do servidor.'}, status=400)
 
-    server = Server.objects.create(name=name, icon=icon, owner=request.user)
+    server = Server.objects.create(name=name[:120], icon=icon, owner=request.user)
+    server.members.add(request.user)
 
     friends = _get_accepted_friend_users(request.user)
     if friends:
         server.members.add(*friends)
 
-    channel_names = [c.strip().lstrip('#').lower().replace(' ', '-') for c in raw_channels.split(',') if c.strip()]
+    channel_names = [
+        c.strip().lstrip('#').lower().replace(' ', '-')
+        for c in raw_channels.split(',')
+        if c.strip()
+    ]
     if not channel_names:
         channel_names = ['chat', 'musica']
 
@@ -159,7 +189,7 @@ def create_channel(request, server_id):
             status=403,
         )
 
-    server = get_object_or_404(Server, id=server_id, owner=request.user)
+    server = get_object_or_404(Server, id=server_id, members=request.user)
     raw_name = (request.POST.get('name') or '').strip().lstrip('#').lower().replace(' ', '-')
     channel_type = (request.POST.get('channel_type') or 'text').strip()
     if channel_type not in {'text', 'audio'}:
@@ -210,75 +240,108 @@ def _build_music_payload(request, profile):
 
 
 @login_required
+@require_POST
 def update_profile(request):
-    if request.method == 'POST':
-        profile, _ = UserProfile.objects.get_or_create(user=request.user)
-        profile.bubble = request.POST.get('bubble', profile.bubble)
-        profile.pronouns = request.POST.get('pronouns', profile.pronouns)
-        profile.bio = request.POST.get('bio', profile.bio)
-        profile.spotify_song = request.POST.get('spotify_song', profile.spotify_song)
-        profile.spotify_artist = request.POST.get('spotify_artist', profile.spotify_artist)
-        profile.accent_color = request.POST.get('accent_color', profile.accent_color)
+    profile, _ = UserProfile.objects.get_or_create(user=request.user)
 
-        if 'music_url' in request.POST:
-            profile.music_url = request.POST.get('music_url', '').strip()
+    prev_song = (profile.spotify_song or '').strip()
+    prev_artist = (profile.spotify_artist or '').strip()
+    prev_music_url = (profile.music_url or '').strip()
+    prev_audio_url = (profile.music_audio_url or '').strip()
+    prev_cover_url = (profile.music_cover_url or '').strip()
 
-        if 'music_audio' in request.FILES:
-            profile.music_audio_file = request.FILES['music_audio']
+    profile.bubble = (request.POST.get('bubble') if 'bubble' in request.POST else profile.bubble) or ''
+    profile.pronouns = (request.POST.get('pronouns') if 'pronouns' in request.POST else profile.pronouns) or ''
+    profile.bio = (request.POST.get('bio') if 'bio' in request.POST else profile.bio) or ''
+    profile.spotify_song = (request.POST.get('spotify_song') if 'spotify_song' in request.POST else profile.spotify_song) or ''
+    profile.spotify_artist = (request.POST.get('spotify_artist') if 'spotify_artist' in request.POST else profile.spotify_artist) or ''
+
+    if 'accent_color' in request.POST:
+        profile.accent_color = _sanitize_accent_color(
+            request.POST.get('accent_color'),
+            request.user,
+            fallback=profile.accent_color or '#ff9de2',
+        )
+    else:
+        profile.accent_color = _sanitize_accent_color(profile.accent_color, request.user)
+
+    if 'music_url' in request.POST:
+        profile.music_url = (request.POST.get('music_url') or '').strip()
+
+    audio_uploaded = 'music_audio' in request.FILES
+    cover_uploaded = 'music_cover' in request.FILES
+
+    if audio_uploaded:
+        profile.music_audio_file = request.FILES['music_audio']
+        profile.music_audio_url = ''
+    elif 'music_audio_url' in request.POST:
+        audio_val = (request.POST.get('music_audio_url') or '').strip()
+        if not audio_val or audio_val.startswith('blob:'):
             profile.music_audio_url = ''
-        elif 'music_audio_url' in request.POST:
-            audio_val = request.POST.get('music_audio_url', '').strip()
-            if audio_val and not audio_val.startswith('blob:'):
-                profile.music_audio_url = audio_val
-                if not audio_val.startswith('/media/'):
-                    profile.music_audio_file = None
+            profile.music_audio_file = None
+        else:
+            profile.music_audio_url = audio_val
+            if not audio_val.startswith('/media/'):
+                profile.music_audio_file = None
 
-        if 'music_cover' in request.FILES:
-            profile.music_cover_file = request.FILES['music_cover']
+    if cover_uploaded:
+        profile.music_cover_file = request.FILES['music_cover']
+        profile.music_cover_url = ''
+    elif 'music_cover_url' in request.POST:
+        cover_val = (request.POST.get('music_cover_url') or '').strip()
+        if not cover_val or cover_val.startswith('blob:'):
             profile.music_cover_url = ''
-        elif 'music_cover_url' in request.POST:
-            cover_val = request.POST.get('music_cover_url', '').strip()
-            if cover_val and not cover_val.startswith('blob:'):
-                profile.music_cover_url = cover_val
-                if not cover_val.startswith('/media/'):
-                    profile.music_cover_file = None
+            profile.music_cover_file = None
+        else:
+            profile.music_cover_url = cover_val
+            if not cover_val.startswith('/media/'):
+                profile.music_cover_file = None
 
-        if 'avatar' in request.FILES:
-            profile.avatar = request.FILES['avatar']
-        if 'banner' in request.FILES:
-            profile.banner = request.FILES['banner']
+    if 'avatar' in request.FILES:
+        profile.avatar = request.FILES['avatar']
+    if 'banner' in request.FILES:
+        profile.banner = request.FILES['banner']
 
-        profile.save()
+    profile.save()
 
-        has_track_data = any([
-            profile.spotify_song.strip(),
-            profile.spotify_artist.strip(),
-            profile.music_url.strip(),
-            bool(profile.music_audio_file),
-            bool(profile.music_audio_url.strip()),
-            bool(profile.music_cover_file),
-            bool(profile.music_cover_url.strip()),
-        ])
-        if has_track_data and request.POST.get('save_to_library', '1') == '1':
-            SavedMusic.objects.create(
-                user=request.user,
-                title=profile.spotify_song.strip(),
-                artist=profile.spotify_artist.strip(),
-                music_url=profile.music_url.strip(),
-                audio_file=profile.music_audio_file,
-                audio_url=profile.music_audio_url.strip(),
-                cover_file=profile.music_cover_file,
-                cover_url=profile.music_cover_url.strip(),
-            )
+    track_changed = any([
+        profile.spotify_song.strip() != prev_song,
+        profile.spotify_artist.strip() != prev_artist,
+        profile.music_url.strip() != prev_music_url,
+        profile.music_audio_url.strip() != prev_audio_url,
+        profile.music_cover_url.strip() != prev_cover_url,
+        audio_uploaded,
+        cover_uploaded,
+    ])
+    has_track_data = any([
+        profile.spotify_song.strip(),
+        profile.spotify_artist.strip(),
+        profile.music_url.strip(),
+        bool(profile.music_audio_file),
+        bool(profile.music_audio_url.strip()),
+    ])
 
-        music_data = _build_music_payload(request, profile)
-        return JsonResponse({
-            'status': 'success',
-            'message': 'Perfil atualizado com sucesso!',
-            **music_data,
-        })
+    should_save_library = request.POST.get('save_to_library', '0') == '1'
+    if should_save_library and track_changed and has_track_data:
+        SavedMusic.objects.create(
+            user=request.user,
+            title=profile.spotify_song.strip(),
+            artist=profile.spotify_artist.strip(),
+            music_url=profile.music_url.strip(),
+            audio_file=profile.music_audio_file,
+            audio_url='' if profile.music_audio_file else profile.music_audio_url.strip(),
+            cover_file=profile.music_cover_file,
+            cover_url='' if profile.music_cover_file else profile.music_cover_url.strip(),
+        )
 
-    return JsonResponse({'status': 'error', 'message': 'Método inválido.'}, status=400)
+    music_data = _build_music_payload(request, profile)
+    return JsonResponse({
+        'status': 'success',
+        'message': 'Perfil atualizado com sucesso!',
+        'username': request.user.username,
+        'accent_color': profile.accent_color,
+        **music_data,
+    })
 
 
 @login_required
@@ -286,6 +349,7 @@ def get_user_profile(request, username):
     target_user = get_object_or_404(User, username=username)
     profile, _ = UserProfile.objects.get_or_create(user=target_user)
     music_data = _build_music_payload(request, profile)
+    safe_color = _sanitize_accent_color(profile.accent_color, target_user)
 
     data = {
         'username': target_user.username,
@@ -294,7 +358,8 @@ def get_user_profile(request, username):
         'bio': profile.bio,
         'spotify_song': profile.spotify_song,
         'spotify_artist': profile.spotify_artist,
-        'accent_color': profile.accent_color or '#ff9de2',
+        'accent_color': safe_color,
+        'is_admin': is_admin_user(target_user),
         'avatarUrl': request.build_absolute_uri(profile.avatar.url) if profile.avatar else '',
         'bannerUrl': request.build_absolute_uri(profile.banner.url) if profile.banner else '',
         'is_friend': are_friends(request.user, target_user) if target_user != request.user else False,
@@ -369,13 +434,13 @@ def create_saved_music(request):
 
     m = SavedMusic.objects.create(
         user=request.user,
-        title=title,
-        artist=artist,
-        music_url=music_url,
+        title=title[:200],
+        artist=artist[:200],
+        music_url=music_url[:500],
         audio_file=audio_file,
-        audio_url='' if audio_file else audio_url,
+        audio_url='' if audio_file else audio_url[:500],
         cover_file=cover_file,
-        cover_url='' if cover_file else cover_url,
+        cover_url='' if cover_file else cover_url[:500],
     )
 
     a_url = request.build_absolute_uri(m.audio_file.url) if m.audio_file else (m.audio_url or '')
@@ -404,26 +469,49 @@ def delete_saved_music(request, music_id):
 
 
 def register_view(request):
+    if request.user.is_authenticated:
+        return redirect('room')
+
     if request.method == 'POST':
         username = (request.POST.get('username') or '').strip()
-        password = request.POST.get('password')
-        if username and password:
-            if not User.objects.filter(username=username).exists():
-                user = User.objects.create_user(username=username, password=password)
-                login(request, user)
-                return redirect('room')
+        password = request.POST.get('password') or ''
+        password_confirm = request.POST.get('password_confirm')
+
+        if not username or not password:
+            messages.error(request, 'Preencha nome de utilizador e senha.')
+        elif len(password) < 6:
+            messages.error(request, 'A senha deve ter pelo menos 6 caracteres.')
+        elif password_confirm is not None and password != password_confirm:
+            messages.error(request, 'As senhas não coincidem.')
+        elif User.objects.filter(username__iexact=username).exists():
+            messages.error(request, 'Este nome de utilizador já está em uso.')
+        else:
+            user = User.objects.create_user(username=username, password=password)
+            UserProfile.objects.get_or_create(user=user)
+            login(request, user)
+            return redirect('room')
+
     return render(request, 'chat/register.html')
 
 
 def login_view(request):
+    if request.user.is_authenticated:
+        return redirect('room')
+
+    next_url = request.POST.get('next') or request.GET.get('next') or ''
+
     if request.method == 'POST':
         username = (request.POST.get('username') or '').strip()
-        password = request.POST.get('password')
+        password = request.POST.get('password') or ''
         user = authenticate(request, username=username, password=password)
         if user is not None:
             login(request, user)
+            if next_url and url_has_allowed_host_and_scheme(next_url, allowed_hosts={request.get_host()}):
+                return redirect(next_url)
             return redirect('room')
-    return render(request, 'chat/login.html')
+        messages.error(request, 'Utilizador ou senha inválidos.')
+
+    return render(request, 'chat/login.html', {'next': next_url})
 
 
 def logout_view(request):
@@ -465,11 +553,8 @@ def search_users(request):
 @require_POST
 def send_friend_request(request):
     try:
-        if request.content_type and 'application/json' in request.content_type:
-            data = json.loads(request.body or '{}')
-            receiver_username = (data.get('username') or '').strip()
-        else:
-            receiver_username = (request.POST.get('username') or '').strip()
+        data = _parse_request_data(request)
+        receiver_username = (data.get('username') or '').strip()
 
         if not receiver_username:
             return JsonResponse({'status': 'error', 'message': 'Digite o nome de usuário.'}, status=400)
@@ -499,14 +584,16 @@ def send_friend_request(request):
         )
 
         return JsonResponse({'status': 'success', 'message': f'Pedido de amizade enviado para {receiver.username}!'})
+    except Http404:
+        return JsonResponse({'status': 'error', 'message': 'Utilizador não encontrado.'}, status=404)
     except Exception as e:
         return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
 
 
 @login_required
 def get_friend_requests(request):
-    requests = FriendRequest.objects.filter(receiver=request.user, status='pending').select_related('sender')
-    data = [{'id': req.id, 'sender': req.sender.username} for req in requests]
+    requests_qs = FriendRequest.objects.filter(receiver=request.user, status='pending').select_related('sender')
+    data = [{'id': req.id, 'sender': req.sender.username} for req in requests_qs]
     return JsonResponse({'status': 'success', 'requests': data})
 
 
@@ -514,11 +601,8 @@ def get_friend_requests(request):
 @require_POST
 def accept_friend_request(request):
     try:
-        if request.content_type and 'application/json' in request.content_type:
-            data = json.loads(request.body or '{}')
-            request_id = data.get('request_id')
-        else:
-            request_id = request.POST.get('request_id')
+        data = _parse_request_data(request)
+        request_id = data.get('request_id')
 
         friend_req = get_object_or_404(FriendRequest, id=request_id, receiver=request.user)
         friend_req.status = 'accepted'
@@ -536,6 +620,24 @@ def accept_friend_request(request):
         )
 
         return JsonResponse({'status': 'success', 'message': 'Amizade aceite com sucesso!'})
+    except Http404:
+        return JsonResponse({'status': 'error', 'message': 'Pedido de amizade não encontrado.'}, status=404)
+    except Exception as e:
+        return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
+
+
+@login_required
+@require_POST
+def reject_friend_request(request):
+    try:
+        data = _parse_request_data(request)
+        request_id = data.get('request_id')
+        friend_req = get_object_or_404(FriendRequest, id=request_id, receiver=request.user, status='pending')
+        friend_req.status = 'rejected'
+        friend_req.save(update_fields=['status', 'updated_at'])
+        return JsonResponse({'status': 'success', 'message': 'Pedido recusado.'})
+    except Http404:
+        return JsonResponse({'status': 'error', 'message': 'Pedido de amizade não encontrado.'}, status=404)
     except Exception as e:
         return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
 
@@ -587,6 +689,54 @@ def get_dm_history(request, username):
 
 @login_required
 @require_POST
+def delete_message(request, message_id):
+    msg = get_object_or_404(Message, id=message_id)
+    if msg.user_id != request.user.id and not is_admin_user(request.user):
+        return JsonResponse({'status': 'error', 'message': 'Sem permissão para excluir esta mensagem.'}, status=403)
+
+    channel_id = msg.channel_id
+    msg.delete()
+
+    channel_layer = get_channel_layer()
+    if channel_layer:
+        async_to_sync(channel_layer.group_send)(
+            f'chat_{channel_id}',
+            {
+                'type': 'message_deleted',
+                'id': message_id,
+            },
+        )
+
+    return JsonResponse({'status': 'success', 'id': message_id})
+
+
+@login_required
+@require_POST
+def delete_dm_message(request, message_id):
+    msg = get_object_or_404(PrivateMessage, id=message_id)
+    if msg.sender_id != request.user.id:
+        return JsonResponse({'status': 'error', 'message': 'Só podes excluir as tuas próprias mensagens.'}, status=403)
+
+    sender_id = msg.sender_id
+    receiver_id = msg.receiver_id
+    msg.delete()
+
+    channel_layer = get_channel_layer()
+    if channel_layer:
+        ids = sorted([sender_id, receiver_id])
+        async_to_sync(channel_layer.group_send)(
+            f'dm_{ids[0]}_{ids[1]}',
+            {
+                'type': 'dm_message_deleted',
+                'id': message_id,
+            },
+        )
+
+    return JsonResponse({'status': 'success', 'id': message_id})
+
+
+@login_required
+@require_POST
 def upload_attachment(request):
     file = request.FILES.get('file')
     if not file:
@@ -611,7 +761,7 @@ def upload_attachment(request):
         )
 
     target = (request.POST.get('target') or '').strip()
-    channel_id = request.POST.get('channel_id')
+    channel_id = (request.POST.get('channel_id') or '').strip()
     content = (request.POST.get('content') or '').strip()
     avatar_url = (request.POST.get('avatarUrl') or '').strip()
 
@@ -688,6 +838,8 @@ def upload_attachment(request):
             'attachment_type': att_type,
             'attachment_name': file.name,
         })
+    except Http404:
+        return JsonResponse({'status': 'error', 'message': 'Canal ou utilizador não encontrado.'}, status=404)
     except Exception as e:
         return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
 
@@ -707,11 +859,8 @@ def profile_page_view(request):
 @require_POST
 def remove_friend(request):
     try:
-        if request.content_type and 'application/json' in request.content_type:
-            data = json.loads(request.body or '{}')
-            target_username = (data.get('username') or '').strip()
-        else:
-            target_username = (request.POST.get('username') or '').strip()
+        data = _parse_request_data(request)
+        target_username = (data.get('username') or '').strip()
 
         if not target_username:
             return JsonResponse({'status': 'error', 'message': 'Utilizador inválido.'}, status=400)
@@ -726,5 +875,7 @@ def remove_friend(request):
             return JsonResponse({'status': 'error', 'message': 'Vocês não são amigos.'}, status=400)
 
         return JsonResponse({'status': 'success', 'message': f'Amizade com {other_user.username} removida.'})
+    except Http404:
+        return JsonResponse({'status': 'error', 'message': 'Utilizador não encontrado.'}, status=404)
     except Exception as e:
         return JsonResponse({'status': 'error', 'message': str(e)}, status=400)

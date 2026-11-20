@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="pt">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -1537,6 +1537,7 @@
             }
         }
 
+        /* === EDITOR ESTÉTICO EM 2 COLUNAS (NA COR DO TEMA) === */
         #edit-modal .aesthetic-profile-card.kiwi-editor-card {
             width: min(860px, 95vw);
             max-height: 92vh;
@@ -2188,6 +2189,9 @@
     </style>
 </head>
 <body>
+    <!-- Quando renderizado pelo Django, injete os valores reais do servidor nestes scripts JSON:
+         Ex.: <script id="kiwi-username-data" type="application/json">"{{ request.user.username|escapejs }}"</script>
+         Se ficar null/vazio (ex.: abrindo o HTML direto sem Django), o JS usa o usuário digitado/salvo por você. -->
     <script id="kiwi-username-data" type="application/json">null</script>
     <script id="kiwi-is-admin-data" type="application/json">false</script>
     <script id="kiwi-channel-id-data" type="application/json">null</script>
@@ -2261,6 +2265,7 @@
             <div class="user-panel-actions">
                 <button type="button" class="icon-btn" id="mailbox-btn" title="Caixa de Mensagens &amp; Atualizações">📬</button>
                 <button type="button" class="icon-btn" id="settings-btn" title="Definições e Cores">⚙️</button>
+                <button type="button" class="icon-btn" id="logout-btn" title="Sair da conta" style="color: #e74c3c;">🚪</button>
             </div>
         </div>
     </div>
@@ -3576,6 +3581,38 @@
 
             updateMySidebarUI();
 
+            const logoutBtn = document.getElementById('logout-btn');
+            if (logoutBtn) {
+                logoutBtn.addEventListener('click', () => {
+                    try { localStorage.removeItem(USERNAME_STORAGE_KEY); } catch (_) {}
+                    window.location.href = '/logout/';
+                });
+            }
+
+            if (activeUsername && activeUsername !== 'Usuário') {
+                fetch(`/api/profile/${encodeURIComponent(activeUsername)}/`, { credentials: 'same-origin' })
+                    .then(res => res.ok ? res.json() : null)
+                    .then(data => {
+                        if (!data || !data.username) return;
+                        myProfileData.bubble = data.bubble ?? myProfileData.bubble;
+                        myProfileData.pronouns = data.pronouns ?? myProfileData.pronouns;
+                        myProfileData.bio = data.bio ?? myProfileData.bio;
+                        myProfileData.song = data.spotify_song ?? myProfileData.song;
+                        myProfileData.artist = data.spotify_artist ?? myProfileData.artist;
+                        myProfileData.musicUrl = data.music_url ?? myProfileData.musicUrl;
+                        if (data.music_audio_url) myProfileData.audioSrc = data.music_audio_url;
+                        if (data.music_cover_url) myProfileData.coverUrl = data.music_cover_url;
+                        if (data.avatarUrl) myProfileData.avatarUrl = data.avatarUrl;
+                        if (data.bannerUrl) myProfileData.bannerUrl = data.bannerUrl;
+                        if (data.accent_color && themesMap[data.accent_color]) {
+                            myProfileData.accentColor = sanitizeThemeForUser(data.accent_color, activeUsername, myProfileData.is_admin);
+                        }
+                        saveUserMusicToLocalCache(activeUsername, myProfileData);
+                        updateMySidebarUI();
+                    })
+                    .catch(() => {});
+            }
+
             const ytTag = document.createElement('script');
             ytTag.src = 'https://www.youtube.com/iframe_api';
             document.head.appendChild(ytTag);
@@ -4624,6 +4661,45 @@
                 }
 
                 saveUserMusicToLocalCache(ownerName, myProfileData);
+
+                try {
+                    const apiFormData = new FormData();
+                    apiFormData.append('bubble', myProfileData.bubble || '');
+                    apiFormData.append('pronouns', myProfileData.pronouns || '');
+                    apiFormData.append('bio', myProfileData.bio || '');
+                    apiFormData.append('spotify_song', myProfileData.song || '');
+                    apiFormData.append('spotify_artist', myProfileData.artist || '');
+                    apiFormData.append('music_url', myProfileData.musicUrl || '');
+                    apiFormData.append('accent_color', myProfileData.accentColor || '#ff9de2');
+
+                    if (pickedAvatarFile) {
+                        apiFormData.append('avatar', pickedAvatarFile);
+                    }
+                    if (pickedBannerFile) {
+                        apiFormData.append('banner', pickedBannerFile);
+                    }
+                    if (pickedAudioFile) {
+                        apiFormData.append('music_audio', pickedAudioFile);
+                    } else if (typedAudioUrl && !typedAudioUrl.startsWith('blob:') && !typedAudioUrl.startsWith('data:')) {
+                        apiFormData.append('music_audio_url', typedAudioUrl);
+                    }
+                    if (pickedCoverFile) {
+                        apiFormData.append('music_cover', pickedCoverFile);
+                    } else if (typedCoverUrl && !typedCoverUrl.startsWith('blob:') && !typedCoverUrl.startsWith('data:')) {
+                        apiFormData.append('music_cover_url', typedCoverUrl);
+                    }
+
+                    const csrfCookie = document.cookie.split('; ').find(row => row.startsWith('csrftoken='));
+                    const csrfToken = csrfCookie ? decodeURIComponent(csrfCookie.split('=')[1]) : '';
+
+                    fetch('/api/profile/update/', {
+                        method: 'POST',
+                        headers: csrfToken ? { 'X-CSRFToken': csrfToken } : {},
+                        body: apiFormData,
+                        credentials: 'same-origin'
+                    }).catch(() => {});
+                } catch (_) {}
+
                 updateMySidebarUI();
                 closeModalAnimated(editModal);
                 showKiwiToast("Perfil guardado!");
@@ -5445,12 +5521,10 @@
                 createServerForm.addEventListener('submit', (e) => {
                     e.preventDefault();
                     const sName = (document.getElementById('new-server-name')?.value || '').trim();
+                    const rawChans = (document.getElementById('new-server-channels')?.value || 'geral').split(',');
                     if (!sName) return;
-                    const chRaw = (document.getElementById('new-server-channels')?.value || 'geral, música').trim();
-                    const chNames = chRaw.split(',').map(s => s.trim()).filter(Boolean);
-                    if (!chNames.length) chNames.push('geral');
 
-                    const rail = document.querySelector('.server-rail');
+                    const serverRail = document.querySelector('.server-rail');
                     const addBtn = document.getElementById('open-create-server-btn');
                     const btn = document.createElement('button');
                     btn.type = 'button';
@@ -5458,33 +5532,33 @@
                     btn.title = sName;
                     btn.textContent = sName.charAt(0).toUpperCase();
 
-                    const bindServerSelect = () => {
-                        document.querySelectorAll('.server-rail-btn').forEach(b => b.classList.remove('active'));
-                        btn.classList.add('active');
-                        if (sidebarServerTitle) sidebarServerTitle.textContent = `🥝 ${sName}`;
-                        const chList = document.getElementById('server-channels-list');
-                        if (chList) {
-                            chList.innerHTML = '';
-                            chNames.forEach((cn, idx) => {
-                                const item = document.createElement('div');
-                                const isAudio = cn.toLowerCase().includes('mús') || cn.toLowerCase().includes('mus') || cn.toLowerCase().includes('voz');
-                                item.className = `channel-item ${idx === 0 ? 'active' : ''}`;
-                                item.setAttribute('data-channel-name', cn);
-                                item.setAttribute('data-channel-type', isAudio ? 'audio' : 'text');
-                                item.innerHTML = `<span>${isAudio ? '🎵' : '#'}</span><span style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${escapeHtmlText(cn)}</span>`;
-                                item.addEventListener('click', () => window.switchToGeral(cn, isAudio ? 'audio' : 'text'));
-                                chList.appendChild(item);
-                            });
-                        }
-                        window.switchToGeral(chNames[0], 'text');
-                    };
+                    document.querySelectorAll('.server-rail-btn').forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                    if (serverRail && addBtn) serverRail.insertBefore(btn, addBtn);
 
-                    btn.addEventListener('click', bindServerSelect);
-                    if (rail && addBtn) rail.insertBefore(btn, addBtn);
-                    bindServerSelect();
-                    createServerForm.reset();
+                    if (sidebarServerTitle) sidebarServerTitle.textContent = `🥝 ${sName}`;
+
+                    const chanList = document.getElementById('server-channels-list');
+                    if (chanList) {
+                        chanList.innerHTML = '';
+                        const cleanedChans = rawChans.map(c => c.trim()).filter(Boolean);
+                        (cleanedChans.length ? cleanedChans : ['geral']).forEach((cname, idx) => {
+                            const ctype = cname.toLowerCase().includes('mús') || cname.toLowerCase().includes('mus') ? 'audio' : 'text';
+                            const item = document.createElement('div');
+                            item.className = `channel-item ${idx === 0 ? 'active' : ''}`;
+                            item.setAttribute('data-channel-name', cname);
+                            item.setAttribute('data-channel-type', ctype);
+                            item.innerHTML = `<span>${ctype === 'audio' ? '🎵' : '#'}</span><span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${escapeHtmlText(cname)}</span>`;
+                            item.addEventListener('click', () => window.switchToGeral(cname, ctype));
+                            chanList.appendChild(item);
+                        });
+                    }
+
+                    const firstChan = (rawChans.map(c => c.trim()).filter(Boolean)[0]) || 'geral';
+                    window.switchToGeral(firstChan, 'text');
                     closeModalAnimated(createServerModal);
                     showKiwiToast(`Servidor "${sName}" criado!`);
+                    createServerForm.reset();
                 });
             }
 
@@ -5504,20 +5578,20 @@
                     const cType = document.getElementById('new-channel-type')?.value || 'text';
                     if (!cName) return;
 
-                    const chList = document.getElementById('server-channels-list');
-                    if (chList) {
+                    const chanList = document.getElementById('server-channels-list');
+                    if (chanList) {
                         const item = document.createElement('div');
                         item.className = 'channel-item';
                         item.setAttribute('data-channel-name', cName);
                         item.setAttribute('data-channel-type', cType);
-                        item.innerHTML = `<span>${cType === 'audio' ? '🎵' : '#'}</span><span style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${escapeHtmlText(cName)}</span>`;
+                        item.innerHTML = `<span>${cType === 'audio' ? '🎵' : '#'}</span><span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${escapeHtmlText(cName)}</span>`;
                         item.addEventListener('click', () => window.switchToGeral(cName, cType));
-                        chList.appendChild(item);
-                        window.switchToGeral(cName, cType);
+                        chanList.appendChild(item);
                     }
-                    createChannelForm.reset();
+
                     closeModalAnimated(createChannelModal);
                     showKiwiToast(`Canal "${cName}" criado!`);
+                    createChannelForm.reset();
                 });
             }
 
@@ -5526,15 +5600,15 @@
             const mobNavMusic = document.getElementById('mob-nav-music');
             const mobNavProfile = document.getElementById('mob-nav-profile');
 
-            function setMobileNavActive(btnEl) {
+            function setMobileNavActive(btn) {
                 document.querySelectorAll('.mobile-nav-btn').forEach(b => b.classList.remove('active'));
-                if (btnEl) btnEl.classList.add('active');
+                if (btn) btn.classList.add('active');
             }
 
             if (mobNavFriends) {
                 mobNavFriends.addEventListener('click', () => {
-                    window.closeMobileChatView();
                     setMobileNavActive(mobNavFriends);
+                    window.closeMobileChatView();
                 });
             }
             if (mobNavSearch) {
