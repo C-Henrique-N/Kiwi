@@ -2680,8 +2680,46 @@
                             return;
                         }
                         if (!payload || typeof payload !== 'object') return;
-                        const entry = this.createMessageEntry(ctx, payload);
+
+                        const ignoredTypes = new Set([
+                            'ping', 'pong', 'presence_update', 'call_signal',
+                            'call_hangup', 'incoming_call', 'delete_message', 'delete_dm'
+                        ]);
+                        const pType = String(payload.type || '').trim().toLowerCase();
+                        if (ignoredTypes.has(pType)) return;
+
                         const isActive = this.activeContextKey === ctx.key;
+
+                        if (pType === 'chat_history' || pType === 'dm_history') {
+                            const items = Array.isArray(payload.messages)
+                                ? payload.messages
+                                : (Array.isArray(payload.history) ? payload.history : []);
+                            const normalizedBatch = [];
+                            items.forEach((rawItem) => {
+                                if (!rawItem || typeof rawItem !== 'object') return;
+                                const itemText = String(rawItem.message ?? rawItem.text ?? '').trim();
+                                const itemAttach = String(rawItem.attachmentUrl ?? rawItem.attachment_url ?? '').trim();
+                                if (!itemText && !itemAttach) return;
+                                const histEntry = this.createMessageEntry(ctx, rawItem);
+                                this.appendMessageToContext(ctx, histEntry, { incrementUnread: false });
+                                normalizedBatch.push(histEntry);
+                            });
+                            if (typeof this.onIncomingMessage === 'function') {
+                                this.onIncomingMessage(payload, {
+                                    entry: normalizedBatch[normalizedBatch.length - 1] || null,
+                                    batch: normalizedBatch,
+                                    ctx,
+                                    isActive
+                                });
+                            }
+                            return;
+                        }
+
+                        const rawMsgText = String(payload.message ?? payload.text ?? '').trim();
+                        const rawAttachUrl = String(payload.attachmentUrl ?? payload.attachment_url ?? '').trim();
+                        if (!rawMsgText && !rawAttachUrl) return;
+
+                        const entry = this.createMessageEntry(ctx, payload);
                         this.appendMessageToContext(ctx, entry, { incrementUnread: !isActive });
                         if (typeof this.onIncomingMessage === 'function') {
                             this.onIncomingMessage(payload, { entry, ctx, isActive });
@@ -3791,42 +3829,61 @@
                 onUnreadChange: () => {
                     renderUnreadBadges();
                 },
-                onIncomingMessage: (_rawData, { entry, ctx, isActive }) => {
-                    if (!entry || !ctx) return;
-                    if (ctx.type === 'dm' && ctx.targetUser) {
-                        if (!openDmTabs.has(ctx.targetUser)) {
-                            openDmTabs.set(ctx.targetUser, { avatarUrl: entry.avatarUrl || '' });
-                            renderDmTabs();
+                onIncomingMessage: (_rawData, { entry, batch, ctx, isActive }) => {
+                    if (!ctx) return;
+                    const itemsToProcess = Array.isArray(batch) && batch.length > 0
+                        ? batch
+                        : (entry ? [entry] : []);
+                    if (!itemsToProcess.length) return;
+
+                    let dmStoreChanged = false;
+                    itemsToProcess.forEach((item) => {
+                        if (!item) return;
+                        const cleanText = String(item.text || '').trim();
+                        const cleanAttach = String(item.attachmentUrl || '').trim();
+                        if (!cleanText && !cleanAttach) return;
+
+                        if (ctx.type === 'dm' && ctx.targetUser) {
+                            if (!openDmTabs.has(ctx.targetUser)) {
+                                openDmTabs.set(ctx.targetUser, { avatarUrl: item.avatarUrl || '' });
+                                renderDmTabs();
+                            }
+                            if (!dmHistoryStore[ctx.targetUser]) dmHistoryStore[ctx.targetUser] = [];
+                            if (!dmHistoryStore[ctx.targetUser].some((m) => String(m.id) === String(item.id))) {
+                                dmHistoryStore[ctx.targetUser].push({
+                                    id: item.id,
+                                    sender: item.author,
+                                    message: item.text,
+                                    timestamp: item.timestamp,
+                                    avatarUrl: item.avatarUrl || '',
+                                    attachmentUrl: item.attachmentUrl || '',
+                                    attachmentName: item.attachmentName || '',
+                                    attachmentType: item.attachmentType || '',
+                                    canDelete: item.author === activeUsername
+                                });
+                                dmStoreChanged = true;
+                            }
                         }
-                        if (!dmHistoryStore[ctx.targetUser]) dmHistoryStore[ctx.targetUser] = [];
-                        if (!dmHistoryStore[ctx.targetUser].some((m) => String(m.id) === String(entry.id))) {
-                            dmHistoryStore[ctx.targetUser].push({
-                                id: entry.id,
-                                sender: entry.author,
-                                message: entry.text,
-                                timestamp: entry.timestamp,
-                                avatarUrl: entry.avatarUrl || '',
-                                attachmentUrl: entry.attachmentUrl || '',
-                                attachmentName: entry.attachmentName || '',
-                                attachmentType: entry.attachmentType || '',
-                                canDelete: entry.author === activeUsername
-                            });
-                            writeStorageJson(DM_HISTORY_STORAGE_KEY, dmHistoryStore);
+
+                        if (isActive) {
+                            appendMessage({
+                                id: item.id,
+                                sender: item.author,
+                                message: item.text,
+                                timestamp: item.timestamp,
+                                avatarUrl: item.avatarUrl || '',
+                                attachmentUrl: item.attachmentUrl || '',
+                                attachmentName: item.attachmentName || '',
+                                attachmentType: item.attachmentType || '',
+                                canDelete: item.author === activeUsername || item.canDelete
+                            }, ctx.type === 'channel');
                         }
+                    });
+
+                    if (dmStoreChanged) {
+                        writeStorageJson(DM_HISTORY_STORAGE_KEY, dmHistoryStore);
                     }
-                    if (isActive) {
-                        appendMessage({
-                            id: entry.id,
-                            sender: entry.author,
-                            message: entry.text,
-                            timestamp: entry.timestamp,
-                            avatarUrl: entry.avatarUrl || '',
-                            attachmentUrl: entry.attachmentUrl || '',
-                            attachmentName: entry.attachmentName || '',
-                            attachmentType: entry.attachmentType || '',
-                            canDelete: entry.author === activeUsername || entry.canDelete
-                        }, ctx.type === 'channel');
-                    } else {
+                    if (!isActive) {
                         renderUnreadBadges();
                     }
                 }
@@ -5984,15 +6041,30 @@
             renderSidebarSavedFriends();
 
             function appendMessage(data, isChannelMessage = true) {
-                const msgId = data.id || data.dm_id || '';
-                const dmId = data.dm_id || '';
-                const sender = data.sender || data.username || 'Usuário';
-                const messageText = data.message || '';
+                if (!data || typeof data !== 'object') return;
+                const msgId = String(data.id || data.dm_id || '').trim();
+                const dmId = String(data.dm_id || '').trim();
+                const sender = String(data.sender || data.username || '').trim() || 'Usuário';
+                const messageText = String(data.message ?? data.text ?? '');
+                const hasText = messageText.trim().length > 0;
+                const attachmentUrl = String(data.attachmentUrl ?? data.attachment_url ?? '').trim();
+                const hasValidAttachment = Boolean(attachmentUrl) && isSafeAssetUrl(attachmentUrl);
+
+                if (!hasText && !hasValidAttachment) {
+                    return;
+                }
+
+                if (msgId && chatLog.querySelector(`.message-group[data-msg-id="${CSS.escape(msgId)}"], .message-group[data-dm-id="${CSS.escape(msgId)}"]`)) {
+                    return;
+                }
+                if (dmId && chatLog.querySelector(`.message-group[data-dm-id="${CSS.escape(dmId)}"]`)) {
+                    return;
+                }
+
                 const timestamp = data.timestamp || new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-                const avatarUrl = data.avatarUrl || '';
-                const attachmentUrl = data.attachmentUrl || '';
-                const attachmentName = data.attachmentName || '';
-                const attachmentType = data.attachmentType || '';
+                const avatarUrl = data.avatarUrl || data.avatar_url || '';
+                const attachmentName = data.attachmentName || data.attachment_name || '';
+                const attachmentType = data.attachmentType || data.attachment_type || '';
                 const canDelete = Boolean(data.canDelete);
 
                 const group = document.createElement('div');
@@ -6045,7 +6117,7 @@
                     content.appendChild(textDiv);
                 }
 
-                if (attachmentUrl && isSafeAssetUrl(attachmentUrl)) {
+                if (hasValidAttachment) {
                     const safeUrl = encodeURI(attachmentUrl);
                     const lowerName = (attachmentName || '').toLowerCase();
                     const isImage = attachmentType === 'image' || /\.(png|jpe?g|gif|webp|avif)$/i.test(lowerName) || attachmentUrl.startsWith('data:image/');
