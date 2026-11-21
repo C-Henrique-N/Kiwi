@@ -6179,7 +6179,7 @@
 
             async function sendCurrentMessage() {
                 if (isSendingMessage) return;
-                const textVal = messageInput.value.trim();
+                const textVal = (messageInput && messageInput.value || '').trim();
                 const fileToSend = pendingAttachmentFile;
                 if (!textVal && !fileToSend) return;
 
@@ -6208,6 +6208,93 @@
                             attachmentUrl = URL.createObjectURL(fileToSend);
                         }
                     }
+
+                    const meta = typeof getCurrentMeta === 'function' ? getCurrentMeta() : { type: 'channel', serverId: 'home', channelName: 'geral' };
+                    const payloadData = {
+                        id: localId,
+                        clientId: localId,
+                        dmId: currentView === 'dm' ? localId : '',
+                        sender: activeUsername,
+                        message: textVal,
+                        timestamp: nowTime,
+                        avatarUrl: (myProfileData && myProfileData.avatarUrl) || '',
+                        attachmentUrl,
+                        attachmentName,
+                        attachmentType,
+                        canDelete: true
+                    };
+
+                    if (currentView === 'dm' && currentDmUser) {
+                        if (!dmHistoryStore[currentDmUser]) dmHistoryStore[currentDmUser] = [];
+                        dmHistoryStore[currentDmUser].push(payloadData);
+                        writeStorageJson(DM_HISTORY_STORAGE_KEY, dmHistoryStore);
+                    }
+
+                    try {
+                        if (roomCtxManager && typeof roomCtxManager.appendMessageToContext === 'function') {
+                            roomCtxManager.appendMessageToContext(meta, {
+                                id: localId,
+                                clientId: localId,
+                                author: activeUsername,
+                                text: textVal,
+                                timestamp: nowTime,
+                                avatarUrl: (myProfileData && myProfileData.avatarUrl) || '',
+                                attachmentUrl,
+                                attachmentName,
+                                attachmentType,
+                                canDelete: true
+                            }, { incrementUnread: false });
+                        }
+                    } catch (err) {
+                        console.error('[Kiwi] Erro ao salvar no contexto:', err);
+                    }
+
+                    try {
+                        if (roomCtxManager && typeof roomCtxManager.sendToContext === 'function') {
+                            const wsPayload = currentView === 'dm' && currentDmUser
+                                ? {
+                                    type: 'dm_message',
+                                    id: localId,
+                                    client_msg_id: localId,
+                                    target: currentDmUser,
+                                    sender: activeUsername,
+                                    message: textVal,
+                                    timestamp: nowTime,
+                                    avatar_url: (myProfileData && myProfileData.avatarUrl) || '',
+                                    attachment_url: attachmentUrl.startsWith('data:') ? attachmentUrl : '',
+                                    attachment_name: attachmentName,
+                                    attachment_type: attachmentType
+                                }
+                                : {
+                                    type: 'chat_message',
+                                    id: localId,
+                                    client_msg_id: localId,
+                                    channel: currentChannelName,
+                                    server_id: currentServerId,
+                                    sender: activeUsername,
+                                    message: textVal,
+                                    timestamp: nowTime,
+                                    avatar_url: (myProfileData && myProfileData.avatarUrl) || '',
+                                    attachment_url: attachmentUrl.startsWith('data:') ? attachmentUrl : '',
+                                    attachment_name: attachmentName,
+                                    attachment_type: attachmentType
+                                };
+                            roomCtxManager.sendToContext(meta, wsPayload);
+                        }
+                    } catch (err) {
+                        console.error('[Kiwi] Erro ao enviar via WebSocket:', err);
+                    }
+
+                    appendMessage(payloadData, currentView !== 'dm');
+
+                    if (messageInput) messageInput.value = '';
+                    if (typeof clearPendingAttachment === 'function') clearPendingAttachment();
+                } catch (err) {
+                    console.error('[Kiwi] Erro geral em sendCurrentMessage:', err);
+                } finally {
+                    isSendingMessage = false;
+                }
+            }
 
                     const meta = getCurrentMeta();
 
