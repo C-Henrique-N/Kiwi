@@ -91,6 +91,13 @@ def are_friends(user1, user2):
     return FriendRequest.are_friends(user1, user2)
 
 
+def _get_accessible_server_or_404(user, server_id):
+    qs = Server.objects.filter(id=server_id)
+    if not is_admin_user(user):
+        qs = qs.filter(models.Q(members=user) | models.Q(owner=user)).distinct()
+    return get_object_or_404(qs)
+
+
 def _user_can_manage_server(user, server):
     if not user or not user.is_authenticated or not server:
         return False
@@ -246,7 +253,11 @@ def _serialize_server_member(request, server, membership):
 @login_required(login_url='login')
 def room_view(request, server_id=None, channel_id=None):
     profile, _ = UserProfile.objects.get_or_create(user=request.user)
-    servers = Server.objects.filter(members=request.user).prefetch_related('channels', 'roles')
+    servers = (
+        Server.objects.filter(models.Q(members=request.user) | models.Q(owner=request.user))
+        .distinct()
+        .prefetch_related('channels', 'roles')
+    )
 
     active_server = None
     active_channel = None
@@ -258,10 +269,17 @@ def room_view(request, server_id=None, channel_id=None):
             server_qs = server_qs.filter(
                 models.Q(members=request.user) | models.Q(owner=request.user)
             ).distinct()
-        active_server = get_object_or_404(server_qs)
+        active_server = server_qs.first()
+
+        # Evita 404 seco quando o servidor nao existe ou o usuario nao tem acesso
+        if active_server is None:
+            return redirect('room_home')
+
         channels = list(active_server.channels.all())
         if channel_id is not None:
-            active_channel = get_object_or_404(Channel, id=channel_id, server=active_server)
+            active_channel = Channel.objects.filter(id=channel_id, server=active_server).first()
+            if active_channel is None:
+                return redirect('room_server', server_id=active_server.id)
         elif channels:
             active_channel = channels[0]
 
@@ -336,7 +354,11 @@ def profile_page_view(request):
 @login_required(login_url='login')
 def loja_view(request):
     profile, _ = UserProfile.objects.get_or_create(user=request.user)
-    servers = Server.objects.filter(members=request.user).prefetch_related('channels', 'roles')
+    servers = (
+        Server.objects.filter(models.Q(members=request.user) | models.Q(owner=request.user))
+        .distinct()
+        .prefetch_related('channels', 'roles')
+    )
     return render(
         request,
         'chat/loja.html',
@@ -402,7 +424,7 @@ def create_server(request):
 @login_required
 @require_POST
 def update_server(request, server_id):
-    server = get_object_or_404(Server, id=server_id, members=request.user)
+    server = _get_accessible_server_or_404(request.user, server_id)
     if not _user_can_manage_server(request.user, server):
         return JsonResponse({'status': 'error', 'message': 'Sem permissão para editar este servidor.'}, status=403)
 
@@ -439,7 +461,7 @@ def delete_server(request, server_id):
 @login_required
 @require_POST
 def create_channel(request, server_id):
-    server = get_object_or_404(Server, id=server_id, members=request.user)
+    server = _get_accessible_server_or_404(request.user, server_id)
     if not _user_can_manage_server(request.user, server):
         return JsonResponse({'status': 'error', 'message': 'Sem permissão para criar canais.'}, status=403)
 
@@ -475,7 +497,7 @@ def create_channel(request, server_id):
 @login_required
 @require_POST
 def delete_channel(request, server_id, channel_id):
-    server = get_object_or_404(Server, id=server_id, members=request.user)
+    server = _get_accessible_server_or_404(request.user, server_id)
     if not _user_can_manage_server(request.user, server):
         return JsonResponse({'status': 'error', 'message': 'Sem permissão para excluir canais.'}, status=403)
 
@@ -486,7 +508,7 @@ def delete_channel(request, server_id, channel_id):
 
 @login_required
 def get_server_members_grouped(request, server_id):
-    server = get_object_or_404(Server, id=server_id, members=request.user)
+    server = _get_accessible_server_or_404(request.user, server_id)
 
     existing_ids = set(
         ServerMember.objects.filter(server=server).values_list('user_id', flat=True)
@@ -551,7 +573,7 @@ def get_server_members_grouped(request, server_id):
 @login_required
 @require_POST
 def create_server_role(request, server_id):
-    server = get_object_or_404(Server, id=server_id, members=request.user)
+    server = _get_accessible_server_or_404(request.user, server_id)
     if not _user_can_manage_roles(request.user, server):
         return JsonResponse({'status': 'error', 'message': 'Apenas o dono pode criar cargos.'}, status=403)
 
@@ -585,7 +607,7 @@ def create_server_role(request, server_id):
 @login_required
 @require_POST
 def delete_server_role(request, server_id, role_id):
-    server = get_object_or_404(Server, id=server_id, members=request.user)
+    server = _get_accessible_server_or_404(request.user, server_id)
     if not _user_can_manage_roles(request.user, server):
         return JsonResponse({'status': 'error', 'message': 'Apenas o dono pode excluir cargos.'}, status=403)
 
@@ -597,7 +619,7 @@ def delete_server_role(request, server_id, role_id):
 @login_required
 @require_POST
 def assign_member_role(request, server_id, user_id):
-    server = get_object_or_404(Server, id=server_id, members=request.user)
+    server = _get_accessible_server_or_404(request.user, server_id)
     if not _user_can_manage_roles(request.user, server):
         return JsonResponse({'status': 'error', 'message': 'Apenas o dono pode atribuir cargos.'}, status=403)
 
@@ -624,7 +646,7 @@ def assign_member_role(request, server_id, user_id):
 @login_required
 @require_POST
 def add_server_member(request, server_id):
-    server = get_object_or_404(Server, id=server_id, members=request.user)
+    server = _get_accessible_server_or_404(request.user, server_id)
     if not _user_can_manage_roles(request.user, server) and not _user_can_kick_members(request.user, server):
         return JsonResponse({'status': 'error', 'message': 'Sem permissão para adicionar membros.'}, status=403)
 
@@ -653,7 +675,7 @@ def add_server_member(request, server_id):
 @login_required
 @require_POST
 def kick_server_member(request, server_id, user_id):
-    server = get_object_or_404(Server, id=server_id, members=request.user)
+    server = _get_accessible_server_or_404(request.user, server_id)
     if not _user_can_kick_members(request.user, server):
         return JsonResponse({'status': 'error', 'message': 'Sem permissão para expulsar membros.'}, status=403)
 
@@ -1206,7 +1228,12 @@ def send_message(request):
 
     channel = None
     if channel_id is not None:
-        channel = get_object_or_404(Channel, id=channel_id, server__members=request.user)
+        channel_qs = Channel.objects.filter(id=channel_id)
+        if not is_admin_user(request.user):
+            channel_qs = channel_qs.filter(
+                models.Q(server__members=request.user) | models.Q(server__owner=request.user)
+            ).distinct()
+        channel = get_object_or_404(channel_qs)
 
     reply_to = Message.objects.filter(id=reply_to_id).first() if reply_to_id else None
 
@@ -1297,7 +1324,15 @@ def upload_attachment(request):
             async_to_sync(channel_layer.group_send)(dm_group, {'type': 'dm_message', 'message': payload})
         return JsonResponse({'status': 'success', 'message': payload})
 
-    channel = get_object_or_404(Channel, id=channel_id, server__members=request.user) if channel_id else None
+    channel = None
+    if channel_id:
+        channel_qs = Channel.objects.filter(id=channel_id)
+        if not is_admin_user(request.user):
+            channel_qs = channel_qs.filter(
+                models.Q(server__members=request.user) | models.Q(server__owner=request.user)
+            ).distinct()
+        channel = get_object_or_404(channel_qs)
+
     msg = Message.objects.create(
         user=request.user,
         channel=channel,

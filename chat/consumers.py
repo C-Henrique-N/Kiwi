@@ -134,7 +134,7 @@ def _model_field_names(model_cls) -> set:
 class ChatConsumer(AsyncWebsocketConsumer):
     """
     WebSocket para canais isolados por servidor + canal:
-    Ex.: /ws/chat/<room_slug>/?server=<server_id>&channel=<channel_name>
+    Suporta tanto /ws/chat/<server_id>/<channel_name>/ quanto /ws/chat/<room_slug>/?server=<server_id>&channel=<channel_name>
     """
 
     HISTORY_LIMIT = 50
@@ -154,35 +154,52 @@ class ChatConsumer(AsyncWebsocketConsumer):
     async def connect(self):
         user = self.scope.get("user")
         if not user or not user.is_authenticated:
+            logger.warning("WSREJECT ChatConsumer: utilizador não autenticado.")
             await self.close(code=4001)
             return
 
         if not self.channel_layer:
-            logger.error("Channel layer não configurado no ChatConsumer.")
+            logger.error("WSREJECT ChatConsumer: Channel layer não configurado.")
             await self.close(code=4002)
             return
 
         self.user = user
         url_kwargs = self.scope.get("url_route", {}).get("kwargs", {})
-        raw_slug = url_kwargs.get("room_slug") or url_kwargs.get("room_name") or "geral"
-        self.room_slug = sanitize_group_token(raw_slug, fallback="geral")
-
         query_params = self._parse_query_string()
-        raw_server = query_params.get("server") or "home"
-        raw_channel = query_params.get("channel") or self.room_slug
 
-        self.server_id = sanitize_group_token(raw_server, fallback="home")
-        self.channel_name_slug = sanitize_group_token(raw_channel, fallback="geral")
+        raw_server = (
+            url_kwargs.get("server_id")
+            or query_params.get("server")
+            or "home"
+        )
+        raw_slug = (
+            url_kwargs.get("channel_name")
+            or url_kwargs.get("room_slug")
+            or url_kwargs.get("room_name")
+            or query_params.get("channel")
+            or "geral"
+        )
+        raw_channel = query_params.get("channel") or raw_slug
+
+        self.room_slug = sanitize_group_token(raw_slug, fallback="geral")
+        self.server_id = sanitize_group_token(str(raw_server), fallback="home")
+        self.channel_name_slug = sanitize_group_token(str(raw_channel), fallback="geral")
         self.group_name = build_channel_group_name(self.server_id, self.channel_name_slug)
         self.presence_group = build_presence_group_name(self.server_id)
 
         channel_obj, allowed = await self._resolve_and_authorize_channel(
-            raw_server=raw_server,
+            raw_server=str(raw_server),
             server_token=self.server_id,
-            raw_channel=raw_channel,
+            raw_channel=str(raw_channel),
             channel_token=self.channel_name_slug,
         )
         if not allowed or channel_obj is None:
+            logger.warning(
+                "WSREJECT ChatConsumer: acesso negado para user=%s em server=%s channel=%s",
+                user.username,
+                raw_server,
+                raw_channel,
+            )
             await self.close(code=4003)
             return
 
