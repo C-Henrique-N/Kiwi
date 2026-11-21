@@ -1,13 +1,13 @@
-from django.contrib import admin
-from django.urls import path, include
+# kiwi/urls.py
 from django.conf import settings
-from django.conf.urls.static import static
+from django.urls import path, re_path
+from django.views.static import serve
 
 urlpatterns = [
-    path('admin/', admin.site.urls),
-    path('', include('chat.urls')),
+    # ... suas rotas atuais ...
 ]
 
-# Adicione estas linhas para permitir que o Django sirva as imagens no ambiente de desenvolvimento
-if settings.DEBUG:
-    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+# Em produção na Railway (sem bucket externo), permite servir MEDIA_ROOT
+urlpatterns += [
+    re_path(r"^media/(?P<path>.*)$", serve, {"document_root": settings.MEDIA_ROOT}),
+]
