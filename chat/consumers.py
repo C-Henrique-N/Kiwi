@@ -12,6 +12,16 @@ from .models import Channel, FriendRequest, Message, PrivateMessage, Server
 
 User = get_user_model()
 
+ALLOWED_CHAT_EVENT_TYPES = {"chat_message", "message", "ping", "delete_message"}
+ALLOWED_DM_EVENT_TYPES = {
+    "dm_message",
+    "delete_dm",
+    "call_signal",
+    "call_hangup",
+    "incoming_call",
+    "ping",
+}
+
 
 def sanitize_group_token(value: str, fallback: str = "default") -> str:
     cleaned = re.sub(r"[^a-zA-Z0-9._-]", "_", (value or "").strip())
@@ -19,7 +29,10 @@ def sanitize_group_token(value: str, fallback: str = "default") -> str:
 
 
 def build_channel_group_name(server_token: str, channel_token: str) -> str:
-    return f"kiwi_srv_{sanitize_group_token(server_token, 'home')}_ch_{sanitize_group_token(channel_token, 'geral')}"
+    return (
+        f"kiwi_srv_{sanitize_group_token(server_token, 'home')}"
+        f"_ch_{sanitize_group_token(channel_token, 'geral')}"
+    )
 
 
 def build_presence_group_name(server_token: str) -> str:
@@ -28,7 +41,10 @@ def build_presence_group_name(server_token: str) -> str:
 
 def build_dm_group_name(username_a: str, username_b: str) -> str:
     pair = sorted([(username_a or "").lower(), (username_b or "").lower()])
-    return f"kiwi_dm_{sanitize_group_token(pair[0], 'u1')}_{sanitize_group_token(pair[1], 'u2')}"
+    return (
+        f"kiwi_dm_{sanitize_group_token(pair[0], 'u1')}"
+        f"_{sanitize_group_token(pair[1], 'u2')}"
+    )
 
 
 def build_user_personal_group_name(username: str) -> str:
@@ -58,22 +74,45 @@ def _normalize_attachment_type(att_type: str, att_url: str) -> str:
 
 
 def _get_user_avatar(user) -> str:
+    if not user:
+        return ""
     profile = getattr(user, "profile", None)
-    if profile:
-        if getattr(profile, "avatar", None):
-            try:
-                return profile.avatar.url
-            except Exception:
-                pass
-        if getattr(profile, "music_cover_file", None):
-            try:
-                return profile.music_cover_file.url
-            except Exception:
-                pass
-        cover_url = getattr(profile, "music_cover_url", "") or ""
-        if isinstance(cover_url, str) and _is_valid_media_url(cover_url):
-            return cover_url.strip()
+    if profile and getattr(profile, "avatar", None):
+        try:
+            url = profile.avatar.url
+            if _is_valid_media_url(url):
+                return url
+        except Exception:
+            pass
     return ""
+
+
+def _extract_model_attachment(msg_obj) -> tuple[str, str, str]:
+    att_url = ""
+    att_name = ""
+    att_type = getattr(msg_obj, "attachment_type", "") or ""
+
+    file_field = getattr(msg_obj, "attachment", None)
+    if file_field:
+        try:
+            att_url = file_field.url or ""
+            if file_field.name:
+                att_name = file_field.name.split("/")[-1]
+        except Exception:
+            att_url = ""
+
+    if not att_url:
+        raw_url = getattr(msg_obj, "attachment_url", "") or ""
+        if _is_valid_media_url(raw_url):
+            att_url = raw_url.strip()
+
+    if not att_name:
+        att_name = (getattr(msg_obj, "attachment_name", "") or "").strip()[:255]
+
+    if att_url and not att_type:
+        att_type = _normalize_attachment_type("", att_url)
+
+    return att_url, att_type, att_name
 
 
 def _model_field_names(model_cls) -> set:
@@ -119,6 +158,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
             return
 
         self.channel_obj = channel_obj
+        self.user_avatar = await database_sync_to_async(_get_user_avatar)(self.user)
 
         await self.channel_layer.group_add(self.group_name, self.channel_name)
         await self.channel_layer.group_add(self.presence_group, self.channel_name)
@@ -143,7 +183,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
                 "type": "presence_update",
                 "username": self.user.username,
                 "status": "online",
-                "avatar_url": await database_sync_to_async(_get_user_avatar)(self.user),
+                "avatar_url": self.user_avatar,
                 "server_id": self.server_id,
                 "channel": self.channel_name_slug,
             },
@@ -161,7 +201,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
                         "type": "presence_update",
                         "username": self.user.username,
                         "status": "offline",
-                        "avatar_url": await database_sync_to_async(_get_user_avatar)(self.user),
+                        "avatar_url": getattr(self, "user_avatar", ""),
                         "server_id": getattr(self, "server_id", "home"),
                         "channel": getattr(self, "channel_name_slug", "geral"),
                     },
@@ -187,7 +227,12 @@ class ChatConsumer(AsyncWebsocketConsumer):
         except json.JSONDecodeError:
             return
 
+        if not isinstance(payload, dict):
+            return
+
         msg_type = payload.get("type") or "chat_message"
+        if msg_type not in ALLOWED_CHAT_EVENT_TYPES:
+            return
 
         if msg_type == "ping":
             await self.send(text_data=json.dumps({"type": "pong"}))
@@ -196,7 +241,11 @@ class ChatConsumer(AsyncWebsocketConsumer):
         if msg_type == "delete_message":
             msg_id = payload.get("id") or payload.get("message_id")
             if msg_id:
-                deleted = await self._delete_message(msg_id, self.user.id, bool(self.user.is_staff or self.user.is_superuser))
+                deleted = await self._delete_message(
+                    msg_id,
+                    self.user.id,
+                    bool(self.user.is_staff or self.user.is_superuser),
+                )
                 if deleted:
                     await self.channel_layer.group_send(
                         self.group_name,
@@ -222,15 +271,12 @@ class ChatConsumer(AsyncWebsocketConsumer):
             attachment_type = ""
             attachment_name = ""
 
+        # Ignora mensagens completamente vazias (sem texto e sem anexo)
         if not content and not attachment_url:
             return
 
-        raw_avatar = (payload.get("avatar_url") or payload.get("avatarUrl") or payload.get("avatar") or "").strip()
-        safe_avatar = (
-            raw_avatar
-            if _is_valid_media_url(raw_avatar)
-            else await database_sync_to_async(_get_user_avatar)(self.user)
-        )
+        current_avatar = await database_sync_to_async(_get_user_avatar)(self.user)
+        self.user_avatar = current_avatar
 
         msg_id = payload.get("id") or f"msg_{int(timezone.now().timestamp() * 1000)}"
         time_str = payload.get("time") or timezone.localtime(timezone.now()).strftime("%H:%M")
@@ -246,11 +292,13 @@ class ChatConsumer(AsyncWebsocketConsumer):
             client_id=client_id,
         )
 
+        final_id = saved_msg.id if saved_msg else msg_id
+
         await self.channel_layer.group_send(
             self.group_name,
             {
                 "type": "chat_message",
-                "id": saved_msg.id if saved_msg else msg_id,
+                "id": final_id,
                 "client_id": client_id,
                 "sender": self.user.username,
                 "username": self.user.username,
@@ -258,7 +306,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
                 "time": time_str,
                 "server_id": self.server_id,
                 "channel": self.channel_name_slug,
-                "avatar_url": safe_avatar,
+                "avatar_url": current_avatar,
                 "attachment_url": attachment_url,
                 "attachment_type": attachment_type if attachment_url else "",
                 "attachment_name": attachment_name if attachment_url else "",
@@ -268,6 +316,16 @@ class ChatConsumer(AsyncWebsocketConsumer):
     async def chat_message(self, event):
         if event.get("server_id") != self.server_id or event.get("channel") != self.channel_name_slug:
             return
+
+        content = (event.get("message") or "").strip()
+        attachment_url = (event.get("attachment_url") or "").strip()
+        if not content and not attachment_url:
+            return
+
+        sender_name = (event.get("sender") or event.get("username") or "").strip()
+        if not sender_name:
+            return
+
         avatar_url = event.get("avatar_url") or event.get("avatarUrl") or ""
         await self.send(
             text_data=json.dumps(
@@ -275,14 +333,14 @@ class ChatConsumer(AsyncWebsocketConsumer):
                     "type": "chat_message",
                     "id": event.get("id"),
                     "client_id": event.get("client_id", ""),
-                    "sender": event.get("sender") or event.get("username"),
-                    "username": event.get("username") or event.get("sender"),
-                    "message": event.get("message", ""),
+                    "sender": sender_name,
+                    "username": sender_name,
+                    "message": content,
                     "time": event.get("time", ""),
                     "server_id": event.get("server_id"),
                     "channel": event.get("channel"),
                     "avatar_url": avatar_url,
-                    "attachment_url": event.get("attachment_url", ""),
+                    "attachment_url": attachment_url,
                     "attachment_type": event.get("attachment_type", ""),
                     "attachment_name": event.get("attachment_name", ""),
                 }
@@ -305,11 +363,14 @@ class ChatConsumer(AsyncWebsocketConsumer):
         )
 
     async def presence_update(self, event):
+        username = (event.get("username") or "").strip()
+        if not username:
+            return
         await self.send(
             text_data=json.dumps(
                 {
                     "type": "presence_update",
-                    "username": event.get("username"),
+                    "username": username,
                     "status": event.get("status", "online"),
                     "avatar_url": event.get("avatar_url", ""),
                     "server_id": event.get("server_id"),
@@ -319,7 +380,9 @@ class ChatConsumer(AsyncWebsocketConsumer):
         )
 
     @database_sync_to_async
-    def _resolve_and_authorize_channel(self, raw_server: str, server_token: str, raw_channel: str, channel_token: str):
+    def _resolve_and_authorize_channel(
+        self, raw_server: str, server_token: str, raw_channel: str, channel_token: str
+    ):
         server = None
         clean_srv = (raw_server or "").strip()
         if clean_srv.isdigit():
@@ -371,37 +434,46 @@ class ChatConsumer(AsyncWebsocketConsumer):
         )
         items = []
         for msg in reversed(list(qs)):
+            content = (msg.content or "").strip()
+            att_url, att_type, att_name = _extract_model_attachment(msg)
+            if not content and not att_url:
+                continue
+
             created = getattr(msg, "timestamp", None) or getattr(msg, "created_at", None)
             time_str = timezone.localtime(created).strftime("%H:%M") if created else ""
-            att_url = getattr(msg, "attachment_url", "") or ""
-            att_name = getattr(msg, "attachment_name", "") or ""
-            if not att_url and getattr(msg, "attachment", None):
-                try:
-                    att_url = msg.attachment.url
-                    if not att_name and msg.attachment.name:
-                        att_name = msg.attachment.name.split("/")[-1]
-                except Exception:
-                    att_url = ""
+            sender_name = msg.user.username if msg.user else ""
+            if not sender_name:
+                continue
+
             items.append(
                 {
                     "id": msg.id,
                     "client_id": getattr(msg, "client_id", "") or "",
-                    "sender": msg.user.username,
-                    "username": msg.user.username,
-                    "message": msg.content or "",
+                    "sender": sender_name,
+                    "username": sender_name,
+                    "message": content,
                     "time": time_str,
                     "server_id": self.server_id,
                     "channel": self.channel_name_slug,
                     "avatar_url": _get_user_avatar(msg.user),
                     "attachment_url": att_url,
-                    "attachment_type": getattr(msg, "attachment_type", "") or "",
+                    "attachment_type": att_type,
                     "attachment_name": att_name,
                 }
             )
         return items
 
     @database_sync_to_async
-    def _save_message(self, user, channel, content, attachment_url="", attachment_type="", attachment_name="", client_id=""):
+    def _save_message(
+        self,
+        user,
+        channel,
+        content,
+        attachment_url="",
+        attachment_type="",
+        attachment_name="",
+        client_id="",
+    ):
         fields = _model_field_names(Message)
         kwargs = {
             "user": user,
@@ -463,6 +535,7 @@ class DMConsumer(AsyncWebsocketConsumer):
         self.room_group_name = build_dm_group_name(self.user.username, self.target_user.username)
         self.target_personal_group = build_user_personal_group_name(self.target_user.username)
         self.self_personal_group = build_user_personal_group_name(self.user.username)
+        self.user_avatar = await database_sync_to_async(_get_user_avatar)(self.user)
 
         await self.channel_layer.group_add(self.room_group_name, self.channel_name)
         await self.channel_layer.group_add(self.self_personal_group, self.channel_name)
@@ -493,7 +566,16 @@ class DMConsumer(AsyncWebsocketConsumer):
         except json.JSONDecodeError:
             return
 
+        if not isinstance(payload, dict):
+            return
+
         ev_type = payload.get("type") or "dm_message"
+        if ev_type not in ALLOWED_DM_EVENT_TYPES:
+            return
+
+        if ev_type == "ping":
+            await self.send(text_data=json.dumps({"type": "pong"}))
+            return
 
         if ev_type in ("call_signal", "call_hangup", "incoming_call"):
             call_event = {
@@ -537,15 +619,13 @@ class DMConsumer(AsyncWebsocketConsumer):
             attachment_type = ""
             attachment_name = ""
 
+        # Ignora DMs vazias (sem texto e sem anexo)
         if not content and not attachment_url:
             return
 
-        raw_avatar = (payload.get("avatar_url") or payload.get("avatarUrl") or payload.get("avatar") or "").strip()
-        safe_avatar = (
-            raw_avatar
-            if _is_valid_media_url(raw_avatar)
-            else await database_sync_to_async(_get_user_avatar)(self.user)
-        )
+        current_avatar = await database_sync_to_async(_get_user_avatar)(self.user)
+        self.user_avatar = current_avatar
+
         msg_id = payload.get("id") or f"dm_{int(timezone.now().timestamp() * 1000)}"
         time_str = payload.get("time") or timezone.localtime(timezone.now()).strftime("%H:%M")
         client_id = str(payload.get("client_id") or msg_id)[:100]
@@ -560,15 +640,17 @@ class DMConsumer(AsyncWebsocketConsumer):
             client_id=client_id,
         )
 
+        final_id = saved_dm.id if saved_dm else msg_id
+
         dm_event = {
             "type": "dm_message",
-            "id": saved_dm.id if saved_dm else msg_id,
+            "id": final_id,
             "client_id": client_id,
             "sender": self.user.username,
             "receiver": self.target_user.username,
             "message": content,
             "time": time_str,
-            "avatar_url": safe_avatar,
+            "avatar_url": current_avatar,
             "attachment_url": attachment_url,
             "attachment_type": attachment_type if attachment_url else "",
             "attachment_name": attachment_name if attachment_url else "",
@@ -578,16 +660,25 @@ class DMConsumer(AsyncWebsocketConsumer):
             self.target_personal_group,
             {
                 "type": "dm_notification",
-                "id": dm_event["id"],
+                "id": final_id,
                 "sender": self.user.username,
                 "receiver": self.target_user.username,
                 "preview": content[:120] if content else (attachment_name or "Anexo"),
                 "time": time_str,
-                "avatar_url": safe_avatar,
+                "avatar_url": current_avatar,
             },
         )
 
     async def dm_message(self, event):
+        content = (event.get("message") or "").strip()
+        attachment_url = (event.get("attachment_url") or "").strip()
+        if not content and not attachment_url:
+            return
+
+        sender_name = (event.get("sender") or "").strip()
+        if not sender_name:
+            return
+
         avatar_url = event.get("avatar_url") or event.get("avatarUrl") or ""
         await self.send(
             text_data=json.dumps(
@@ -595,12 +686,12 @@ class DMConsumer(AsyncWebsocketConsumer):
                     "type": "dm_message",
                     "id": event.get("id"),
                     "client_id": event.get("client_id", ""),
-                    "sender": event.get("sender"),
+                    "sender": sender_name,
                     "receiver": event.get("receiver"),
-                    "message": event.get("message", ""),
+                    "message": content,
                     "time": event.get("time", ""),
                     "avatar_url": avatar_url,
-                    "attachment_url": event.get("attachment_url", ""),
+                    "attachment_url": attachment_url,
                     "attachment_type": event.get("attachment_type", ""),
                     "attachment_name": event.get("attachment_name", ""),
                 }
@@ -668,35 +759,44 @@ class DMConsumer(AsyncWebsocketConsumer):
         )
         items = []
         for dm in reversed(list(qs)):
+            content = (dm.content or "").strip()
+            att_url, att_type, att_name = _extract_model_attachment(dm)
+            if not content and not att_url:
+                continue
+
             created = getattr(dm, "timestamp", None) or getattr(dm, "created_at", None)
             time_str = timezone.localtime(created).strftime("%H:%M") if created else ""
-            att_url = getattr(dm, "attachment_url", "") or ""
-            att_name = getattr(dm, "attachment_name", "") or ""
-            if not att_url and getattr(dm, "attachment", None):
-                try:
-                    att_url = dm.attachment.url
-                    if not att_name and dm.attachment.name:
-                        att_name = dm.attachment.name.split("/")[-1]
-                except Exception:
-                    att_url = ""
+            sender_name = dm.sender.username if dm.sender else ""
+            if not sender_name:
+                continue
+
             items.append(
                 {
                     "id": dm.id,
                     "client_id": getattr(dm, "client_id", "") or "",
-                    "sender": dm.sender.username,
-                    "receiver": dm.receiver.username,
-                    "message": dm.content or "",
+                    "sender": sender_name,
+                    "receiver": dm.receiver.username if dm.receiver else "",
+                    "message": content,
                     "time": time_str,
                     "avatar_url": _get_user_avatar(dm.sender),
                     "attachment_url": att_url,
-                    "attachment_type": getattr(dm, "attachment_type", "") or "",
+                    "attachment_type": att_type,
                     "attachment_name": att_name,
                 }
             )
         return items
 
     @database_sync_to_async
-    def _save_dm(self, sender, receiver, content, attachment_url="", attachment_type="", attachment_name="", client_id=""):
+    def _save_dm(
+        self,
+        sender,
+        receiver,
+        content,
+        attachment_url="",
+        attachment_type="",
+        attachment_name="",
+        client_id="",
+    ):
         fields = _model_field_names(PrivateMessage)
         kwargs = {
             "sender": sender,
