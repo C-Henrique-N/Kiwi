@@ -253,7 +253,12 @@ def room_view(request, server_id=None, channel_id=None):
     chat_messages = []
 
     if server_id is not None:
-        active_server = get_object_or_404(Server, id=server_id, members=request.user)
+        server_qs = Server.objects.filter(id=server_id)
+        if not is_admin_user(request.user):
+            server_qs = server_qs.filter(
+                models.Q(members=request.user) | models.Q(owner=request.user)
+            ).distinct()
+        active_server = get_object_or_404(server_qs)
         channels = list(active_server.channels.all())
         if channel_id is not None:
             active_channel = get_object_or_404(Channel, id=channel_id, server=active_server)
