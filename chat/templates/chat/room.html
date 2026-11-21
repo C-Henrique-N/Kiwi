@@ -2440,6 +2440,9 @@
         })(window);
     </script>
 
+    <!-- Gerenciador de isolamento de servidores, canais e DMs -->
+    <script src="{% static 'chat/js/room_context_manager.js' %}"></script>
+
     <div id="kiwi-splash" aria-hidden="true">
         <div class="kiwi-splash-stage">
             <div class="kiwi-splash-ring"></div>
@@ -3393,6 +3396,62 @@
                 syncAkiiraExclusiveRoomUI(activeUsername, myProfileData.is_admin);
             }
 
+
+            // === ISOLAMENTO POR (SERVIDOR, CANAL) E DM VIA KIWICONTEXTMANAGER ===
+            let currentServerId = 'home';
+            const serverChannelsStore = {
+                'home': [
+                    { name: 'geral', type: 'text' },
+                    { name: 'música', type: 'audio' }
+                ]
+            };
+            const channelSnapshotsByKey = new Map();
+
+            function makeRoomContextKey(serverId, chName) {
+                const srv = encodeURIComponent(String(serverId || 'home').trim() || 'home');
+                const ch = encodeURIComponent(String(chName || 'geral').trim().toLowerCase() || 'geral');
+                return `srv:${srv}:ch:${ch}`;
+            }
+
+            function saveCurrentChannelSnapshot() {
+                if (currentView === 'geral' && chatLog) {
+                    const key = makeRoomContextKey(currentServerId, currentChannelName);
+                    channelSnapshotsByKey.set(key, chatLog.innerHTML);
+                    if (currentServerId === 'home' && (currentChannelName || 'geral') === 'geral') {
+                        geralSnapshotHTML = chatLog.innerHTML;
+                    }
+                    if (window.KiwiContextManager && typeof window.KiwiContextManager.saveSnapshot === 'function') {
+                        try {
+                            window.KiwiContextManager.saveSnapshot(key, chatLog.innerHTML);
+                        } catch (_) {}
+                    }
+                }
+            }
+
+            function renderChannelsListForServer(serverId, activeChName) {
+                const listContainer = document.getElementById('server-channels-list');
+                if (!listContainer) return;
+                if (!serverChannelsStore[serverId]) {
+                    serverChannelsStore[serverId] = [
+                        { name: 'geral', type: 'text' },
+                        { name: 'música', type: 'audio' }
+                    ];
+                }
+                const channels = serverChannelsStore[serverId];
+                listContainer.innerHTML = '';
+                channels.forEach((ch) => {
+                    const isAct = (ch.name === activeChName);
+                    const item = document.createElement('div');
+                    item.className = 'channel-item' + (isAct ? ' active' : '');
+                    if (ch.name === 'geral' && serverId === 'home') item.id = 'tab-geral';
+                    item.setAttribute('data-channel-name', ch.name);
+                    item.setAttribute('data-channel-type', ch.type || 'text');
+                    item.innerHTML = `<span>${ch.type === 'audio' ? '🎵' : '#'}</span><span style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${escapeHtmlText(ch.name)}</span>`;
+                    item.addEventListener('click', () => switchToServerChannel(ch.name, ch.type || 'text'));
+                    listContainer.appendChild(item);
+                });
+            }
+
             const chatAreaEl = document.querySelector('.chat-area');
             const chatLog = document.getElementById('chat-log');
             const messageInput = document.getElementById('chat-message-input');
@@ -3780,7 +3839,7 @@
                     }
                 }
 
-                if (currentView === 'geral') geralSnapshotHTML = chatLog.innerHTML;
+                if (currentView === 'geral') saveCurrentChannelSnapshot();
             }
 
             function enhanceExistingMessagesInLog() {
@@ -3793,6 +3852,7 @@
 
             enhanceExistingMessagesInLog();
             let geralSnapshotHTML = chatLog.innerHTML;
+            channelSnapshotsByKey.set(makeRoomContextKey('home', 'geral'), geralSnapshotHTML);
 
             function persistThemePreference(colorKey) {
                 const safeTheme = sanitizeThemeForUser(colorKey, activeUsername, myProfileData.is_admin);
@@ -5337,7 +5397,7 @@
 
             window.openPrivateChat = function(targetUsername, knownAvatarUrl = '') {
                 if (!targetUsername || targetUsername === activeUsername) return;
-                if (currentView === 'geral') geralSnapshotHTML = chatLog.innerHTML;
+                saveCurrentChannelSnapshot();
 
                 currentView = 'dm';
                 currentDmUser = targetUsername;
@@ -5367,42 +5427,68 @@
                 window.openMobileChatView();
             };
 
-            window.switchToGeral = function() {
-                currentView = 'geral';
-                currentDmUser = null;
-                document.querySelectorAll('#server-channels-list .channel-item').forEach(c => {
-                    c.classList.toggle('active', c.getAttribute('data-channel-name') === currentChannelName);
-                });
-                renderDmTabs();
-
-                headerMainTitle.textContent = `# ${currentChannelName}`;
-                headerSubLabel.textContent = currentChannelName === 'música' ? '| Canal de Música' : '| Chat estético interativo';
-                headerCallBtn.classList.remove('visible');
-                backToGeralBtn.classList.remove('visible');
-                headerDmAvatar.classList.remove('visible');
-
-                messageInput.placeholder = `Conversar em #${currentChannelName}...`;
-                chatLog.innerHTML = geralSnapshotHTML;
-                enhanceExistingMessagesInLog();
-                chatLog.scrollTop = chatLog.scrollHeight;
-                triggerChatAreaTransition();
-            };
-
-            function switchToServerChannel(chName, chType = 'text') {
+            function loadChannelView(serverId, chName, chType = 'text') {
+                currentServerId = serverId || 'home';
                 currentView = 'geral';
                 currentDmUser = null;
                 currentChannelName = chName || 'geral';
-                document.querySelectorAll('#server-channels-list .channel-item').forEach(c => {
-                    c.classList.toggle('active', c.getAttribute('data-channel-name') === currentChannelName);
-                });
+
+                if (window.KiwiContextManager && typeof window.KiwiContextManager.switchToChannel === 'function') {
+                    try {
+                        window.KiwiContextManager.switchToChannel(currentServerId, currentChannelName, chType);
+                    } catch (_) {}
+                }
+
+                renderChannelsListForServer(currentServerId, currentChannelName);
                 renderDmTabs();
+
                 headerMainTitle.textContent = `${chType === 'audio' ? '🎵' : '#'} ${currentChannelName}`;
                 headerSubLabel.textContent = chType === 'audio' ? '| Canal de Música' : '| Chat estético interativo';
                 headerCallBtn.classList.remove('visible');
                 backToGeralBtn.classList.remove('visible');
                 headerDmAvatar.classList.remove('visible');
                 messageInput.placeholder = `Conversar em #${currentChannelName}...`;
+
+                const ctxKey = makeRoomContextKey(currentServerId, currentChannelName);
+                let savedHtml = channelSnapshotsByKey.get(ctxKey);
+                if (!savedHtml && window.KiwiContextManager && typeof window.KiwiContextManager.getSnapshot === 'function') {
+                    try {
+                        savedHtml = window.KiwiContextManager.getSnapshot(ctxKey);
+                    } catch (_) {}
+                }
+
+                if (savedHtml) {
+                    chatLog.innerHTML = savedHtml;
+                } else {
+                    const srvLabel = currentServerId === 'home' ? 'Kiwi' : currentServerId;
+                    chatLog.innerHTML = `
+                        <div class="message-group">
+                            <div class="avatar" style="background: #232428;">🥝</div>
+                            <div class="message-content">
+                                <div class="message-header">
+                                    <span class="username" style="color: #23a55a;">Sistema Kiwi</span>
+                                    <span class="timestamp">Agora</span>
+                                </div>
+                                <div class="message-text">Canal <strong>${escapeHtmlText(chType === 'audio' ? '🎵' : '#')} ${escapeHtmlText(currentChannelName)}</strong> em <strong>${escapeHtmlText(srvLabel)}</strong>.</div>
+                            </div>
+                        </div>
+                    `;
+                    channelSnapshotsByKey.set(ctxKey, chatLog.innerHTML);
+                }
+
+                enhanceExistingMessagesInLog();
+                chatLog.scrollTop = chatLog.scrollHeight;
                 triggerChatAreaTransition();
+            }
+
+            window.switchToGeral = function() {
+                saveCurrentChannelSnapshot();
+                loadChannelView('home', 'geral', 'text');
+            };
+
+            function switchToServerChannel(chName, chType = 'text') {
+                saveCurrentChannelSnapshot();
+                loadChannelView(currentServerId, chName || 'geral', chType || 'text');
                 window.openMobileChatView();
             }
 
@@ -5571,17 +5657,31 @@
             });
             if (railHomeBtn) {
                 railHomeBtn.addEventListener('click', () => {
+                    saveCurrentChannelSnapshot();
                     document.querySelectorAll('.server-rail-btn').forEach(b => b.classList.remove('active'));
                     railHomeBtn.classList.add('active');
                     if (sidebarServerTitle) sidebarServerTitle.textContent = '🥝 Kiwi • Amizades';
-                    switchToGeral();
+                    loadChannelView('home', 'geral', 'text');
                 });
             }
             if (createServerForm) {
                 createServerForm.addEventListener('submit', function(e) {
                     e.preventDefault();
                     const nameInput = document.getElementById('new-server-name');
+                    const channelsInput = document.getElementById('new-server-channels');
                     const sName = (nameInput && nameInput.value.trim()) || 'Novo Servidor';
+                    const serverSlug = `${sName.toLowerCase().replace(/[^a-z0-9]+/g, '-')}-${Date.now().toString(36).slice(-4)}`;
+
+                    const rawChs = ((channelsInput && channelsInput.value) || 'geral, música')
+                        .split(',')
+                        .map(s => s.trim().toLowerCase().replace(/\s+/g, '-'))
+                        .filter(Boolean);
+                    if (!rawChs.includes('geral')) rawChs.unshift('geral');
+                    serverChannelsStore[serverSlug] = rawChs.map(name => ({
+                        name,
+                        type: (name === 'música' || name === 'musica' || name === 'audio') ? 'audio' : 'text'
+                    }));
+
                     if (serverRail && openCreateServerBtn) {
                         const btn = document.createElement('button');
                         btn.type = 'button';
@@ -5589,13 +5689,20 @@
                         btn.textContent = sName.charAt(0).toUpperCase();
                         btn.title = sName;
                         btn.addEventListener('click', () => {
+                            saveCurrentChannelSnapshot();
                             document.querySelectorAll('.server-rail-btn').forEach(b => b.classList.remove('active'));
                             btn.classList.add('active');
                             if (sidebarServerTitle) sidebarServerTitle.textContent = `🥝 ${sName}`;
-                            switchToServerChannel('geral', 'text');
+                            loadChannelView(serverSlug, 'geral', 'text');
+                            window.openMobileChatView();
                         });
                         serverRail.insertBefore(btn, openCreateServerBtn);
+                        document.querySelectorAll('.server-rail-btn').forEach(b => b.classList.remove('active'));
+                        btn.classList.add('active');
                     }
+                    saveCurrentChannelSnapshot();
+                    if (sidebarServerTitle) sidebarServerTitle.textContent = `🥝 ${sName}`;
+                    loadChannelView(serverSlug, 'geral', 'text');
                     closeModalAnimated(createServerModal);
                     if (nameInput) nameInput.value = '';
                     showKiwiToast(`Servidor "${sName}" criado!`);
@@ -5621,13 +5728,13 @@
                     const chName = ((nameInp && nameInp.value.trim()) || 'novo-canal').toLowerCase().replace(/\s+/g, '-');
                     const chType = (typeInp && typeInp.value) || 'text';
 
-                    const item = document.createElement('div');
-                    item.className = 'channel-item';
-                    item.setAttribute('data-channel-name', chName);
-                    item.setAttribute('data-channel-type', chType);
-                    item.innerHTML = `<span>${chType === 'audio' ? '🎵' : '#'}</span><span style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${escapeHtmlText(chName)}</span>`;
-                    item.addEventListener('click', () => switchToServerChannel(chName, chType));
-                    serverChannelsList.appendChild(item);
+                    if (!serverChannelsStore[currentServerId]) {
+                        serverChannelsStore[currentServerId] = [{ name: 'geral', type: 'text' }];
+                    }
+                    if (!serverChannelsStore[currentServerId].some(c => c.name === chName)) {
+                        serverChannelsStore[currentServerId].push({ name: chName, type: chType });
+                    }
+                    renderChannelsListForServer(currentServerId, chName);
 
                     closeModalAnimated(createChannelModal);
                     if (nameInp) nameInp.value = '';
@@ -5920,7 +6027,7 @@
                         writeStorageJson(DM_HISTORY_STORAGE_KEY, dmHistoryStore);
                     }
                     if (grp) grp.remove();
-                    if (currentView === 'geral') geralSnapshotHTML = chatLog.innerHTML;
+                    if (currentView === 'geral') saveCurrentChannelSnapshot();
                     closeAllMessagePopovers();
                     showKiwiToast('Mensagem removida.');
                     return;
