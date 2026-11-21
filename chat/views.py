@@ -32,7 +32,7 @@ from .models import (
     UserProfile,
 )
 
-IMAGE_EXTS = {'.png', '.jpg', '.jpeg', '.gif', '.webp'}
+IMAGE_EXTS = {'.png', '.jpg', '.jpeg', '.gif', '.webp', '.heic', '.heif', '.avif'}
 AUDIO_EXTS = {'.mp3', '.wav', '.ogg', '.webm', '.m4a'}
 DOC_EXTS = {'.pdf', '.doc', '.docx', '.txt', '.zip', '.rar', '.csv', '.xls', '.xlsx', '.ppt', '.pptx'}
 MAX_FILE_SIZE = 10 * 1024 * 1024  # 10 MB
@@ -326,6 +326,21 @@ def room_view(request, server_id=None, channel_id=None):
 def profile_page_view(request):
     profile, _ = UserProfile.objects.get_or_create(user=request.user)
     return render(request, 'chat/profile.html', {'profile': profile})
+
+
+@login_required(login_url='login')
+def loja_view(request):
+    profile, _ = UserProfile.objects.get_or_create(user=request.user)
+    servers = Server.objects.filter(members=request.user).prefetch_related('channels', 'roles')
+    return render(
+        request,
+        'chat/loja.html',
+        {
+            'profile': profile,
+            'servers': servers,
+            'is_akiira_admin': is_akiira_admin(request.user),
+        },
+    )
 
 
 @login_required

@@ -1,0 +1,436 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🛍️ Loja • Kiwi Chat</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700;900&family=Fredoka:wght@600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-darkest: #0b0c0e;
+            --bg-sidebar: #121316;
+            --bg-main: #18191d;
+            --bg-card: #202227;
+            --bg-soft: #282b31;
+            --accent: #8a63d2;
+            --accent-hover: #7650bd;
+            --text-main: #f2f3f5;
+            --text-muted: #949ba4;
+            --border-subtle: rgba(255, 255, 255, 0.08);
+            --gold: #ffd700;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+            background: var(--bg-main);
+            color: var(--text-main);
+            display: flex;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        /* === RAIL DE SERVIDORES === */
+        .server-rail {
+            width: 68px;
+            background: var(--bg-darkest);
+            border-right: 1px solid var(--border-subtle);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 12px 0;
+            gap: 10px;
+            flex-shrink: 0;
+        }
+        .rail-btn {
+            width: 46px;
+            height: 46px;
+            border-radius: 50%;
+            background: var(--bg-card);
+            color: var(--text-main);
+            border: 1px solid var(--border-subtle);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 800;
+            font-size: 16px;
+            text-decoration: none;
+            transition: border-radius 0.2s ease, background 0.2s ease;
+            background-size: cover;
+            background-position: center;
+        }
+        .rail-btn:hover, .rail-btn.active {
+            border-radius: 16px;
+            background: var(--accent);
+            color: #fff;
+        }
+        .rail-divider {
+            width: 32px;
+            height: 2px;
+            background: var(--border-subtle);
+            border-radius: 2px;
+        }
+
+        /* === SIDEBAR ESQUERDA === */
+        .sidebar-left {
+            width: 240px;
+            background: var(--bg-sidebar);
+            border-right: 1px solid var(--border-subtle);
+            display: flex;
+            flex-direction: column;
+            flex-shrink: 0;
+        }
+        .sidebar-header {
+            padding: 16px 18px;
+            font-size: 15px;
+            font-weight: 800;
+            border-bottom: 1px solid var(--border-subtle);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .sidebar-nav {
+            padding: 12px 10px;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+        .nav-link {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 10px 12px;
+            border-radius: 8px;
+            color: var(--text-muted);
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 600;
+            transition: background 0.15s ease, color 0.15s ease;
+        }
+        .nav-link:hover {
+            background: rgba(255, 255, 255, 0.06);
+            color: var(--text-main);
+        }
+        .nav-link.active {
+            background: rgba(138, 99, 210, 0.22);
+            color: #ffffff;
+            border-left: 3px solid var(--accent);
+        }
+
+        /* === PAINEL DO USUÁRIO NO RODAPÉ === */
+        .user-footer {
+            padding: 10px 12px;
+            background: var(--bg-darkest);
+            border-top: 1px solid var(--border-subtle);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .user-avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: var(--accent);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 800;
+            background-size: cover;
+            background-position: center;
+            flex-shrink: 0;
+        }
+
+        /* === ÁREA PRINCIPAL DA LOJA === */
+        .shop-main {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+            min-width: 0;
+        }
+        .shop-topbar {
+            padding: 14px 24px;
+            background: var(--bg-sidebar);
+            border-bottom: 1px solid var(--border-subtle);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            flex-wrap: wrap;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+        .shop-tabs {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+        .shop-tab-btn {
+            background: transparent;
+            border: 1px solid transparent;
+            color: var(--text-muted);
+            padding: 7px 14px;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: 0.15s ease;
+        }
+        .shop-tab-btn:hover {
+            background: var(--bg-soft);
+            color: var(--text-main);
+        }
+        .shop-tab-btn.active {
+            background: var(--accent);
+            color: #fff;
+        }
+
+        /* === BANNER HERO DA LOJA === */
+        .shop-hero {
+            margin: 22px 24px 0 24px;
+            padding: 28px 30px;
+            border-radius: 16px;
+            background: linear-gradient(135deg, #24163d 0%, #151722 55%, #1d263b 100%);
+            border: 1px solid rgba(138, 99, 210, 0.35);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 20px;
+            box-shadow: 0 12px 30px rgba(0, 0, 0, 0.25);
+        }
+        .shop-hero h1 {
+            font-size: 24px;
+            font-weight: 900;
+            margin-bottom: 6px;
+        }
+        .shop-hero p {
+            font-size: 13px;
+            color: var(--text-muted);
+            max-width: 520px;
+            line-height: 1.5;
+        }
+
+        /* === CONTEÚDO: VITRINE + PRÉVIA DO ARMÁRIO === */
+        .shop-workspace {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) 310px;
+            gap: 22px;
+            padding: 22px 24px 32px 24px;
+            align-items: start;
+        }
+
+        .shop-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+            gap: 16px;
+        }
+
+        .empty-shop-card {
+            grid-column: 1 / -1;
+            background: var(--bg-card);
+            border: 1px dashed var(--border-subtle);
+            border-radius: 14px;
+            padding: 44px 24px;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+        }
+        .empty-shop-icon {
+            font-size: 38px;
+            margin-bottom: 4px;
+        }
+
+        /* === CARTÃO DE PRÉVIA DO PERFIL / ARMÁRIO === */
+        .preview-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-subtle);
+            border-radius: 16px;
+            overflow: hidden;
+            position: sticky;
+            top: 76px;
+        }
+        .preview-banner {
+            height: 92px;
+            background: linear-gradient(135deg, #5865f2, #8a63d2);
+            background-size: cover;
+            background-position: center;
+        }
+        .preview-body {
+            padding: 0 16px 18px 16px;
+            margin-top: -34px;
+        }
+        .preview-avatar {
+            width: 68px;
+            height: 68px;
+            border-radius: 50%;
+            border: 4px solid var(--bg-card);
+            background: var(--accent);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            font-weight: 800;
+            background-size: cover;
+            background-position: center;
+            margin-bottom: 10px;
+        }
+        .preview-slot-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            margin-top: 14px;
+        }
+        .preview-slot {
+            background: var(--bg-soft);
+            border: 1px solid var(--border-subtle);
+            border-radius: 10px;
+            padding: 9px 12px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-size: 12px;
+        }
+        .btn-back-chat {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: var(--bg-soft);
+            color: var(--text-main);
+            border: 1px solid var(--border-subtle);
+            padding: 7px 12px;
+            border-radius: 8px;
+            font-size: 12px;
+            font-weight: 700;
+            text-decoration: none;
+        }
+        .btn-back-chat:hover { background: #32363e; }
+
+        @media (max-width: 900px) {
+            .shop-workspace { grid-template-columns: 1fr; }
+            .preview-card { position: static; }
+        }
+        @media (max-width: 768px) {
+            .sidebar-left { display: none; }
+            .server-rail { width: 54px; }
+            .shop-hero { margin: 14px; padding: 20px; }
+            .shop-workspace { padding: 14px; }
+        }
+    </style>
+</head>
+<body>
+    <!-- Rail de Servidores -->
+    <nav class="server-rail">
+        <a href="{% url 'room_home' %}" class="rail-btn" title="Início / Chat">🥝</a>
+        <div class="rail-divider"></div>
+        {% for srv in servers %}
+            <a href="{% url 'room_server' srv.id %}" class="rail-btn" title="{{ srv.name }}"
+               {% if srv.icon %}style="background-image: url('{{ srv.icon.url }}'); font-size: 0;"{% endif %}>
+                {{ srv.name|slice:":2"|upper }}
+            </a>
+        {% endfor %}
+    </nav>
+
+    <!-- Menu Lateral -->
+    <aside class="sidebar-left">
+        <div class="sidebar-header">
+            <span>🥝 Kiwi Chat</span>
+        </div>
+        <nav class="sidebar-nav">
+            <a href="{% url 'room_home' %}" class="nav-link">💬 Mensagens &amp; Amigos</a>
+            <a href="{% url 'loja' %}" class="nav-link active">🛍️ Loja de Efeitos</a>
+        </nav>
+        <div class="user-footer">
+            <div class="user-avatar" {% if profile.avatar %}style="background-image: url('{{ profile.avatar.url }}'); font-size: 0;"{% endif %}>
+                {{ request.user.username|slice:":1"|upper }}
+            </div>
+            <div style="min-width: 0; flex: 1;">
+                <div style="font-size: 13px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                    {{ request.user.username }}
+                </div>
+                <div style="font-size: 11px; color: #23a55a;">● Online</div>
+            </div>
+        </div>
+    </aside>
+
+    <!-- Conteúdo da Loja -->
+    <main class="shop-main">
+        <header class="shop-topbar">
+            <div class="shop-tabs">
+                <button type="button" class="shop-tab-btn active" data-filter="all">✨ Destaques</button>
+                <button type="button" class="shop-tab-btn" data-filter="frame">🖼️ Molduras de Avatar</button>
+                <button type="button" class="shop-tab-btn" data-filter="card_effect">🃏 Efeitos de Cartão</button>
+                <button type="button" class="shop-tab-btn" data-filter="name_style">🔤 Estilos de Nome</button>
+            </div>
+            <a href="{% url 'room_home' %}" class="btn-back-chat">← Voltar ao Chat</a>
+        </header>
+
+        <section class="shop-hero">
+            <div>
+                <h1>🛍️ Loja de Efeitos Kiwi</h1>
+                <p>Personalize o seu perfil com molduras animadas, auras para o cartão e tipografias exclusivas para o seu nome. Todos os itens adquiridos ficam guardados no seu Armário de Efeitos.</p>
+            </div>
+        </section>
+
+        <div class="shop-workspace">
+            <!-- Grade de Itens (pronta para receber os produtos depois) -->
+            <div class="shop-grid" id="shop-items-grid">
+                <div class="empty-shop-card">
+                    <div class="empty-shop-icon">🎁</div>
+                    <h3 style="font-size: 16px;">Catálogo em preparação</h3>
+                    <p style="font-size: 13px; color: var(--text-muted); max-width: 380px;">
+                        A estrutura da Loja já está ativa! Assim que os pacotes de molduras, efeitos de cartão e estilos de nome forem adicionados, eles aparecerão aqui.
+                    </p>
+                </div>
+            </div>
+
+            <!-- Prévia ao Vivo & Slots do Armário -->
+            <aside class="preview-card">
+                <div class="preview-banner" {% if profile.banner %}style="background-image: url('{{ profile.banner.url }}');"{% endif %}></div>
+                <div class="preview-body">
+                    <div class="preview-avatar" {% if profile.avatar %}style="background-image: url('{{ profile.avatar.url }}'); font-size: 0;"{% endif %}>
+                        {{ request.user.username|slice:":1"|upper }}
+                    </div>
+                    <div style="font-size: 17px; font-weight: 800;">{{ request.user.username }}</div>
+                    <div style="font-size: 12px; color: var(--text-muted); margin-top: 2px;">{{ profile.bubble|default:"Online" }}</div>
+
+                    <div class="preview-slot-list">
+                        <div class="preview-slot">
+                            <span style="color: var(--text-muted);">Moldura</span>
+                            <strong>Nenhuma</strong>
+                        </div>
+                        <div class="preview-slot">
+                            <span style="color: var(--text-muted);">Efeito do Cartão</span>
+                            <strong>Padrão</strong>
+                        </div>
+                        <div class="preview-slot">
+                            <span style="color: var(--text-muted);">Estilo do Nome</span>
+                            <strong>Padrão</strong>
+                        </div>
+                    </div>
+
+                    <a href="{% url 'room_home' %}" class="btn-back-chat" style="width: 100%; justify-content: center; margin-top: 14px; background: var(--accent); border: none;">
+                        🎒 Abrir Meu Armário no Perfil
+                    </a>
+                </div>
+            </aside>
+        </div>
+    </main>
+
+    <script>
+        document.querySelectorAll('.shop-tab-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.shop-tab-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+            });
+        });
+    </script>
+</body>
+</html>

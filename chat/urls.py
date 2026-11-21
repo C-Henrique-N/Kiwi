@@ -15,6 +15,7 @@ urlpatterns = [
     path('profile/', views.profile_page_view, name='profile_page'),
     path('api/profile/update/', views.update_profile, name='update_profile'),
     path('api/profile/<str:username>/', views.get_user_profile, name='get_user_profile'),
+    path('loja/', views.loja_view, name='loja'),
 
     path('api/servers/create/', views.create_server, name='create_server'),
     path('api/servers/<int:server_id>/update/', views.update_server, name='update_server'),
