@@ -5092,8 +5092,7 @@
                 if (editUsernameInput) editUsernameInput.value = activeUsername || myProfileData.username || '';
                 editBubble.value = myProfileData.bubble || '';
                 editPronouns.value = myProfileData.pronouns || '';
-                editBio.value = (myProfileData.bio || '').replace(/<br\s*\/?\s*>/gi, '
-');
+                editBio.value = (myProfileData.bio || '').replace(/<br\s*\/?\s*>/gi, '\n');
                 editSong.value = myProfileData.song || '';
                 editArtist.value = myProfileData.artist || '';
                 if (editYtUrl) editYtUrl.value = myProfileData.musicUrl || '';
