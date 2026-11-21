@@ -17,7 +17,18 @@ urlpatterns = [
     path('api/profile/<str:username>/', views.get_user_profile, name='get_user_profile'),
 
     path('api/servers/create/', views.create_server, name='create_server'),
+    path('api/servers/<int:server_id>/update/', views.update_server, name='update_server'),
+    path('api/servers/<int:server_id>/delete/', views.delete_server, name='delete_server'),
     path('api/servers/<int:server_id>/channels/create/', views.create_channel, name='create_channel'),
+    path('api/servers/<int:server_id>/channels/<int:channel_id>/delete/', views.delete_channel, name='delete_channel'),
+
+    # Cargos e membros do servidor
+    path('api/servers/<int:server_id>/members/', views.get_server_members_grouped, name='server_members_grouped'),
+    path('api/servers/<int:server_id>/members/add/', views.add_server_member, name='add_server_member'),
+    path('api/servers/<int:server_id>/members/<int:user_id>/kick/', views.kick_server_member, name='kick_server_member'),
+    path('api/servers/<int:server_id>/members/<int:user_id>/role/', views.assign_member_role, name='assign_member_role'),
+    path('api/servers/<int:server_id>/roles/create/', views.create_server_role, name='create_server_role'),
+    path('api/servers/<int:server_id>/roles/<int:role_id>/delete/', views.delete_server_role, name='delete_server_role'),
 
     path('api/users/search/', views.search_users, name='search_users'),
     path('api/friend-request/send/', views.send_friend_request, name='send_friend_request'),

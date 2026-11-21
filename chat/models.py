@@ -1,7 +1,7 @@
 from django.contrib.auth.models import User
 from django.db import models
 from django.db.models import Q
-from django.db.models.signals import post_save
+from django.db.models.signals import m2m_changed, post_save
 from django.dispatch import receiver
 
 
@@ -86,9 +86,61 @@ class Server(models.Model):
         super().save(*args, **kwargs)
         if is_new and self.owner_id:
             self.members.add(self.owner)
+            ServerMember.objects.get_or_create(server=self, user=self.owner)
 
     def __str__(self):
         return self.name
+
+
+class ServerRole(models.Model):
+    server = models.ForeignKey(Server, on_delete=models.CASCADE, related_name='roles')
+    name = models.CharField(max_length=50)
+    color = models.CharField(max_length=20, default='#8a63d2')
+    position = models.PositiveIntegerField(default=0)
+    can_manage_channels = models.BooleanField(default=False)
+    can_kick_members = models.BooleanField(default=False)
+    can_manage_roles = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['position', 'id']
+        unique_together = ('server', 'name')
+
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'server_id': self.server_id,
+            'name': self.name,
+            'color': self.color,
+            'position': self.position,
+            'can_manage_channels': self.can_manage_channels,
+            'can_kick_members': self.can_kick_members,
+            'can_manage_roles': self.can_manage_roles,
+        }
+
+    def __str__(self):
+        return f'{self.name} ({self.server.name})'
+
+
+class ServerMember(models.Model):
+    server = models.ForeignKey(Server, on_delete=models.CASCADE, related_name='server_memberships')
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='server_memberships')
+    role = models.ForeignKey(
+        ServerRole,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='members',
+    )
+    joined_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['joined_at', 'id']
+        unique_together = ('server', 'user')
+
+    def __str__(self):
+        role_name = self.role.name if self.role else 'Sem cargo'
+        return f'{self.user.username} em {self.server.name} [{role_name}]'
 
 
 class Channel(models.Model):
@@ -291,3 +343,23 @@ class SavedMusic(models.Model):
 def create_user_profile(sender, instance, created, **kwargs):
     if created:
         UserProfile.objects.get_or_create(user=instance)
+
+
+@receiver(m2m_changed, sender=Server.members.through)
+def sync_server_memberships(sender, instance, action, pk_set, **kwargs):
+    if action == 'post_add' and pk_set:
+        existing = set(
+            ServerMember.objects.filter(server=instance, user_id__in=pk_set).values_list('user_id', flat=True)
+        )
+        missing_ids = [uid for uid in pk_set if uid not in existing]
+        if missing_ids:
+            ServerMember.objects.bulk_create([
+                ServerMember(server=instance, user_id=uid) for uid in missing_ids
+            ])
+    elif action == 'post_remove' and pk_set:
+        ServerMember.objects.filter(server=instance, user_id__in=pk_set).delete()
+    elif action == 'post_clear':
+        ServerMember.objects.filter(server=instance).delete()
+        if instance.owner_id:
+            instance.members.add(instance.owner)
+            ServerMember.objects.get_or_create(server=instance, user=instance.owner)

@@ -1,6 +1,7 @@
 import json
 import os
 from urllib.parse import urlparse
+
 from asgiref.sync import async_to_sync
 from channels.layers import get_channel_layer
 from django.contrib import messages
@@ -10,7 +11,6 @@ from django.contrib.auth.models import User
 from django.db import models
 from django.http import Http404, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
-from django.utils import timezone
 from django.utils.http import url_has_allowed_host_and_scheme
 from django.views.decorators.http import require_POST
 
@@ -27,6 +27,8 @@ from .models import (
     PrivateMessage,
     SavedMusic,
     Server,
+    ServerMember,
+    ServerRole,
     UserProfile,
 )
 
@@ -89,6 +91,33 @@ def are_friends(user1, user2):
     return FriendRequest.are_friends(user1, user2)
 
 
+def _user_can_manage_server(user, server):
+    if not user or not user.is_authenticated or not server:
+        return False
+    if server.owner_id == user.id or is_admin_user(user):
+        return True
+    membership = ServerMember.objects.filter(server=server, user=user).select_related('role').first()
+    return bool(membership and membership.role and membership.role.can_manage_channels)
+
+
+def _user_can_kick_members(user, server):
+    if not user or not user.is_authenticated or not server:
+        return False
+    if server.owner_id == user.id or is_admin_user(user):
+        return True
+    membership = ServerMember.objects.filter(server=server, user=user).select_related('role').first()
+    return bool(membership and membership.role and membership.role.can_kick_members)
+
+
+def _user_can_manage_roles(user, server):
+    if not user or not user.is_authenticated or not server:
+        return False
+    if server.owner_id == user.id or is_admin_user(user):
+        return True
+    membership = ServerMember.objects.filter(server=server, user=user).select_related('role').first()
+    return bool(membership and membership.role and membership.role.can_manage_roles)
+
+
 def _sanitize_external_url(raw_url):
     val = (raw_url or '').strip()
     if not val:
@@ -116,8 +145,8 @@ def _sanitize_frame_effect(frame_value, user):
 
 def _get_accepted_friend_users(user):
     accepted = FriendRequest.objects.filter(
-        (models.Q(sender=user) | models.Q(receiver=user)) &
-        models.Q(status='accepted')
+        (models.Q(sender=user) | models.Q(receiver=user))
+        & models.Q(status='accepted')
     ).select_related('sender', 'receiver', 'sender__profile', 'receiver__profile')
 
     friends = []
@@ -184,10 +213,40 @@ def _channel_ws_tokens(channel):
     return (srv_token, ch_token)
 
 
+def _serialize_server_member(request, server, membership):
+    u = membership.user
+    prof, _ = UserProfile.objects.get_or_create(user=u)
+    role = membership.role
+    is_owner = (u.id == server.owner_id)
+    akiira_admin = is_akiira_admin(u)
+
+    return {
+        'id': u.id,
+        'username': u.username,
+        'is_owner': is_owner,
+        'is_admin': is_admin_user(u),
+        'is_akiira_admin': akiira_admin,
+        'avatarUrl': request.build_absolute_uri(prof.avatar.url) if prof.avatar else '',
+        'bannerUrl': request.build_absolute_uri(prof.banner.url) if prof.banner else '',
+        'bubble': prof.bubble or '',
+        'pronouns': prof.pronouns or '',
+        'bio': prof.bio or '',
+        'spotify_song': prof.spotify_song or '',
+        'spotify_artist': prof.spotify_artist or '',
+        'accent_color': _sanitize_accent_color(prof.accent_color, u, fallback=prof.accent_color or '#ff9de2'),
+        'frame_effect': _sanitize_frame_effect(getattr(prof, 'frame_effect', 'none'), u),
+        'profile_glow': bool(getattr(prof, 'profile_glow', False)) if akiira_admin else False,
+        'avatar_pulse': bool(getattr(prof, 'avatar_pulse', False)) if akiira_admin else False,
+        'name_style': (getattr(prof, 'name_style', '') or '') if akiira_admin else '',
+        'role': role.to_dict() if role else None,
+        'joined_at': membership.joined_at.isoformat() if membership.joined_at else '',
+    }
+
+
 @login_required(login_url='login')
 def room_view(request, server_id=None, channel_id=None):
     profile, _ = UserProfile.objects.get_or_create(user=request.user)
-    servers = Server.objects.filter(members=request.user).prefetch_related('channels')
+    servers = Server.objects.filter(members=request.user).prefetch_related('channels', 'roles')
 
     active_server = None
     active_channel = None
@@ -263,15 +322,15 @@ def room_view(request, server_id=None, channel_id=None):
     )
 
 
+@login_required(login_url='login')
+def profile_page_view(request):
+    profile, _ = UserProfile.objects.get_or_create(user=request.user)
+    return render(request, 'chat/profile.html', {'profile': profile})
+
+
 @login_required
 @require_POST
 def create_server(request):
-    if not is_admin_user(request.user):
-        return JsonResponse(
-            {'status': 'error', 'message': 'Apenas administradores podem criar servidores no momento.'},
-            status=403,
-        )
-
     name = (request.POST.get('name') or '').strip()
     icon = request.FILES.get('icon')
     raw_channels = (request.POST.get('channels') or '').strip()
@@ -281,10 +340,13 @@ def create_server(request):
 
     server = Server.objects.create(name=name[:120], icon=icon, owner=request.user)
     server.members.add(request.user)
+    ServerMember.objects.get_or_create(server=server, user=request.user)
 
     friends = _get_accepted_friend_users(request.user)
     if friends:
         server.members.add(*friends)
+        for friend in friends:
+            ServerMember.objects.get_or_create(server=server, user=friend)
 
     channel_names = [
         c.strip().lstrip('#').lower().replace(' ', '-')
@@ -310,6 +372,7 @@ def create_server(request):
         'server': {
             'id': server.id,
             'name': server.name,
+            'owner_id': server.owner_id,
             'icon_url': icon_url,
             'channels': created_channels,
         },
@@ -318,14 +381,48 @@ def create_server(request):
 
 @login_required
 @require_POST
-def create_channel(request, server_id):
-    if not is_admin_user(request.user):
-        return JsonResponse(
-            {'status': 'error', 'message': 'Apenas administradores podem criar canais.'},
-            status=403,
-        )
-
+def update_server(request, server_id):
     server = get_object_or_404(Server, id=server_id, members=request.user)
+    if not _user_can_manage_server(request.user, server):
+        return JsonResponse({'status': 'error', 'message': 'Sem permissão para editar este servidor.'}, status=403)
+
+    name = (request.POST.get('name') or '').strip()
+    if name:
+        server.name = name[:120]
+
+    if 'icon' in request.FILES:
+        server.icon = request.FILES['icon']
+
+    server.save()
+    return JsonResponse({
+        'status': 'success',
+        'server': {
+            'id': server.id,
+            'name': server.name,
+            'owner_id': server.owner_id,
+            'icon_url': request.build_absolute_uri(server.icon.url) if server.icon else '',
+        },
+    })
+
+
+@login_required
+@require_POST
+def delete_server(request, server_id):
+    server = get_object_or_404(Server, id=server_id)
+    if server.owner_id != request.user.id and not is_admin_user(request.user):
+        return JsonResponse({'status': 'error', 'message': 'Apenas o dono pode excluir o servidor.'}, status=403)
+
+    server.delete()
+    return JsonResponse({'status': 'success'})
+
+
+@login_required
+@require_POST
+def create_channel(request, server_id):
+    server = get_object_or_404(Server, id=server_id, members=request.user)
+    if not _user_can_manage_server(request.user, server):
+        return JsonResponse({'status': 'error', 'message': 'Sem permissão para criar canais.'}, status=403)
+
     raw_name = (request.POST.get('name') or '').strip().lstrip('#').lower().replace(' ', '-')
     channel_type = (request.POST.get('channel_type') or 'text').strip()
     if channel_type not in {'text', 'audio'}:
@@ -353,6 +450,208 @@ def create_channel(request, server_id):
             'channel_type': channel.channel_type,
         },
     })
+
+
+@login_required
+@require_POST
+def delete_channel(request, server_id, channel_id):
+    server = get_object_or_404(Server, id=server_id, members=request.user)
+    if not _user_can_manage_server(request.user, server):
+        return JsonResponse({'status': 'error', 'message': 'Sem permissão para excluir canais.'}, status=403)
+
+    channel = get_object_or_404(Channel, id=channel_id, server=server)
+    channel.delete()
+    return JsonResponse({'status': 'success'})
+
+
+@login_required
+def get_server_members_grouped(request, server_id):
+    server = get_object_or_404(Server, id=server_id, members=request.user)
+
+    existing_ids = set(
+        ServerMember.objects.filter(server=server).values_list('user_id', flat=True)
+    )
+    missing_member_ids = [
+        uid for uid in server.members.values_list('id', flat=True) if uid not in existing_ids
+    ]
+    if missing_member_ids:
+        ServerMember.objects.bulk_create([
+            ServerMember(server=server, user_id=uid) for uid in missing_member_ids
+        ])
+
+    roles = list(ServerRole.objects.filter(server=server).order_by('position', 'id'))
+    memberships = list(
+        ServerMember.objects.filter(server=server)
+        .select_related('user', 'user__profile', 'role')
+        .order_by('user__username')
+    )
+
+    serialized_members = [_serialize_server_member(request, server, m) for m in memberships]
+    members_by_role_id = {r.id: [] for r in roles}
+    unassigned_members = []
+
+    for m_data in serialized_members:
+        r_obj = m_data.get('role')
+        if r_obj and r_obj['id'] in members_by_role_id:
+            members_by_role_id[r_obj['id']].append(m_data)
+        else:
+            unassigned_members.append(m_data)
+
+    groups = []
+    for r in roles:
+        groups.append({
+            'id': r.id,
+            'name': r.name,
+            'color': r.color,
+            'position': r.position,
+            'members': members_by_role_id[r.id],
+        })
+
+    if unassigned_members or not groups:
+        groups.append({
+            'id': None,
+            'name': 'Membros',
+            'color': '#949ba4',
+            'position': 9999,
+            'members': unassigned_members,
+        })
+
+    return JsonResponse({
+        'status': 'success',
+        'server_id': server.id,
+        'owner_id': server.owner_id,
+        'can_manage_roles': _user_can_manage_roles(request.user, server),
+        'can_kick_members': _user_can_kick_members(request.user, server),
+        'roles': [r.to_dict() for r in roles],
+        'groups': groups,
+        'members': serialized_members,
+    })
+
+
+@login_required
+@require_POST
+def create_server_role(request, server_id):
+    server = get_object_or_404(Server, id=server_id, members=request.user)
+    if not _user_can_manage_roles(request.user, server):
+        return JsonResponse({'status': 'error', 'message': 'Apenas o dono pode criar cargos.'}, status=403)
+
+    data = _parse_request_data(request)
+    name = (data.get('name') or '').strip()
+    color = (data.get('color') or '#8a63d2').strip()
+    try:
+        position = int(data.get('position', server.roles.count()))
+    except (TypeError, ValueError):
+        position = server.roles.count()
+
+    if not name:
+        return JsonResponse({'status': 'error', 'message': 'Informe o nome do cargo.'}, status=400)
+
+    if ServerRole.objects.filter(server=server, name__iexact=name).exists():
+        return JsonResponse({'status': 'error', 'message': 'Já existe um cargo com esse nome.'}, status=400)
+
+    role = ServerRole.objects.create(
+        server=server,
+        name=name[:50],
+        color=color[:20] or '#8a63d2',
+        position=position,
+        can_manage_channels=bool(data.get('can_manage_channels', False)),
+        can_kick_members=bool(data.get('can_kick_members', False)),
+        can_manage_roles=bool(data.get('can_manage_roles', False)),
+    )
+
+    return JsonResponse({'status': 'success', 'role': role.to_dict()})
+
+
+@login_required
+@require_POST
+def delete_server_role(request, server_id, role_id):
+    server = get_object_or_404(Server, id=server_id, members=request.user)
+    if not _user_can_manage_roles(request.user, server):
+        return JsonResponse({'status': 'error', 'message': 'Apenas o dono pode excluir cargos.'}, status=403)
+
+    role = get_object_or_404(ServerRole, id=role_id, server=server)
+    role.delete()
+    return JsonResponse({'status': 'success'})
+
+
+@login_required
+@require_POST
+def assign_member_role(request, server_id, user_id):
+    server = get_object_or_404(Server, id=server_id, members=request.user)
+    if not _user_can_manage_roles(request.user, server):
+        return JsonResponse({'status': 'error', 'message': 'Apenas o dono pode atribuir cargos.'}, status=403)
+
+    target_user = get_object_or_404(User, id=user_id)
+    data = _parse_request_data(request)
+    role_id = data.get('role_id')
+
+    server.members.add(target_user)
+    membership, _ = ServerMember.objects.get_or_create(server=server, user=target_user)
+
+    if role_id in (None, '', 'none', 'null', 0, '0'):
+        membership.role = None
+    else:
+        role = get_object_or_404(ServerRole, id=int(role_id), server=server)
+        membership.role = role
+
+    membership.save(update_fields=['role'])
+    return JsonResponse({
+        'status': 'success',
+        'member': _serialize_server_member(request, server, membership),
+    })
+
+
+@login_required
+@require_POST
+def add_server_member(request, server_id):
+    server = get_object_or_404(Server, id=server_id, members=request.user)
+    if not _user_can_manage_roles(request.user, server) and not _user_can_kick_members(request.user, server):
+        return JsonResponse({'status': 'error', 'message': 'Sem permissão para adicionar membros.'}, status=403)
+
+    data = _parse_request_data(request)
+    username = (data.get('username') or '').strip()
+    role_id = data.get('role_id')
+
+    if not username:
+        return JsonResponse({'status': 'error', 'message': 'Informe o nome de usuário.'}, status=400)
+
+    target_user = get_object_or_404(User, username__iexact=username)
+    server.members.add(target_user)
+    membership, _ = ServerMember.objects.get_or_create(server=server, user=target_user)
+
+    if role_id not in (None, '', 'none', 'null'):
+        role = get_object_or_404(ServerRole, id=int(role_id), server=server)
+        membership.role = role
+        membership.save(update_fields=['role'])
+
+    return JsonResponse({
+        'status': 'success',
+        'member': _serialize_server_member(request, server, membership),
+    })
+
+
+@login_required
+@require_POST
+def kick_server_member(request, server_id, user_id):
+    server = get_object_or_404(Server, id=server_id, members=request.user)
+    if not _user_can_kick_members(request.user, server):
+        return JsonResponse({'status': 'error', 'message': 'Sem permissão para expulsar membros.'}, status=403)
+
+    target_user = get_object_or_404(User, id=user_id)
+    if target_user.id == server.owner_id:
+        return JsonResponse({'status': 'error', 'message': 'Não é possível expulsar o dono do servidor.'}, status=400)
+
+    server.members.remove(target_user)
+    ServerMember.objects.filter(server=server, user=target_user).delete()
+
+    _notify_user_group(
+        target_user.id,
+        'server_kicked',
+        {'server_id': server.id, 'server_name': server.name},
+        username=target_user.username,
+    )
+
+    return JsonResponse({'status': 'success', 'kicked_user_id': target_user.id})
 
 
 @login_required
@@ -777,6 +1076,7 @@ def accept_friend_request(request):
             owned = Server.objects.filter(owner=request.user)
             for srv in owned:
                 srv.members.add(friend_req.sender)
+                ServerMember.objects.get_or_create(server=srv, user=friend_req.sender)
 
         _notify_user_group(
             friend_req.sender.id,
@@ -837,367 +1137,159 @@ def get_friends_list(request):
 
 
 @login_required
-def get_dm_history(request, username):
-    other_user = get_object_or_404(User, username=username)
-    if other_user == request.user:
-        return JsonResponse({'status': 'error', 'message': 'Não podes abrir DM contigo mesmo.'}, status=400)
-
-    if not are_friends(request.user, other_user):
-        return JsonResponse({'status': 'error', 'message': 'Precisam de ser amigos para conversar em privado.'}, status=403)
-
-    msgs = PrivateMessage.objects.filter(
-        models.Q(sender=request.user, receiver=other_user) |
-        models.Q(sender=other_user, receiver=request.user)
-    ).select_related('sender').order_by('timestamp')[:100]
-
-    data = []
-    for m in msgs:
-        att_field = getattr(m, 'attachment', None) or getattr(m, 'file', None)
-        att_url = request.build_absolute_uri(att_field.url) if att_field else ''
-        data.append({
-            'id': m.id,
-            'sender': m.sender.username,
-            'message': m.content,
-            'attachment_url': att_url,
-            'attachment_type': getattr(m, 'attachment_type', '') or '',
-            'time': timezone.localtime(m.timestamp).strftime('%H:%M'),
-        })
-    return JsonResponse({'status': 'success', 'messages': data})
-
-
-@login_required
-@require_POST
-def delete_message(request, message_id):
-    msg = get_object_or_404(Message.objects.select_related('channel'), id=message_id)
-    if msg.user_id != request.user.id and not is_admin_user(request.user):
-        return JsonResponse({'status': 'error', 'message': 'Sem permissão para excluir esta mensagem.'}, status=403)
-
-    srv_token, ch_token = _channel_ws_tokens(msg.channel)
-    msg.delete()
-
-    channel_layer = get_channel_layer()
-    if channel_layer:
-        async_to_sync(channel_layer.group_send)(
-            build_channel_group_name(srv_token, ch_token),
-            {
-                'type': 'message_deleted',
-                'id': message_id,
-                'server_id': srv_token,
-                'channel': ch_token,
-            },
-        )
-
-    return JsonResponse({'status': 'success', 'id': message_id})
-
-
-@login_required
-@require_POST
-def delete_dm_message(request, message_id):
-    msg = get_object_or_404(PrivateMessage.objects.select_related('sender', 'receiver'), id=message_id)
-    if msg.sender_id != request.user.id:
-        return JsonResponse({'status': 'error', 'message': 'Só podes excluir as tuas próprias mensagens.'}, status=403)
-
-    sender_username = msg.sender.username
-    receiver_username = msg.receiver.username
-    msg.delete()
-
-    channel_layer = get_channel_layer()
-    if channel_layer:
-        async_to_sync(channel_layer.group_send)(
-            build_dm_group_name(sender_username, receiver_username),
-            {
-                'type': 'dm_deleted',
-                'id': message_id,
-                'sender': sender_username,
-                'receiver': receiver_username,
-            },
-        )
-
-    return JsonResponse({'status': 'success', 'id': message_id})
-
-
-@login_required
-@require_POST
-def upload_attachment(request):
-    file = request.FILES.get('file')
-    if not file:
-        return JsonResponse({'status': 'error', 'message': 'Nenhum ficheiro enviado.'}, status=400)
-
-    if file.size > MAX_FILE_SIZE:
-        return JsonResponse({'status': 'error', 'message': 'O ficheiro excede 10 MB.'}, status=400)
-
-    ext = os.path.splitext(file.name)[1].lower()
-    content_type = (file.content_type or '').lower()
-
-    if ext in IMAGE_EXTS or content_type.startswith('image/'):
-        att_type = 'image'
-    elif ext in AUDIO_EXTS or content_type.startswith('audio/'):
-        att_type = 'audio'
-    elif ext in DOC_EXTS:
-        att_type = 'file'
-    else:
-        return JsonResponse(
-            {'status': 'error', 'message': 'Formato não suportado (use imagem/GIF, áudio ou documento).'},
-            status=400,
-        )
-
-    target = (request.POST.get('target') or '').strip()
-    channel_id = (request.POST.get('channel_id') or '').strip()
-    content = (request.POST.get('content') or '').strip()
-    avatar_url = _sanitize_external_url(request.POST.get('avatarUrl') or request.POST.get('avatar_url') or '')
-    time_str = timezone.localtime(timezone.now()).strftime('%H:%M')
-
-    try:
-        channel_layer = get_channel_layer()
-        if channel_id:
-            channel = get_object_or_404(Channel, id=channel_id, server__members=request.user)
-            msg = Message.objects.create(
-                user=request.user,
-                channel=channel,
-                content=content,
-                attachment=file,
-                attachment_type=att_type,
-            )
-            att_url = request.build_absolute_uri(msg.attachment.url) if msg.attachment else ''
-            srv_token, ch_token = _channel_ws_tokens(channel)
-            if channel_layer:
-                async_to_sync(channel_layer.group_send)(
-                    build_channel_group_name(srv_token, ch_token),
-                    {
-                        'type': 'chat_message',
-                        'id': msg.id,
-                        'client_id': msg.client_id,
-                        'sender': request.user.username,
-                        'username': request.user.username,
-                        'message': msg.content,
-                        'time': time_str,
-                        'server_id': srv_token,
-                        'channel': ch_token,
-                        'avatar_url': avatar_url,
-                        'attachment_url': att_url,
-                        'attachment_type': att_type,
-                        'attachment_name': file.name,
-                    },
-                )
-        elif target:
-            other_user = get_object_or_404(User, username=target)
-            if not are_friends(request.user, other_user):
-                return JsonResponse(
-                    {'status': 'error', 'message': 'Precisam de ser amigos para enviar anexos em DM.'},
-                    status=403,
-                )
-
-            private_kwargs = {
-                'sender': request.user,
-                'receiver': other_user,
-                'content': content,
-            }
-            private_fields = {f.name for f in PrivateMessage._meta.get_fields()}
-            if 'attachment' in private_fields:
-                private_kwargs['attachment'] = file
-            elif 'file' in private_fields:
-                private_kwargs['file'] = file
-
-            if 'attachment_type' in private_fields:
-                private_kwargs['attachment_type'] = att_type
-
-            msg = PrivateMessage.objects.create(**private_kwargs)
-            att_field = getattr(msg, 'attachment', None) or getattr(msg, 'file', None)
-            att_url = request.build_absolute_uri(att_field.url) if att_field else ''
-            if channel_layer:
-                async_to_sync(channel_layer.group_send)(
-                    build_dm_group_name(request.user.username, other_user.username),
-                    {
-                        'type': 'dm_message',
-                        'id': msg.id,
-                        'client_id': msg.client_id,
-                        'sender': request.user.username,
-                        'receiver': other_user.username,
-                        'message': msg.content,
-                        'time': time_str,
-                        'avatar_url': avatar_url,
-                        'attachment_url': att_url,
-                        'attachment_type': att_type,
-                        'attachment_name': file.name,
-                    },
-                )
-                async_to_sync(channel_layer.group_send)(
-                    build_user_personal_group_name(other_user.username),
-                    {
-                        'type': 'dm_notification',
-                        'id': msg.id,
-                        'sender': request.user.username,
-                        'receiver': other_user.username,
-                        'preview': content[:120] if content else file.name,
-                        'time': time_str,
-                        'avatar_url': avatar_url,
-                    },
-                )
-        else:
-            return JsonResponse({'status': 'error', 'message': 'Selecione um amigo ou canal.'}, status=400)
-
-        return JsonResponse({
-            'status': 'success',
-            'id': msg.id,
-            'attachment_url': att_url,
-            'attachment_type': att_type,
-            'attachment_name': file.name,
-        })
-    except Http404:
-        return JsonResponse({'status': 'error', 'message': 'Canal ou utilizador não encontrado.'}, status=404)
-    except Exception as e:
-        return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
-
-
-@login_required(login_url='login')
-def profile_page_view(request):
-    username = request.GET.get('user', request.user.username)
-    target_user = get_object_or_404(User, username=username)
-    target_profile, _ = UserProfile.objects.get_or_create(user=target_user)
-    UserProfile.objects.get_or_create(user=request.user)
-    viewer_is_akiira = is_akiira_admin(request.user)
-    target_is_akiira = is_akiira_admin(target_user)
-
-    return render(request, 'chat/profile.html', {
-        'target_username': target_user.username,
-        'is_self': target_user == request.user,
-        'is_akiira_admin': viewer_is_akiira,
-        'viewer_is_akiira_admin': viewer_is_akiira,
-        'target_is_akiira_admin': target_is_akiira,
-        'frame_effect': _sanitize_frame_effect(getattr(target_profile, 'frame_effect', 'none'), target_user),
-        'profile_glow': bool(getattr(target_profile, 'profile_glow', False)) if target_is_akiira else False,
-        'avatar_pulse': bool(getattr(target_profile, 'avatar_pulse', False)) if target_is_akiira else False,
-        'name_style': (getattr(target_profile, 'name_style', '') or '') if target_is_akiira else '',
-    })
-
-
-@login_required
 @require_POST
 def remove_friend(request):
     try:
         data = _parse_request_data(request)
         target_username = (data.get('username') or '').strip()
-
-        if not target_username:
-            return JsonResponse({'status': 'error', 'message': 'Utilizador inválido.'}, status=400)
-
-        other_user = get_object_or_404(User, username=target_username)
-        deleted_count, _ = FriendRequest.objects.filter(
-            (models.Q(sender=request.user, receiver=other_user) | models.Q(sender=other_user, receiver=request.user)) &
-            models.Q(status='accepted')
+        target_user = get_object_or_404(User, username=target_username)
+        FriendRequest.objects.filter(
+            models.Q(sender=request.user, receiver=target_user)
+            | models.Q(sender=target_user, receiver=request.user)
         ).delete()
-
-        if deleted_count == 0:
-            return JsonResponse({'status': 'error', 'message': 'Vocês não são amigos.'}, status=400)
-
-        _notify_user_group(
-            other_user.id,
-            'friend_removed',
-            {'username': request.user.username},
-            username=other_user.username,
-        )
-
-        return JsonResponse({'status': 'success', 'message': f'Amizade com {other_user.username} removida.'})
-    except Http404:
-        return JsonResponse({'status': 'error', 'message': 'Utilizador não encontrado.'}, status=404)
+        return JsonResponse({'status': 'success', 'message': 'Amizade removida.'})
     except Exception as e:
         return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
 
 
 @login_required
+def get_dm_history(request, username):
+    other_user = get_object_or_404(User, username=username)
+    if other_user == request.user:
+        return JsonResponse({'status': 'error', 'message': 'Não é possível abrir DM consigo mesmo.'}, status=400)
+
+    dms = (
+        PrivateMessage.objects.filter(
+            (models.Q(sender=request.user) & models.Q(receiver=other_user))
+            | (models.Q(sender=other_user) & models.Q(receiver=request.user))
+        )
+        .select_related('sender', 'receiver')
+        .order_by('timestamp', 'id')[:100]
+    )
+    return JsonResponse({
+        'status': 'success',
+        'messages': [m.to_dict() for m in dms],
+    })
+
+
+@login_required
 @require_POST
 def send_message(request):
-    try:
-        data = _parse_request_data(request)
-        content = (data.get('message') or data.get('content') or '').strip()
-        client_id = str(data.get('client_id') or data.get('id') or '')[:100]
-        channel_id = data.get('channel_id')
-        target_username = (data.get('target') or data.get('username') or data.get('receiver') or '').strip()
-        avatar_url = _sanitize_external_url(data.get('avatarUrl') or data.get('avatar_url') or '')
+    data = _parse_request_data(request)
+    content = (data.get('content') or '').strip()
+    channel_id = data.get('channel_id')
+    client_id = (data.get('client_id') or '').strip()[:100]
+    reply_to_id = data.get('reply_to')
 
-        if not content:
-            return JsonResponse({'status': 'error', 'message': 'Digite uma mensagem antes de enviar.'}, status=400)
+    if not content:
+        return JsonResponse({'status': 'error', 'message': 'Mensagem vazia.'}, status=400)
 
-        channel_layer = get_channel_layer()
+    channel = None
+    if channel_id is not None:
+        channel = get_object_or_404(Channel, id=channel_id, server__members=request.user)
 
-        if channel_id:
-            channel = get_object_or_404(Channel, id=channel_id, server__members=request.user)
-            msg = Message.objects.create(
-                user=request.user,
-                channel=channel,
-                content=content,
-                client_id=client_id,
-            )
-            srv_token, ch_token = _channel_ws_tokens(channel)
-            time_str = timezone.localtime(msg.timestamp).strftime('%H:%M')
-            if channel_layer:
-                async_to_sync(channel_layer.group_send)(
-                    build_channel_group_name(srv_token, ch_token),
-                    {
-                        'type': 'chat_message',
-                        'id': msg.id,
-                        'client_id': msg.client_id,
-                        'message': msg.content,
-                        'username': request.user.username,
-                        'sender': request.user.username,
-                        'server_id': srv_token,
-                        'channel': ch_token,
-                        'avatar_url': avatar_url,
-                        'time': time_str,
-                    },
-                )
-            return JsonResponse({
-                'status': 'success',
-                'message': msg.to_dict(),
-            })
+    reply_to = Message.objects.filter(id=reply_to_id).first() if reply_to_id else None
 
-        if target_username:
-            other_user = get_object_or_404(User, username__iexact=target_username)
-            if other_user == request.user:
-                return JsonResponse({'status': 'error', 'message': 'Não podes enviar DM para ti mesmo.'}, status=400)
-            if not are_friends(request.user, other_user):
-                return JsonResponse({'status': 'error', 'message': 'Precisam de ser amigos para enviar mensagem privada.'}, status=403)
+    msg = Message.objects.create(
+        user=request.user,
+        channel=channel,
+        reply_to=reply_to,
+        content=content,
+        client_id=client_id,
+    )
 
-            dm = PrivateMessage.objects.create(
-                sender=request.user,
-                receiver=other_user,
-                content=content,
-                client_id=client_id,
-            )
-            time_str = timezone.localtime(dm.timestamp).strftime('%H:%M')
-            if channel_layer:
-                async_to_sync(channel_layer.group_send)(
-                    build_dm_group_name(request.user.username, other_user.username),
-                    {
-                        'type': 'dm_message',
-                        'id': dm.id,
-                        'client_id': dm.client_id,
-                        'message': dm.content,
-                        'sender': request.user.username,
-                        'receiver': other_user.username,
-                        'avatar_url': avatar_url,
-                        'time': time_str,
-                    },
-                )
-                async_to_sync(channel_layer.group_send)(
-                    build_user_personal_group_name(other_user.username),
-                    {
-                        'type': 'dm_notification',
-                        'id': dm.id,
-                        'sender': request.user.username,
-                        'receiver': other_user.username,
-                        'preview': dm.content[:120],
-                        'time': time_str,
-                        'avatar_url': avatar_url,
-                    },
-                )
-            return JsonResponse({
-                'status': 'success',
-                'message': dm.to_dict(),
-            })
+    payload = msg.to_dict()
+    channel_layer = get_channel_layer()
+    if channel_layer:
+        srv_token, ch_token = _channel_ws_tokens(channel)
+        group_name = build_channel_group_name(srv_token, ch_token)
+        async_to_sync(channel_layer.group_send)(
+            group_name,
+            {
+                'type': 'chat_message',
+                'message': payload,
+            },
+        )
 
-        return JsonResponse({'status': 'error', 'message': 'Informe channel_id ou target.'}, status=400)
-    except Http404:
-        return JsonResponse({'status': 'error', 'message': 'Canal ou utilizador não encontrado.'}, status=404)
-    except Exception as e:
-        return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
+    return JsonResponse({'status': 'success', 'message': payload})
+
+
+@login_required
+@require_POST
+def delete_message(request, message_id):
+    msg = get_object_or_404(Message, id=message_id)
+    if msg.user_id != request.user.id and not is_admin_user(request.user):
+        return JsonResponse({'status': 'error', 'message': 'Sem permissão para apagar esta mensagem.'}, status=403)
+    msg.delete()
+    return JsonResponse({'status': 'success', 'deleted_id': message_id})
+
+
+@login_required
+@require_POST
+def delete_dm_message(request, message_id):
+    msg = get_object_or_404(PrivateMessage, id=message_id)
+    if msg.sender_id != request.user.id and not is_admin_user(request.user):
+        return JsonResponse({'status': 'error', 'message': 'Sem permissão para apagar esta DM.'}, status=403)
+    msg.delete()
+    return JsonResponse({'status': 'success', 'deleted_id': message_id})
+
+
+@login_required
+@require_POST
+def upload_attachment(request):
+    uploaded = request.FILES.get('file') or request.FILES.get('attachment')
+    if not uploaded:
+        return JsonResponse({'status': 'error', 'message': 'Nenhum arquivo enviado.'}, status=400)
+
+    if uploaded.size > MAX_FILE_SIZE:
+        return JsonResponse({'status': 'error', 'message': 'Arquivo excede o limite de 10 MB.'}, status=400)
+
+    ext = os.path.splitext(uploaded.name or '')[1].lower()
+    if ext in IMAGE_EXTS:
+        att_type = 'image'
+    elif ext in AUDIO_EXTS:
+        att_type = 'audio'
+    elif ext in DOC_EXTS:
+        att_type = 'document'
+    else:
+        return JsonResponse({'status': 'error', 'message': 'Formato de arquivo não suportado.'}, status=400)
+
+    channel_id = request.POST.get('channel_id')
+    dm_recipient_username = (request.POST.get('recipient') or '').strip()
+    content = (request.POST.get('content') or '').strip()
+    client_id = (request.POST.get('client_id') or '').strip()[:100]
+
+    channel_layer = get_channel_layer()
+
+    if dm_recipient_username:
+        recipient = get_object_or_404(User, username=dm_recipient_username)
+        dm = PrivateMessage.objects.create(
+            sender=request.user,
+            receiver=recipient,
+            content=content,
+            attachment=uploaded,
+            attachment_type=att_type,
+            client_id=client_id,
+        )
+        payload = dm.to_dict()
+        if channel_layer:
+            dm_group = build_dm_group_name(request.user.username, recipient.username)
+            async_to_sync(channel_layer.group_send)(dm_group, {'type': 'dm_message', 'message': payload})
+        return JsonResponse({'status': 'success', 'message': payload})
+
+    channel = get_object_or_404(Channel, id=channel_id, server__members=request.user) if channel_id else None
+    msg = Message.objects.create(
+        user=request.user,
+        channel=channel,
+        content=content,
+        attachment=uploaded,
+        attachment_type=att_type,
+        client_id=client_id,
+    )
+    payload = msg.to_dict()
+    if channel_layer:
+        srv_token, ch_token = _channel_ws_tokens(channel)
+        group_name = build_channel_group_name(srv_token, ch_token)
+        async_to_sync(channel_layer.group_send)(group_name, {'type': 'chat_message', 'message': payload})
+
+    return JsonResponse({'status': 'success', 'message': payload})
