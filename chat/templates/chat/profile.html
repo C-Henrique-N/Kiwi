@@ -137,7 +137,6 @@
       color: var(--text-main);
     }
 
-    /* Fonte especial para AkiiraPW */
     .profile-name.akiira-special {
       font-family: "Cinzel Decorative", "Fredoka", serif;
       font-weight: 900;
@@ -229,6 +228,13 @@
       place-items: center;
       font-size: 22px;
       flex-shrink: 0;
+      overflow: hidden;
+    }
+
+    .spotify-icon img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
     }
 
     .spotify-label {
@@ -273,6 +279,11 @@
       font-size: 12px;
       font-weight: 700;
       cursor: pointer;
+    }
+
+    .spotify-btn:disabled {
+      opacity: 0.55;
+      cursor: default;
     }
 
     .tags {
@@ -371,7 +382,7 @@
 
       <section class="box">
         <div class="spotify-main">
-          <div class="spotify-icon">♫</div>
+          <div class="spotify-icon" id="spotifyCoverBox">♫</div>
           <div style="flex: 1; min-width: 0;">
             <div class="spotify-label">Listening to Spotify</div>
             <div class="song-title" id="spotify-song-title">rap/trap</div>
@@ -379,7 +390,7 @@
             <div class="bar"><i></i></div>
           </div>
         </div>
-        <button type="button" class="spotify-btn" id="spotifyOpenBtn">Ouvir no Spotify</button>
+        <button type="button" class="spotify-btn" id="spotifyOpenBtn" disabled>Ouvir no Spotify</button>
       </section>
 
       <div class="tags">
@@ -410,7 +421,11 @@
       const bioEl = document.getElementById("profile-bio");
       const songEl = document.getElementById("spotify-song-title");
       const artistEl = document.getElementById("spotify-song-artist");
+      const coverBoxEl = document.getElementById("spotifyCoverBox");
+      const spotifyBtn = document.getElementById("spotifyOpenBtn");
       const dmInput = document.getElementById("quickDmInput");
+
+      let musicUrl = "";
 
       function applySpecialFont(username) {
         if ((username || "").trim().toLowerCase() === "akiirapw") {
@@ -420,41 +435,67 @@
         }
       }
 
+      function setMusicUrl(url) {
+        musicUrl = (url || "").trim();
+        spotifyBtn.disabled = !musicUrl;
+      }
+
       applySpecialFont(targetUser);
       dmInput.placeholder = `Conversar com @${targetUser}`;
 
-      fetch(`/api/profile/${encodeURIComponent(targetUser)}/`)
+      fetch(`/api/profile/${encodeURIComponent(targetUser)}/`, { cache: "no-store" })
         .then(r => r.ok ? r.json() : null)
         .then(data => {
           if (!data) return;
-          const uname = data.username || targetUser;
+          const payload = data.profile || data;
+          const uname = payload.username || targetUser;
+          const bannerUrl = payload.bannerUrl || payload.banner_url || "";
+          const avatarUrl = payload.avatarUrl || payload.avatar_url || "";
+          const song = payload.spotify_song || payload.music_title || payload.song || "";
+          const artist = payload.spotify_artist || payload.music_artist || payload.artist || "";
+          const coverUrl = payload.music_cover_url || payload.musicCoverUrl || "";
+          const linkUrl = payload.music_url || payload.musicUrl || payload.spotify_url || "";
+
           nameEl.textContent = uname;
           applySpecialFont(uname);
           dmInput.placeholder = `Conversar com @${uname}`;
 
-          if (data.bannerUrl) bannerEl.style.backgroundImage = `url('${data.bannerUrl}')`;
-          if (data.avatarUrl) avatarEl.src = data.avatarUrl;
-          if (data.bubble) bubbleEl.textContent = data.bubble;
-          if (data.pronouns) pronounsEl.textContent = data.pronouns;
-          if (data.bio) bioEl.textContent = data.bio.replace(/<br\s*\/?>/gi, "\n");
-          if (data.spotify_song) songEl.textContent = data.spotify_song;
-          if (data.spotify_artist) artistEl.textContent = data.spotify_artist;
+          if (bannerUrl) bannerEl.style.backgroundImage = `url("${String(bannerUrl).replace(/"/g, '%22')}")`;
+          if (avatarUrl) avatarEl.src = avatarUrl;
+          if (payload.bubble !== undefined) bubbleEl.textContent = payload.bubble || "";
+          if (payload.pronouns !== undefined) pronounsEl.textContent = payload.pronouns || "";
+          if (payload.bio !== undefined) bioEl.textContent = String(payload.bio || "").replace(/<br\s*\/?>/gi, "\n");
+          if (song) songEl.textContent = song;
+          if (artist) artistEl.textContent = artist;
+          if (coverUrl) {
+            coverBoxEl.innerHTML = `<img src="${coverUrl}" alt="Capa" />`;
+          }
+          setMusicUrl(linkUrl);
         })
         .catch(() => {});
 
+      spotifyBtn.addEventListener("click", () => {
+        if (!musicUrl) return;
+        window.open(musicUrl, "_blank", "noopener,noreferrer");
+      });
+
+      const postTargetOrigin = window.location.origin && window.location.origin !== "null"
+        ? window.location.origin
+        : "*";
+
       document.getElementById("closeProfileBtn").addEventListener("click", () => {
-        window.parent?.postMessage({ type: "close_profile" }, "*");
+        window.parent?.postMessage({ type: "close_profile" }, postTargetOrigin);
       });
 
       document.getElementById("editProfileBtn").addEventListener("click", () => {
-        window.parent?.postMessage({ type: "open_edit_profile" }, "*");
+        window.parent?.postMessage({ type: "open_edit_profile" }, postTargetOrigin);
       });
 
       document.getElementById("quickDmForm").addEventListener("submit", (e) => {
         e.preventDefault();
         const text = dmInput.value.trim();
         if (!text) return;
-        window.parent?.postMessage({ type: "quick_dm", username: nameEl.textContent, text }, "*");
+        window.parent?.postMessage({ type: "quick_dm", username: nameEl.textContent, text }, postTargetOrigin);
         dmInput.value = "";
       });
     })();

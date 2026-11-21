@@ -5951,19 +5951,47 @@
                 window.openMobileChatView();
             };
 
+            function getMessageFingerprint(sender, text, attachmentName, timestamp) {
+                return [
+                    String(sender || '').trim().toLowerCase(),
+                    String(text || '').trim(),
+                    String(attachmentName || '').trim().toLowerCase(),
+                    String(timestamp || '').trim()
+                ].join('|');
+            }
+
             function appendMessage(data, isChannelMessage = true) {
-                const msgId = data.id || '';
+                const msgId = data.id || data.msgId || '';
                 const dmId = data.dmId || '';
+                const clientId = data.clientId || data.client_msg_id || '';
+
                 if (msgId && chatLog.querySelector(`.message-group[data-msg-id="${CSS.escape(String(msgId))}"]`)) return;
                 if (dmId && chatLog.querySelector(`.message-group[data-dm-id="${CSS.escape(String(dmId))}"]`)) return;
+                if (clientId && chatLog.querySelector(`.message-group[data-client-id="${CSS.escape(String(clientId))}"]`)) return;
 
-                const senderName = data.sender || 'Usuário';
+                const senderName = data.sender || data.author || 'Usuário';
+                const messageText = data.message ?? data.text ?? '';
+                const attachmentUrl = data.attachmentUrl || data.attachment_url || '';
+                const attachmentName = data.attachmentName || data.attachment_name || 'Arquivo';
+                const attachmentType = data.attachmentType || data.attachment_type || '';
+                const timestampText = data.timestamp || new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+                const fingerprint = getMessageFingerprint(
+                    senderName,
+                    messageText,
+                    attachmentUrl ? attachmentName : '',
+                    timestampText
+                );
+                const hasContentOrAttachment = messageText.trim() !== '' || attachmentUrl !== '';
+                if (hasContentOrAttachment) {
+                    const recentGroups = Array.from(chatLog.querySelectorAll('.message-group')).slice(-10);
+                    const isDuplicateRecent = recentGroups.some((el) => el.getAttribute('data-msg-fp') === fingerprint);
+                    if (isDuplicateRecent) return;
+                }
+
                 const isOwnMessage = senderName === activeUsername;
                 const canDelete = Boolean(data.canDelete) || isOwnMessage;
                 const safeAvatarUrl = isOwnMessage ? (myProfileData.avatarUrl || data.avatarUrl || '') : (data.avatarUrl || '');
-                const attachmentUrl = data.attachmentUrl || '';
-                const attachmentName = data.attachmentName || 'Arquivo';
-                const attachmentType = data.attachmentType || '';
 
                 if (senderName && !isOwnMessage && safeAvatarUrl) {
                     const existingProf = profilesByUsername.get(senderName.toLowerCase()) || { username: senderName };
@@ -5974,6 +6002,8 @@
                 group.className = 'message-group';
                 if (msgId) group.setAttribute('data-msg-id', String(msgId));
                 if (dmId) group.setAttribute('data-dm-id', String(dmId));
+                if (clientId) group.setAttribute('data-client-id', String(clientId));
+                group.setAttribute('data-msg-fp', fingerprint);
                 group.setAttribute('data-can-delete', canDelete ? '1' : '0');
 
                 const av = document.createElement('div');
@@ -5995,16 +6025,16 @@
 
                 const time = document.createElement('span');
                 time.className = 'timestamp';
-                time.textContent = data.timestamp || new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                time.textContent = timestampText;
 
                 header.appendChild(uname);
                 header.appendChild(time);
                 content.appendChild(header);
 
-                if (data.message && data.message.trim() !== '') {
+                if (messageText && messageText.trim() !== '') {
                     const textDiv = document.createElement('div');
                     textDiv.className = 'message-text';
-                    textDiv.textContent = data.message;
+                    textDiv.textContent = messageText;
                     content.appendChild(textDiv);
                 }
 
@@ -6145,117 +6175,131 @@
                 }
             });
 
+            let isSendingMessage = false;
+
             async function sendCurrentMessage() {
+                if (isSendingMessage) return;
                 const textVal = messageInput.value.trim();
                 const fileToSend = pendingAttachmentFile;
                 if (!textVal && !fileToSend) return;
 
-                const nowTime = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-                const localId = `local-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
-                let attachmentUrl = '';
-                let attachmentName = '';
-                let attachmentType = '';
+                isSendingMessage = true;
+                try {
+                    const nowTime = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                    const localId = `local-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
+                    let attachmentUrl = '';
+                    let attachmentName = '';
+                    let attachmentType = '';
 
-                if (fileToSend) {
-                    attachmentName = fileToSend.name || 'Arquivo';
-                    if (pendingAttachmentCategory === 'photo' || isImageAttachment(fileToSend, '')) {
-                        attachmentType = 'image';
-                        try {
-                            attachmentUrl = await readFileAsDataUrl(fileToSend);
-                        } catch (_) {
+                    if (fileToSend) {
+                        attachmentName = fileToSend.name || 'Arquivo';
+                        if (pendingAttachmentCategory === 'photo' || isImageAttachment(fileToSend, '')) {
+                            attachmentType = 'image';
+                            try {
+                                attachmentUrl = await readFileAsDataUrl(fileToSend);
+                            } catch (_) {
+                                attachmentUrl = URL.createObjectURL(fileToSend);
+                            }
+                        } else if (pendingAttachmentCategory === 'audio' || isAudioAttachment(fileToSend, '')) {
+                            attachmentType = 'audio';
+                            attachmentUrl = URL.createObjectURL(fileToSend);
+                        } else {
+                            attachmentType = 'document';
                             attachmentUrl = URL.createObjectURL(fileToSend);
                         }
-                    } else if (pendingAttachmentCategory === 'audio' || isAudioAttachment(fileToSend, '')) {
-                        attachmentType = 'audio';
-                        attachmentUrl = URL.createObjectURL(fileToSend);
-                    } else {
-                        attachmentType = 'document';
-                        attachmentUrl = URL.createObjectURL(fileToSend);
                     }
+
+                    const meta = getCurrentMeta();
+
+                    if (currentView === 'dm' && currentDmUser) {
+                        const dmEntry = {
+                            id: localId,
+                            clientId: localId,
+                            sender: activeUsername,
+                            message: textVal,
+                            timestamp: nowTime,
+                            avatarUrl: myProfileData.avatarUrl || '',
+                            attachmentUrl,
+                            attachmentName,
+                            attachmentType,
+                            canDelete: true
+                        };
+                        if (!dmHistoryStore[currentDmUser]) dmHistoryStore[currentDmUser] = [];
+                        dmHistoryStore[currentDmUser].push(dmEntry);
+                        writeStorageJson(DM_HISTORY_STORAGE_KEY, dmHistoryStore);
+                        roomCtxManager.appendMessageToContext(meta, {
+                            id: localId,
+                            clientId: localId,
+                            author: activeUsername,
+                            text: textVal,
+                            timestamp: nowTime,
+                            avatarUrl: myProfileData.avatarUrl || '',
+                            attachmentUrl,
+                            attachmentName,
+                            attachmentType,
+                            canDelete: true
+                        }, { incrementUnread: false });
+                        roomCtxManager.sendToContext(meta, {
+                            type: 'dm_message',
+                            id: localId,
+                            client_msg_id: localId,
+                            target: currentDmUser,
+                            sender: activeUsername,
+                            message: textVal,
+                            timestamp: nowTime,
+                            avatar_url: myProfileData.avatarUrl || '',
+                            attachment_url: attachmentUrl.startsWith('data:') ? attachmentUrl : '',
+                            attachment_name: attachmentName,
+                            attachment_type: attachmentType
+                        });
+                        appendMessage({ ...dmEntry, dmId: localId }, false);
+                    } else {
+                        const chEntry = roomCtxManager.createMessageEntry(meta, {
+                            id: localId,
+                            clientId: localId,
+                            author: activeUsername,
+                            text: textVal,
+                            timestamp: nowTime,
+                            avatarUrl: myProfileData.avatarUrl || '',
+                            attachmentUrl,
+                            attachmentName,
+                            attachmentType,
+                            canDelete: true
+                        });
+                        roomCtxManager.appendMessageToContext(meta, chEntry, { incrementUnread: false });
+                        roomCtxManager.sendToContext(meta, {
+                            type: 'chat_message',
+                            id: localId,
+                            client_msg_id: localId,
+                            channel: currentChannelName,
+                            server_id: currentServerId,
+                            sender: activeUsername,
+                            message: textVal,
+                            timestamp: nowTime,
+                            avatar_url: myProfileData.avatarUrl || '',
+                            attachment_url: attachmentUrl.startsWith('data:') ? attachmentUrl : '',
+                            attachment_name: attachmentName,
+                            attachment_type: attachmentType
+                        });
+                        appendMessage({
+                            id: localId,
+                            clientId: localId,
+                            sender: activeUsername,
+                            message: textVal,
+                            timestamp: nowTime,
+                            avatarUrl: myProfileData.avatarUrl || '',
+                            attachmentUrl,
+                            attachmentName,
+                            attachmentType,
+                            canDelete: true
+                        }, true);
+                    }
+
+                    messageInput.value = '';
+                    clearPendingAttachment();
+                } finally {
+                    isSendingMessage = false;
                 }
-
-                const meta = getCurrentMeta();
-
-                if (currentView === 'dm' && currentDmUser) {
-                    const dmEntry = {
-                        id: localId,
-                        sender: activeUsername,
-                        message: textVal,
-                        timestamp: nowTime,
-                        avatarUrl: myProfileData.avatarUrl || '',
-                        attachmentUrl,
-                        attachmentName,
-                        attachmentType,
-                        canDelete: true
-                    };
-                    if (!dmHistoryStore[currentDmUser]) dmHistoryStore[currentDmUser] = [];
-                    dmHistoryStore[currentDmUser].push(dmEntry);
-                    writeStorageJson(DM_HISTORY_STORAGE_KEY, dmHistoryStore);
-                    roomCtxManager.appendMessageToContext(meta, {
-                        id: localId,
-                        author: activeUsername,
-                        text: textVal,
-                        timestamp: nowTime,
-                        avatarUrl: myProfileData.avatarUrl || '',
-                        attachmentUrl,
-                        attachmentName,
-                        attachmentType,
-                        canDelete: true
-                    }, { incrementUnread: false });
-                    roomCtxManager.sendToContext(meta, {
-                        type: 'dm_message',
-                        id: localId,
-                        target: currentDmUser,
-                        sender: activeUsername,
-                        message: textVal,
-                        timestamp: nowTime,
-                        avatar_url: myProfileData.avatarUrl || '',
-                        attachment_url: attachmentUrl.startsWith('data:') ? attachmentUrl : '',
-                        attachment_name: attachmentName,
-                        attachment_type: attachmentType
-                    });
-                    appendMessage({ ...dmEntry, dmId: localId }, false);
-                } else {
-                    const chEntry = roomCtxManager.createMessageEntry(meta, {
-                        id: localId,
-                        author: activeUsername,
-                        text: textVal,
-                        timestamp: nowTime,
-                        avatarUrl: myProfileData.avatarUrl || '',
-                        attachmentUrl,
-                        attachmentName,
-                        attachmentType,
-                        canDelete: true
-                    });
-                    roomCtxManager.appendMessageToContext(meta, chEntry, { incrementUnread: false });
-                    roomCtxManager.sendToContext(meta, {
-                        type: 'chat_message',
-                        id: localId,
-                        channel: currentChannelName,
-                        server_id: currentServerId,
-                        sender: activeUsername,
-                        message: textVal,
-                        timestamp: nowTime,
-                        avatar_url: myProfileData.avatarUrl || '',
-                        attachment_url: attachmentUrl.startsWith('data:') ? attachmentUrl : '',
-                        attachment_name: attachmentName,
-                        attachment_type: attachmentType
-                    });
-                    appendMessage({
-                        id: localId,
-                        sender: activeUsername,
-                        message: textVal,
-                        timestamp: nowTime,
-                        avatarUrl: myProfileData.avatarUrl || '',
-                        attachmentUrl,
-                        attachmentName,
-                        attachmentType,
-                        canDelete: true
-                    }, true);
-                }
-
-                messageInput.value = '';
-                clearPendingAttachment();
             }
 
             messageInput.addEventListener('keypress', e => {
