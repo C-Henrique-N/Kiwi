@@ -2579,11 +2579,18 @@
 
                 createMessageEntry(meta, raw = {}) {
                     const ctx = this.ensureContext(meta);
+                    const authorName = raw.author
+                        || raw.sender
+                        || raw.username
+                        || raw.sender_name
+                        || (raw.user && raw.user.username)
+                        || (typeof raw.user === 'string' ? raw.user : '')
+                        || 'Usuário';
                     return {
-                        id: raw.id || `msg-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+                        id: raw.id || raw.message_id || raw.dm_id || `msg-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
                         contextKey: ctx.key,
-                        author: raw.author || raw.sender || raw.username || 'Usuário',
-                        text: raw.text || raw.message || '',
+                        author: String(authorName).trim() || 'Usuário',
+                        text: String(raw.text ?? raw.message ?? raw.content ?? raw.body ?? ''),
                         timestamp: raw.timestamp || new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
                         avatarUrl: raw.avatarUrl || raw.avatar_url || '',
                         attachmentUrl: raw.attachmentUrl || raw.attachment_url || '',
@@ -2697,8 +2704,8 @@
                             const normalizedBatch = [];
                             items.forEach((rawItem) => {
                                 if (!rawItem || typeof rawItem !== 'object') return;
-                                const itemText = String(rawItem.message ?? rawItem.text ?? '').trim();
-                                const itemAttach = String(rawItem.attachmentUrl ?? rawItem.attachment_url ?? '').trim();
+                                const itemText = String(rawItem.message ?? rawItem.text ?? rawItem.content ?? rawItem.body ?? '').trim();
+                                const itemAttach = String(rawItem.attachmentUrl ?? rawItem.attachment_url ?? rawItem.attachment ?? '').trim();
                                 if (!itemText && !itemAttach) return;
                                 const histEntry = this.createMessageEntry(ctx, rawItem);
                                 this.appendMessageToContext(ctx, histEntry, { incrementUnread: false });
@@ -2715,11 +2722,35 @@
                             return;
                         }
 
-                        const rawMsgText = String(payload.message ?? payload.text ?? '').trim();
-                        const rawAttachUrl = String(payload.attachmentUrl ?? payload.attachment_url ?? '').trim();
+                        const resolvedAuthor = raw => {
+                            if (!raw || typeof raw !== 'object') return 'Usuário';
+                            if (typeof raw.author === 'string' && raw.author.trim()) return raw.author.trim();
+                            if (typeof raw.sender === 'string' && raw.sender.trim()) return raw.sender.trim();
+                            if (typeof raw.username === 'string' && raw.username.trim()) return raw.username.trim();
+                            if (typeof raw.sender_name === 'string' && raw.sender_name.trim()) return raw.sender_name.trim();
+                            if (raw.user && typeof raw.user === 'object' && raw.user.username) return String(raw.user.username).trim();
+                            if (typeof raw.user === 'string' && raw.user.trim()) return raw.user.trim();
+                            return 'Usuário';
+                        };
+
+                        const rawMsgText = String(
+                            payload.message ?? payload.text ?? payload.content ?? payload.body ?? ''
+                        ).trim();
+                        const rawAttachUrl = String(
+                            payload.attachmentUrl ?? payload.attachment_url ?? payload.attachment ?? ''
+                        ).trim();
                         if (!rawMsgText && !rawAttachUrl) return;
 
-                        const entry = this.createMessageEntry(ctx, payload);
+                        const normalizedPayload = {
+                            ...payload,
+                            author: resolvedAuthor(payload),
+                            message: rawMsgText,
+                            attachmentUrl: rawAttachUrl,
+                            attachmentName: payload.attachmentName || payload.attachment_name || '',
+                            attachmentType: payload.attachmentType || payload.attachment_type || ''
+                        };
+
+                        const entry = this.createMessageEntry(ctx, normalizedPayload);
                         this.appendMessageToContext(ctx, entry, { incrementUnread: !isActive });
                         if (typeof this.onIncomingMessage === 'function') {
                             this.onIncomingMessage(payload, { entry, ctx, isActive });
@@ -5327,13 +5358,14 @@
                     if (!isAkiiraAdminIdentity(owner, myProfileData.is_admin)) return;
                     myProfileData.profileGlow = !myProfileData.profileGlow;
                     refreshEditorLivePreview();
-                    showKiwiToast(myProfileData.profileGlow ? '🌟 Aura dourada no card ativada!' : 'Aura dourada no card desativada.');
+                    showKiwiToast(myProfileData.profileGlow ? '🌟 Aura dourada ativada!' : 'Aura dourada desativada.');
                 });
             }
             if (editorEffectGoldBtn) {
                 editorEffectGoldBtn.addEventListener('click', () => {
                     myProfileData.avatarPulse = !myProfileData.avatarPulse;
                     refreshEditorLivePreview();
+                    updateMySidebarUI();
                 });
             }
             if (editorNameStyleToggle) {
@@ -5344,17 +5376,15 @@
             }
             if (editorPreviewProfileBtn) {
                 editorPreviewProfileBtn.addEventListener('click', () => {
-                    refreshEditorLivePreview();
-                    const owner = ((editUsernameInput && editUsernameInput.value.trim()) || activeUsername || 'Usuário').trim();
                     const previewObj = {
                         ...myProfileData,
-                        username: owner,
-                        bubble: (editBubble && editBubble.value.trim()) || '',
-                        pronouns: (editPronouns && editPronouns.value.trim()) || '',
-                        bio: (editBio && editBio.value.trim()) || '',
-                        song: (editSong && editSong.value.trim()) || '',
-                        artist: (editArtist && editArtist.value.trim()) || '',
-                        musicUrl: (editYtUrl && editYtUrl.value.trim()) || '',
+                        username: (editUsernameInput && editUsernameInput.value.trim()) || activeUsername,
+                        bubble: editBubble ? editBubble.value.trim() : myProfileData.bubble,
+                        pronouns: editPronouns ? editPronouns.value.trim() : myProfileData.pronouns,
+                        bio: editBio ? editBio.value.trim() : myProfileData.bio,
+                        song: editSong ? editSong.value.trim() : myProfileData.song,
+                        artist: editArtist ? editArtist.value.trim() : myProfileData.artist,
+                        musicUrl: editYtUrl ? editYtUrl.value.trim() : myProfileData.musicUrl,
                         avatarUrl: tempEditorAvatarUrl || myProfileData.avatarUrl,
                         bannerUrl: tempEditorBannerUrl || myProfileData.bannerUrl
                     };
@@ -5366,47 +5396,48 @@
                     editorPrivacyNotice.style.display = 'none';
                 });
             }
-            [editUsernameInput, editPronouns, editGoldCheckbox].forEach(el => {
-                if (el) el.addEventListener('input', refreshEditorLivePreview);
-                if (el) el.addEventListener('change', refreshEditorLivePreview);
-            });
+            if (editGoldCheckbox) editGoldCheckbox.addEventListener('change', refreshEditorLivePreview);
+            if (editUsernameInput) editUsernameInput.addEventListener('input', refreshEditorLivePreview);
+            if (editPronouns) editPronouns.addEventListener('input', refreshEditorLivePreview);
 
             function syncCustomFilePickers() {
-                document.querySelectorAll('.kiwi-file-picker-wrap').forEach(wrap => {
+                document.querySelectorAll('.kiwi-file-picker-wrap[data-file-picker-for]').forEach(wrap => {
                     const inputId = wrap.getAttribute('data-file-picker-for');
                     const emptyText = wrap.getAttribute('data-empty-text') || 'Nenhum ficheiro escolhido';
-                    const fileInput = inputId ? document.getElementById(inputId) : null;
+                    const inp = document.getElementById(inputId);
                     const nameEl = wrap.querySelector('.kiwi-file-picker-name');
                     const clearBtn = wrap.querySelector('.kiwi-file-picker-clear');
-                    if (!fileInput || !nameEl) return;
-
-                    const f = fileInput.files && fileInput.files[0];
-                    if (f) {
-                        nameEl.textContent = f.name;
-                        nameEl.classList.add('has-file');
-                        if (clearBtn) clearBtn.classList.add('visible');
-                    } else {
-                        nameEl.textContent = emptyText;
-                        nameEl.classList.remove('has-file');
-                        if (clearBtn) clearBtn.classList.remove('visible');
+                    const file = inp && inp.files && inp.files[0];
+                    if (nameEl) {
+                        if (file) {
+                            nameEl.textContent = file.name;
+                            nameEl.classList.add('has-file');
+                        } else {
+                            nameEl.textContent = emptyText;
+                            nameEl.classList.remove('has-file');
+                        }
+                    }
+                    if (clearBtn) {
+                        clearBtn.classList.toggle('visible', Boolean(file));
                     }
                 });
             }
 
-            document.querySelectorAll('.kiwi-file-picker-wrap').forEach(wrap => {
+            document.querySelectorAll('.kiwi-file-picker-wrap[data-file-picker-for]').forEach(wrap => {
                 const inputId = wrap.getAttribute('data-file-picker-for');
-                const fileInput = inputId ? document.getElementById(inputId) : null;
+                const inp = document.getElementById(inputId);
                 const btn = wrap.querySelector('.kiwi-file-picker-btn');
                 const clearBtn = wrap.querySelector('.kiwi-file-picker-clear');
-                if (!fileInput) return;
-
-                if (btn) btn.addEventListener('click', (e) => { e.preventDefault(); fileInput.click(); });
-                fileInput.addEventListener('change', syncCustomFilePickers);
-                if (clearBtn) {
+                if (btn && inp) {
+                    btn.addEventListener('click', () => inp.click());
+                }
+                if (inp) {
+                    inp.addEventListener('change', syncCustomFilePickers);
+                }
+                if (clearBtn && inp) {
                     clearBtn.addEventListener('click', (e) => {
-                        e.preventDefault();
                         e.stopPropagation();
-                        fileInput.value = '';
+                        inp.value = '';
                         syncCustomFilePickers();
                     });
                 }
@@ -5417,59 +5448,46 @@
             const quickAddMusicToggle = document.getElementById('quick-add-music-toggle');
             const quickAddMusicForm = document.getElementById('quick-add-music-form');
             const qmSaveBtn = document.getElementById('qm-save-btn');
-            const savedMusicListEl = document.getElementById('saved-music-list');
-            const SAVED_MUSIC_STORAGE_KEY = 'kiwi_saved_music_tracks_v1';
-            let savedMusicTracks = readStorageJson(SAVED_MUSIC_STORAGE_KEY, []);
+            const savedMusicList = document.getElementById('saved-music-list');
+            let savedMusicTracks = [];
 
-            function renderSavedMusicTracks() {
-                if (!savedMusicListEl) return;
+            function renderSavedMusicList() {
+                if (!savedMusicList) return;
                 if (!savedMusicTracks.length) {
-                    savedMusicListEl.innerHTML = '<div style="opacity:0.7;">Nenhuma música salva ainda. Clique em "+ Adicionar".</div>';
+                    savedMusicList.innerHTML = '<div style="opacity:0.7;">Nenhuma música salva ainda. Clique em "+ Adicionar".</div>';
                     return;
                 }
-                savedMusicListEl.innerHTML = '';
-                savedMusicTracks.forEach((trk, idx) => {
-                    const row = document.createElement('div');
-                    row.style.cssText = 'display:flex; align-items:center; justify-content:space-between; gap:8px; background:#232429; padding:7px 9px; border-radius:7px;';
-                    const label = document.createElement('div');
-                    label.style.cssText = 'min-width:0; flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;';
-                    label.textContent = `🎵 ${trk.title || 'Faixa'} — ${trk.artist || 'Artista'}`;
-
-                    const useBtn = document.createElement('button');
-                    useBtn.type = 'button';
-                    useBtn.textContent = 'Usar';
-                    useBtn.style.cssText = 'background:#5865f2; color:#fff; border:none; border-radius:5px; padding:3px 8px; font-size:11px; cursor:pointer; flex-shrink:0;';
-                    useBtn.addEventListener('click', () => {
-                        if (editSong) editSong.value = trk.title || '';
-                        if (editArtist) editArtist.value = trk.artist || '';
-                        if (editLocalAudioUrl) editLocalAudioUrl.value = trk.audioUrl || '';
-                        if (editMusicCoverUrl) editMusicCoverUrl.value = trk.coverUrl || '';
-                        if (savedMusicBox) savedMusicBox.style.display = 'none';
-                        showKiwiToast(`Música "${trk.title || 'Faixa'}" aplicada ao perfil.`);
+                savedMusicList.innerHTML = '';
+                savedMusicTracks.forEach((track, idx) => {
+                    const item = document.createElement('div');
+                    item.style.cssText = 'display:flex; align-items:center; justify-content:space-between; gap:8px; background:#232429; padding:6px 8px; border-radius:6px;';
+                    item.innerHTML = `
+                        <div style="min-width:0; flex:1; cursor:pointer;">
+                            <div style="font-weight:700; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${escapeHtmlText(track.title || 'Faixa')}</div>
+                            <div style="font-size:11px; opacity:0.75; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${escapeHtmlText(track.artist || '')}</div>
+                        </div>
+                        <button type="button" data-del-track="${idx}" style="background:rgba(231,76,60,0.2); color:#ff7675; border:none; border-radius:4px; padding:3px 6px; cursor:pointer; font-size:11px;">✕</button>
+                    `;
+                    item.firstElementChild.addEventListener('click', () => {
+                        if (editSong) editSong.value = track.title || '';
+                        if (editArtist) editArtist.value = track.artist || '';
+                        if (editLocalAudioUrl && track.audioUrl) editLocalAudioUrl.value = track.audioUrl;
+                        if (editMusicCoverUrl && track.coverUrl) editMusicCoverUrl.value = track.coverUrl;
+                        showKiwiToast(`Música "${track.title || 'Faixa'}" selecionada!`);
                     });
-
-                    const delBtn = document.createElement('button');
-                    delBtn.type = 'button';
-                    delBtn.textContent = '✕';
-                    delBtn.style.cssText = 'background:rgba(231,76,60,0.2); color:#ff7675; border:none; border-radius:5px; padding:3px 6px; font-size:11px; cursor:pointer; flex-shrink:0;';
-                    delBtn.addEventListener('click', () => {
+                    item.querySelector(`[data-del-track="${idx}"]`).addEventListener('click', (e) => {
+                        e.stopPropagation();
                         savedMusicTracks.splice(idx, 1);
-                        writeStorageJson(SAVED_MUSIC_STORAGE_KEY, savedMusicTracks);
-                        renderSavedMusicTracks();
+                        renderSavedMusicList();
                     });
-
-                    row.appendChild(label);
-                    row.appendChild(useBtn);
-                    row.appendChild(delBtn);
-                    savedMusicListEl.appendChild(row);
+                    savedMusicList.appendChild(item);
                 });
             }
 
             if (openMusicBoxBtn && savedMusicBox) {
                 openMusicBoxBtn.addEventListener('click', () => {
-                    const isOpen = savedMusicBox.style.display === 'block';
-                    savedMusicBox.style.display = isOpen ? 'none' : 'block';
-                    if (!isOpen) renderSavedMusicTracks();
+                    savedMusicBox.style.display = savedMusicBox.style.display === 'none' ? 'block' : 'none';
+                    renderSavedMusicList();
                 });
             }
             if (quickAddMusicToggle && quickAddMusicForm) {
@@ -5479,413 +5497,411 @@
             }
             if (qmSaveBtn) {
                 qmSaveBtn.addEventListener('click', async () => {
-                    const t = (document.getElementById('qm-title')?.value || '').trim();
-                    const a = (document.getElementById('qm-artist')?.value || '').trim();
-                    let aUrl = (document.getElementById('qm-audio-url')?.value || '').trim();
-                    let cUrl = (document.getElementById('qm-cover-url')?.value || '').trim();
-                    const aFile = document.getElementById('qm-audio-file')?.files?.[0];
-                    const cFile = document.getElementById('qm-cover-file')?.files?.[0];
-                    if (aFile && !aUrl) {
-                        const dataUrl = await readFileAsDataUrl(aFile);
-                        if (dataUrl.length < 280000) aUrl = dataUrl;
-                    }
-                    if (cFile && !cUrl) {
-                        const dataUrl = await readFileAsDataUrl(cFile);
-                        if (dataUrl.length < 280000) cUrl = dataUrl;
-                    }
-                    if (!t && !a && !aUrl) {
-                        showKiwiToast('Preencha pelo menos o nome da música ou link de áudio.');
+                    const qmTitle = document.getElementById('qm-title');
+                    const qmArtist = document.getElementById('qm-artist');
+                    const qmAudioUrl = document.getElementById('qm-audio-url');
+                    const qmCoverUrl = document.getElementById('qm-cover-url');
+                    const qmAudioFile = document.getElementById('qm-audio-file');
+                    const qmCoverFile = document.getElementById('qm-cover-file');
+
+                    const title = (qmTitle && qmTitle.value.trim()) || '';
+                    const artist = (qmArtist && qmArtist.value.trim()) || '';
+                    if (!title && !artist) {
+                        showKiwiToast('Digite pelo menos o nome da música ou artista.');
                         return;
                     }
-                    savedMusicTracks.unshift({
-                        title: t || 'Música salva',
-                        artist: a || activeUsername,
-                        audioUrl: aUrl,
-                        coverUrl: cUrl
-                    });
-                    writeStorageJson(SAVED_MUSIC_STORAGE_KEY, savedMusicTracks);
-                    renderSavedMusicTracks();
-                    if (document.getElementById('qm-title')) document.getElementById('qm-title').value = '';
-                    if (document.getElementById('qm-artist')) document.getElementById('qm-artist').value = '';
-                    if (document.getElementById('qm-audio-url')) document.getElementById('qm-audio-url').value = '';
-                    if (document.getElementById('qm-cover-url')) document.getElementById('qm-cover-url').value = '';
-                    if (document.getElementById('qm-audio-file')) document.getElementById('qm-audio-file').value = '';
-                    if (document.getElementById('qm-cover-file')) document.getElementById('qm-cover-file').value = '';
+                    let audioUrl = (qmAudioUrl && qmAudioUrl.value.trim()) || '';
+                    let coverUrl = (qmCoverUrl && qmCoverUrl.value.trim()) || '';
+                    if (qmAudioFile && qmAudioFile.files && qmAudioFile.files[0]) {
+                        try { audioUrl = URL.createObjectURL(qmAudioFile.files[0]); } catch (_) {}
+                    }
+                    if (qmCoverFile && qmCoverFile.files && qmCoverFile.files[0]) {
+                        try { coverUrl = await readFileAsDataUrl(qmCoverFile.files[0]); } catch (_) {}
+                    }
+                    savedMusicTracks.push({ title: title || 'Faixa', artist, audioUrl, coverUrl });
+                    renderSavedMusicList();
+                    if (editSong) editSong.value = title || 'Faixa';
+                    if (editArtist) editArtist.value = artist;
+                    if (qmTitle) qmTitle.value = '';
+                    if (qmArtist) qmArtist.value = '';
+                    if (qmAudioUrl) qmAudioUrl.value = '';
+                    if (qmCoverUrl) qmCoverUrl.value = '';
+                    if (qmAudioFile) qmAudioFile.value = '';
+                    if (qmCoverFile) qmCoverFile.value = '';
                     if (quickAddMusicForm) quickAddMusicForm.style.display = 'none';
-                    showKiwiToast('Música guardada na sua biblioteca!');
+                    showKiwiToast('Música guardada na lista!');
                 });
             }
 
-            editProfileForm.addEventListener("submit", async function(e) {
+            editProfileForm.addEventListener('submit', async (e) => {
                 e.preventDefault();
 
-                const chosenUsername = (editUsernameInput && editUsernameInput.value.trim()) || activeUsername || 'Usuário';
-                activeUsername = chosenUsername;
-                try { localStorage.setItem(USERNAME_STORAGE_KEY, activeUsername); } catch (_) {}
-                myProfileData.username = activeUsername;
-
-                const formData = new FormData(editProfileForm);
-                formData.set('username', activeUsername);
-
-                const avatarFile = editAvatarFileInput ? editAvatarFileInput.files[0] : null;
-                const bannerFile = editBannerFileInput ? editBannerFileInput.files[0] : null;
-                const audioFile = editLocalAudioFile ? editLocalAudioFile.files[0] : null;
-                const coverFile = editMusicCoverFile ? editMusicCoverFile.files[0] : null;
-
-                let newAvatarUrl = myProfileData.avatarUrl;
-                let newBannerUrl = myProfileData.bannerUrl;
-                let newAudioSrc = (editLocalAudioUrl ? editLocalAudioUrl.value.trim() : '') || '';
-                let newCoverUrl = (editMusicCoverUrl ? editMusicCoverUrl.value.trim() : '') || '';
-
-                if (avatarFile) {
-                    newAvatarUrl = URL.createObjectURL(avatarFile);
-                    try {
-                        const b64 = await readFileAsDataUrl(avatarFile);
-                        if (b64.length < 300000) newAvatarUrl = b64;
-                    } catch (_) {}
-                } else if (tempEditorAvatarUrl) {
-                    newAvatarUrl = tempEditorAvatarUrl;
+                const nextUsername = ((editUsernameInput && editUsernameInput.value.trim()) || activeUsername || 'Usuário').trim();
+                const previousUsername = activeUsername;
+                if (previousUsername && previousUsername.toLowerCase() !== nextUsername.toLowerCase()) {
+                    profilesByUsername.delete(previousUsername.toLowerCase());
                 }
-
-                if (bannerFile) {
-                    newBannerUrl = URL.createObjectURL(bannerFile);
-                    try {
-                        const b64 = await readFileAsDataUrl(bannerFile);
-                        if (b64.length < 300000) newBannerUrl = b64;
-                    } catch (_) {}
-                } else if (tempEditorBannerUrl) {
-                    newBannerUrl = tempEditorBannerUrl;
-                }
-
-                if (audioFile) {
-                    newAudioSrc = URL.createObjectURL(audioFile);
-                    myProfileData.audioFileName = audioFile.name;
-                    try {
-                        const b64 = await readFileAsDataUrl(audioFile);
-                        if (b64.length < 280000) newAudioSrc = b64;
-                    } catch (_) {}
-                } else if (!newAudioSrc && !editYtUrl?.value.trim()) {
-                    newAudioSrc = '';
-                }
-
-                if (coverFile) {
-                    newCoverUrl = URL.createObjectURL(coverFile);
-                    try {
-                        const b64 = await readFileAsDataUrl(coverFile);
-                        if (b64.length < 280000) newCoverUrl = b64;
-                    } catch (_) {}
-                }
-
-                if (window.location.protocol !== 'file:' && window.KiwiClient) {
-                    try {
-                        const respData = await window.KiwiClient.submitProfileUpdate(formData, '/api/profile/update/');
-                        if (respData && respData.username) {
-                            activeUsername = String(respData.username).trim() || activeUsername;
-                            myProfileData.username = activeUsername;
-                            try { localStorage.setItem(USERNAME_STORAGE_KEY, activeUsername); } catch (_) {}
-                        }
-                        if (respData && respData.avatar_url) newAvatarUrl = respData.avatar_url;
-                        if (respData && respData.banner_url) newBannerUrl = respData.banner_url;
-                        if (respData && respData.music_audio_url) newAudioSrc = respData.music_audio_url;
-                        if (respData && respData.music_cover_url) newCoverUrl = respData.music_cover_url;
-                    } catch (_) {}
-                }
+                activeUsername = nextUsername;
+                myProfileData.username = nextUsername;
+                try { localStorage.setItem(USERNAME_STORAGE_KEY, nextUsername); } catch (_) {}
 
                 myProfileData.bubble = editBubble.value.trim();
                 myProfileData.pronouns = editPronouns.value.trim();
-                myProfileData.bio = editBio.value.trim();
+                myProfileData.bio = formatSafeBioHtml(editBio.value.trim());
                 myProfileData.song = editSong.value.trim();
                 myProfileData.artist = editArtist.value.trim();
                 myProfileData.musicUrl = editYtUrl ? editYtUrl.value.trim() : '';
-                myProfileData.audioSrc = newAudioSrc;
-                myProfileData.coverUrl = newCoverUrl;
-                myProfileData.avatarUrl = newAvatarUrl;
-                myProfileData.bannerUrl = newBannerUrl;
+
                 const canGold = isAdminIdentity(activeUsername, myProfileData.is_admin);
                 myProfileData.goldProfileBg = canGold && Boolean(editGoldCheckbox && editGoldCheckbox.checked);
+                if (!isAkiiraAdminIdentity(activeUsername, myProfileData.is_admin)) {
+                    myProfileData.goldGlowFrame = false;
+                    myProfileData.profileGlow = false;
+                }
 
-                profilesByUsername.set(activeUsername.toLowerCase(), { ...myProfileData });
-                saveUserMusicToLocalCache(activeUsername, myProfileData);
+                const typedAudioUrl = editLocalAudioUrl ? editLocalAudioUrl.value.trim() : '';
+                if (editLocalAudioFile && editLocalAudioFile.files && editLocalAudioFile.files[0]) {
+                    const audioFileObj = editLocalAudioFile.files[0];
+                    myProfileData.audioFileName = audioFileObj.name || '';
+                    try {
+                        myProfileData.audioSrc = URL.createObjectURL(audioFileObj);
+                    } catch (_) {}
+                } else if (typedAudioUrl) {
+                    myProfileData.audioSrc = typedAudioUrl;
+                    myProfileData.audioFileName = '';
+                } else if (!myProfileData.audioSrc || myProfileData.audioSrc.startsWith('blob:')) {
+                    myProfileData.audioSrc = '';
+                    myProfileData.audioFileName = '';
+                }
+
+                const typedCoverUrl = editMusicCoverUrl ? editMusicCoverUrl.value.trim() : '';
+                if (editMusicCoverFile && editMusicCoverFile.files && editMusicCoverFile.files[0]) {
+                    try {
+                        myProfileData.coverUrl = await readFileAsDataUrl(editMusicCoverFile.files[0]);
+                    } catch (_) {}
+                } else if (typedCoverUrl) {
+                    myProfileData.coverUrl = typedCoverUrl;
+                } else if (!myProfileData.coverUrl || myProfileData.coverUrl.startsWith('blob:')) {
+                    myProfileData.coverUrl = '';
+                }
+
+                const avatarFile = editAvatarFileInput && editAvatarFileInput.files && editAvatarFileInput.files[0];
+                if (avatarFile) {
+                    try {
+                        const dataUrl = await readFileAsDataUrl(avatarFile);
+                        myProfileData.avatarUrl = dataUrl;
+                    } catch (_) {
+                        myProfileData.avatarUrl = URL.createObjectURL(avatarFile);
+                    }
+                } else if (tempEditorAvatarUrl) {
+                    myProfileData.avatarUrl = tempEditorAvatarUrl;
+                }
+
+                const bannerFile = editBannerFileInput && editBannerFileInput.files && editBannerFileInput.files[0];
+                if (bannerFile) {
+                    try {
+                        const dataUrl = await readFileAsDataUrl(bannerFile);
+                        myProfileData.bannerUrl = dataUrl;
+                    } catch (_) {
+                        myProfileData.bannerUrl = URL.createObjectURL(bannerFile);
+                    }
+                } else if (tempEditorBannerUrl) {
+                    myProfileData.bannerUrl = tempEditorBannerUrl;
+                }
+
+                if (window.KiwiClient && window.location.protocol !== 'file:') {
+                    try {
+                        const fd = new FormData();
+                        fd.append('username', myProfileData.username);
+                        fd.append('bubble', myProfileData.bubble);
+                        fd.append('pronouns', myProfileData.pronouns);
+                        fd.append('bio', editBio.value.trim());
+                        fd.append('spotify_song', myProfileData.song);
+                        fd.append('spotify_artist', myProfileData.artist);
+                        fd.append('music_url', myProfileData.musicUrl);
+                        if (typedAudioUrl) fd.append('music_audio_url', typedAudioUrl);
+                        if (typedCoverUrl) fd.append('music_cover_url', typedCoverUrl);
+                        if (avatarFile) fd.append('avatar', avatarFile);
+                        if (bannerFile) fd.append('banner', bannerFile);
+                        if (editLocalAudioFile && editLocalAudioFile.files && editLocalAudioFile.files[0]) {
+                            fd.append('music_audio', editLocalAudioFile.files[0]);
+                        }
+                        if (editMusicCoverFile && editMusicCoverFile.files && editMusicCoverFile.files[0]) {
+                            fd.append('music_cover', editMusicCoverFile.files[0]);
+                        }
+                        await window.KiwiClient.submitProfileUpdate(fd);
+                    } catch (_) {}
+                }
+
                 updateMySidebarUI();
+                saveUserMusicToLocalCache(activeUsername, myProfileData);
                 closeModalAnimated(editModal);
-                showKiwiToast("Perfil atualizado!");
+                showKiwiToast("Perfil salvo com sucesso!");
             });
 
-            function renderDmTabs() {
-                dmTabsListEl.innerHTML = '';
-                openDmTabs.forEach((info, targetUser) => {
-                    const isActive = (currentView === 'dm' && currentDmUser === targetUser);
-                    const item = document.createElement('div');
-                    item.className = 'channel-item' + (isActive ? ' active' : '');
-                    item.setAttribute('data-dm-user', targetUser);
-                    item.onclick = () => openPrivateChat(targetUser, info.avatarUrl);
+            function fetchFriendRequests() {
+                const container = document.getElementById('mailbox-friend-requests');
+                if (!container) return;
+                container.innerHTML = '';
 
-                    const av = document.createElement('div');
-                    av.className = 'dm-channel-avatar';
-                    setAvatarStyle(av, info.avatarUrl, targetUser);
+                if (!friendRequestsList.length) {
+                    container.innerHTML = '<div style="font-size: 12px; color: var(--text-muted);">Sem pedidos de amizade pendentes.</div>';
+                    return;
+                }
+
+                friendRequestsList.forEach(req => {
+                    const card = document.createElement('div');
+                    card.className = 'friend-req-card';
 
                     const nameSpan = document.createElement('span');
-                    nameSpan.textContent = targetUser;
-                    nameSpan.style.flex = '1';
-                    nameSpan.style.overflow = 'hidden';
-                    nameSpan.style.textOverflow = 'ellipsis';
-                    nameSpan.style.whiteSpace = 'nowrap';
+                    nameSpan.style.cssText = 'font-weight: bold; font-size: 13px; color: var(--text-main);';
+                    nameSpan.textContent = req.from_user;
 
-                    const closeBtn = document.createElement('button');
-                    closeBtn.type = 'button';
-                    closeBtn.className = 'dm-close-tab';
-                    closeBtn.title = 'Fechar conversa';
-                    closeBtn.textContent = '×';
-                    closeBtn.onclick = (e) => {
-                        e.stopPropagation();
-                        openDmTabs.delete(targetUser);
-                        if (currentView === 'dm' && currentDmUser === targetUser) switchToGeral();
-                        else renderDmTabs();
-                    };
+                    const actionsWrap = document.createElement('div');
+                    actionsWrap.style.cssText = 'display: flex; gap: 6px;';
+
+                    const acceptBtn = document.createElement('button');
+                    acceptBtn.type = 'button';
+                    acceptBtn.style.cssText = 'background: #23a55a; color: #fff; border: none; border-radius: 5px; padding: 5px 10px; font-size: 11px; font-weight: bold; cursor: pointer;';
+                    acceptBtn.textContent = 'Aceitar';
+
+                    const rejectBtn = document.createElement('button');
+                    rejectBtn.type = 'button';
+                    rejectBtn.style.cssText = 'background: #ed4245; color: #fff; border: none; border-radius: 5px; padding: 5px 10px; font-size: 11px; font-weight: bold; cursor: pointer;';
+                    rejectBtn.textContent = 'Recusar';
+
+                    acceptBtn.addEventListener('click', () => {
+                        if (!isFriendName(req.from_user)) {
+                            friendsList.push(req.from_user);
+                            writeStorageJson(FRIENDS_STORAGE_KEY, friendsList);
+                        }
+                        friendRequestsList = friendRequestsList.filter(r => r.id !== req.id);
+                        writeStorageJson(REQUESTS_STORAGE_KEY, friendRequestsList);
+                        card.classList.add('accepted');
+                        actionsWrap.innerHTML = '<span class="friend-req-status">✓ Aceito</span>';
+                        setTimeout(() => {
+                            card.classList.add('fading-out');
+                            setTimeout(() => card.remove(), 350);
+                        }, 650);
+                    });
+
+                    rejectBtn.addEventListener('click', () => {
+                        friendRequestsList = friendRequestsList.filter(r => r.id !== req.id);
+                        writeStorageJson(REQUESTS_STORAGE_KEY, friendRequestsList);
+                        card.classList.add('fading-out');
+                        setTimeout(() => card.remove(), 350);
+                    });
+
+                    actionsWrap.appendChild(acceptBtn);
+                    actionsWrap.appendChild(rejectBtn);
+                    card.appendChild(nameSpan);
+                    card.appendChild(actionsWrap);
+                    container.appendChild(card);
+                });
+            }
+
+            const socialTabs = document.querySelectorAll('.social-tab');
+            const socialContentContainer = document.getElementById('social-content-container');
+
+            function renderSocialUserList(users, emptyMessage, listType = 'online') {
+                socialContentContainer.innerHTML = '';
+                if (!users || users.length === 0) {
+                    socialContentContainer.innerHTML = `<p style="color: var(--text-muted);">${escapeHtmlText(emptyMessage)}</p>`;
+                    return;
+                }
+                users.forEach(u => {
+                    const uname = typeof u === 'string' ? u : (u.username || 'Utilizador');
+                    const known = profilesByUsername.get(uname.toLowerCase());
+                    const cachedU = loadUserMusicFromLocalCache(uname);
+                    const avUrl = (typeof u === 'object' && (u.avatar_url || u.avatarUrl))
+                        || (known && known.avatarUrl)
+                        || (cachedU && cachedU.avatarUrl)
+                        || '';
+                    const isAdminUser = isAdminIdentity(uname, typeof u === 'object' && u.is_admin);
+
+                    const item = document.createElement('div');
+                    item.className = 'social-list-item';
+
+                    const av = document.createElement('div');
+                    av.className = 'social-avatar';
+                    if (isAdminUser) av.classList.add('akiira-gold-frame');
+                    setAvatarStyle(av, avUrl, uname);
+
+                    const nameSpan = document.createElement('span');
+                    nameSpan.textContent = uname;
+                    nameSpan.style.cssText = 'flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 600;';
 
                     item.appendChild(av);
                     item.appendChild(nameSpan);
-                    item.appendChild(closeBtn);
-                    dmTabsListEl.appendChild(item);
+
+                    if (listType === 'amigos' && uname.toLowerCase() !== (activeUsername || '').toLowerCase()) {
+                        const dmQuickBtn = document.createElement('button');
+                        dmQuickBtn.type = 'button';
+                        dmQuickBtn.className = 'dm-quick-btn';
+                        dmQuickBtn.textContent = 'DM';
+                        dmQuickBtn.title = `Abrir DM com ${uname}`;
+                        dmQuickBtn.addEventListener('click', (ev) => {
+                            ev.stopPropagation();
+                            openPrivateChat(uname, avUrl);
+                        });
+                        item.appendChild(dmQuickBtn);
+
+                        const rmQuickBtn = document.createElement('button');
+                        rmQuickBtn.type = 'button';
+                        rmQuickBtn.className = 'remove-friend-mini-btn';
+                        rmQuickBtn.textContent = '✕';
+                        rmQuickBtn.title = `Remover amizade com ${uname}`;
+                        rmQuickBtn.addEventListener('click', (ev) => {
+                            ev.stopPropagation();
+                            window.removeFriend(uname);
+                        });
+                        item.appendChild(rmQuickBtn);
+                    }
+
+                    item.addEventListener('click', () => openUserProfile(uname));
+                    socialContentContainer.appendChild(item);
                 });
-                renderUnreadBadges();
             }
 
-            window.switchToServerChannel = function(channelName, channelType = 'text') {
-                saveCurrentChannelSnapshot();
-                const cleanCh = (channelName || 'geral').trim();
-                currentView = 'geral';
-                currentChannelName = cleanCh;
-                currentDmUser = null;
-
-                document.querySelectorAll('#server-channels-list .channel-item').forEach((el) => {
-                    el.classList.toggle('active', el.getAttribute('data-channel-name') === cleanCh);
-                });
-                dmTabsListEl.querySelectorAll('.channel-item').forEach(el => el.classList.remove('active'));
-
-                headerDmAvatar.classList.remove('visible');
-                headerDmAvatar.onclick = null;
-                headerMainTitle.textContent = `${channelType === 'audio' ? '🎵' : '#'} ${cleanCh}`;
-                headerSubLabel.textContent = currentServerId === 'home'
-                    ? `| Canal ${cleanCh} • Kiwi Chat`
-                    : `| Servidor ${currentServerId} • #${cleanCh}`;
-                headerCallBtn.classList.remove('visible');
-                headerCallBtn.onclick = null;
-                backToGeralBtn.classList.remove('visible');
-                messageInput.placeholder = `Conversar em #${cleanCh}...`;
-
-                const ctx = roomCtxManager.activateContext({
-                    type: 'channel',
-                    serverId: currentServerId,
-                    channelName: cleanCh,
-                    channelType
-                });
-
-                chatLog.innerHTML = '';
-                if (ctx && ctx.snapshotHtml) {
-                    chatLog.innerHTML = ctx.snapshotHtml;
-                } else if (ctx && Array.isArray(ctx.messages) && ctx.messages.length) {
-                    ctx.messages.forEach((m) => appendMessage({
-                        id: m.id,
-                        sender: m.author,
-                        message: m.text,
-                        timestamp: m.timestamp,
-                        avatarUrl: m.avatarUrl || '',
-                        attachmentUrl: m.attachmentUrl || '',
-                        attachmentName: m.attachmentName || '',
-                        attachmentType: m.attachmentType || '',
-                        canDelete: m.author === activeUsername
-                    }, true));
-                } else {
-                    appendMessage({
-                        sender: 'Sistema Kiwi',
-                        message: `Você entrou em ${channelType === 'audio' ? '🎵' : '#'} ${cleanCh}.`,
-                        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-                        canDelete: false
-                    }, true);
-                }
-
-                enhanceExistingMessagesInLog();
-                renderUnreadBadges();
-                triggerChatAreaTransition();
-                window.openMobileChatView();
-            };
-
-            window.switchToGeral = function() {
-                window.switchToServerChannel('geral', 'text');
-            };
-
-            window.openPrivateChat = function(targetUsername, knownAvatarUrl = '') {
-                if (!targetUsername || targetUsername === activeUsername) return;
-                saveCurrentChannelSnapshot();
-                currentView = 'dm';
-                currentChannelName = '';
-                currentDmUser = targetUsername;
-
-                if (!openDmTabs.has(targetUsername)) {
-                    openDmTabs.set(targetUsername, { avatarUrl: knownAvatarUrl || '' });
-                } else if (knownAvatarUrl) {
-                    openDmTabs.get(targetUsername).avatarUrl = knownAvatarUrl;
-                }
-                renderDmTabs();
-
-                document.querySelectorAll('#server-channels-list .channel-item').forEach(el => el.classList.remove('active'));
-                dmTabsListEl.querySelectorAll('.channel-item').forEach(el => {
-                    el.classList.toggle('active', el.getAttribute('data-dm-user') === targetUsername);
-                });
-
-                const tabInfo = openDmTabs.get(targetUsername);
-                setAvatarStyle(headerDmAvatar, tabInfo ? tabInfo.avatarUrl : '', targetUsername);
-                headerDmAvatar.classList.add('visible');
-                headerDmAvatar.onclick = () => window.openUserProfile(targetUsername);
-
-                headerMainTitle.textContent = targetUsername;
-                headerSubLabel.textContent = '| Mensagem privada';
-                headerCallBtn.classList.add('visible');
-                headerCallBtn.onclick = () => window.startVoiceCall(targetUsername);
-                backToGeralBtn.classList.add('visible');
-                messageInput.placeholder = `Conversar com ${targetUsername}...`;
-
-                const ctx = roomCtxManager.activateContext({
-                    type: 'dm',
-                    targetUser: targetUsername
-                });
-
-                chatLog.innerHTML = '';
-                const history = dmHistoryStore[targetUsername] || [];
-                if (history.length > 0) {
-                    history.forEach(item => {
-                        appendMessage({
-                            id: item.id,
-                            sender: item.sender,
-                            message: item.message,
-                            timestamp: item.timestamp,
-                            avatarUrl: item.avatarUrl || '',
-                            attachmentUrl: item.attachmentUrl || '',
-                            attachmentName: item.attachmentName || '',
-                            attachmentType: item.attachmentType || '',
-                            canDelete: Boolean(item.canDelete)
-                        }, false);
+            function fetchOnlineUsers() {
+                const online = [{
+                    username: activeUsername,
+                    avatar_url: myProfileData.avatarUrl,
+                    is_admin: myProfileData.is_admin
+                }];
+                friendsList.forEach(fname => {
+                    const known = profilesByUsername.get(fname.toLowerCase());
+                    online.push({
+                        username: fname,
+                        avatar_url: (known && known.avatarUrl) || '',
+                        is_admin: false
                     });
-                } else if (ctx && Array.isArray(ctx.messages) && ctx.messages.length > 0) {
-                    ctx.messages.forEach(m => {
-                        appendMessage({
-                            id: m.id,
-                            sender: m.author,
-                            message: m.text,
-                            timestamp: m.timestamp,
-                            avatarUrl: m.avatarUrl || '',
-                            attachmentUrl: m.attachmentUrl || '',
-                            attachmentName: m.attachmentName || '',
-                            attachmentType: m.attachmentType || '',
-                            canDelete: m.author === activeUsername
-                        }, false);
-                    });
-                } else {
-                    appendMessage({
-                        sender: 'Sistema Kiwi',
-                        message: `Conversa privada iniciada com ${targetUsername}.`,
-                        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-                        canDelete: false
-                    }, false);
-                }
-                enhanceExistingMessagesInLog();
-                renderUnreadBadges();
-                triggerChatAreaTransition();
-                window.openMobileChatView();
-            };
-
-            if (tabGeralEl) {
-                tabGeralEl.addEventListener('click', () => window.switchToServerChannel('geral', 'text'));
+                });
+                renderSocialUserList(online, 'Nenhum utilizador online.', 'online');
             }
 
-            // === SERVIDORES, AMIGOS SALVOS E NAVEGAÇÃO MOBILE ===
-            const railHomeBtn = document.getElementById('rail-home-btn');
-            const openCreateServerBtn = document.getElementById('open-create-server-btn');
-            const createServerModal = document.getElementById('create-server-modal');
-            const closeCreateServerBtn = document.getElementById('close-create-server-btn');
-            const createServerForm = document.getElementById('create-server-form');
+            function fetchFriendsList() {
+                const friendObjs = friendsList.map(fname => {
+                    const known = profilesByUsername.get(fname.toLowerCase());
+                    return {
+                        username: fname,
+                        avatar_url: (known && known.avatarUrl) || '',
+                        is_admin: false
+                    };
+                });
+                renderSocialUserList(friendObjs, 'Ainda não adicionou amigos.', 'amigos');
+            }
 
-            const openCreateChannelBtn = document.getElementById('open-create-channel-btn');
-            const createChannelModal = document.getElementById('create-channel-modal');
-            const closeCreateChannelBtn = document.getElementById('close-create-channel-btn');
-            const createChannelForm = document.getElementById('create-channel-form');
+            function fetchFollowersList() {
+                renderSocialUserList([], 'Sem seguidores registados de momento.', 'seguidores');
+            }
 
-            const openAddFriendBtn = document.getElementById('open-add-friend-btn');
-            const sidebarSearchFriendBtn = document.getElementById('sidebar-search-friend-btn');
-            const addFriendModal = document.getElementById('add-friend-modal');
-            const closeAddFriendBtn = document.getElementById('close-add-friend-btn');
-            const addFriendDirectForm = document.getElementById('add-friend-direct-form');
-            const friendSearchInput = document.getElementById('friend-search-input');
-            const friendSearchResults = document.getElementById('friend-search-results');
-            const sidebarSavedFriendsList = document.getElementById('sidebar-saved-friends-list');
+            socialTabs.forEach(tab => {
+                tab.addEventListener('click', () => {
+                    socialTabs.forEach(t => t.classList.remove('active'));
+                    tab.classList.add('active');
+                    const tabName = tab.getAttribute('data-tab');
+                    if (tabName === 'online') fetchOnlineUsers();
+                    else if (tabName === 'amigos') fetchFriendsList();
+                    else if (tabName === 'seguidores') fetchFollowersList();
+                });
+            });
 
-            const customServers = readStorageJson('kiwi_custom_servers_v1', []);
+            fetchOnlineUsers();
 
             function renderSidebarSavedFriends() {
+                const sidebarSavedFriendsList = document.getElementById('sidebar-saved-friends-list');
                 if (!sidebarSavedFriendsList) return;
                 sidebarSavedFriendsList.innerHTML = '';
                 if (!friendsList.length) {
-                    sidebarSavedFriendsList.innerHTML = '<div style="font-size:11px; color:var(--text-muted); padding:4px 6px;">Nenhum amigo salvo ainda.</div>';
+                    sidebarSavedFriendsList.innerHTML = '<div style="font-size:11px; color:var(--text-muted); padding:2px 6px;">Nenhum amigo salvo.</div>';
                     return;
                 }
                 friendsList.forEach((fname) => {
+                    const known = profilesByUsername.get(String(fname).toLowerCase());
+                    const cachedU = loadUserMusicFromLocalCache(fname);
+                    const avUrl = (known && known.avatarUrl) || (cachedU && cachedU.avatarUrl) || '';
+
                     const row = document.createElement('div');
                     row.className = 'channel-item';
                     row.style.padding = '6px 10px';
                     row.style.marginBottom = '2px';
-                    row.innerHTML = `<span>🟢</span><span style="flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${escapeHtmlText(fname)}</span>`;
-                    row.addEventListener('click', () => window.openPrivateChat(fname));
+
+                    const av = document.createElement('div');
+                    av.className = 'dm-channel-avatar';
+                    av.style.width = '20px';
+                    av.style.height = '20px';
+                    av.style.fontSize = '10px';
+                    setAvatarStyle(av, avUrl, fname);
+
+                    const labelSpan = document.createElement('span');
+                    labelSpan.style.cssText = 'flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;';
+                    labelSpan.textContent = fname;
+
+                    row.appendChild(av);
+                    row.appendChild(labelSpan);
+                    row.addEventListener('click', () => window.openPrivateChat(fname, avUrl));
                     sidebarSavedFriendsList.appendChild(row);
                 });
             }
 
-            function renderServerRailButtons() {
-                const railEl = document.querySelector('.server-rail');
-                if (!railEl) return;
-                railEl.querySelectorAll('.server-rail-custom').forEach(el => el.remove());
-                const dividerEl = railEl.querySelector('.server-rail-divider');
-                customServers.forEach((srv) => {
-                    const btn = document.createElement('button');
-                    btn.type = 'button';
-                    btn.className = 'server-rail-btn server-rail-custom' + (currentServerId === srv.id ? ' active' : '');
-                    btn.title = srv.name;
-                    btn.textContent = (srv.name || 'S').slice(0, 2).toUpperCase();
-                    btn.addEventListener('click', () => {
-                        saveCurrentChannelSnapshot();
-                        currentServerId = srv.id;
-                        const titleEl = document.getElementById('sidebar-server-title');
-                        if (titleEl) titleEl.textContent = `🥝 ${srv.name}`;
-                        if (!serverChannelsStore[srv.id]) {
-                            serverChannelsStore[srv.id] = (srv.channels && srv.channels.length)
-                                ? srv.channels
-                                : [{ name: 'geral', type: 'text' }, { name: 'música', type: 'audio' }];
-                        }
-                        renderChannelsListForServer(srv.id, 'geral');
-                        renderServerRailButtons();
-                        window.switchToServerChannel('geral', 'text');
-                    });
-                    if (dividerEl && dividerEl.nextSibling) {
-                        railEl.insertBefore(btn, dividerEl.nextSibling);
-                    } else {
-                        railEl.appendChild(btn);
-                    }
+            const addFriendModal = document.getElementById('add-friend-modal');
+            const closeAddFriendBtn = document.getElementById('close-add-friend-btn');
+            const openAddFriendBtn = document.getElementById('open-add-friend-btn');
+            const sidebarSearchFriendBtn = document.getElementById('sidebar-search-friend-btn');
+            const addFriendDirectForm = document.getElementById('add-friend-direct-form');
+            const friendSearchInput = document.getElementById('friend-search-input');
+
+            function openAddFriendModal() {
+                if (addFriendModal) openModalAnimated(addFriendModal);
+                if (friendSearchInput) setTimeout(() => friendSearchInput.focus(), 60);
+            }
+
+            if (openAddFriendBtn) openAddFriendBtn.addEventListener('click', openAddFriendModal);
+            if (sidebarSearchFriendBtn) sidebarSearchFriendBtn.addEventListener('click', openAddFriendModal);
+            if (closeAddFriendBtn && addFriendModal) {
+                closeAddFriendBtn.addEventListener('click', () => closeModalAnimated(addFriendModal));
+            }
+            if (addFriendModal) {
+                addFriendModal.addEventListener('click', (e) => {
+                    if (e.target === addFriendModal) closeModalAnimated(addFriendModal);
                 });
             }
+            if (addFriendDirectForm) {
+                addFriendDirectForm.addEventListener('submit', (e) => {
+                    e.preventDefault();
+                    const uname = friendSearchInput ? friendSearchInput.value.trim() : '';
+                    if (!uname) return;
+                    if (!isFriendName(uname)) {
+                        friendsList.push(uname);
+                        writeStorageJson(FRIENDS_STORAGE_KEY, friendsList);
+                    }
+                    if (friendSearchInput) friendSearchInput.value = '';
+                    closeModalAnimated(addFriendModal);
+                    renderSidebarSavedFriends();
+                    const amigosTab = document.querySelector('.social-tab[data-tab="amigos"]');
+                    if (amigosTab && amigosTab.classList.contains('active')) fetchFriendsList();
+                    showKiwiToast(`${uname} adicionado aos amigos!`);
+                });
+            }
+
+            const createServerModal = document.getElementById('create-server-modal');
+            const openCreateServerBtn = document.getElementById('open-create-server-btn');
+            const closeCreateServerBtn = document.getElementById('close-create-server-btn');
+            const createServerForm = document.getElementById('create-server-form');
+            const railHomeBtn = document.getElementById('rail-home-btn');
+            const sidebarServerTitle = document.getElementById('sidebar-server-title');
 
             if (railHomeBtn) {
                 railHomeBtn.addEventListener('click', () => {
-                    saveCurrentChannelSnapshot();
                     currentServerId = 'home';
-                    const titleEl = document.getElementById('sidebar-server-title');
-                    if (titleEl) titleEl.textContent = '🥝 Kiwi • Amizades';
+                    document.querySelectorAll('.server-rail-btn').forEach(b => b.classList.remove('active'));
                     railHomeBtn.classList.add('active');
-                    renderChannelsListForServer('home', 'geral');
-                    renderServerRailButtons();
-                    window.switchToServerChannel('geral', 'text');
+                    if (sidebarServerTitle) sidebarServerTitle.textContent = '🥝 Kiwi • Amizades';
+                    renderChannelsListForServer('home', currentChannelName);
+                    switchToGeral();
                 });
             }
-
             if (openCreateServerBtn && createServerModal) {
                 openCreateServerBtn.addEventListener('click', () => openModalAnimated(createServerModal));
             }
@@ -5902,32 +5918,44 @@
                     e.preventDefault();
                     const nameInput = document.getElementById('new-server-name');
                     const chInput = document.getElementById('new-server-channels');
-                    const sName = (nameInput?.value || '').trim();
+                    const sName = (nameInput && nameInput.value.trim()) || '';
                     if (!sName) return;
-                    const sId = `srv-${Date.now()}`;
-                    const rawChs = (chInput?.value || 'geral, música')
-                        .split(',')
-                        .map(s => s.trim().toLowerCase())
-                        .filter(Boolean);
-                    const chObjs = (rawChs.length ? rawChs : ['geral', 'música']).map(ch => ({
-                        name: ch,
-                        type: (ch.includes('música') || ch.includes('musica') || ch.includes('áudio') || ch.includes('audio')) ? 'audio' : 'text'
+                    const sId = 'srv-' + Date.now().toString(36);
+                    const rawChs = (chInput && chInput.value.trim()) || 'geral, música';
+                    const parsedChs = rawChs.split(',').map(x => x.trim()).filter(Boolean).map(n => ({
+                        name: n,
+                        type: n.toLowerCase().includes('mús') || n.toLowerCase().includes('mus') || n.toLowerCase().includes('voz') ? 'audio' : 'text'
                     }));
-                    customServers.push({ id: sId, name: sName, channels: chObjs });
-                    writeStorageJson('kiwi_custom_servers_v1', customServers);
-                    serverChannelsStore[sId] = chObjs;
-                    currentServerId = sId;
-                    const titleEl = document.getElementById('sidebar-server-title');
-                    if (titleEl) titleEl.textContent = `🥝 ${sName}`;
-                    if (railHomeBtn) railHomeBtn.classList.remove('active');
-                    renderServerRailButtons();
-                    renderChannelsListForServer(sId, chObjs[0].name);
+                    serverChannelsStore[sId] = parsedChs.length ? parsedChs : [{ name: 'geral', type: 'text' }];
+
+                    const btn = document.createElement('button');
+                    btn.type = 'button';
+                    btn.className = 'server-rail-btn';
+                    btn.title = sName;
+                    btn.textContent = sName.charAt(0).toUpperCase();
+                    btn.addEventListener('click', () => {
+                        currentServerId = sId;
+                        document.querySelectorAll('.server-rail-btn').forEach(b => b.classList.remove('active'));
+                        btn.classList.add('active');
+                        if (sidebarServerTitle) sidebarServerTitle.textContent = `🥝 ${sName}`;
+                        const firstCh = serverChannelsStore[sId][0] || { name: 'geral', type: 'text' };
+                        renderChannelsListForServer(sId, firstCh.name);
+                        switchToServerChannel(firstCh.name, firstCh.type);
+                    });
+                    if (openCreateServerBtn && openCreateServerBtn.parentNode) {
+                        openCreateServerBtn.parentNode.insertBefore(btn, openCreateServerBtn);
+                    }
                     closeModalAnimated(createServerModal);
                     if (nameInput) nameInput.value = '';
-                    window.switchToServerChannel(chObjs[0].name, chObjs[0].type);
+                    btn.click();
                     showKiwiToast(`Servidor "${sName}" criado!`);
                 });
             }
+
+            const createChannelModal = document.getElementById('create-channel-modal');
+            const openCreateChannelBtn = document.getElementById('open-create-channel-btn');
+            const closeCreateChannelBtn = document.getElementById('close-create-channel-btn');
+            const createChannelForm = document.getElementById('create-channel-form');
 
             if (openCreateChannelBtn && createChannelModal) {
                 openCreateChannelBtn.addEventListener('click', () => openModalAnimated(createChannelModal));
@@ -5943,350 +5971,273 @@
             if (createChannelForm) {
                 createChannelForm.addEventListener('submit', (e) => {
                     e.preventDefault();
-                    const nameInput = document.getElementById('new-channel-name');
-                    const typeSelect = document.getElementById('new-channel-type');
-                    const chName = (nameInput?.value || '').trim().toLowerCase().replace(/\s+/g, '-');
-                    const chType = typeSelect?.value || 'text';
-                    if (!chName) return;
-                    if (!serverChannelsStore[currentServerId]) {
-                        serverChannelsStore[currentServerId] = [{ name: 'geral', type: 'text' }];
+                    const chNameEl = document.getElementById('new-channel-name');
+                    const chTypeEl = document.getElementById('new-channel-type');
+                    const cName = (chNameEl && chNameEl.value.trim()) || '';
+                    const cType = (chTypeEl && chTypeEl.value) || 'text';
+                    if (!cName) return;
+                    if (!serverChannelsStore[currentServerId]) serverChannelsStore[currentServerId] = [];
+                    if (!serverChannelsStore[currentServerId].some(c => c.name.toLowerCase() === cName.toLowerCase())) {
+                        serverChannelsStore[currentServerId].push({ name: cName, type: cType });
                     }
-                    if (!serverChannelsStore[currentServerId].some(c => c.name === chName)) {
-                        serverChannelsStore[currentServerId].push({ name: chName, type: chType });
-                    }
-                    renderChannelsListForServer(currentServerId, chName);
+                    renderChannelsListForServer(currentServerId, cName);
+                    switchToServerChannel(cName, cType);
                     closeModalAnimated(createChannelModal);
-                    if (nameInput) nameInput.value = '';
-                    window.switchToServerChannel(chName, chType);
-                    showKiwiToast(`Canal ${chType === 'audio' ? '🎵' : '#'} ${chName} criado!`);
+                    if (chNameEl) chNameEl.value = '';
+                    showKiwiToast(`Canal ${cType === 'audio' ? '🎵' : '#'} ${cName} criado!`);
                 });
             }
 
-            function openAddFriendModalFn() {
-                if (friendSearchResults) friendSearchResults.innerHTML = '';
-                if (friendSearchInput) friendSearchInput.value = '';
-                openModalAnimated(addFriendModal);
-                if (friendSearchInput) setTimeout(() => friendSearchInput.focus(), 60);
-            }
-
-            if (openAddFriendBtn) openAddFriendBtn.addEventListener('click', openAddFriendModalFn);
-            if (sidebarSearchFriendBtn) sidebarSearchFriendBtn.addEventListener('click', openAddFriendModalFn);
-            if (closeAddFriendBtn && addFriendModal) {
-                closeAddFriendBtn.addEventListener('click', () => closeModalAnimated(addFriendModal));
-            }
-            if (addFriendModal) {
-                addFriendModal.addEventListener('click', (e) => {
-                    if (e.target === addFriendModal) closeModalAnimated(addFriendModal);
-                });
-            }
-            if (addFriendDirectForm) {
-                addFriendDirectForm.addEventListener('submit', (e) => {
-                    e.preventDefault();
-                    const target = (friendSearchInput?.value || '').trim();
-                    if (!target) {
-                        showKiwiToast('Digite um nome de usuário.');
-                        return;
-                    }
-                    if (!isFriendName(target)) {
-                        friendsList.push(target);
-                        writeStorageJson(FRIENDS_STORAGE_KEY, friendsList);
-                    }
-                    renderSidebarSavedFriends();
-                    if (friendSearchResults) {
-                        friendSearchResults.innerHTML = `<div style="padding:8px 10px; border-radius:8px; background:rgba(35,165,90,0.14); color:#23a55a; font-size:12px; font-weight:700;">✓ ${escapeHtmlText(target)} adicionado aos amigos!</div>`;
-                    }
-                    showKiwiToast(`${target} adicionado aos seus amigos!`);
-                    const amigosTab = document.querySelector('.social-tab[data-tab="amigos"]');
-                    if (amigosTab && amigosTab.classList.contains('active')) fetchFriendsList();
-                });
-            }
+            renderSidebarSavedFriends();
 
             const mobNavFriends = document.getElementById('mob-nav-friends');
             const mobNavSearch = document.getElementById('mob-nav-search');
             const mobNavMusic = document.getElementById('mob-nav-music');
             const mobNavProfile = document.getElementById('mob-nav-profile');
 
-            function setMobileNavActive(btn) {
+            function setActiveMobNav(btn) {
                 document.querySelectorAll('.mobile-nav-btn').forEach(b => b.classList.remove('active'));
                 if (btn) btn.classList.add('active');
             }
-
             if (mobNavFriends) {
                 mobNavFriends.addEventListener('click', () => {
-                    setMobileNavActive(mobNavFriends);
+                    setActiveMobNav(mobNavFriends);
                     window.closeMobileChatView();
                 });
             }
             if (mobNavSearch) {
                 mobNavSearch.addEventListener('click', () => {
-                    setMobileNavActive(mobNavSearch);
-                    openAddFriendModalFn();
+                    setActiveMobNav(mobNavSearch);
+                    openAddFriendModal();
                 });
             }
             if (mobNavMusic) {
                 mobNavMusic.addEventListener('click', () => {
-                    setMobileNavActive(mobNavMusic);
-                    window.switchToServerChannel('música', 'audio');
+                    setActiveMobNav(mobNavMusic);
+                    switchToServerChannel('música', 'audio');
                 });
             }
             if (mobNavProfile) {
                 mobNavProfile.addEventListener('click', () => {
-                    setMobileNavActive(mobNavProfile);
-                    window.openUserProfile(activeUsername);
+                    setActiveMobNav(mobNavProfile);
+                    openUserProfile(activeUsername);
                 });
             }
 
-            renderServerRailButtons();
-            renderChannelsListForServer('home', 'geral');
-            renderSidebarSavedFriends();
+            function renderDmTabs() {
+                dmTabsListEl.innerHTML = '';
+                openDmTabs.forEach((dmInfo, peerName) => {
+                    const tabEl = document.createElement('div');
+                    const isActiveDm = (currentView === 'dm' && currentDmUser === peerName);
+                    tabEl.className = 'channel-item' + (isActiveDm ? ' active' : '');
+                    tabEl.setAttribute('data-dm-user', peerName);
 
-            function appendMessage(data, isChannelMessage = true) {
-                if (!data || typeof data !== 'object') return;
-                const msgId = String(data.id || data.dm_id || '').trim();
-                const dmId = String(data.dm_id || '').trim();
-                const sender = String(data.sender || data.username || '').trim() || 'Usuário';
-                const messageText = String(data.message ?? data.text ?? '');
-                const hasText = messageText.trim().length > 0;
-                const attachmentUrl = String(data.attachmentUrl ?? data.attachment_url ?? '').trim();
-                const hasValidAttachment = Boolean(attachmentUrl) && isSafeAssetUrl(attachmentUrl);
+                    const avEl = document.createElement('div');
+                    avEl.className = 'dm-channel-avatar';
+                    const knownPeer = profilesByUsername.get(peerName.toLowerCase());
+                    const avSrc = dmInfo.avatarUrl || (knownPeer && knownPeer.avatarUrl) || '';
+                    setAvatarStyle(avEl, avSrc, peerName);
 
-                if (!hasText && !hasValidAttachment) {
-                    return;
-                }
+                    const nameSpan = document.createElement('span');
+                    nameSpan.textContent = peerName;
+                    nameSpan.style.cssText = 'flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;';
 
-                if (msgId && chatLog.querySelector(`.message-group[data-msg-id="${CSS.escape(msgId)}"], .message-group[data-dm-id="${CSS.escape(msgId)}"]`)) {
-                    return;
-                }
-                if (dmId && chatLog.querySelector(`.message-group[data-dm-id="${CSS.escape(dmId)}"]`)) {
-                    return;
-                }
+                    const closeBtn = document.createElement('button');
+                    closeBtn.type = 'button';
+                    closeBtn.className = 'dm-close-tab';
+                    closeBtn.textContent = '×';
+                    closeBtn.title = 'Fechar DM';
+                    closeBtn.addEventListener('click', (ev) => {
+                        ev.stopPropagation();
+                        openDmTabs.delete(peerName);
+                        if (currentView === 'dm' && currentDmUser === peerName) switchToGeral();
+                        else renderDmTabs();
+                    });
 
-                const timestamp = data.timestamp || new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-                const avatarUrl = data.avatarUrl || data.avatar_url || '';
-                const attachmentName = data.attachmentName || data.attachment_name || '';
-                const attachmentType = data.attachmentType || data.attachment_type || '';
-                const canDelete = Boolean(data.canDelete);
-
-                const group = document.createElement('div');
-                group.className = 'message-group';
-                if (msgId) group.setAttribute('data-msg-id', msgId);
-                if (dmId) group.setAttribute('data-dm-id', dmId);
-                if (canDelete) group.setAttribute('data-can-delete', '1');
-
-                const avatar = document.createElement('div');
-                avatar.className = 'avatar';
-                const isSystem = sender === 'Sistema Kiwi';
-                if (isSystem) {
-                    avatar.style.background = '#232428';
-                    avatar.textContent = '🥝';
-                } else {
-                    avatar.style.background = '#5865f2';
-                    const knownProfile = profilesByUsername.get(sender.toLowerCase());
-                    const effectiveAvatarUrl = avatarUrl || (knownProfile ? knownProfile.avatarUrl : '');
-                    setAvatarStyle(avatar, effectiveAvatarUrl, sender);
-                    avatar.onclick = () => window.openUserProfile(sender);
-                }
-
-                const content = document.createElement('div');
-                content.className = 'message-content';
-
-                const header = document.createElement('div');
-                header.className = 'message-header';
-
-                const usernameSpan = document.createElement('span');
-                usernameSpan.className = 'username';
-                usernameSpan.textContent = sender;
-                if (isSystem) {
-                    usernameSpan.style.color = '#23a55a';
-                } else {
-                    usernameSpan.onclick = () => window.openUserProfile(sender);
-                }
-
-                const timeSpan = document.createElement('span');
-                timeSpan.className = 'timestamp';
-                timeSpan.textContent = timestamp;
-
-                header.appendChild(usernameSpan);
-                header.appendChild(timeSpan);
-                content.appendChild(header);
-
-                if (messageText) {
-                    const textDiv = document.createElement('div');
-                    textDiv.className = 'message-text';
-                    textDiv.textContent = messageText;
-                    content.appendChild(textDiv);
-                }
-
-                if (hasValidAttachment) {
-                    const safeUrl = encodeURI(attachmentUrl);
-                    const lowerName = (attachmentName || '').toLowerCase();
-                    const isImage = attachmentType === 'image' || /\.(png|jpe?g|gif|webp|avif)$/i.test(lowerName) || attachmentUrl.startsWith('data:image/');
-                    const isAudio = attachmentType === 'audio' || /\.(mp3|ogg|wav|m4a|webm|aac)$/i.test(lowerName) || attachmentUrl.startsWith('data:audio/');
-
-                    if (isImage) {
-                        const imgEl = document.createElement('img');
-                        imgEl.className = 'msg-attachment-img';
-                        imgEl.src = safeUrl;
-                        imgEl.alt = attachmentName || 'Imagem anexada';
-                        imgEl.addEventListener('click', () => openImageLightbox(safeUrl, attachmentName || 'Imagem anexada'));
-                        content.appendChild(imgEl);
-                    } else if (isAudio) {
-                        const audioEl = document.createElement('audio');
-                        audioEl.className = 'msg-attachment-audio';
-                        audioEl.src = safeUrl;
-                        audioEl.controls = true;
-                        content.appendChild(audioEl);
-                    } else {
-                        const docLink = document.createElement('a');
-                        docLink.className = 'msg-attachment-doc';
-                        docLink.href = safeUrl;
-                        docLink.target = '_blank';
-                        docLink.rel = 'noopener noreferrer';
-                        docLink.download = attachmentName || 'documento';
-                        docLink.textContent = `📄 ${attachmentName || 'Documento anexado'}`;
-                        content.appendChild(docLink);
-                    }
-                }
-
-                group.appendChild(avatar);
-                group.appendChild(content);
-                enhanceMessageGroup(group, { isSystem });
-                chatLog.appendChild(group);
-                chatLog.scrollTop = chatLog.scrollHeight;
-
-                if (isChannelMessage && currentView === 'geral') {
-                    saveCurrentChannelSnapshot();
-                }
+                    tabEl.appendChild(avEl);
+                    tabEl.appendChild(nameSpan);
+                    tabEl.appendChild(closeBtn);
+                    tabEl.addEventListener('click', () => openPrivateChat(peerName, avSrc));
+                    dmTabsListEl.appendChild(tabEl);
+                });
+                renderUnreadBadges();
             }
 
-            chatLog.addEventListener('click', function(e) {
-                const reactionChip = e.target.closest('.msg-reaction-chip');
-                if (reactionChip) {
-                    e.stopPropagation();
-                    const emoji = reactionChip.getAttribute('data-emoji');
-                    const group = reactionChip.closest('.message-group');
-                    toggleMessageReaction(group, emoji);
-                    return;
-                }
+            function switchToServerChannel(channelName, channelType = 'text') {
+                saveCurrentChannelSnapshot();
+                const cleanCh = (channelName || 'geral').trim() || 'geral';
+                currentView = 'geral';
+                currentChannelName = cleanCh;
+                currentDmUser = null;
 
-                const reactChoiceBtn = e.target.closest('[data-react-emoji]');
-                if (reactChoiceBtn) {
-                    e.stopPropagation();
-                    const emoji = reactChoiceBtn.getAttribute('data-react-emoji');
-                    const group = reactChoiceBtn.closest('.message-group');
-                    toggleMessageReaction(group, emoji);
-                    closeAllMessagePopovers();
-                    return;
-                }
+                document.querySelectorAll('#server-channels-list .channel-item').forEach(el => {
+                    el.classList.toggle('active', (el.getAttribute('data-channel-name') || '').toLowerCase() === cleanCh.toLowerCase());
+                });
+                renderDmTabs();
+                triggerChatAreaTransition();
 
-                const togglePickerBtn = e.target.closest('[data-toggle-picker]');
-                if (togglePickerBtn) {
-                    e.stopPropagation();
-                    const group = togglePickerBtn.closest('.message-group');
-                    const picker = group ? group.querySelector('.msg-emoji-picker') : null;
-                    const willOpen = picker && !picker.classList.contains('open');
-                    closeAllMessagePopovers();
-                    if (willOpen && picker) {
-                        picker.classList.add('open');
-                        group.classList.add('menu-open');
-                    }
-                    return;
-                }
+                headerDmAvatar.classList.remove('visible');
+                headerDmAvatar.style.backgroundImage = 'none';
+                headerMainTitle.textContent = channelType === 'audio' ? `🎵 ${cleanCh}` : `# ${cleanCh}`;
+                headerSubLabel.textContent = channelType === 'audio' ? '| Canal de áudio & música' : '| Chat estético interativo';
+                headerCallBtn.classList.remove('visible');
+                backToGeralBtn.classList.remove('visible');
+                messageInput.placeholder = `Conversar em ${channelType === 'audio' ? '🎵 ' : '#'}${cleanCh}...`;
 
-                const replyBtn = e.target.closest('[data-reply-msg]');
-                if (replyBtn) {
-                    e.stopPropagation();
-                    const group = replyBtn.closest('.message-group');
-                    const authorName = group?.querySelector('.username')?.textContent?.trim() || 'alguém';
-                    const msgSnippet = group?.querySelector('.message-text')?.textContent?.trim() || '';
-                    closeAllMessagePopovers();
-                    if (messageInput) {
-                        messageInput.value = msgSnippet
-                            ? `@${authorName} ("${msgSnippet.slice(0, 45)}") `
-                            : `@${authorName} `;
-                        messageInput.focus();
-                    }
-                    return;
-                }
+                const ctx = roomCtxManager.activateContext({
+                    type: 'channel',
+                    serverId: currentServerId,
+                    channelName: cleanCh,
+                    channelType: channelType
+                });
+                renderUnreadBadges();
 
-                const toggleMoreBtn = e.target.closest('[data-toggle-more]');
-                if (toggleMoreBtn) {
-                    e.stopPropagation();
-                    const group = toggleMoreBtn.closest('.message-group');
-                    const popover = group ? group.querySelector('.msg-more-popover') : null;
-                    const willOpen = popover && !popover.classList.contains('open');
-                    closeAllMessagePopovers();
-                    if (willOpen && popover) {
-                        popover.classList.add('open');
-                        group.classList.add('menu-open');
-                    }
-                    return;
+                chatLog.innerHTML = '';
+                if (ctx && ctx.snapshotHtml) {
+                    chatLog.innerHTML = ctx.snapshotHtml;
+                } else {
+                    appendMessage({
+                        sender: 'Sistema Kiwi',
+                        message: `Você entrou em ${channelType === 'audio' ? '🎵' : '#'} ${cleanCh}.`,
+                        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+                        canDelete: false
+                    }, false);
                 }
-
-                const copyBtn = e.target.closest('[data-copy-msg]');
-                if (copyBtn) {
-                    e.stopPropagation();
-                    const group = copyBtn.closest('.message-group');
-                    const textEl = group ? group.querySelector('.message-text') : null;
-                    const rawText = textEl ? textEl.textContent.trim() : '';
-                    closeAllMessagePopovers();
-                    if (!rawText) {
-                        showKiwiToast('Nenhuma mensagem de texto para copiar.');
-                        return;
-                    }
-                    if (navigator.clipboard && navigator.clipboard.writeText) {
-                        navigator.clipboard.writeText(rawText).then(() => showKiwiToast('Mensagem copiada!')).catch(() => showKiwiToast('Não foi possível copiar.'));
-                    } else {
-                        showKiwiToast('Mensagem copiada!');
-                    }
-                    return;
+                if (ctx && Array.isArray(ctx.messages) && ctx.messages.length) {
+                    ctx.messages.forEach((m) => {
+                        if (m && m.id && chatLog.querySelector(`.message-group[data-msg-id="${CSS.escape(String(m.id))}"]`)) {
+                            return;
+                        }
+                        appendMessage({
+                            id: m.id,
+                            sender: m.author,
+                            message: m.text,
+                            timestamp: m.timestamp,
+                            avatarUrl: m.avatarUrl || '',
+                            attachmentUrl: m.attachmentUrl || '',
+                            attachmentName: m.attachmentName || '',
+                            attachmentType: m.attachmentType || '',
+                            canDelete: m.author === activeUsername
+                        }, false);
+                    });
                 }
-
-                const deleteBtn = e.target.closest('[data-delete-id], [data-delete-dm-id]');
-                if (deleteBtn) {
-                    e.stopPropagation();
-                    const group = deleteBtn.closest('.message-group');
-                    const mId = deleteBtn.getAttribute('data-delete-id') || group?.getAttribute('data-msg-id') || '';
-                    const dId = deleteBtn.getAttribute('data-delete-dm-id') || group?.getAttribute('data-dm-id') || '';
-                    closeAllMessagePopovers();
-
-                    if (group) group.remove();
-                    if (mId || dId) {
-                        roomCtxManager.removeMessageFromContext(getCurrentMeta(), mId || dId);
-                    }
-                    if (currentView === 'dm' && currentDmUser && dmHistoryStore[currentDmUser]) {
-                        dmHistoryStore[currentDmUser] = dmHistoryStore[currentDmUser].filter(item => {
-                            const itemId = String(item.id || item.dm_id || '');
-                            return (!mId || itemId !== mId) && (!dId || itemId !== dId);
-                        });
-                        writeStorageJson(DM_HISTORY_STORAGE_KEY, dmHistoryStore);
-                    } else if (currentView === 'geral') {
-                        saveCurrentChannelSnapshot();
-                    }
-                    showKiwiToast('Mensagem excluída.');
+                if (ctx) {
+                    ctx.snapshotHtml = chatLog.innerHTML;
+                    roomCtxManager.saveSnapshot(ctx.key, chatLog.innerHTML);
                 }
-            });
+                enhanceExistingMessagesInLog();
+                chatLog.scrollTop = chatLog.scrollHeight;
+                window.openMobileChatView();
+            }
 
-            document.addEventListener('click', function(e) {
-                if (!e.target.closest('.msg-hover-toolbar') && !e.target.closest('.msg-emoji-picker') && !e.target.closest('.msg-more-popover')) {
-                    closeAllMessagePopovers();
+            window.switchToGeral = function() {
+                switchToServerChannel('geral', 'text');
+            };
+
+            window.openPrivateChat = function(targetUsername, knownAvatarUrl = '') {
+                if (!targetUsername || targetUsername === activeUsername) return;
+                saveCurrentChannelSnapshot();
+                currentView = 'dm';
+                currentDmUser = targetUsername;
+
+                if (!openDmTabs.has(targetUsername)) openDmTabs.set(targetUsername, { avatarUrl: knownAvatarUrl || '' });
+                else if (knownAvatarUrl) openDmTabs.get(targetUsername).avatarUrl = knownAvatarUrl;
+
+                document.querySelectorAll('#server-channels-list .channel-item').forEach(el => el.classList.remove('active'));
+                renderDmTabs();
+                triggerChatAreaTransition();
+
+                const knownPeer = profilesByUsername.get(targetUsername.toLowerCase());
+                const dmAvSrc = knownAvatarUrl || (knownPeer && knownPeer.avatarUrl) || '';
+                setAvatarStyle(headerDmAvatar, dmAvSrc, targetUsername);
+                headerDmAvatar.classList.add('visible');
+                headerDmAvatar.onclick = () => openUserProfile(targetUsername);
+
+                headerMainTitle.textContent = `@ ${targetUsername}`;
+                headerSubLabel.textContent = '| Mensagem privada';
+                headerCallBtn.classList.add('visible');
+                headerCallBtn.onclick = () => window.startVoiceCall(targetUsername);
+                backToGeralBtn.classList.add('visible');
+                messageInput.placeholder = `Enviar DM para @${targetUsername}...`;
+
+                const ctx = roomCtxManager.activateContext({
+                    type: 'dm',
+                    targetUser: targetUsername
+                });
+                renderUnreadBadges();
+
+                chatLog.innerHTML = '';
+                const history = (ctx && Array.isArray(ctx.messages) && ctx.messages.length)
+                    ? ctx.messages.map(m => ({
+                        id: m.id,
+                        sender: m.author,
+                        message: m.text,
+                        timestamp: m.timestamp,
+                        avatarUrl: m.avatarUrl || '',
+                        attachmentUrl: m.attachmentUrl || '',
+                        attachmentName: m.attachmentName || '',
+                        attachmentType: m.attachmentType || '',
+                        canDelete: m.author === activeUsername
+                    }))
+                    : (dmHistoryStore[targetUsername] || []);
+                if (!history.length) {
+                    appendMessage({
+                        sender: 'Sistema Kiwi',
+                        message: `Início da conversa privada com ${targetUsername}.`,
+                        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+                        canDelete: false
+                    }, false);
+                } else {
+                    history.forEach(item => appendMessage(item, false));
                 }
-            });
+                chatLog.scrollTop = chatLog.scrollHeight;
+                window.openMobileChatView();
+            };
+
+            function detectAttachmentCategory(file, explicitCategory) {
+                if (explicitCategory === 'image' || explicitCategory === 'audio' || explicitCategory === 'document') {
+                    return explicitCategory;
+                }
+                const mime = String((file && file.type) || '').toLowerCase();
+                const name = String((file && file.name) || '').toLowerCase();
+                if (mime.startsWith('image/') || /\.(png|jpe?g|gif|webp|avif|heic|heif|bmp)$/i.test(name)) {
+                    return 'image';
+                }
+                if (mime.startsWith('audio/') || /\.(mp3|ogg|wav|m4a|webm|aac|opus)$/i.test(name)) {
+                    return 'audio';
+                }
+                return 'document';
+            }
+
+            let pendingAttachmentPreviewUrl = '';
 
             function setPendingAttachment(file, category) {
                 if (!file) return;
+                if (pendingAttachmentPreviewUrl && pendingAttachmentPreviewUrl.startsWith('blob:')) {
+                    try { URL.revokeObjectURL(pendingAttachmentPreviewUrl); } catch (_) {}
+                }
                 pendingAttachmentFile = file;
-                pendingAttachmentCategory = category || 'file';
-                const blobUrl = URL.createObjectURL(file);
+                pendingAttachmentCategory = detectAttachmentCategory(file, category);
+                let previewSrc = '';
+                try {
+                    previewSrc = URL.createObjectURL(file);
+                } catch (_) {
+                    previewSrc = '';
+                }
+                pendingAttachmentPreviewUrl = previewSrc;
 
-                previewName.textContent = file.name;
-                if (pendingAttachmentCategory === 'image' || file.type.startsWith('image/')) {
-                    previewImg.src = blobUrl;
-                    previewImg.style.display = 'block';
+                previewName.textContent = file.name || (pendingAttachmentCategory === 'image' ? 'imagem' : 'anexo');
+                if (pendingAttachmentCategory === 'image') {
+                    if (previewSrc) {
+                        previewImg.src = previewSrc;
+                        previewImg.style.display = 'block';
+                    } else {
+                        previewImg.style.display = 'none';
+                    }
                     previewBadge.style.display = 'none';
                 } else {
                     previewImg.style.display = 'none';
-                    previewBadge.textContent = (pendingAttachmentCategory === 'audio' || file.type.startsWith('audio/')) ? '🎵' : '📄';
+                    previewBadge.textContent = (pendingAttachmentCategory === 'audio') ? '🎵' : '📄';
                     previewBadge.style.display = 'flex';
                 }
                 previewBar.style.display = 'flex';
@@ -6295,8 +6246,12 @@
             function clearPendingAttachment() {
                 pendingAttachmentFile = null;
                 pendingAttachmentCategory = 'file';
+                if (pendingAttachmentPreviewUrl && pendingAttachmentPreviewUrl.startsWith('blob:')) {
+                    try { URL.revokeObjectURL(pendingAttachmentPreviewUrl); } catch (_) {}
+                }
+                pendingAttachmentPreviewUrl = '';
                 if (previewImg.src && previewImg.src.startsWith('blob:')) {
-                    URL.revokeObjectURL(previewImg.src);
+                    try { URL.revokeObjectURL(previewImg.src); } catch (_) {}
                 }
                 previewImg.src = '';
                 previewImg.style.display = 'none';
@@ -6306,79 +6261,288 @@
                 allFileInputs.forEach(inp => { if (inp) inp.value = ''; });
             }
 
-            function closeAttachMenu() {
-                if (attachMenu) attachMenu.classList.remove('open');
-            }
-
             if (clipMenuBtn && attachMenu) {
                 clipMenuBtn.addEventListener('click', (e) => {
                     e.stopPropagation();
                     attachMenu.classList.toggle('open');
                 });
+                document.addEventListener('click', (e) => {
+                    if (!attachMenu.contains(e.target) && e.target !== clipMenuBtn) attachMenu.classList.remove('open');
+                });
             }
-            if (pickPhotoBtn && photoFileInput) {
-                pickPhotoBtn.addEventListener('click', () => { closeAttachMenu(); photoFileInput.click(); });
-            }
-            if (pickAudioBtn && audioFileInput) {
-                pickAudioBtn.addEventListener('click', () => { closeAttachMenu(); audioFileInput.click(); });
-            }
-            if (pickDocBtn && docFileInput) {
-                pickDocBtn.addEventListener('click', () => { closeAttachMenu(); docFileInput.click(); });
-            }
-            document.addEventListener('click', (e) => {
-                if (attachMenu && !attachMenu.contains(e.target) && e.target !== clipMenuBtn) closeAttachMenu();
-            });
+            if (pickPhotoBtn && photoFileInput) pickPhotoBtn.addEventListener('click', () => { attachMenu.classList.remove('open'); photoFileInput.click(); });
+            if (pickAudioBtn && audioFileInput) pickAudioBtn.addEventListener('click', () => { attachMenu.classList.remove('open'); audioFileInput.click(); });
+            if (pickDocBtn && docFileInput) pickDocBtn.addEventListener('click', () => { attachMenu.classList.remove('open'); docFileInput.click(); });
 
-            if (photoFileInput) {
-                photoFileInput.addEventListener('change', () => {
-                    if (photoFileInput.files && photoFileInput.files[0]) setPendingAttachment(photoFileInput.files[0], 'image');
-                });
-            }
-            if (audioFileInput) {
-                audioFileInput.addEventListener('change', () => {
-                    if (audioFileInput.files && audioFileInput.files[0]) setPendingAttachment(audioFileInput.files[0], 'audio');
-                });
-            }
-            if (docFileInput) {
-                docFileInput.addEventListener('change', () => {
-                    if (docFileInput.files && docFileInput.files[0]) setPendingAttachment(docFileInput.files[0], 'document');
-                });
-            }
+            if (photoFileInput) photoFileInput.addEventListener('change', () => { if (photoFileInput.files && photoFileInput.files[0]) setPendingAttachment(photoFileInput.files[0], 'image'); });
+            if (audioFileInput) audioFileInput.addEventListener('change', () => { if (audioFileInput.files && audioFileInput.files[0]) setPendingAttachment(audioFileInput.files[0], 'audio'); });
+            if (docFileInput) docFileInput.addEventListener('change', () => { if (docFileInput.files && docFileInput.files[0]) setPendingAttachment(docFileInput.files[0], 'document'); });
             clearAttachmentBtn.addEventListener('click', clearPendingAttachment);
 
-            recordAudioBtn.addEventListener('click', async () => {
-                if (mediaRecorder && mediaRecorder.state === 'recording') {
-                    mediaRecorder.stop();
-                    recordAudioBtn.classList.remove('recording');
-                    recordAudioBtn.title = 'Gravar Áudio';
+            if (recordAudioBtn) {
+                recordAudioBtn.addEventListener('click', async () => {
+                    if (mediaRecorder && mediaRecorder.state === 'recording') {
+                        mediaRecorder.stop();
+                        recordAudioBtn.classList.remove('recording');
+                        recordAudioBtn.title = 'Gravar Áudio';
+                        return;
+                    }
+                    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+                        showKiwiToast("Gravação de áudio não suportada neste navegador.");
+                        return;
+                    }
+                    try {
+                        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                        audioChunks = [];
+                        mediaRecorder = new MediaRecorder(stream);
+                        mediaRecorder.ondataavailable = (ev) => { if (ev.data && ev.data.size > 0) audioChunks.push(ev.data); };
+                        mediaRecorder.onstop = () => {
+                            const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+                            const recordedFile = new File([audioBlob], `audio_${Date.now()}.webm`, { type: 'audio/webm' });
+                            setPendingAttachment(recordedFile, 'audio');
+                            stream.getTracks().forEach(t => t.stop());
+                        };
+                        mediaRecorder.start();
+                        recordAudioBtn.classList.add('recording');
+                        recordAudioBtn.title = 'Parar Gravação';
+                    } catch (_) {
+                        showKiwiToast("Permissão de microfone negada ou indisponível.");
+                    }
+                });
+            }
+
+            function appendMessage(data, saveToChannelStore = true) {
+                const msgId = data.id || data.message_id || data.dm_id || '';
+                if (msgId && chatLog.querySelector(`.message-group[data-msg-id="${CSS.escape(String(msgId))}"]`)) {
                     return;
                 }
-                if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-                    showKiwiToast("Gravação de áudio não suportada neste navegador.");
+
+                const isSystemMsg = (data.sender === 'Sistema Kiwi');
+                const senderName = (data.sender || activeUsername || 'Usuário').trim() || 'Usuário';
+                const knownSender = profilesByUsername.get(senderName.toLowerCase());
+                const senderAvatar = data.avatarUrl || data.avatar_url || (senderName.toLowerCase() === (activeUsername || '').toLowerCase() ? myProfileData.avatarUrl : (knownSender ? knownSender.avatarUrl : ''));
+                const isAdminSender = !isSystemMsg && isAdminIdentity(senderName, data.is_admin);
+
+                const group = document.createElement('div');
+                group.className = 'message-group';
+                if (msgId) group.setAttribute('data-msg-id', String(msgId));
+                if (currentView === 'dm' && msgId) group.setAttribute('data-dm-id', String(msgId));
+                if (data.canDelete || (!isSystemMsg && senderName.toLowerCase() === (activeUsername || '').toLowerCase())) {
+                    group.setAttribute('data-can-delete', '1');
+                }
+
+                const av = document.createElement('div');
+                av.className = 'avatar';
+                if (isSystemMsg) {
+                    av.style.background = '#232428';
+                    av.textContent = '🥝';
+                } else {
+                    if (isAdminSender) av.classList.add('akiira-gold-frame');
+                    setAvatarStyle(av, senderAvatar, senderName);
+                    av.addEventListener('click', () => openUserProfile(senderName));
+                }
+
+                const content = document.createElement('div');
+                content.className = 'message-content';
+
+                const header = document.createElement('div');
+                header.className = 'message-header';
+
+                const unameEl = document.createElement('span');
+                unameEl.className = 'username';
+                unameEl.textContent = senderName;
+                if (isSystemMsg) {
+                    unameEl.style.color = '#23a55a';
+                } else {
+                    if (senderName.toLowerCase() === 'akiirapw') unameEl.classList.add('akiira-special-font');
+                    unameEl.addEventListener('click', () => openUserProfile(senderName));
+                }
+
+                const timeEl = document.createElement('span');
+                timeEl.className = 'timestamp';
+                timeEl.textContent = data.timestamp || new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+                header.appendChild(unameEl);
+                if (isAdminSender) {
+                    const badge = document.createElement('span');
+                    badge.className = 'admin-gold-badge';
+                    badge.textContent = '👑 ADMIN';
+                    header.appendChild(badge);
+                }
+                header.appendChild(timeEl);
+
+                const bodyEl = document.createElement('div');
+                bodyEl.className = 'message-text';
+                if (data.message) {
+                    bodyEl.textContent = data.message;
+                }
+
+                content.appendChild(header);
+                if (data.message) {
+                    content.appendChild(bodyEl);
+                }
+
+                const attachmentUrl = data.attachmentUrl || data.attachment_url || '';
+                const attachmentName = data.attachmentName || data.attachment_name || '';
+                const attachmentType = data.attachmentType || data.attachment_type || '';
+                const hasValidAttachment = Boolean(attachmentUrl) && isSafeAssetUrl(attachmentUrl);
+
+                if (hasValidAttachment) {
+                    const isDataOrBlob = attachmentUrl.startsWith('data:') || attachmentUrl.startsWith('blob:');
+                    const safeUrl = isDataOrBlob ? attachmentUrl : encodeURI(attachmentUrl);
+                    const lowerName = (attachmentName || '').toLowerCase();
+                    const isImage = attachmentType === 'image'
+                        || /\.(png|jpe?g|gif|webp|avif|heic|heif|bmp)$/i.test(lowerName)
+                        || /^data:image\//i.test(attachmentUrl);
+                    const isAudio = attachmentType === 'audio'
+                        || /\.(mp3|ogg|wav|m4a|webm|aac|opus)$/i.test(lowerName)
+                        || /^data:audio\//i.test(attachmentUrl);
+
+                    if (isImage) {
+                        const imgEl = document.createElement('img');
+                        imgEl.src = safeUrl;
+                        imgEl.alt = attachmentName || 'Imagem enviada';
+                        imgEl.className = 'msg-attachment-img';
+                        imgEl.addEventListener('click', () => openImageLightbox(safeUrl, attachmentName || 'Imagem enviada'));
+                        content.appendChild(imgEl);
+                    } else if (isAudio) {
+                        const audioEl = document.createElement('audio');
+                        audioEl.src = safeUrl;
+                        audioEl.controls = true;
+                        audioEl.className = 'msg-attachment-audio';
+                        content.appendChild(audioEl);
+                    } else {
+                        const docLink = document.createElement('a');
+                        docLink.href = safeUrl;
+                        docLink.download = attachmentName || 'documento';
+                        docLink.target = '_blank';
+                        docLink.rel = 'noopener noreferrer';
+                        docLink.className = 'msg-attachment-doc';
+                        docLink.innerHTML = `<span>📄</span><span>${escapeHtmlText(attachmentName || 'Abrir documento')}</span>`;
+                        content.appendChild(docLink);
+                    }
+                }
+
+                group.appendChild(av);
+                group.appendChild(content);
+                enhanceMessageGroup(group, { isSystem: isSystemMsg });
+                chatLog.appendChild(group);
+                chatLog.scrollTop = chatLog.scrollHeight;
+
+                if (saveToChannelStore && currentView === 'geral') {
+                    const meta = getCurrentMeta();
+                    roomCtxManager.appendMessageToContext(meta, {
+                        id: msgId || undefined,
+                        author: senderName,
+                        text: data.message || '',
+                        timestamp: timeEl.textContent,
+                        avatarUrl: senderAvatar,
+                        attachmentUrl: hasValidAttachment ? attachmentUrl : '',
+                        attachmentName: attachmentName,
+                        attachmentType: attachmentType,
+                        canDelete: Boolean(data.canDelete || senderName.toLowerCase() === (activeUsername || '').toLowerCase())
+                    }, { incrementUnread: false });
+                    saveCurrentChannelSnapshot();
+                }
+            }
+
+            chatLog.addEventListener('click', function(e) {
+                const target = e.target;
+                if (!target) return;
+
+                const reactionChip = target.closest('.msg-reaction-chip');
+                if (reactionChip) {
+                    const grp = reactionChip.closest('.message-group');
+                    const emo = reactionChip.getAttribute('data-emoji');
+                    if (grp && emo) toggleMessageReaction(grp, emo);
                     return;
                 }
-                try {
-                    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-                    audioChunks = [];
-                    mediaRecorder = new MediaRecorder(stream);
-                    mediaRecorder.ondataavailable = (event) => {
-                        if (event.data && event.data.size > 0) audioChunks.push(event.data);
-                    };
-                    mediaRecorder.onstop = () => {
-                        const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
-                        const audioFile = new File([audioBlob], `gravacao_${Date.now()}.webm`, { type: 'audio/webm' });
-                        setPendingAttachment(audioFile, 'audio');
-                        stream.getTracks().forEach(track => track.stop());
-                    };
-                    mediaRecorder.start();
-                    recordAudioBtn.classList.add('recording');
-                    recordAudioBtn.title = 'Clique para parar a gravação';
-                } catch (_) {
-                    showKiwiToast("Não foi possível aceder ao microfone.");
+
+                const reactBtn = target.closest('[data-react-emoji]');
+                if (reactBtn) {
+                    const grp = reactBtn.closest('.message-group');
+                    const emo = reactBtn.getAttribute('data-react-emoji');
+                    if (grp && emo) {
+                        toggleMessageReaction(grp, emo);
+                        closeAllMessagePopovers();
+                    }
+                    return;
+                }
+
+                const togglePickerBtn = target.closest('[data-toggle-picker]');
+                if (togglePickerBtn) {
+                    e.stopPropagation();
+                    const grp = togglePickerBtn.closest('.message-group');
+                    const picker = grp ? grp.querySelector('.msg-emoji-picker') : null;
+                    const wasOpen = picker && picker.classList.contains('open');
+                    closeAllMessagePopovers();
+                    if (picker && !wasOpen) {
+                        picker.classList.add('open');
+                        if (grp) grp.classList.add('menu-open');
+                    }
+                    return;
+                }
+
+                const toggleMoreBtn = target.closest('[data-toggle-more]');
+                if (toggleMoreBtn) {
+                    e.stopPropagation();
+                    const grp = toggleMoreBtn.closest('.message-group');
+                    const popover = grp ? grp.querySelector('.msg-more-popover') : null;
+                    const wasOpen = popover && popover.classList.contains('open');
+                    closeAllMessagePopovers();
+                    if (popover && !wasOpen) {
+                        popover.classList.add('open');
+                        if (grp) grp.classList.add('menu-open');
+                    }
+                    return;
+                }
+
+                const replyBtn = target.closest('[data-reply-msg]');
+                if (replyBtn) {
+                    const grp = replyBtn.closest('.message-group');
+                    const author = grp && grp.querySelector('.username') ? grp.querySelector('.username').textContent.trim() : '';
+                    if (author && messageInput) {
+                        messageInput.value = `@${author} ` + messageInput.value;
+                        messageInput.focus();
+                    }
+                    closeAllMessagePopovers();
+                    return;
+                }
+
+                const copyBtn = target.closest('[data-copy-msg]');
+                if (copyBtn) {
+                    const grp = copyBtn.closest('.message-group');
+                    const txt = grp && grp.querySelector('.message-text') ? grp.querySelector('.message-text').textContent : '';
+                    if (txt && navigator.clipboard && navigator.clipboard.writeText) {
+                        navigator.clipboard.writeText(txt).then(() => showKiwiToast('Mensagem copiada!')).catch(() => {});
+                    }
+                    closeAllMessagePopovers();
+                    return;
+                }
+
+                const delBtn = target.closest('[data-delete-id], [data-delete-dm-id]');
+                if (delBtn) {
+                    const grp = delBtn.closest('.message-group');
+                    const mId = delBtn.getAttribute('data-delete-id') || (grp ? grp.getAttribute('data-msg-id') : '');
+                    const dId = delBtn.getAttribute('data-delete-dm-id') || (grp ? grp.getAttribute('data-dm-id') : '');
+                    if (grp) grp.remove();
+                    if (mId && roomCtxManager) roomCtxManager.removeMessageFromContext(getCurrentMeta(), mId);
+                    if (currentView === 'geral') saveCurrentChannelSnapshot();
+                    if (currentView === 'dm' && currentDmUser && dId && dmHistoryStore[currentDmUser]) {
+                        dmHistoryStore[currentDmUser] = dmHistoryStore[currentDmUser].filter(m => String(m.id) !== String(dId));
+                        writeStorageJson(DM_HISTORY_STORAGE_KEY, dmHistoryStore);
+                    }
+                    closeAllMessagePopovers();
                 }
             });
 
-            function sendMessage() {
+            document.addEventListener('click', function(e) {
+                if (!e.target.closest('.msg-hover-toolbar') && !e.target.closest('.msg-emoji-picker') && !e.target.closest('.msg-more-popover')) {
+                    closeAllMessagePopovers();
+                }
+            });
+
+            async function sendMessage() {
                 const text = messageInput.value.trim();
                 const hasAttachment = Boolean(pendingAttachmentFile);
                 if (!text && !hasAttachment) return;
@@ -6388,284 +6552,98 @@
                 let attachType = '';
 
                 if (hasAttachment && pendingAttachmentFile) {
-                    attachUrl = URL.createObjectURL(pendingAttachmentFile);
-                    attachName = pendingAttachmentFile.name;
-                    if (pendingAttachmentCategory === 'image' || pendingAttachmentFile.type.startsWith('image/')) attachType = 'image';
-                    else if (pendingAttachmentCategory === 'audio' || pendingAttachmentFile.type.startsWith('audio/')) attachType = 'audio';
-                    else attachType = 'document';
+                    const fileObj = pendingAttachmentFile;
+                    attachType = detectAttachmentCategory(fileObj, pendingAttachmentCategory);
+                    attachName = fileObj.name || (attachType === 'image' ? 'imagem.jpg' : 'anexo');
+
+                    if (attachType === 'image' && fileObj.size <= 2500000) {
+                        try {
+                            attachUrl = await readFileAsDataUrl(fileObj);
+                        } catch (_) {
+                            attachUrl = '';
+                        }
+                    }
+                    if (!attachUrl) {
+                        try {
+                            attachUrl = URL.createObjectURL(fileObj);
+                        } catch (_) {
+                            attachUrl = '';
+                        }
+                    }
                 }
 
-                const nowTime = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-                const localId = `kiwi-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
+                const msgPayload = {
+                    id: `msg-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+                    sender: activeUsername,
+                    message: text,
+                    timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+                    avatarUrl: myProfileData.avatarUrl || '',
+                    attachmentUrl: attachUrl,
+                    attachmentName: attachName,
+                    attachmentType: attachType,
+                    canDelete: true
+                };
 
+                const meta = getCurrentMeta();
                 if (currentView === 'dm' && currentDmUser) {
-                    const dmEntry = {
-                        id: localId,
-                        dm_id: localId,
-                        sender: activeUsername,
-                        message: text,
-                        timestamp: nowTime,
-                        avatarUrl: myProfileData.avatarUrl || '',
-                        attachmentUrl: attachUrl,
-                        attachmentName: attachName,
-                        attachmentType: attachType,
-                        canDelete: true
-                    };
-                    appendMessage(dmEntry, false);
-                    roomCtxManager.appendMessageToContext(
-                        { type: 'dm', targetUser: currentDmUser },
-                        {
-                            id: localId,
-                            author: activeUsername,
-                            text,
-                            timestamp: nowTime,
-                            avatarUrl: myProfileData.avatarUrl || '',
-                            attachmentUrl: attachUrl,
-                            attachmentName: attachName,
-                            attachmentType: attachType,
-                            canDelete: true
-                        }
-                    );
-                    roomCtxManager.sendToContext(
-                        { type: 'dm', targetUser: currentDmUser },
-                        {
-                            id: localId,
-                            author: activeUsername,
-                            sender: activeUsername,
-                            recipient: currentDmUser,
-                            message: text,
-                            timestamp: nowTime,
-                            avatar_url: myProfileData.avatarUrl || '',
-                            attachment_name: attachName,
-                            attachment_type: attachType
-                        }
-                    );
-
                     if (!dmHistoryStore[currentDmUser]) dmHistoryStore[currentDmUser] = [];
-                    dmHistoryStore[currentDmUser].push({
-                        id: localId,
-                        dm_id: localId,
-                        sender: activeUsername,
-                        message: text,
-                        timestamp: nowTime,
-                        avatarUrl: myProfileData.avatarUrl || '',
-                        attachmentUrl: (attachUrl && attachUrl.startsWith('blob:')) ? '' : attachUrl,
-                        attachmentName: attachName,
-                        attachmentType: attachType,
-                        canDelete: true
-                    });
+                    dmHistoryStore[currentDmUser].push(msgPayload);
                     writeStorageJson(DM_HISTORY_STORAGE_KEY, dmHistoryStore);
-                } else {
-                    const chObj = (serverChannelsStore[currentServerId] || []).find((c) => c.name === currentChannelName);
-                    const chMeta = {
-                        type: 'channel',
-                        serverId: currentServerId,
-                        channelName: currentChannelName,
-                        channelType: (chObj && chObj.type) || 'text'
-                    };
-                    const chEntry = {
-                        id: localId,
+                    roomCtxManager.appendMessageToContext(meta, {
+                        id: msgPayload.id,
+                        author: msgPayload.sender,
+                        text: msgPayload.message,
+                        timestamp: msgPayload.timestamp,
+                        avatarUrl: msgPayload.avatarUrl,
+                        attachmentUrl: msgPayload.attachmentUrl,
+                        attachmentName: msgPayload.attachmentName,
+                        attachmentType: msgPayload.attachmentType,
+                        canDelete: true
+                    }, { incrementUnread: false });
+                    roomCtxManager.sendToContext(meta, {
+                        type: 'dm_message',
                         sender: activeUsername,
+                        target: currentDmUser,
                         message: text,
-                        timestamp: nowTime,
-                        avatarUrl: myProfileData.avatarUrl || '',
                         attachmentUrl: attachUrl,
                         attachmentName: attachName,
-                        attachmentType: attachType,
-                        canDelete: true
-                    };
-                    appendMessage(chEntry, true);
-                    roomCtxManager.appendMessageToContext(
-                        chMeta,
-                        {
-                            id: localId,
-                            author: activeUsername,
-                            text,
-                            timestamp: nowTime,
-                            avatarUrl: myProfileData.avatarUrl || '',
-                            attachmentUrl: attachUrl,
-                            attachmentName: attachName,
-                            attachmentType: attachType,
-                            canDelete: true
-                        }
-                    );
-                    roomCtxManager.sendToContext(
-                        chMeta,
-                        {
-                            id: localId,
-                            author: activeUsername,
-                            username: activeUsername,
-                            message: text,
-                            timestamp: nowTime,
-                            avatar_url: myProfileData.avatarUrl || '',
-                            attachment_name: attachName,
-                            attachment_type: attachType
-                        }
-                    );
+                        attachmentType: attachType
+                    });
+                } else {
+                    roomCtxManager.sendToContext(meta, {
+                        type: 'chat_message',
+                        sender: activeUsername,
+                        channel: currentChannelName,
+                        server_id: currentServerId,
+                        message: text,
+                        attachmentUrl: attachUrl,
+                        attachmentName: attachName,
+                        attachmentType: attachType
+                    });
                 }
 
+                appendMessage(msgPayload, currentView === 'geral');
                 messageInput.value = '';
                 clearPendingAttachment();
             }
 
-            submitButton.addEventListener('click', sendMessage);
-            messageInput.addEventListener('keypress', (e) => {
-                if (e.key === 'Enter') { e.preventDefault(); sendMessage(); }
-            });
-
-            const socialTabs = document.querySelectorAll('.social-tab');
-            const socialContentContainer = document.getElementById('social-content-container');
-            const mailboxRequestsContainer = document.getElementById('mailbox-friend-requests');
-
-            function renderSocialUserList(users, emptyMessage, showDmAction = false) {
-                socialContentContainer.innerHTML = '';
-                if (!users || users.length === 0) {
-                    socialContentContainer.innerHTML = `<p style="color: var(--text-muted);">${escapeHtmlText(emptyMessage)}</p>`;
-                    return;
+            let isSendingMsg = false;
+            async function handleSendMessageTrigger() {
+                if (isSendingMsg) return;
+                isSendingMsg = true;
+                try {
+                    await sendMessage();
+                } finally {
+                    isSendingMsg = false;
                 }
-
-                users.forEach(u => {
-                    const uname = typeof u === 'string' ? u : (u.username || 'Utilizador');
-                    const known = profilesByUsername.get(uname.toLowerCase());
-                    const avUrl = (typeof u === 'object' && u.avatar_url) || (known ? known.avatarUrl : '') || '';
-
-                    const item = document.createElement('div');
-                    item.className = 'social-list-item';
-                    item.onclick = () => window.openUserProfile(uname);
-
-                    const av = document.createElement('div');
-                    av.className = 'social-avatar';
-                    setAvatarStyle(av, avUrl, uname);
-
-                    const label = document.createElement('span');
-                    label.textContent = uname;
-                    label.style.flex = '1';
-                    label.style.overflow = 'hidden';
-                    label.style.textOverflow = 'ellipsis';
-                    label.style.whiteSpace = 'nowrap';
-
-                    item.appendChild(av);
-                    item.appendChild(label);
-
-                    if (showDmAction && uname !== activeUsername) {
-                        const dmBtn = document.createElement('button');
-                        dmBtn.type = 'button';
-                        dmBtn.className = 'dm-quick-btn';
-                        dmBtn.textContent = 'DM';
-                        dmBtn.title = `Enviar mensagem privada para ${uname}`;
-                        dmBtn.onclick = (e) => {
-                            e.stopPropagation();
-                            openPrivateChat(uname, avUrl);
-                        };
-                        item.appendChild(dmBtn);
-
-                        const rmBtn = document.createElement('button');
-                        rmBtn.type = 'button';
-                        rmBtn.className = 'remove-friend-mini-btn';
-                        rmBtn.textContent = '✖';
-                        rmBtn.title = `Remover amizade com ${uname}`;
-                        rmBtn.onclick = (e) => {
-                            e.stopPropagation();
-                            removeFriend(uname);
-                        };
-                        item.appendChild(rmBtn);
-                    }
-
-                    socialContentContainer.appendChild(item);
-                });
             }
-
-            function fetchOnlineUsers() {
-                const list = [];
-                if (activeUsername) list.push({ username: activeUsername, avatar_url: myProfileData.avatarUrl || '' });
-                friendsList.forEach(name => {
-                    if (name.toLowerCase() !== (activeUsername || '').toLowerCase()) {
-                        list.push({ username: name, avatar_url: '' });
-                    }
-                });
-                renderSocialUserList(list, 'Ninguém online no momento.', false);
-            }
-
-            function fetchFriendsList() {
-                renderSocialUserList(friendsList, 'Ainda não tem amigos adicionados.', true);
-            }
-
-            function fetchFollowersList() {
-                renderSocialUserList([], 'Nenhum seguidor registado ainda.', false);
-            }
-
-            function fetchFriendRequests() {
-                if (!mailboxRequestsContainer) return;
-                mailboxRequestsContainer.innerHTML = '';
-                if (!friendRequestsList.length) {
-                    mailboxRequestsContainer.innerHTML = '<div style="font-size: 12px; color: var(--text-muted);">Sem pedidos de amizade pendentes.</div>';
-                    return;
+            submitButton.addEventListener('click', handleSendMessageTrigger);
+            messageInput.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    handleSendMessageTrigger();
                 }
-
-                friendRequestsList.forEach((req, idx) => {
-                    const senderName = req.sender || req.username || 'Utilizador';
-                    const card = document.createElement('div');
-                    card.className = 'friend-req-card';
-
-                    const nameEl = document.createElement('span');
-                    nameEl.textContent = senderName;
-                    nameEl.style.fontWeight = '600';
-                    nameEl.style.fontSize = '13px';
-
-                    const actionsWrap = document.createElement('div');
-                    actionsWrap.style.display = 'flex';
-                    actionsWrap.style.gap = '6px';
-
-                    const acceptBtn = document.createElement('button');
-                    acceptBtn.type = 'button';
-                    acceptBtn.textContent = 'Aceitar';
-                    acceptBtn.style.cssText = 'background:#23a55a; color:#fff; border:none; border-radius:6px; padding:5px 10px; font-size:11px; font-weight:700; cursor:pointer;';
-                    acceptBtn.onclick = () => {
-                        if (!isFriendName(senderName)) {
-                            friendsList.push(senderName);
-                            writeStorageJson(FRIENDS_STORAGE_KEY, friendsList);
-                        }
-                        friendRequestsList.splice(idx, 1);
-                        writeStorageJson(REQUESTS_STORAGE_KEY, friendRequestsList);
-                        card.classList.add('accepted');
-                        actionsWrap.innerHTML = '<span class="friend-req-status">✓ Aceito</span>';
-                        setTimeout(() => {
-                            card.classList.add('fading-out');
-                            setTimeout(() => fetchFriendRequests(), 350);
-                        }, 500);
-                    };
-
-                    const rejectBtn = document.createElement('button');
-                    rejectBtn.type = 'button';
-                    rejectBtn.textContent = 'Recusar';
-                    rejectBtn.style.cssText = 'background:rgba(231,76,60,0.16); color:#c0392b; border:none; border-radius:6px; padding:5px 10px; font-size:11px; font-weight:700; cursor:pointer;';
-                    rejectBtn.onclick = () => {
-                        friendRequestsList.splice(idx, 1);
-                        writeStorageJson(REQUESTS_STORAGE_KEY, friendRequestsList);
-                        card.classList.add('fading-out');
-                        setTimeout(() => fetchFriendRequests(), 320);
-                    };
-
-                    actionsWrap.appendChild(acceptBtn);
-                    actionsWrap.appendChild(rejectBtn);
-                    card.appendChild(nameEl);
-                    card.appendChild(actionsWrap);
-                    mailboxRequestsContainer.appendChild(card);
-                });
-            }
-
-            socialTabs.forEach(tab => {
-                tab.addEventListener('click', () => {
-                    socialTabs.forEach(t => t.classList.remove('active'));
-                    tab.classList.add('active');
-                    const tabName = tab.getAttribute('data-tab');
-                    if (tabName === 'online') fetchOnlineUsers();
-                    else if (tabName === 'amigos') fetchFriendsList();
-                    else if (tabName === 'seguidores') fetchFollowersList();
-                });
             });
-
-            fetchOnlineUsers();
         });
     </script>
 </body>
