@@ -10,8 +10,16 @@ from django.contrib.auth.models import User
 from django.db import models
 from django.http import Http404, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
+from django.utils import timezone
 from django.utils.http import url_has_allowed_host_and_scheme
 from django.views.decorators.http import require_POST
+
+from .consumers import (
+    build_channel_group_name,
+    build_dm_group_name,
+    build_user_personal_group_name,
+    sanitize_group_token,
+)
 from .models import (
     Channel,
     FriendRequest,
@@ -123,12 +131,17 @@ def _get_accepted_friend_users(user):
     return friends
 
 
-def _notify_user_group(user_id, event_type, payload):
+def _notify_user_group(user_id, event_type, payload, username=None):
     channel_layer = get_channel_layer()
     if not channel_layer:
         return
+    resolved_username = username
+    if not resolved_username:
+        u = User.objects.filter(pk=int(user_id)).only('username').first()
+        resolved_username = u.username if u else str(user_id)
+    group_name = build_user_personal_group_name(resolved_username)
     async_to_sync(channel_layer.group_send)(
-        f'user_{int(user_id)}',
+        group_name,
         {
             'type': 'friend_event',
             'event': event_type,
@@ -141,6 +154,34 @@ def _parse_request_data(request):
     if request.content_type and 'application/json' in request.content_type:
         return json.loads(request.body or '{}')
     return request.POST
+
+
+def _build_music_payload(request, profile):
+    audio_src = ''
+    if profile.music_audio_file:
+        audio_src = request.build_absolute_uri(profile.music_audio_file.url)
+    elif profile.music_audio_url:
+        audio_src = profile.music_audio_url
+
+    cover_src = ''
+    if profile.music_cover_file:
+        cover_src = request.build_absolute_uri(profile.music_cover_file.url)
+    elif profile.music_cover_url:
+        cover_src = profile.music_cover_url
+
+    return {
+        'music_url': profile.music_url or '',
+        'music_audio_url': audio_src,
+        'music_cover_url': cover_src,
+    }
+
+
+def _channel_ws_tokens(channel):
+    if not channel:
+        return ('home', 'geral')
+    srv_token = sanitize_group_token(str(channel.server_id), 'home')
+    ch_token = sanitize_group_token(channel.name, 'geral')
+    return (srv_token, ch_token)
 
 
 @login_required(login_url='login')
@@ -173,6 +214,35 @@ def room_view(request, server_id=None, channel_id=None):
     avatar_pulse = bool(getattr(profile, 'avatar_pulse', False)) if akiira_admin else False
     name_style = (getattr(profile, 'name_style', '') or '') if akiira_admin else ''
 
+    music_payload = _build_music_payload(request, profile)
+    sanitized_accent = _sanitize_accent_color(
+        profile.accent_color,
+        request.user,
+        fallback=profile.accent_color or '#ff9de2',
+    )
+
+    profile_data = {
+        'username': request.user.username,
+        'bubble': profile.bubble or '',
+        'pronouns': profile.pronouns or '',
+        'bio': profile.bio or '',
+        'song': profile.spotify_song or '',
+        'artist': profile.spotify_artist or '',
+        'musicUrl': profile.music_url or '',
+        'audioSrc': music_payload.get('music_audio_url', ''),
+        'coverUrl': music_payload.get('music_cover_url', ''),
+        'accentColor': sanitized_accent,
+        'avatarUrl': request.build_absolute_uri(profile.avatar.url) if profile.avatar else '',
+        'bannerUrl': request.build_absolute_uri(profile.banner.url) if profile.banner else '',
+        'frameEffect': frame_effect != 'none',
+        'goldGlowFrame': frame_effect == 'gold_glow_frame',
+        'profileGlow': profile_glow,
+        'avatarPulse': avatar_pulse,
+        'nameStyle': name_style,
+        'is_admin': is_admin_user(request.user),
+        'is_akiira_admin': akiira_admin,
+    }
+
     return render(
         request,
         'chat/room.html',
@@ -184,6 +254,7 @@ def room_view(request, server_id=None, channel_id=None):
             'profile_glow': profile_glow,
             'avatar_pulse': avatar_pulse,
             'name_style': name_style,
+            'profile_json': json.dumps(profile_data),
             'servers': servers,
             'active_server': active_server,
             'active_channel': active_channel,
@@ -282,26 +353,6 @@ def create_channel(request, server_id):
             'channel_type': channel.channel_type,
         },
     })
-
-
-def _build_music_payload(request, profile):
-    audio_src = ''
-    if profile.music_audio_file:
-        audio_src = request.build_absolute_uri(profile.music_audio_file.url)
-    elif profile.music_audio_url:
-        audio_src = profile.music_audio_url
-
-    cover_src = ''
-    if profile.music_cover_file:
-        cover_src = request.build_absolute_uri(profile.music_cover_file.url)
-    elif profile.music_cover_url:
-        cover_src = profile.music_cover_url
-
-    return {
-        'music_url': profile.music_url or '',
-        'music_audio_url': audio_src,
-        'music_cover_url': cover_src,
-    }
 
 
 @login_required
@@ -432,9 +483,16 @@ def update_profile(request):
         'status': 'success',
         'message': 'Perfil atualizado com sucesso!',
         'username': request.user.username,
+        'bubble': profile.bubble or '',
+        'pronouns': profile.pronouns or '',
+        'bio': profile.bio or '',
+        'spotify_song': profile.spotify_song or '',
+        'spotify_artist': profile.spotify_artist or '',
+        'music_url': profile.music_url or '',
         'accent_color': profile.accent_color,
         'avatarUrl': request.build_absolute_uri(profile.avatar.url) if profile.avatar else '',
         'bannerUrl': request.build_absolute_uri(profile.banner.url) if profile.banner else '',
+        'is_admin': is_admin_user(request.user),
         'is_akiira_admin': akiira_admin,
         'frame_effect': _sanitize_frame_effect(getattr(profile, 'frame_effect', 'none'), request.user),
         'profile_glow': bool(getattr(profile, 'profile_glow', False)) if akiira_admin else False,
@@ -479,7 +537,7 @@ def friend_music_feed(request):
     friends = _get_accepted_friend_users(request.user)
     feed = []
     for friend in friends:
-        profile = friend.profile
+        profile, _ = UserProfile.objects.get_or_create(user=friend)
         music_data = _build_music_payload(request, profile)
         recent_tracks = []
         for m in SavedMusic.objects.filter(user=friend)[:10]:
@@ -687,6 +745,7 @@ def send_friend_request(request):
             receiver.id,
             'friend_request_received',
             {'id': req_obj.id, 'sender': request.user.username},
+            username=receiver.username,
         )
 
         return JsonResponse({'status': 'success', 'message': f'Pedido de amizade enviado para {receiver.username}!'})
@@ -723,6 +782,7 @@ def accept_friend_request(request):
             friend_req.sender.id,
             'friend_request_accepted',
             {'id': friend_req.id, 'accepter': request.user.username},
+            username=friend_req.sender.username,
         )
 
         return JsonResponse({'status': 'success', 'message': 'Amizade aceite com sucesso!'})
@@ -800,7 +860,7 @@ def get_dm_history(request, username):
             'message': m.content,
             'attachment_url': att_url,
             'attachment_type': getattr(m, 'attachment_type', '') or '',
-            'time': m.timestamp.strftime('%H:%M'),
+            'time': timezone.localtime(m.timestamp).strftime('%H:%M'),
         })
     return JsonResponse({'status': 'success', 'messages': data})
 
@@ -808,20 +868,22 @@ def get_dm_history(request, username):
 @login_required
 @require_POST
 def delete_message(request, message_id):
-    msg = get_object_or_404(Message, id=message_id)
+    msg = get_object_or_404(Message.objects.select_related('channel'), id=message_id)
     if msg.user_id != request.user.id and not is_admin_user(request.user):
         return JsonResponse({'status': 'error', 'message': 'Sem permissão para excluir esta mensagem.'}, status=403)
 
-    channel_id = msg.channel_id
+    srv_token, ch_token = _channel_ws_tokens(msg.channel)
     msg.delete()
 
     channel_layer = get_channel_layer()
     if channel_layer:
         async_to_sync(channel_layer.group_send)(
-            f'chat_{channel_id}',
+            build_channel_group_name(srv_token, ch_token),
             {
                 'type': 'message_deleted',
-                'message_id': message_id,
+                'id': message_id,
+                'server_id': srv_token,
+                'channel': ch_token,
             },
         )
 
@@ -831,22 +893,23 @@ def delete_message(request, message_id):
 @login_required
 @require_POST
 def delete_dm_message(request, message_id):
-    msg = get_object_or_404(PrivateMessage, id=message_id)
+    msg = get_object_or_404(PrivateMessage.objects.select_related('sender', 'receiver'), id=message_id)
     if msg.sender_id != request.user.id:
         return JsonResponse({'status': 'error', 'message': 'Só podes excluir as tuas próprias mensagens.'}, status=403)
 
-    sender_id = msg.sender_id
-    receiver_id = msg.receiver_id
+    sender_username = msg.sender.username
+    receiver_username = msg.receiver.username
     msg.delete()
 
     channel_layer = get_channel_layer()
     if channel_layer:
-        ids = sorted([sender_id, receiver_id])
         async_to_sync(channel_layer.group_send)(
-            f'dm_{ids[0]}_{ids[1]}',
+            build_dm_group_name(sender_username, receiver_username),
             {
                 'type': 'dm_deleted',
-                'message_id': message_id,
+                'id': message_id,
+                'sender': sender_username,
+                'receiver': receiver_username,
             },
         )
 
@@ -871,7 +934,7 @@ def upload_attachment(request):
     elif ext in AUDIO_EXTS or content_type.startswith('audio/'):
         att_type = 'audio'
     elif ext in DOC_EXTS:
-        att_type = 'document'
+        att_type = 'file'
     else:
         return JsonResponse(
             {'status': 'error', 'message': 'Formato não suportado (use imagem/GIF, áudio ou documento).'},
@@ -881,7 +944,8 @@ def upload_attachment(request):
     target = (request.POST.get('target') or '').strip()
     channel_id = (request.POST.get('channel_id') or '').strip()
     content = (request.POST.get('content') or '').strip()
-    avatar_url = (request.POST.get('avatarUrl') or '').strip()
+    avatar_url = _sanitize_external_url(request.POST.get('avatarUrl') or request.POST.get('avatar_url') or '')
+    time_str = timezone.localtime(timezone.now()).strftime('%H:%M')
 
     try:
         channel_layer = get_channel_layer()
@@ -895,17 +959,24 @@ def upload_attachment(request):
                 attachment_type=att_type,
             )
             att_url = request.build_absolute_uri(msg.attachment.url) if msg.attachment else ''
+            srv_token, ch_token = _channel_ws_tokens(channel)
             if channel_layer:
                 async_to_sync(channel_layer.group_send)(
-                    f'chat_{channel.id}',
+                    build_channel_group_name(srv_token, ch_token),
                     {
                         'type': 'chat_message',
                         'id': msg.id,
-                        'message': msg.content,
+                        'client_id': msg.client_id,
+                        'sender': request.user.username,
                         'username': request.user.username,
-                        'avatarUrl': avatar_url,
+                        'message': msg.content,
+                        'time': time_str,
+                        'server_id': srv_token,
+                        'channel': ch_token,
+                        'avatar_url': avatar_url,
                         'attachment_url': att_url,
                         'attachment_type': att_type,
+                        'attachment_name': file.name,
                     },
                 )
         elif target:
@@ -934,16 +1005,32 @@ def upload_attachment(request):
             att_field = getattr(msg, 'attachment', None) or getattr(msg, 'file', None)
             att_url = request.build_absolute_uri(att_field.url) if att_field else ''
             if channel_layer:
-                ids = sorted([request.user.id, other_user.id])
                 async_to_sync(channel_layer.group_send)(
-                    f'dm_{ids[0]}_{ids[1]}',
+                    build_dm_group_name(request.user.username, other_user.username),
                     {
                         'type': 'dm_message',
                         'id': msg.id,
-                        'message': msg.content,
+                        'client_id': msg.client_id,
                         'sender': request.user.username,
+                        'receiver': other_user.username,
+                        'message': msg.content,
+                        'time': time_str,
+                        'avatar_url': avatar_url,
                         'attachment_url': att_url,
                         'attachment_type': att_type,
+                        'attachment_name': file.name,
+                    },
+                )
+                async_to_sync(channel_layer.group_send)(
+                    build_user_personal_group_name(other_user.username),
+                    {
+                        'type': 'dm_notification',
+                        'id': msg.id,
+                        'sender': request.user.username,
+                        'receiver': other_user.username,
+                        'preview': content[:120] if content else file.name,
+                        'time': time_str,
+                        'avatar_url': avatar_url,
                     },
                 )
         else:
@@ -967,7 +1054,7 @@ def profile_page_view(request):
     username = request.GET.get('user', request.user.username)
     target_user = get_object_or_404(User, username=username)
     target_profile, _ = UserProfile.objects.get_or_create(user=target_user)
-    viewer_profile, _ = UserProfile.objects.get_or_create(user=request.user)
+    UserProfile.objects.get_or_create(user=request.user)
     viewer_is_akiira = is_akiira_admin(request.user)
     target_is_akiira = is_akiira_admin(target_user)
 
@@ -1007,6 +1094,7 @@ def remove_friend(request):
             other_user.id,
             'friend_removed',
             {'username': request.user.username},
+            username=other_user.username,
         )
 
         return JsonResponse({'status': 'success', 'message': f'Amizade com {other_user.username} removida.'})
@@ -1014,6 +1102,7 @@ def remove_friend(request):
         return JsonResponse({'status': 'error', 'message': 'Utilizador não encontrado.'}, status=404)
     except Exception as e:
         return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
+
 
 @login_required
 @require_POST
@@ -1039,9 +1128,11 @@ def send_message(request):
                 content=content,
                 client_id=client_id,
             )
+            srv_token, ch_token = _channel_ws_tokens(channel)
+            time_str = timezone.localtime(msg.timestamp).strftime('%H:%M')
             if channel_layer:
                 async_to_sync(channel_layer.group_send)(
-                    f'chat_{channel.id}',
+                    build_channel_group_name(srv_token, ch_token),
                     {
                         'type': 'chat_message',
                         'id': msg.id,
@@ -1049,9 +1140,10 @@ def send_message(request):
                         'message': msg.content,
                         'username': request.user.username,
                         'sender': request.user.username,
-                        'avatarUrl': avatar_url,
+                        'server_id': srv_token,
+                        'channel': ch_token,
                         'avatar_url': avatar_url,
-                        'time': msg.timestamp.strftime('%H:%M'),
+                        'time': time_str,
                     },
                 )
             return JsonResponse({
@@ -1072,10 +1164,10 @@ def send_message(request):
                 content=content,
                 client_id=client_id,
             )
+            time_str = timezone.localtime(dm.timestamp).strftime('%H:%M')
             if channel_layer:
-                ids = sorted([request.user.id, other_user.id])
                 async_to_sync(channel_layer.group_send)(
-                    f'dm_{ids[0]}_{ids[1]}',
+                    build_dm_group_name(request.user.username, other_user.username),
                     {
                         'type': 'dm_message',
                         'id': dm.id,
@@ -1083,9 +1175,20 @@ def send_message(request):
                         'message': dm.content,
                         'sender': request.user.username,
                         'receiver': other_user.username,
-                        'avatarUrl': avatar_url,
                         'avatar_url': avatar_url,
-                        'time': dm.timestamp.strftime('%H:%M'),
+                        'time': time_str,
+                    },
+                )
+                async_to_sync(channel_layer.group_send)(
+                    build_user_personal_group_name(other_user.username),
+                    {
+                        'type': 'dm_notification',
+                        'id': dm.id,
+                        'sender': request.user.username,
+                        'receiver': other_user.username,
+                        'preview': dm.content[:120],
+                        'time': time_str,
+                        'avatar_url': avatar_url,
                     },
                 )
             return JsonResponse({

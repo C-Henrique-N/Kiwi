@@ -13,9 +13,26 @@ from .models import Channel, FriendRequest, Message, PrivateMessage, Server
 User = get_user_model()
 
 
-def _sanitize_group_token(value: str, fallback: str = "default") -> str:
+def sanitize_group_token(value: str, fallback: str = "default") -> str:
     cleaned = re.sub(r"[^a-zA-Z0-9._-]", "_", (value or "").strip())
     return cleaned[:80] if cleaned else fallback
+
+
+def build_channel_group_name(server_token: str, channel_token: str) -> str:
+    return f"kiwi_srv_{sanitize_group_token(server_token, 'home')}_ch_{sanitize_group_token(channel_token, 'geral')}"
+
+
+def build_presence_group_name(server_token: str) -> str:
+    return f"kiwi_presence_srv_{sanitize_group_token(server_token, 'home')}"
+
+
+def build_dm_group_name(username_a: str, username_b: str) -> str:
+    pair = sorted([(username_a or "").lower(), (username_b or "").lower()])
+    return f"kiwi_dm_{sanitize_group_token(pair[0], 'u1')}_{sanitize_group_token(pair[1], 'u2')}"
+
+
+def build_user_personal_group_name(username: str) -> str:
+    return f"kiwi_user_{sanitize_group_token((username or '').lower(), 'user')}"
 
 
 def _is_valid_media_url(url: str) -> bool:
@@ -29,9 +46,9 @@ def _is_valid_media_url(url: str) -> bool:
 
 
 def _normalize_attachment_type(att_type: str, att_url: str) -> str:
-    allowed = {"image", "audio", "file", "video"}
+    allowed = {"image", "audio", "file", "video", "document"}
     if att_type in allowed:
-        return att_type
+        return "file" if att_type == "document" else att_type
     lower_url = (att_url or "").lower()
     if any(lower_url.endswith(ext) for ext in (".png", ".jpg", ".jpeg", ".gif", ".webp")):
         return "image"
@@ -78,19 +95,18 @@ class ChatConsumer(AsyncWebsocketConsumer):
             return
 
         self.user = user
-        self.room_slug = _sanitize_group_token(
-            self.scope["url_route"]["kwargs"].get("room_slug", "geral"),
-            fallback="geral",
-        )
+        kwargs = self.scope.get("url_route", {}).get("kwargs", {})
+        raw_slug = kwargs.get("room_slug") or kwargs.get("room_name") or "geral"
+        self.room_slug = sanitize_group_token(raw_slug, fallback="geral")
 
         query_params = self._parse_query_string()
         raw_server = query_params.get("server") or "home"
         raw_channel = query_params.get("channel") or self.room_slug
 
-        self.server_id = _sanitize_group_token(raw_server, fallback="home")
-        self.channel_name_slug = _sanitize_group_token(raw_channel, fallback="geral")
-        self.group_name = f"kiwi_srv_{self.server_id}_ch_{self.channel_name_slug}"
-        self.presence_group = f"kiwi_presence_srv_{self.server_id}"
+        self.server_id = sanitize_group_token(raw_server, fallback="home")
+        self.channel_name_slug = sanitize_group_token(raw_channel, fallback="geral")
+        self.group_name = build_channel_group_name(self.server_id, self.channel_name_slug)
+        self.presence_group = build_presence_group_name(self.server_id)
 
         channel_obj, allowed = await self._resolve_and_authorize_channel(
             raw_server=raw_server,
@@ -178,9 +194,9 @@ class ChatConsumer(AsyncWebsocketConsumer):
             return
 
         if msg_type == "delete_message":
-            msg_id = payload.get("id")
+            msg_id = payload.get("id") or payload.get("message_id")
             if msg_id:
-                deleted = await self._delete_message(msg_id, self.user.id)
+                deleted = await self._delete_message(msg_id, self.user.id, bool(self.user.is_staff or self.user.is_superuser))
                 if deleted:
                     await self.channel_layer.group_send(
                         self.group_name,
@@ -209,7 +225,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
         if not content and not attachment_url:
             return
 
-        raw_avatar = (payload.get("avatar_url") or payload.get("avatar") or "").strip()
+        raw_avatar = (payload.get("avatar_url") or payload.get("avatarUrl") or payload.get("avatar") or "").strip()
         safe_avatar = (
             raw_avatar
             if _is_valid_media_url(raw_avatar)
@@ -252,19 +268,20 @@ class ChatConsumer(AsyncWebsocketConsumer):
     async def chat_message(self, event):
         if event.get("server_id") != self.server_id or event.get("channel") != self.channel_name_slug:
             return
+        avatar_url = event.get("avatar_url") or event.get("avatarUrl") or ""
         await self.send(
             text_data=json.dumps(
                 {
                     "type": "chat_message",
                     "id": event.get("id"),
                     "client_id": event.get("client_id", ""),
-                    "sender": event.get("sender"),
-                    "username": event.get("username"),
+                    "sender": event.get("sender") or event.get("username"),
+                    "username": event.get("username") or event.get("sender"),
                     "message": event.get("message", ""),
                     "time": event.get("time", ""),
                     "server_id": event.get("server_id"),
                     "channel": event.get("channel"),
-                    "avatar_url": event.get("avatar_url", ""),
+                    "avatar_url": avatar_url,
                     "attachment_url": event.get("attachment_url", ""),
                     "attachment_type": event.get("attachment_type", ""),
                     "attachment_name": event.get("attachment_name", ""),
@@ -275,11 +292,12 @@ class ChatConsumer(AsyncWebsocketConsumer):
     async def message_deleted(self, event):
         if event.get("server_id") != self.server_id or event.get("channel") != self.channel_name_slug:
             return
+        deleted_id = event.get("id") or event.get("message_id")
         await self.send(
             text_data=json.dumps(
                 {
                     "type": "delete_message",
-                    "id": event.get("id"),
+                    "id": deleted_id,
                     "server_id": event.get("server_id"),
                     "channel": event.get("channel"),
                 }
@@ -324,8 +342,8 @@ class ChatConsumer(AsyncWebsocketConsumer):
         else:
             is_owner = getattr(server, "owner_id", None) == self.user.id
             is_member = server.members.filter(pk=self.user.id).exists()
-            is_public = bool(getattr(server, "is_public", False)) or server.name.lower() == "home"
-            if not (is_owner or is_member or is_public or self.user.is_staff):
+            is_home = server.name.lower() == "home"
+            if not (is_owner or is_member or is_home or self.user.is_staff):
                 return None, False
             if not is_member:
                 server.members.add(self.user)
@@ -356,9 +374,12 @@ class ChatConsumer(AsyncWebsocketConsumer):
             created = getattr(msg, "timestamp", None) or getattr(msg, "created_at", None)
             time_str = timezone.localtime(created).strftime("%H:%M") if created else ""
             att_url = getattr(msg, "attachment_url", "") or ""
+            att_name = getattr(msg, "attachment_name", "") or ""
             if not att_url and getattr(msg, "attachment", None):
                 try:
                     att_url = msg.attachment.url
+                    if not att_name and msg.attachment.name:
+                        att_name = msg.attachment.name.split("/")[-1]
                 except Exception:
                     att_url = ""
             items.append(
@@ -374,7 +395,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
                     "avatar_url": _get_user_avatar(msg.user),
                     "attachment_url": att_url,
                     "attachment_type": getattr(msg, "attachment_type", "") or "",
-                    "attachment_name": getattr(msg, "attachment_name", "") or "",
+                    "attachment_name": att_name,
                 }
             )
         return items
@@ -398,14 +419,20 @@ class ChatConsumer(AsyncWebsocketConsumer):
         return Message.objects.create(**kwargs)
 
     @database_sync_to_async
-    def _delete_message(self, msg_id, user_id) -> bool:
+    def _delete_message(self, msg_id, user_id, is_staff=False) -> bool:
         try:
             numeric_id = int(msg_id)
-        except (TypeError, ValueError):
-            deleted_count, _ = Message.objects.filter(client_id=str(msg_id), user_id=user_id).delete()
+            qs = Message.objects.filter(id=numeric_id)
+            if not is_staff:
+                qs = qs.filter(user_id=user_id)
+            deleted_count, _ = qs.delete()
             return deleted_count > 0
-        deleted_count, _ = Message.objects.filter(id=numeric_id, user_id=user_id).delete()
-        return deleted_count > 0
+        except (TypeError, ValueError):
+            qs = Message.objects.filter(client_id=str(msg_id))
+            if not is_staff:
+                qs = qs.filter(user_id=user_id)
+            deleted_count, _ = qs.delete()
+            return deleted_count > 0
 
 
 class DMConsumer(AsyncWebsocketConsumer):
@@ -433,10 +460,9 @@ class DMConsumer(AsyncWebsocketConsumer):
             await self.close(code=4003)
             return
 
-        pair = sorted([self.user.username.lower(), self.target_user.username.lower()])
-        self.room_group_name = f"kiwi_dm_{_sanitize_group_token(pair[0])}_{_sanitize_group_token(pair[1])}"
-        self.target_personal_group = f"kiwi_user_{_sanitize_group_token(self.target_user.username.lower())}"
-        self.self_personal_group = f"kiwi_user_{_sanitize_group_token(self.user.username.lower())}"
+        self.room_group_name = build_dm_group_name(self.user.username, self.target_user.username)
+        self.target_personal_group = build_user_personal_group_name(self.target_user.username)
+        self.self_personal_group = build_user_personal_group_name(self.user.username)
 
         await self.channel_layer.group_add(self.room_group_name, self.channel_name)
         await self.channel_layer.group_add(self.self_personal_group, self.channel_name)
@@ -482,6 +508,22 @@ class DMConsumer(AsyncWebsocketConsumer):
                 await self.channel_layer.group_send(self.target_personal_group, call_event)
             return
 
+        if ev_type == "delete_dm":
+            dm_id = payload.get("id") or payload.get("message_id")
+            if dm_id:
+                deleted = await self._delete_dm(dm_id, self.user.id)
+                if deleted:
+                    await self.channel_layer.group_send(
+                        self.room_group_name,
+                        {
+                            "type": "dm_deleted",
+                            "id": dm_id,
+                            "sender": self.user.username,
+                            "receiver": self.target_user.username,
+                        },
+                    )
+            return
+
         content = (payload.get("message") or payload.get("content") or "").strip()
         attachment_url = (payload.get("attachment_url") or "").strip()
         attachment_name = (payload.get("attachment_name") or "").strip()[:255]
@@ -498,7 +540,7 @@ class DMConsumer(AsyncWebsocketConsumer):
         if not content and not attachment_url:
             return
 
-        raw_avatar = (payload.get("avatar_url") or payload.get("avatar") or "").strip()
+        raw_avatar = (payload.get("avatar_url") or payload.get("avatarUrl") or payload.get("avatar") or "").strip()
         safe_avatar = (
             raw_avatar
             if _is_valid_media_url(raw_avatar)
@@ -546,6 +588,7 @@ class DMConsumer(AsyncWebsocketConsumer):
         )
 
     async def dm_message(self, event):
+        avatar_url = event.get("avatar_url") or event.get("avatarUrl") or ""
         await self.send(
             text_data=json.dumps(
                 {
@@ -556,10 +599,23 @@ class DMConsumer(AsyncWebsocketConsumer):
                     "receiver": event.get("receiver"),
                     "message": event.get("message", ""),
                     "time": event.get("time", ""),
-                    "avatar_url": event.get("avatar_url", ""),
+                    "avatar_url": avatar_url,
                     "attachment_url": event.get("attachment_url", ""),
                     "attachment_type": event.get("attachment_type", ""),
                     "attachment_name": event.get("attachment_name", ""),
+                }
+            )
+        )
+
+    async def dm_deleted(self, event):
+        deleted_id = event.get("id") or event.get("message_id")
+        await self.send(
+            text_data=json.dumps(
+                {
+                    "type": "delete_dm",
+                    "id": deleted_id,
+                    "sender": event.get("sender"),
+                    "receiver": event.get("receiver"),
                 }
             )
         )
@@ -615,9 +671,12 @@ class DMConsumer(AsyncWebsocketConsumer):
             created = getattr(dm, "timestamp", None) or getattr(dm, "created_at", None)
             time_str = timezone.localtime(created).strftime("%H:%M") if created else ""
             att_url = getattr(dm, "attachment_url", "") or ""
+            att_name = getattr(dm, "attachment_name", "") or ""
             if not att_url and getattr(dm, "attachment", None):
                 try:
                     att_url = dm.attachment.url
+                    if not att_name and dm.attachment.name:
+                        att_name = dm.attachment.name.split("/")[-1]
                 except Exception:
                     att_url = ""
             items.append(
@@ -631,7 +690,7 @@ class DMConsumer(AsyncWebsocketConsumer):
                     "avatar_url": _get_user_avatar(dm.sender),
                     "attachment_url": att_url,
                     "attachment_type": getattr(dm, "attachment_type", "") or "",
-                    "attachment_name": getattr(dm, "attachment_name", "") or "",
+                    "attachment_name": att_name,
                 }
             )
         return items
@@ -653,3 +712,13 @@ class DMConsumer(AsyncWebsocketConsumer):
         if "client_id" in fields:
             kwargs["client_id"] = client_id
         return PrivateMessage.objects.create(**kwargs)
+
+    @database_sync_to_async
+    def _delete_dm(self, msg_id, user_id) -> bool:
+        try:
+            numeric_id = int(msg_id)
+            deleted_count, _ = PrivateMessage.objects.filter(id=numeric_id, sender_id=user_id).delete()
+            return deleted_count > 0
+        except (TypeError, ValueError):
+            deleted_count, _ = PrivateMessage.objects.filter(client_id=str(msg_id), sender_id=user_id).delete()
+            return deleted_count > 0
