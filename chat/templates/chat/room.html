@@ -3461,15 +3461,11 @@
                     .replace(/"/g, '&quot;')
                     .replace(/'/g, '&#39;');
             }
-
+            
             function formatSafeBioHtml(rawBio) {
                 const escaped = escapeHtmlText(rawBio || '');
-                return escaped.replace(/(?:
-|
-|
-|<br\s*\/?\s*>)/gi, '<br>');
+                return escaped.replace(/(?:\r\n|\r|\n|<br\s*\/?\s*>)/gi, '<br>');
             }
-
             function isSafeAssetUrl(url) {
                 if (!url || typeof url !== 'string') return false;
                 const trimmed = url.trim();
