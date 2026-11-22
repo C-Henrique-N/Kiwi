@@ -61,7 +61,7 @@
     -webkit-overflow-scrolling: touch;
     overscroll-behavior: contain;
     z-index: 12;
-  }
+  }o
 
   /* Coluna principal ao lado da rail (menu, canais e painel do utilizador) */
   .sidebar-left {
