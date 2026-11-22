@@ -27,6 +27,8 @@ from .models import (
     MessageReaction,
     PrivateMessage,
     Profile,
+    ProfilePost,
+    ProfilePostReply,
     SavedMusic,
     Server,
     ServerMember,
@@ -189,6 +191,7 @@ def _serialize_profile(user, profile):
         "display_name": (getattr(profile, "display_name", "") or "").strip() or user.username,
         "bio": getattr(profile, "bio", "") or "",
         "pronouns": getattr(profile, "pronouns", "") or "",
+        "location": getattr(profile, "location", "") or "",
         "status": _sanitize_status(getattr(profile, "status", "online")),
         "custom_status": getattr(profile, "custom_status", "") or getattr(profile, "bubble", "") or "",
         "bubble": getattr(profile, "bubble", "") or "",
@@ -351,10 +354,7 @@ def _render_first_existing(request, template_names, context):
 @ensure_csrf_cookie
 def login_view(request):
     if request.user.is_authenticated:
-        try:
-            return redirect("room")
-        except Exception:
-            return redirect("room_home")
+        return redirect("room_home")
 
     error_message = None
     if request.method == "POST":
@@ -365,10 +365,7 @@ def login_view(request):
             login(request, user)
             _get_or_create_profile(user)
             _ensure_default_workspace(user)
-            try:
-                return redirect("room")
-            except Exception:
-                return redirect("room_home")
+            return redirect("room_home")
         error_message = "Usuário ou senha inválidos."
 
     return _render_first_existing(
@@ -381,10 +378,7 @@ def login_view(request):
 @ensure_csrf_cookie
 def register_view(request):
     if request.user.is_authenticated:
-        try:
-            return redirect("room")
-        except Exception:
-            return redirect("room_home")
+        return redirect("room_home")
 
     error_message = None
     if request.method == "POST":
@@ -408,10 +402,7 @@ def register_view(request):
                 _get_or_create_profile(user)
                 _ensure_default_workspace(user)
                 login(request, user)
-                try:
-                    return redirect("room")
-                except Exception:
-                    return redirect("room_home")
+                return redirect("room_home")
             except IntegrityError:
                 error_message = "Não foi possível criar a conta agora."
 
@@ -825,6 +816,8 @@ def api_update_profile(request):
         profile.bio = (data.get("bio") or "").strip()[:500]
     if "pronouns" in data:
         profile.pronouns = (data.get("pronouns") or "").strip()[:100]
+    if "location" in data:
+        profile.location = (data.get("location") or "").strip()[:120]
     if "bubble" in data or "custom_status" in data:
         val = data.get("bubble") if "bubble" in data else data.get("custom_status")
         profile.bubble = (val or "").strip()[:255]
@@ -960,6 +953,113 @@ def api_remove_friend(request, username):
         Q(user1=request.user, user2=target_user) | Q(user1=target_user, user2=request.user)
     ).delete()
     return JsonResponse({"ok": True, "removed": target_user.username})
+
+
+# === POSTAGENS DO PERFIL (ProfilePost & ProfilePostReply) ===
+
+@login_required
+@require_GET
+def list_profile_posts(request):
+    username = (request.GET.get("username") or "").strip()
+    qs = ProfilePost.objects.select_related("author").prefetch_related("liked_by", "replies", "replies__author")
+    if username:
+        qs = qs.filter(author__username__iexact=username)
+    posts = [p.to_dict(current_user=request.user) for p in qs[:50]]
+    return JsonResponse({"ok": True, "posts": posts})
+
+
+@login_required
+@require_POST
+def create_profile_post(request):
+    if request.content_type and "multipart/form-data" in request.content_type:
+        data = request.POST
+    else:
+        try:
+            data = json.loads(request.body.decode("utf-8") or "{}")
+        except Exception:
+            data = request.POST
+
+    content = (data.get("content") or data.get("text") or "").strip()
+    image_url = (data.get("image_url") or "").strip()
+    uploaded_image = request.FILES.get("image") or request.FILES.get("file")
+
+    if not content and not uploaded_image and not image_url:
+        return JsonResponse({"ok": False, "error": "A postagem não pode estar vazia."}, status=400)
+
+    post = ProfilePost.objects.create(
+        author=request.user,
+        content=content[:2000],
+        image_url=image_url if not str(image_url).startswith("data:") else "",
+    )
+
+    if uploaded_image:
+        post.image = uploaded_image
+        post.save()
+    elif isinstance(image_url, str) and image_url.startswith("data:"):
+        saved = _save_base64_media(image_url, prefix="post")
+        if saved:
+            post.image.name = saved.replace(settings.MEDIA_URL, "", 1).lstrip("/")
+            post.save()
+
+    return JsonResponse({"ok": True, "post": post.to_dict(current_user=request.user)})
+
+
+@login_required
+@require_POST
+def toggle_like_profile_post(request, post_id):
+    post = get_object_or_404(ProfilePost, pk=post_id)
+    if post.liked_by.filter(pk=request.user.pk).exists():
+        post.liked_by.remove(request.user)
+        liked = False
+    else:
+        post.liked_by.add(request.user)
+        liked = True
+    return JsonResponse({
+        "ok": True,
+        "liked": liked,
+        "likes": post.liked_by.count(),
+        "post": post.to_dict(current_user=request.user),
+    })
+
+
+@login_required
+@require_POST
+def add_profile_post_reply(request, post_id):
+    post = get_object_or_404(ProfilePost, pk=post_id)
+    try:
+        payload = json.loads(request.body.decode("utf-8") or "{}")
+    except Exception:
+        payload = request.POST
+
+    content = (payload.get("content") or payload.get("text") or "").strip()
+    if not content:
+        return JsonResponse({"ok": False, "error": "Resposta vazia."}, status=400)
+
+    reply = ProfilePostReply.objects.create(
+        post=post,
+        author=request.user,
+        content=content[:1000],
+    )
+    return JsonResponse({
+        "ok": True,
+        "reply": {
+            "id": reply.id,
+            "author": reply.author.username,
+            "text": reply.content,
+            "created_at": reply.created_at.isoformat(),
+        },
+        "post": post.to_dict(current_user=request.user),
+    })
+
+
+@login_required
+@require_POST
+def delete_profile_post(request, post_id):
+    post = get_object_or_404(ProfilePost, pk=post_id)
+    if post.author_id != request.user.id and not _is_kiwi_admin(request.user):
+        return JsonResponse({"ok": False, "error": "Sem permissão para excluir esta postagem."}, status=403)
+    post.delete()
+    return JsonResponse({"ok": True, "deleted_id": post_id})
 
 
 # === ALIASES DE COMPATIBILIDADE COM chat/urls.py ===

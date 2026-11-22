@@ -2074,6 +2074,8 @@ body {
             let currentView = 'perfil';
             let currentChannelName = 'geral';
             let currentDmUser = null;
+            let selectedDmPeer = null;
+            const dmThreads = {};
             const openDmTabs = new Map();
 
             const serverChannelsStore = {
@@ -3952,7 +3954,7 @@ body {
                         if (pendingAttachmentFile.size <= 350000) {
                             try { attachmentUrl = await readFileAsDataUrl(pendingAttachmentFile); } catch (_) {}
                         }
-                        if (!attachmentUrl && pendingAttachmentPreviewUrl) {
+                        if (!attachmentUrl && pendingAttachmentPreviewUrl && !pendingAttachmentPreviewUrl.startsWith('blob:')) {
                             attachmentUrl = pendingAttachmentPreviewUrl;
                         } else if (!attachmentUrl) {
                             try { attachmentUrl = URL.createObjectURL(pendingAttachmentFile); } catch (_) {}
@@ -5595,7 +5597,7 @@ body {
                         </div>
                     `;
                     row.addEventListener('click', () => openDmPeerThread(c.username));
-                    if (idx < 2 && thread.length > 0) dmConvListEl.appendChild(row);
+                    if (thread.length > 0 || (typeof openDmTabs !== 'undefined' && openDmTabs.has(c.username))) dmConvListEl.appendChild(row);
                     else dmSuggListEl.appendChild(row);
                 });
             }

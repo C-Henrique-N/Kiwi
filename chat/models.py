@@ -12,6 +12,7 @@ class UserProfile(models.Model):
     bubble = models.CharField(max_length=255, blank=True, default='🌸 a testar o novo kiwi chat...')
     pronouns = models.CharField(max_length=100, blank=True, default='utilizador • 🥝')
     bio = models.TextField(blank=True, default='Perfil estético ativo.')
+    location = models.CharField(max_length=120, blank=True, default='')
     spotify_song = models.CharField(max_length=150, blank=True, default='Drama')
     spotify_artist = models.CharField(max_length=150, blank=True, default='Lala Sadii')
     accent_color = models.CharField(max_length=50, default='#ff9de2')
@@ -58,6 +59,29 @@ class UserProfile(models.Model):
         if self.music_cover_file:
             return self.music_cover_file.url
         return self.music_cover_url or ''
+
+    def to_dict(self):
+        return {
+            'username': self.user.username,
+            'avatar_url': self.avatar.url if self.avatar else '',
+            'banner_url': self.banner.url if self.banner else '',
+            'bubble': self.bubble,
+            'pronouns': self.pronouns,
+            'bio': self.bio,
+            'location': self.location,
+            'spotify_song': self.spotify_song,
+            'spotify_artist': self.spotify_artist,
+            'accent_color': self.accent_color,
+            'frame_effect': self.get_active_frame_effect(),
+            'profile_glow': self.has_active_profile_glow(),
+            'avatar_pulse': self.has_active_avatar_pulse(),
+            'name_style': self.get_active_name_style(),
+            'music_url': self.music_url,
+            'music_audio_url': self.get_music_audio_src(),
+            'music_cover_url': self.get_music_cover_src(),
+            'is_admin': self.is_admin_user,
+            'is_akiira_admin': self.is_akiira_admin,
+        }
 
     def __str__(self):
         return self.user.username
@@ -335,8 +359,80 @@ class SavedMusic(models.Model):
             return self.cover_file.url
         return self.cover_url or ''
 
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'title': self.title,
+            'artist': self.artist,
+            'music_url': self.music_url,
+            'audio_url': self.get_audio_src(),
+            'cover_url': self.get_cover_src(),
+            'created_at': self.created_at.isoformat(),
+        }
+
     def __str__(self):
         return f'{self.user.username}: {self.title or "Música"}'
+
+
+class ProfilePost(models.Model):
+    author = models.ForeignKey(User, on_delete=models.CASCADE, related_name='profile_posts')
+    content = models.TextField()
+    image = models.ImageField(upload_to='profile_posts/', blank=True, null=True)
+    image_url = models.TextField(blank=True, default='')
+    liked_by = models.ManyToManyField(User, related_name='liked_profile_posts', blank=True)
+    reposts_count = models.PositiveIntegerField(default=0)
+    views_count = models.PositiveIntegerField(default=1)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-created_at', '-id']
+
+    def get_image_src(self):
+        if self.image:
+            return self.image.url
+        return self.image_url or ''
+
+    def to_dict(self, current_user=None):
+        replies_qs = self.replies.select_related('author').all()
+        return {
+            'id': f'post-{self.id}',
+            'db_id': self.id,
+            'author': self.author.username,
+            'handle': f'@{self.author.username.lower()}',
+            'content': self.content,
+            'image_url': self.get_image_src(),
+            'likes': self.liked_by.count(),
+            'liked': bool(current_user and current_user.is_authenticated and self.liked_by.filter(pk=current_user.pk).exists()),
+            'reposts': self.reposts_count,
+            'views': str(self.views_count),
+            'replies': replies_qs.count(),
+            'reply_items': [
+                {
+                    'id': r.id,
+                    'author': r.author.username,
+                    'text': r.content,
+                    'created_at': r.created_at.isoformat(),
+                }
+                for r in replies_qs
+            ],
+            'created_at': self.created_at.isoformat(),
+        }
+
+    def __str__(self):
+        return f'Post #{self.id} por {self.author.username}'
+
+
+class ProfilePostReply(models.Model):
+    post = models.ForeignKey(ProfilePost, on_delete=models.CASCADE, related_name='replies')
+    author = models.ForeignKey(User, on_delete=models.CASCADE, related_name='profile_post_replies')
+    content = models.TextField()
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['created_at', 'id']
+
+    def __str__(self):
+        return f'Resposta de {self.author.username} no Post #{self.post_id}'
 
 
 @receiver(post_save, sender=User)

@@ -17,6 +17,12 @@ urlpatterns = [
     path('api/profile/<str:username>/', views.get_user_profile, name='get_user_profile'),
     path('loja/', views.loja_view, name='loja'),
 
+    path('api/profile/posts/', views.list_profile_posts, name='list_profile_posts'),
+    path('api/profile/posts/create/', views.create_profile_post, name='create_profile_post'),
+    path('api/profile/posts/<int:post_id>/like/', views.toggle_like_profile_post, name='toggle_like_profile_post'),
+    path('api/profile/posts/<int:post_id>/reply/', views.add_profile_post_reply, name='add_profile_post_reply'),
+    path('api/profile/posts/<int:post_id>/delete/', views.delete_profile_post, name='delete_profile_post'),
+
     path('api/servers/create/', views.create_server, name='create_server'),
     path('api/servers/<int:server_id>/update/', views.update_server, name='update_server'),
     path('api/servers/<int:server_id>/delete/', views.delete_server, name='delete_server'),
