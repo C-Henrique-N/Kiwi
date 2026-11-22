@@ -28,6 +28,7 @@
     height: 100dvh;
     overflow: hidden;
     background: #0b0714;
+    -webkit-text-size-adjust: 100%;
   }
 
   .kiwi-app-shell {
@@ -57,6 +58,7 @@
     gap: 10px;
     padding: 12px 0 calc(var(--m-bottom-h) + 20px + env(safe-area-inset-bottom));
     overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
     overscroll-behavior: contain;
     z-index: 12;
   }
@@ -70,6 +72,7 @@
     display: flex;
     flex-direction: column;
     overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
     overscroll-behavior: contain;
     padding-bottom: calc(var(--m-bottom-h) + 76px + env(safe-area-inset-bottom));
     background: transparent;
@@ -111,6 +114,7 @@
     flex-wrap: nowrap;
     flex-shrink: 0;
     background: rgba(18, 11, 33, 0.94);
+    -webkit-backdrop-filter: blur(10px);
     backdrop-filter: blur(10px);
     border-bottom: 1px solid rgba(167, 139, 250, 0.16);
   }
@@ -151,6 +155,7 @@
     min-height: 0;
     overflow-y: auto;
     -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
   }
 
   #kiwi-profile-timeline-view .kiwi-x-topbar {
@@ -176,7 +181,9 @@
   }
 
   #kiwi-profile-timeline-view .kiwi-x-subtabs {
+    display: flex;
     overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
     scrollbar-width: none;
   }
 
@@ -188,6 +195,7 @@
     flex: 1 0 auto;
     padding: 11px 12px;
     font-size: 13px;
+    white-space: nowrap;
   }
 
   /* DM dividida: empilha lista e conversa no mobile para não espremer */
@@ -198,6 +206,7 @@
     height: 100%;
     min-height: 0;
     overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
   }
 
   .kiwi-dm-left-pane {
@@ -206,6 +215,7 @@
     max-height: 44%;
     flex-shrink: 0;
     overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
     border-right: none;
     border-bottom: 1px solid var(--kiwi-border);
   }
@@ -225,11 +235,17 @@
     bottom: calc(var(--m-bottom-h) + 18px + env(safe-area-inset-bottom));
     width: auto;
     max-width: none;
+    max-height: none;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
   }
 
   .aesthetic-profile-card {
     width: min(94vw, 440px) !important;
+    max-width: 94vw !important;
     max-height: 86dvh;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
   }
 
   /* Barra inferior fixa estilo pílula (Mensagens | Perfil) */
@@ -242,6 +258,7 @@
     display: flex;
     align-items: center;
     background: rgba(24, 14, 46, 0.94);
+    -webkit-backdrop-filter: blur(14px);
     backdrop-filter: blur(14px);
     border: 1px solid rgba(168, 85, 247, 0.48);
     border-radius: 999px;
@@ -265,6 +282,7 @@
     font-size: 14px;
     font-weight: 700;
     cursor: pointer;
+    touch-action: manipulation;
   }
 
   .kiwi-mobile-bottom-pill button + button {
