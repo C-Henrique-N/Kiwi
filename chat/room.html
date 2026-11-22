@@ -1791,6 +1791,16 @@ body {
                 is_admin: injectedIsAdmin
             };
 
+            function isAdminIdentity(username, isAdminFlag) {
+                    const clean = (username || '').trim().toLowerCase();
+                if (!clean) return false;
+                if (clean === 'akiirapw') {
+                    return Boolean(isAdminFlag) || (hasExplicitUser && activeUsername.toLowerCase() === 'akiirapw' && injectedIsAdmin) || true;
+                }
+                const stored = profilesByUsername.get(clean);
+                return Boolean(isAdminFlag) || Boolean(stored && stored.is_admin);
+            }
+
             function readStorageJson(key, fallbackVal) {
                 try {
                     const raw = localStorage.getItem(key);
