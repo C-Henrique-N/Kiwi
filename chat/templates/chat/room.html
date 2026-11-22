@@ -420,16 +420,46 @@
 
     <div class="sidebar-left">
         <div class="server-header" style="display:flex; align-items:center; justify-content:space-between; gap:8px;">
-            <span id="sidebar-server-title" style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">🥝 Kiwi • Amizades</span>
+            <span id="sidebar-server-title" style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">🥝 Kiwi</span>
             <button type="button" id="open-add-friend-btn" class="section-mini-action-btn" title="Buscar e adicionar amigos">+ Amigo</button>
         </div>
-        <div class="channels-list">
-            <div class="section-row-header">
+        <div class="channels-list" id="kiwi-main-nav-list">
+            <nav aria-label="Menu principal Kiwi" style="display:flex; flex-direction:column; gap:4px;">
+                <button type="button" class="kiwi-nav-item" id="nav-tab-inicio" data-nav-tab="inicio">
+                    <span class="kiwi-nav-item-main"><span>🏠</span><span>Início</span></span>
+                </button>
+                <button type="button" class="kiwi-nav-item" id="nav-tab-explorar" data-nav-tab="explorar">
+                    <span class="kiwi-nav-item-main"><span>🔍</span><span>Explorar</span></span>
+                </button>
+                <button type="button" class="kiwi-nav-item" id="nav-tab-notificacoes" data-nav-tab="notificacoes">
+                    <span class="kiwi-nav-item-main"><span>🔔</span><span>Notificações</span></span>
+                    <span class="kiwi-nav-badge" id="nav-notif-badge">3</span>
+                </button>
+                <button type="button" class="kiwi-nav-item" id="nav-tab-mensagens" data-nav-tab="mensagens">
+                    <span class="kiwi-nav-item-main"><span>✉️</span><span>Mensagens</span></span>
+                </button>
+                <button type="button" class="kiwi-nav-item" id="nav-tab-listas" data-nav-tab="listas">
+                    <span class="kiwi-nav-item-main"><span>📋</span><span>Listas</span></span>
+                </button>
+                <button type="button" class="kiwi-nav-item active" id="nav-tab-perfil" data-nav-tab="perfil">
+                    <span class="kiwi-nav-item-main"><span>👤</span><span>Perfil</span></span>
+                </button>
+                <button type="button" class="kiwi-nav-item" id="nav-tab-mais" data-nav-tab="mais">
+                    <span class="kiwi-nav-item-main"><span>•••</span><span>Mais</span></span>
+                </button>
+
+                <button type="button" class="kiwi-nav-post-btn" id="nav-open-post-modal-btn">
+                    <span>✏️</span>
+                    <span>Postar</span>
+                </button>
+            </nav>
+
+            <div class="section-row-header" style="margin-top:14px;">
                 <div class="section-label">Canais</div>
                 <button type="button" id="open-create-channel-btn" class="section-mini-action-btn" title="Criar canal">+ Canal</button>
             </div>
             <div id="server-channels-list">
-                <div class="channel-item active" id="tab-geral" data-channel-name="geral" data-channel-type="text">
+                <div class="channel-item" id="tab-geral" data-channel-name="geral" data-channel-type="text">
                     <span>#</span>
                     <span style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">geral</span>
                 </div>
@@ -440,14 +470,10 @@
             </div>
 
             <div class="section-row-header">
-                <div class="section-label">Amigos Salvos</div>
+                <div class="section-label">Amigos &amp; DMs</div>
                 <button type="button" id="sidebar-search-friend-btn" class="section-mini-action-btn">🔍 Buscar</button>
             </div>
-            <div id="sidebar-saved-friends-list" style="display:flex; flex-direction:column; gap:4px; margin-bottom:10px;"></div>
-
-            <div class="section-row-header">
-                <div class="section-label">Mensagens Privadas</div>
-            </div>
+            <div id="sidebar-saved-friends-list" style="display:flex; flex-direction:column; gap:4px; margin-bottom:8px;"></div>
             <div id="dm-tabs-list"></div>
         </div>
         <div class="my-user-panel">
@@ -525,7 +551,65 @@
             <div id="remote-screen-status" class="watch-loading-note">A aguardar sinal de vídeo da tela...</div>
         </div>
 
-        <div id="chat-log">
+        <div id="kiwi-profile-timeline-view" class="active">
+            <div class="kiwi-x-topbar">
+                <div class="kiwi-x-topbar-left">
+                    <button type="button" class="kiwi-x-back-btn" id="kiwi-x-back-btn" title="Voltar ao chat">←</button>
+                    <div>
+                        <div id="kiwi-x-top-name" style="font-size:17px;font-weight:900;line-height:1.15;">AkiiraPW</div>
+                        <div id="kiwi-x-top-posts-count" style="font-size:12px;color:var(--kiwi-text-muted);">584 posts</div>
+                    </div>
+                </div>
+                <button type="button" class="section-mini-action-btn" id="kiwi-x-edit-profile-btn">✏️ Editar Perfil</button>
+            </div>
+
+            <div id="kiwi-x-banner" class="kiwi-x-banner"></div>
+
+            <div class="kiwi-x-profile-body">
+                <div class="kiwi-x-avatar-action-row">
+                    <div id="kiwi-x-avatar" class="kiwi-x-avatar">A</div>
+                    <div class="kiwi-x-action-group">
+                        <button type="button" class="kiwi-x-circle-btn" id="kiwi-x-more-btn" title="Mais opções">•••</button>
+                        <button type="button" class="kiwi-x-circle-btn" id="kiwi-x-dm-btn" title="Enviar mensagem privada">✉️</button>
+                        <button type="button" class="kiwi-x-follow-pill" id="kiwi-x-follow-btn">Seguir</button>
+                    </div>
+                </div>
+
+                <div id="kiwi-x-display-name" class="kiwi-x-name">
+                    <span>AkiiraPW</span>
+                    <span style="color:#a855f7;font-size:15px;">✔</span>
+                    <span id="kiwi-x-admin-badge" class="admin-gold-badge" style="display:none;">👑 ADMIN</span>
+                </div>
+                <div id="kiwi-x-handle" class="kiwi-x-handle">@henriquecaua523</div>
+
+                <div id="kiwi-x-bio" class="kiwi-x-bio">
+                    人間は鳥のようなものだ。巣を作る鳥もいれば、ただ空を飛ぶ鳥もいる。<br>
+                    好きなゲーム：フォートナイト、マインクラフト、トゥームレイダー、香港。<br>
+                    好きなアニメ：Re:ゼロとチェンソーマン。
+                </div>
+
+                <div class="kiwi-x-meta-row">
+                    <span>📍 Brasil</span>
+                    <span id="kiwi-x-joined-label">📅 Entrou em outubro de 2021</span>
+                </div>
+
+                <div class="kiwi-x-stats-row">
+                    <span><strong id="kiwi-x-following-count">143</strong> Seguindo</span>
+                    <span><strong id="kiwi-x-followers-count">247</strong> Seguidores</span>
+                </div>
+            </div>
+
+            <div class="kiwi-x-subtabs" role="tablist">
+                <button type="button" class="kiwi-x-subtab active" data-x-subtab="posts">Posts</button>
+                <button type="button" class="kiwi-x-subtab" data-x-subtab="respostas">Respostas</button>
+                <button type="button" class="kiwi-x-subtab" data-x-subtab="midia">Mídia</button>
+                <button type="button" class="kiwi-x-subtab" data-x-subtab="curtidas">Curtidas</button>
+            </div>
+
+            <div id="kiwi-x-feed-list"></div>
+        </div>
+
+        <div id="chat-log" style="display:none;">
             <div class="message-group">
                 <div class="avatar" style="background: #241642;">🥝</div>
                 <div class="message-content">
@@ -538,7 +622,7 @@
             </div>
         </div>
 
-        <div class="chat-input-area">
+        <div class="chat-input-area" id="chat-input-area" style="display:none;">
             <div id="attachment-preview-bar">
                 <img id="attachment-preview-img" src="" alt="Prévia">
                 <div id="attachment-preview-badge">📄</div>
@@ -999,7 +1083,26 @@
         </div>
     </div>
 
-    <!-- Modal Criar Canal -->
+    <!-- Modal Postar no Perfil -->
+    <div id="create-post-modal" class="modal-overlay">
+        <div class="aesthetic-profile-card" style="padding: 20px; width: 440px; max-height: 88vh; overflow-y: auto;">
+            <button type="button" class="close-modal-btn" id="close-create-post-btn">×</button>
+            <h3 style="color: var(--text-main); margin-bottom: 12px; font-size: 16px;">✏️ Nova Postagem no Perfil</h3>
+            <form id="create-post-form">
+                <div class="form-group">
+                    <label for="new-post-text">O que está acontecendo?</label>
+                    <textarea id="new-post-text" rows="4" required placeholder="Escreva sua postagem para o seu perfil..."></textarea>
+                </div>
+                <div class="form-group" style="margin-top: 8px;">
+                    <label for="new-post-image-url">URL de imagem / banner (opcional)</label>
+                    <input type="text" id="new-post-image-url" placeholder="https://...">
+                </div>
+                <button type="submit" class="btn-aesthetic-edit" style="margin-top: 12px;">Publicar Post</button>
+            </form>
+        </div>
+    </div>
+
+        <!-- Modal Criar Canal -->
     <div id="create-channel-modal" class="modal-overlay">
         <div class="aesthetic-profile-card" style="padding: 20px; width: 400px; max-height: 85vh; overflow-y: auto;">
             <button type="button" class="close-modal-btn" id="close-create-channel-btn">×</button>
@@ -3242,6 +3345,483 @@
                     closeAllMessagePopovers();
                 }
             });
+
+
+            // === NAVEGAÇÃO PRINCIPAL (INÍCIO, EXPLORAR, NOTIFICAÇÕES, MENSAGENS, LISTAS, PERFIL, MAIS, POSTAR) ===
+            const profileTimelineView = document.getElementById('kiwi-profile-timeline-view');
+            const chatInputAreaEl = document.getElementById('chat-input-area');
+            const navItems = document.querySelectorAll('.kiwi-nav-item[data-nav-tab]');
+            const xFeedListEl = document.getElementById('kiwi-x-feed-list');
+            const xSubtabs = document.querySelectorAll('.kiwi-x-subtab[data-x-subtab]');
+
+            let activeNavTab = 'perfil';
+            let activeXSubtab = 'posts';
+
+            const USER_POSTS_KEY = 'kiwi_profile_posts_v1';
+            let userProfilePosts = readStorageJson(USER_POSTS_KEY, [
+                {
+                    id: 'p-1',
+                    author: activeUsername || 'AkiiraPW',
+                    handle: `@${(activeUsername || 'AkiiraPW').toLowerCase()}`,
+                    time: '2h',
+                    text: 'Finalmente consegui terminar o evento! 🎮✨',
+                    hasBannerCard: true,
+                    kind: 'posts',
+                    replies: 12,
+                    reposts: 8,
+                    likes: 96,
+                    views: '4,7 mil',
+                    liked: false
+                },
+                {
+                    id: 'p-2',
+                    author: activeUsername || 'AkiiraPW',
+                    handle: `@${(activeUsername || 'AkiiraPW').toLowerCase()}`,
+                    time: '1d',
+                    text: 'Qual seu jogo favorito? 🤔',
+                    hasBannerCard: false,
+                    kind: 'posts',
+                    replies: 87,
+                    reposts: 42,
+                    likes: 231,
+                    views: '12,9 mil',
+                    liked: false
+                }
+            ]);
+
+            function syncXProfileHeader() {
+                const uname = activeUsername || myProfileData.username || 'AkiiraPW';
+                const topName = document.getElementById('kiwi-x-top-name');
+                const topCount = document.getElementById('kiwi-x-top-posts-count');
+                const xBanner = document.getElementById('kiwi-x-banner');
+                const xAvatar = document.getElementById('kiwi-x-avatar');
+                const xDisplayName = document.getElementById('kiwi-x-display-name');
+                const xHandle = document.getElementById('kiwi-x-handle');
+                const xBio = document.getElementById('kiwi-x-bio');
+                const xBadge = document.getElementById('kiwi-x-admin-badge');
+
+                if (topName) topName.textContent = uname;
+                if (topCount) topCount.textContent = `${582 + userProfilePosts.length} posts`;
+                if (xBanner) {
+                    if (myProfileData.bannerUrl && isSafeAssetUrl(myProfileData.bannerUrl)) {
+                        xBanner.style.backgroundImage = `url("${encodeURI(myProfileData.bannerUrl.trim())}")`;
+                    } else {
+                        xBanner.style.backgroundImage = 'linear-gradient(135deg, #2e1065 0%, #6d28d9 48%, #1e1b4b 100%)';
+                    }
+                }
+                if (xAvatar) {
+                    setAvatarStyle(xAvatar, myProfileData.avatarUrl, uname);
+                    xAvatar.classList.toggle('akiira-gold-frame', Boolean(isAkiiraAdminIdentity(uname, myProfileData.is_admin) && myProfileData.goldGlowFrame));
+                }
+                if (xDisplayName) {
+                    xDisplayName.innerHTML = `<span>${escapeHtmlText(uname)}</span><span style="color:#a855f7;font-size:15px;">✔</span>`;
+                    if (xBadge) xDisplayName.appendChild(xBadge);
+                }
+                if (xHandle) xHandle.textContent = `@${uname.toLowerCase()}`;
+                if (xBio && myProfileData.bio) {
+                    xBio.innerHTML = formatSafeBioHtml(myProfileData.bio);
+                }
+                if (xBadge) {
+                    xBadge.style.display = isAdminIdentity(uname, myProfileData.is_admin) ? 'inline-flex' : 'none';
+                }
+            }
+
+            function renderXProfileFeed() {
+                if (!xFeedListEl) return;
+                syncXProfileHeader();
+                xFeedListEl.innerHTML = '';
+
+                const filtered = userProfilePosts.filter(p => {
+                    if (activeXSubtab === 'curtidas') return Boolean(p.liked);
+                    if (activeXSubtab === 'midia') return Boolean(p.hasBannerCard || p.imageUrl);
+                    if (activeXSubtab === 'respostas') return p.kind === 'respostas' || p.replies > 0;
+                    return true;
+                });
+
+                if (!filtered.length) {
+                    xFeedListEl.innerHTML = `<div class="kiwi-info-panel-card"><div style="font-weight:700;">Nenhuma publicação nesta aba ainda.</div><div style="font-size:12px;color:var(--kiwi-text-muted);">Clique em <strong>Postar</strong> para publicar algo no seu perfil.</div></div>`;
+                    return;
+                }
+
+                filtered.forEach(post => {
+                    const card = document.createElement('div');
+                    card.className = 'kiwi-x-post-card';
+
+                    const av = document.createElement('div');
+                    av.className = 'avatar';
+                    setAvatarStyle(av, myProfileData.avatarUrl, post.author || activeUsername);
+
+                    const body = document.createElement('div');
+                    body.style.flex = '1';
+                    body.style.minWidth = '0';
+
+                    const head = document.createElement('div');
+                    head.className = 'message-header';
+                    head.innerHTML = `<span class="username">${escapeHtmlText(post.author || activeUsername)}</span><span style="font-size:12px;color:var(--kiwi-text-muted);">${escapeHtmlText(post.handle || '@akiirapw')}</span><span class="timestamp">· ${escapeHtmlText(post.time || 'agora')}</span>`;
+
+                    const txt = document.createElement('div');
+                    txt.className = 'message-text';
+                    txt.textContent = post.text || '';
+
+                    body.appendChild(head);
+                    body.appendChild(txt);
+
+                    if (post.imageUrl && isSafeAssetUrl(post.imageUrl)) {
+                        const img = document.createElement('img');
+                        img.className = 'msg-attachment-img';
+                        img.src = post.imageUrl;
+                        img.alt = 'Imagem da postagem';
+                        img.onclick = () => openImageLightbox(post.imageUrl, 'Postagem');
+                        body.appendChild(img);
+                    } else if (post.hasBannerCard) {
+                        const bannerCard = document.createElement('div');
+                        bannerCard.className = 'kiwi-x-post-media-banner';
+                        if (myProfileData.bannerUrl && isSafeAssetUrl(myProfileData.bannerUrl)) {
+                            bannerCard.style.backgroundImage = `url("${encodeURI(myProfileData.bannerUrl.trim())}")`;
+                        } else {
+                            bannerCard.style.backgroundImage = 'linear-gradient(135deg, #2e1065 0%, #6d28d9 50%, #1e1b4b 100%)';
+                        }
+                        body.appendChild(bannerCard);
+                    }
+
+                    const metrics = document.createElement('div');
+                    metrics.className = 'kiwi-x-post-metrics';
+
+                    const likeBtn = document.createElement('button');
+                    likeBtn.type = 'button';
+                    likeBtn.className = 'kiwi-x-metric-btn' + (post.liked ? ' liked' : '');
+                    likeBtn.textContent = `♥ ${Number(post.likes || 0) + (post.liked ? 1 : 0)}`;
+                    likeBtn.onclick = () => {
+                        post.liked = !post.liked;
+                        writeStorageJson(USER_POSTS_KEY, userProfilePosts);
+                        renderXProfileFeed();
+                    };
+
+                    metrics.innerHTML = `<span>💬 ${post.replies || 0}</span><span>🔁 ${post.reposts || 0}</span>`;
+                    metrics.appendChild(likeBtn);
+                    metrics.insertAdjacentHTML('beforeend', `<span>📊 ${post.views || '1,2 mil'}</span><span>📤</span>`);
+
+                    body.appendChild(metrics);
+                    card.appendChild(av);
+                    card.appendChild(body);
+                    xFeedListEl.appendChild(card);
+                });
+            }
+
+            xSubtabs.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    xSubtabs.forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                    activeXSubtab = btn.getAttribute('data-x-subtab') || 'posts';
+                    renderXProfileFeed();
+                });
+            });
+
+            function showChatLogSurface(showInput = true) {
+                if (profileTimelineView) profileTimelineView.classList.remove('active');
+                if (chatLog) chatLog.style.display = 'flex';
+                if (chatInputAreaEl) chatInputAreaEl.style.display = showInput ? 'block' : 'none';
+            }
+
+            function showProfileTimelineSurface() {
+                if (chatLog) chatLog.style.display = 'none';
+                if (chatInputAreaEl) chatInputAreaEl.style.display = 'none';
+                if (profileTimelineView) {
+                    profileTimelineView.classList.add('active');
+                    renderXProfileFeed();
+                }
+            }
+
+            function renderInfoCardInChatLog(titleHtml, itemsHtml) {
+                showChatLogSurface(false);
+                if (!chatLog) return;
+                chatLog.innerHTML = `
+                    <div class="kiwi-info-panel-card">
+                        <div style="font-size:17px;font-weight:800;">${titleHtml}</div>
+                        <div style="font-size:13px;line-height:1.55;color:var(--kiwi-text-secondary);">${itemsHtml}</div>
+                    </div>
+                `;
+            }
+
+            function activateNavTab(tabKey) {
+                activeNavTab = tabKey;
+                navItems.forEach(btn => {
+                    btn.classList.toggle('active', btn.getAttribute('data-nav-tab') === tabKey);
+                });
+
+                if (tabKey === 'perfil') {
+                    headerMainTitle.textContent = `👤 ${activeUsername || 'AkiiraPW'}`;
+                    headerSubLabel.textContent = '| Perfil';
+                    backToGeralBtn.classList.add('visible');
+                    showProfileTimelineSurface();
+                    return;
+                }
+
+                if (tabKey === 'inicio') {
+                    headerMainTitle.textContent = '🏠 Início';
+                    headerSubLabel.textContent = '| Feed e conversa geral';
+                    backToGeralBtn.classList.remove('visible');
+                    showChatLogSurface(true);
+                    return;
+                }
+
+                if (tabKey === 'explorar') {
+                    headerMainTitle.textContent = '🔍 Explorar Servidores';
+                    headerSubLabel.textContent = '| Pesquise e entre em servidores';
+                    backToGeralBtn.classList.add('visible');
+                    renderInfoCardInChatLog(
+                        '🔍 Explorar Servidores Kiwi',
+                        `
+                        <div style="display:flex;gap:8px;margin-bottom:12px;">
+                            <input id="explore-server-search" type="text" placeholder="Pesquisar servidores..." style="flex:1;padding:8px 12px;border-radius:999px;border:1px solid var(--kiwi-border);background:var(--kiwi-bg-panel);color:var(--kiwi-text-primary);">
+                            <button type="button" id="explore-create-server-shortcut" class="dm-quick-btn">+ Novo Servidor</button>
+                        </div>
+                        <div id="explore-servers-grid" style="display:grid;gap:8px;">
+                            <div class="social-list-item" data-join-srv="kiwi-hub" data-join-name="Kiwi Hub">
+                                <div class="social-avatar">KH</div>
+                                <div style="flex:1;"><div style="font-weight:700;">Kiwi Hub</div><div style="font-size:11px;color:var(--kiwi-text-muted);">Comunidade oficial • geral, música</div></div>
+                                <button type="button" class="dm-quick-btn">Entrar</button>
+                            </div>
+                            <div class="social-list-item" data-join-srv="anime-music" data-join-name="Anime & Lo-Fi">
+                                <div class="social-avatar">AL</div>
+                                <div style="flex:1;"><div style="font-weight:700;">Anime &amp; Lo-Fi</div><div style="font-size:11px;color:var(--kiwi-text-muted);">Trilhas, recomendações e calls</div></div>
+                                <button type="button" class="dm-quick-btn">Entrar</button>
+                            </div>
+                        </div>
+                        `
+                    );
+                    const shortcutBtn = document.getElementById('explore-create-server-shortcut');
+                    if (shortcutBtn && createServerModal) {
+                        shortcutBtn.onclick = () => openModalAnimated(createServerModal);
+                    }
+                    chatLog.querySelectorAll('[data-join-srv]').forEach(row => {
+                        row.onclick = () => {
+                            const sid = row.getAttribute('data-join-srv');
+                            const sname = row.getAttribute('data-join-name');
+                            selectServerInRail(sid, sname, [{ name: 'geral', type: 'text' }, { name: 'música', type: 'audio' }]);
+                            activateNavTab('inicio');
+                            showKiwiToast(`Entrou em ${sname}!`);
+                        };
+                    });
+                    return;
+                }
+
+                if (tabKey === 'notificacoes') {
+                    headerMainTitle.textContent = '🔔 Notificações';
+                    headerSubLabel.textContent = '| Atualizações e pedidos de amizade';
+                    backToGeralBtn.classList.add('visible');
+                    renderInfoCardInChatLog(
+                        '🔔 Notificações — Atualizações & Amizades',
+                        `
+                        <div style="margin-bottom:10px;font-weight:700;color:var(--kiwi-text-primary);">Atualizações recentes</div>
+                        <div>• Perfil no estilo feed com abas Posts, Respostas, Mídia e Curtidas.</div>
+                        <div>• Navegação lateral unificada com Início, Explorar, Notificações, Mensagens, Listas, Perfil, Mais e Postar.</div>
+                        <div style="margin-top:12px;font-weight:700;color:var(--kiwi-text-primary);">Pedidos de amizade</div>
+                        <div id="notif-friend-reqs" style="margin-top:6px;">Nenhum pedido pendente no momento.</div>
+                        `
+                    );
+                    return;
+                }
+
+                if (tabKey === 'mensagens') {
+                    headerMainTitle.textContent = '✉️ Mensagens & Amigos';
+                    headerSubLabel.textContent = '| Selecione um amigo para abrir a DM';
+                    backToGeralBtn.classList.add('visible');
+                    showChatLogSurface(true);
+                    const amigosTabEl = document.querySelector('.social-tab[data-tab="amigos"]');
+                    if (amigosTabEl) amigosTabEl.click();
+                    return;
+                }
+
+                if (tabKey === 'listas') {
+                    headerMainTitle.textContent = '📋 Listas — Guia & Regras';
+                    headerSubLabel.textContent = '| Guia da atualização e regras do site';
+                    backToGeralBtn.classList.add('visible');
+                    renderInfoCardInChatLog(
+                        '📋 Guia da Atualização & Regras do Kiwi',
+                        `
+                        <div style="font-weight:800;color:var(--kiwi-text-primary);margin-bottom:4px;">Guia da Atualização</div>
+                        <div>1. Use <strong>Explorar</strong> para pesquisar ou criar servidores e <strong>Canais</strong> para alternar entre texto e música.</div>
+                        <div>2. Use <strong>Notificações</strong> para acompanhar atualizações e solicitações de amizade.</div>
+                        <div>3. Use <strong>Perfil</strong> para ver seu feed em abas (Posts, Respostas, Mídia, Curtidas) e <strong>Postar</strong> para publicar novas atualizações.</div>
+                        <div style="font-weight:800;color:var(--kiwi-text-primary);margin-top:12px;margin-bottom:4px;">Regras do Site</div>
+                        <div>• Respeite todos os membros nas salas, DMs e chamadas.</div>
+                        <div>• Proibido spam, links maliciosos ou conteúdo impróprio fora das diretrizes da comunidade.</div>
+                        <div>• Mantenha o ambiente organizado e amigável.</div>
+                        `
+                    );
+                    return;
+                }
+
+                if (tabKey === 'mais') {
+                    headerMainTitle.textContent = '••• Mais & Configurações';
+                    headerSubLabel.textContent = '| Aparência, temas e preferências';
+                    backToGeralBtn.classList.add('visible');
+                    if (settingsColorsModal) {
+                        syncAdminVisualRestrictions();
+                        openModalAnimated(settingsColorsModal);
+                    }
+                }
+            }
+
+            navItems.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const tabKey = btn.getAttribute('data-nav-tab');
+                    if (tabKey) activateNavTab(tabKey);
+                });
+            });
+
+            // Botão Postar e modal de nova postagem
+            const createPostModal = document.getElementById('create-post-modal');
+            const navOpenPostModalBtn = document.getElementById('nav-open-post-modal-btn');
+            const closeCreatePostBtn = document.getElementById('close-create-post-btn');
+            const createPostForm = document.getElementById('create-post-form');
+
+            if (navOpenPostModalBtn && createPostModal) {
+                navOpenPostModalBtn.addEventListener('click', () => openModalAnimated(createPostModal));
+            }
+            if (closeCreatePostBtn && createPostModal) {
+                closeCreatePostBtn.addEventListener('click', () => closeModalAnimated(createPostModal));
+            }
+            if (createPostModal) {
+                createPostModal.addEventListener('click', (e) => {
+                    if (e.target === createPostModal) closeModalAnimated(createPostModal);
+                });
+            }
+            if (createPostForm) {
+                createPostForm.addEventListener('submit', (e) => {
+                    e.preventDefault();
+                    const textInp = document.getElementById('new-post-text');
+                    const imgInp = document.getElementById('new-post-image-url');
+                    const postContent = (textInp && textInp.value.trim()) || '';
+                    if (!postContent) return;
+                    const imgUrl = (imgInp && imgInp.value.trim()) || '';
+
+                    userProfilePosts.unshift({
+                        id: 'p-' + Date.now().toString(36),
+                        author: activeUsername || 'AkiiraPW',
+                        handle: `@${(activeUsername || 'AkiiraPW').toLowerCase()}`,
+                        time: 'agora',
+                        text: postContent,
+                        imageUrl: imgUrl,
+                        hasBannerCard: false,
+                        kind: 'posts',
+                        replies: 0,
+                        reposts: 0,
+                        likes: 0,
+                        views: '1',
+                        liked: false
+                    });
+                    writeStorageJson(USER_POSTS_KEY, userProfilePosts);
+                    if (textInp) textInp.value = '';
+                    if (imgInp) imgInp.value = '';
+                    closeModalAnimated(createPostModal);
+                    activateNavTab('perfil');
+                    showKiwiToast('Postagem publicada no seu perfil!');
+                });
+            }
+
+            // Ações do topo do perfil estilo X
+            const kiwiXBackBtn = document.getElementById('kiwi-x-back-btn');
+            const kiwiXEditBtn = document.getElementById('kiwi-x-edit-profile-btn');
+            const kiwiXFollowBtn = document.getElementById('kiwi-x-follow-btn');
+            const kiwiXDmBtn = document.getElementById('kiwi-x-dm-btn');
+            const kiwiXMoreBtn = document.getElementById('kiwi-x-more-btn');
+
+            if (kiwiXBackBtn) kiwiXBackBtn.addEventListener('click', () => activateNavTab('inicio'));
+            if (kiwiXEditBtn) kiwiXEditBtn.addEventListener('click', () => switchToEditBtn.click());
+            if (kiwiXFollowBtn) {
+                kiwiXFollowBtn.addEventListener('click', () => {
+                    const isNowFollowing = kiwiXFollowBtn.classList.toggle('following');
+                    kiwiXFollowBtn.textContent = isNowFollowing ? 'Seguindo' : 'Seguir';
+                    showKiwiToast(isNowFollowing ? 'Agora você está seguindo!' : 'Deixou de seguir.');
+                });
+            }
+            if (kiwiXDmBtn) kiwiXDmBtn.addEventListener('click', () => activateNavTab('mensagens'));
+            if (kiwiXMoreBtn) kiwiXMoreBtn.addEventListener('click', () => openUserProfile(activeUsername));
+
+            // Sidebar direita estilo imagem 4 ("Quem seguir" e "Assuntos do momento")
+            const sidebarRightEl = document.querySelector('.sidebar-right');
+            if (sidebarRightEl && socialContentContainer) {
+                const extraRightBox = document.createElement('div');
+                extraRightBox.style.cssText = 'display:flex;flex-direction:column;gap:12px;margin-top:4px;';
+                extraRightBox.innerHTML = `
+                    <div class="kiwi-right-search-wrap">
+                        <span class="kiwi-right-search-icon">🔍</span>
+                        <input type="text" id="kiwi-right-search-input" class="kiwi-right-search-input" placeholder="Buscar no Kiwi...">
+                    </div>
+                    <div class="kiwi-right-widget-card">
+                        <div class="kiwi-right-widget-header">
+                            <span class="kiwi-right-widget-title">Quem seguir</span>
+                            <button type="button" class="kiwi-right-widget-link" id="right-ver-mais-follow">Ver mais →</button>
+                        </div>
+                        <div class="kiwi-follow-row">
+                            <div style="display:flex;align-items:center;gap:8px;min-width:0;">
+                                <div class="social-avatar" style="background:#5865f2;">H</div>
+                                <div style="min-width:0;"><div style="font-size:13px;font-weight:700;">Hollow29</div><div style="font-size:11px;color:var(--kiwi-text-muted);">@Hollow29</div></div>
+                            </div>
+                            <button type="button" class="kiwi-follow-pill-btn" data-follow-user="Hollow29">Seguir</button>
+                        </div>
+                        <div class="kiwi-follow-row">
+                            <div style="display:flex;align-items:center;gap:8px;min-width:0;">
+                                <div class="social-avatar">A</div>
+                                <div style="min-width:0;"><div style="font-size:13px;font-weight:700;">AkiiraPW</div><div style="font-size:11px;color:var(--kiwi-text-muted);">@AkiiraPW</div></div>
+                            </div>
+                            <button type="button" class="kiwi-follow-pill-btn" data-follow-user="AkiiraPW">Seguir</button>
+                        </div>
+                        <div class="kiwi-follow-row">
+                            <div style="display:flex;align-items:center;gap:8px;min-width:0;">
+                                <div class="social-avatar" style="background:#7c3aed;">L</div>
+                                <div style="min-width:0;"><div style="font-size:13px;font-weight:700;">Lunaria</div><div style="font-size:11px;color:var(--kiwi-text-muted);">@lunari4x</div></div>
+                            </div>
+                            <button type="button" class="kiwi-follow-pill-btn" data-follow-user="Lunaria">Seguir</button>
+                        </div>
+                    </div>
+                    <div class="kiwi-right-widget-card">
+                        <div class="kiwi-right-widget-header">
+                            <span class="kiwi-right-widget-title">Assuntos do momento</span>
+                            <button type="button" class="kiwi-right-widget-link" id="right-ver-mais-trends">Ver mais →</button>
+                        </div>
+                        <div class="kiwi-trend-row"><span class="kiwi-trend-sub">1. Assunto em alta</span><span class="kiwi-trend-tag">#KiwiUpdate</span><span class="kiwi-trend-sub">12,4 mil posts</span></div>
+                        <div class="kiwi-trend-row"><span class="kiwi-trend-sub">2. Assunto em alta</span><span class="kiwi-trend-tag">#Anime</span><span class="kiwi-trend-sub">89,7 mil posts</span></div>
+                        <div class="kiwi-trend-row"><span class="kiwi-trend-sub">3. Assunto em alta</span><span class="kiwi-trend-tag">#Gaming</span><span class="kiwi-trend-sub">57,3 mil posts</span></div>
+                        <div class="kiwi-trend-row"><span class="kiwi-trend-sub">4. Assunto em alta</span><span class="kiwi-trend-tag">#Minecraft</span><span class="kiwi-trend-sub">32,1 mil posts</span></div>
+                    </div>
+                `;
+                const artCard = sidebarRightEl.querySelector('.sidebar-artwork-card');
+                if (artCard) sidebarRightEl.insertBefore(extraRightBox, artCard);
+                else sidebarRightEl.appendChild(extraRightBox);
+
+                extraRightBox.querySelectorAll('[data-follow-user]').forEach(btn => {
+                    btn.addEventListener('click', () => {
+                        const target = btn.getAttribute('data-follow-user');
+                        const following = btn.classList.toggle('is-following');
+                        btn.textContent = following ? 'Seguindo' : 'Seguir';
+                        if (following && target) addFriendByName(target);
+                    });
+                });
+
+                const verMaisFollow = document.getElementById('right-ver-mais-follow');
+                if (verMaisFollow) verMaisFollow.addEventListener('click', () => activateNavTab('mensagens'));
+                const verMaisTrends = document.getElementById('right-ver-mais-trends');
+                if (verMaisTrends) verMaisTrends.addEventListener('click', () => activateNavTab('explorar'));
+            }
+
+            // Ao abrir DM ou canal de chat, exibir a área de chat e input
+            const origOpenPrivateChat = window.openPrivateChat;
+            window.openPrivateChat = function(targetUsername) {
+                showChatLogSurface(true);
+                navItems.forEach(btn => btn.classList.toggle('active', btn.getAttribute('data-nav-tab') === 'mensagens'));
+                origOpenPrivateChat(targetUsername);
+            };
+
+            const origSwitchToServerChannel = switchToServerChannel;
+            switchToServerChannel = function(channelName, channelType = 'text') {
+                showChatLogSurface(true);
+                origSwitchToServerChannel(channelName, channelType);
+            };
+
+            activateNavTab('perfil');
 
             fetchOnlineUsers();
             renderSidebarSavedFriends();
