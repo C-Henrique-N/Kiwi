@@ -3111,8 +3111,7 @@
                 </button>
             </div>
 
-            <form id="edit-profile-form" enctype="multipart/form-data">
-                {% csrf_token %}
+            <form id="edit-profile-form">
                 <div class="kiwi-editor-grid">
                     <div class="kiwi-editor-col-left">
                         <div class="kiwi-preview-media-box">
@@ -3224,12 +3223,12 @@
                             <button type="button" id="editor-dismiss-privacy-btn" style="background:none; border:none; color:var(--text-main); font-size:15px; font-weight:bold; cursor:pointer; line-height:1;" title="Fechar aviso">×</button>
                         </div>
 
-                        <div class="form-group" style="position:absolute; width:1px; height:1px; overflow:hidden; opacity:0; pointer-events:none;">
-                            <label for="edit-avatar-file">Selecionar Foto de Perfil</label>
+                        <div class="form-group" style="display:none;">
+                            <label>Selecionar Foto de Perfil</label>
                             <input type="file" name="avatar" id="edit-avatar-file" accept="image/*">
                         </div>
-                        <div class="form-group" style="position:absolute; width:1px; height:1px; overflow:hidden; opacity:0; pointer-events:none;">
-                            <label for="edit-banner-file">Selecionar Banner</label>
+                        <div class="form-group" style="display:none;">
+                            <label>Selecionar Banner</label>
                             <input type="file" name="banner" id="edit-banner-file" accept="image/*">
                         </div>
 
@@ -5583,103 +5582,92 @@
 
             editProfileForm.addEventListener('submit', async function(e) {
                 e.preventDefault();
-                const saveBtn = document.getElementById('save-profile-btn');
-                if (saveBtn) {
-                    saveBtn.disabled = true;
-                    saveBtn.textContent = '⏳ Salvando...';
+                const formData = new FormData(editProfileForm);
+                const typedUsername = (editUsernameInput && editUsernameInput.value.trim()) || '';
+                const previousUsername = activeUsername;
+
+                if (typedUsername) {
+                    activeUsername = typedUsername;
+                    try { localStorage.setItem(USERNAME_STORAGE_KEY, activeUsername); } catch (_) {}
                 }
 
-                try {
-                    const formData = new FormData(editProfileForm);
-                    const typedUsername = (editUsernameInput && editUsernameInput.value.trim()) || '';
-                    const previousUsername = activeUsername;
+                const canGold = isAdminIdentity(activeUsername, myProfileData.is_admin);
+                const isAkiira = isAkiiraAdminIdentity(activeUsername, myProfileData.is_admin);
+                const goldChecked = canGold && Boolean(editGoldCheckbox && editGoldCheckbox.checked);
 
-                    if (typedUsername) {
-                        activeUsername = typedUsername;
-                        try { localStorage.setItem(USERNAME_STORAGE_KEY, activeUsername); } catch (_) {}
+                myProfileData.username = activeUsername;
+                myProfileData.bubble = formData.get('bubble') || '';
+                myProfileData.pronouns = formData.get('pronouns') || '';
+                myProfileData.bio = formData.get('bio') || '';
+                myProfileData.song = formData.get('spotify_song') || '';
+                myProfileData.artist = formData.get('spotify_artist') || '';
+                myProfileData.musicUrl = (formData.get('music_url') || '').trim();
+                myProfileData.goldProfileBg = goldChecked;
+                myProfileData.goldGlowFrame = isAkiira && Boolean(myProfileData.goldGlowFrame);
+                myProfileData.profileGlow = isAkiira && Boolean(myProfileData.profileGlow);
+
+                const typedAudioUrl = (formData.get('music_audio_url') || '').trim();
+                const localAudioFile = editLocalAudioFile && editLocalAudioFile.files && editLocalAudioFile.files[0];
+                if (localAudioFile) {
+                    try {
+                        myProfileData.audioSrc = await readFileAsDataUrl(localAudioFile);
+                    } catch (_) {
+                        myProfileData.audioSrc = URL.createObjectURL(localAudioFile);
                     }
+                    myProfileData.audioFileName = localAudioFile.name;
+                } else {
+                    myProfileData.audioSrc = typedAudioUrl;
+                    myProfileData.audioFileName = '';
+                }
 
-                    const canGold = isAdminIdentity(activeUsername, myProfileData.is_admin);
-                    const isAkiira = isAkiiraAdminIdentity(activeUsername, myProfileData.is_admin);
-                    const goldChecked = canGold && Boolean(editGoldCheckbox && editGoldCheckbox.checked);
-
-                    myProfileData.username = activeUsername;
-                    myProfileData.bubble = formData.get('bubble') || '';
-                    myProfileData.pronouns = formData.get('pronouns') || '';
-                    myProfileData.bio = formData.get('bio') || '';
-                    myProfileData.song = formData.get('spotify_song') || '';
-                    myProfileData.artist = formData.get('spotify_artist') || '';
-                    myProfileData.musicUrl = (formData.get('music_url') || '').trim();
-                    myProfileData.goldProfileBg = goldChecked;
-                    myProfileData.goldGlowFrame = isAkiira && Boolean(myProfileData.goldGlowFrame);
-                    myProfileData.profileGlow = isAkiira && Boolean(myProfileData.profileGlow);
-
-                    const typedAudioUrl = (formData.get('music_audio_url') || '').trim();
-                    const localAudioFile = editLocalAudioFile && editLocalAudioFile.files && editLocalAudioFile.files[0];
-                    if (localAudioFile) {
-                        try {
-                            myProfileData.audioSrc = await readFileAsDataUrl(localAudioFile);
-                        } catch (_) {
-                            myProfileData.audioSrc = URL.createObjectURL(localAudioFile);
-                        }
-                        myProfileData.audioFileName = localAudioFile.name;
-                    } else {
-                        myProfileData.audioSrc = typedAudioUrl;
-                        myProfileData.audioFileName = '';
+                const typedCoverUrl = (formData.get('music_cover_url') || '').trim();
+                const coverFile = editMusicCoverFile && editMusicCoverFile.files && editMusicCoverFile.files[0];
+                if (coverFile) {
+                    try {
+                        myProfileData.coverUrl = await readFileAsDataUrl(coverFile);
+                    } catch (_) {
+                        myProfileData.coverUrl = URL.createObjectURL(coverFile);
                     }
+                } else {
+                    myProfileData.coverUrl = typedCoverUrl;
+                }
 
-                    const typedCoverUrl = (formData.get('music_cover_url') || '').trim();
-                    const coverFile = editMusicCoverFile && editMusicCoverFile.files && editMusicCoverFile.files[0];
-                    if (coverFile) {
-                        try {
-                            myProfileData.coverUrl = await readFileAsDataUrl(coverFile);
-                        } catch (_) {
-                            myProfileData.coverUrl = URL.createObjectURL(coverFile);
-                        }
-                    } else {
-                        myProfileData.coverUrl = typedCoverUrl;
+                const avatarFile = editAvatarFileInput && editAvatarFileInput.files && editAvatarFileInput.files[0];
+                if (avatarFile) {
+                    try {
+                        myProfileData.avatarUrl = await readFileAsDataUrl(avatarFile);
+                    } catch (_) {
+                        myProfileData.avatarUrl = URL.createObjectURL(avatarFile);
                     }
+                } else if (tempEditorAvatarUrl) {
+                    myProfileData.avatarUrl = tempEditorAvatarUrl;
+                }
 
-                    const avatarFile = editAvatarFileInput && editAvatarFileInput.files && editAvatarFileInput.files[0];
-                    if (avatarFile) {
-                        try {
-                            myProfileData.avatarUrl = await readFileAsDataUrl(avatarFile);
-                        } catch (_) {
-                            myProfileData.avatarUrl = URL.createObjectURL(avatarFile);
-                        }
-                    } else if (tempEditorAvatarUrl) {
-                        myProfileData.avatarUrl = tempEditorAvatarUrl;
+                const bannerFile = editBannerFileInput && editBannerFileInput.files && editBannerFileInput.files[0];
+                if (bannerFile) {
+                    try {
+                        myProfileData.bannerUrl = await readFileAsDataUrl(bannerFile);
+                    } catch (_) {
+                        myProfileData.bannerUrl = URL.createObjectURL(bannerFile);
                     }
+                } else if (tempEditorBannerUrl) {
+                    myProfileData.bannerUrl = tempEditorBannerUrl;
+                }
 
-                    const bannerFile = editBannerFileInput && editBannerFileInput.files && editBannerFileInput.files[0];
-                    if (bannerFile) {
-                        try {
-                            myProfileData.bannerUrl = await readFileAsDataUrl(bannerFile);
-                        } catch (_) {
-                            myProfileData.bannerUrl = URL.createObjectURL(bannerFile);
-                        }
-                    } else if (tempEditorBannerUrl) {
-                        myProfileData.bannerUrl = tempEditorBannerUrl;
-                    }
+                if (previousUsername && previousUsername.toLowerCase() !== activeUsername.toLowerCase()) {
+                    profilesByUsername.delete(previousUsername.toLowerCase());
+                }
+                profilesByUsername.set(activeUsername.toLowerCase(), { ...myProfileData });
+                saveUserMusicToLocalCache(activeUsername, myProfileData);
+                updateMySidebarUI();
+                closeModalAnimated(editModal);
+                showKiwiToast('Perfil atualizado!');
 
-                    if (window.location.protocol !== 'file:') {
-                        const csrfInput = editProfileForm.querySelector('[name=csrfmiddlewaretoken]');
-                        const csrfToken = (csrfInput && csrfInput.value) || (window.KiwiClient && window.KiwiClient.getCsrfToken()) || '';
-
-                        const res = await fetch('/api/profile/update/', {
-                            method: 'POST',
-                            headers: csrfToken ? { 'X-CSRFToken': csrfToken } : {},
-                            body: formData,
-                            credentials: 'same-origin'
-                        });
-
-                        if (!res.ok) {
-                            throw new Error(`HTTP ${res.status}`);
-                        }
-
-                        const data = await res.json().catch(() => ({}));
-                        if (data && typeof data === 'object') {
-                            const norm = window.KiwiClient ? window.KiwiClient.normalizeProfilePayload(data, myProfileData) : data;
+                if (window.location.protocol !== 'file:' && window.KiwiClient) {
+                    window.KiwiClient.submitProfileUpdate(formData, '/api/profile/update/')
+                        .then(data => {
+                            if (!data || typeof data !== 'object') return;
+                            const norm = window.KiwiClient.normalizeProfilePayload(data, myProfileData);
                             if (norm.username) {
                                 activeUsername = norm.username;
                                 myProfileData.username = norm.username;
@@ -5689,25 +5677,11 @@
                             if (norm.bannerUrl) myProfileData.bannerUrl = norm.bannerUrl;
                             if (norm.audioSrc) myProfileData.audioSrc = norm.audioSrc;
                             if (norm.coverUrl) myProfileData.coverUrl = norm.coverUrl;
-                        }
-                    }
-
-                    if (previousUsername && previousUsername.toLowerCase() !== activeUsername.toLowerCase()) {
-                        profilesByUsername.delete(previousUsername.toLowerCase());
-                    }
-                    profilesByUsername.set(activeUsername.toLowerCase(), { ...myProfileData });
-                    saveUserMusicToLocalCache(activeUsername, myProfileData);
-                    updateMySidebarUI();
-                    closeModalAnimated(editModal);
-                    showKiwiToast('✅ Perfil atualizado e salvo!');
-                } catch (err) {
-                    console.error('[Kiwi] Erro ao salvar perfil:', err);
-                    showKiwiToast('⚠️ Erro ao salvar no servidor. Tente novamente.');
-                } finally {
-                    if (saveBtn) {
-                        saveBtn.disabled = false;
-                        saveBtn.textContent = '💾 Guardar';
-                    }
+                            profilesByUsername.set(activeUsername.toLowerCase(), { ...myProfileData });
+                            saveUserMusicToLocalCache(activeUsername, myProfileData);
+                            updateMySidebarUI();
+                        })
+                        .catch(() => {});
                 }
             });
 
@@ -6451,24 +6425,6 @@
                     createChannelForm.reset();
                     switchToServerChannel(chName, chType);
                     showKiwiToast(`Canal "${chName}" criado!`);
-                });
-            }
-
-            const addFriendModal = document.getElementById('add-friend-modal');
-            const closeAddFriendBtn = document.getElementById('close-add-friend-btn');
-            const openAddFriendBtn = document.getElementById('open-add-friend-btn');
-            const sidebarSearchFriendBtn = document.getElementById('sidebar-search-friend-btn');
-
-            window.openAddFriendModal = function() {
-                if (addFriendModal) openModalAnimated(addFriendModal);
-            };
-
-            if (openAddFriendBtn) openAddFriendBtn.addEventListener('click', window.openAddFriendModal);
-            if (sidebarSearchFriendBtn) sidebarSearchFriendBtn.addEventListener('click', window.openAddFriendModal);
-            if (closeAddFriendBtn && addFriendModal) {
-                closeAddFriendBtn.addEventListener('click', () => closeModalAnimated(addFriendModal));
-                addFriendModal.addEventListener('click', (e) => {
-                    if (e.target === addFriendModal) closeModalAnimated(addFriendModal);
                 });
             }
 
