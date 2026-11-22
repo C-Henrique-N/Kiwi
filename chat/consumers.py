@@ -29,6 +29,14 @@ def get_display_name_and_avatar(user):
     return display_name, avatar_url
 
 
+def _format_time(msg):
+    dt = getattr(msg, "timestamp", None) or getattr(msg, "created_at", None)
+    if not dt:
+        return ""
+    local_dt = timezone.localtime(dt) if timezone.is_aware(dt) else dt
+    return local_dt.strftime("%H:%M")
+
+
 class ChatConsumer(AsyncWebsocketConsumer):
     async def connect(self):
         self.user = self.scope.get("user")
@@ -176,14 +184,14 @@ class ChatConsumer(AsyncWebsocketConsumer):
         channel = Channel.objects.filter(id=channel_id).first()
         if not channel:
             return []
-        qs = (
+        recent_desc = list(
             Message.objects.filter(channel=channel)
             .select_related("user")
             .prefetch_related("reactions", "reactions__user")
             .order_by("-timestamp", "-id")[:50]
         )
         result = []
-        for msg in reversed(list(qs)):
+        for msg in reversed(recent_desc):
             display_name, avatar_url = get_display_name_and_avatar(msg.user)
 
             att_url = ""
@@ -201,8 +209,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
                 entry["count"] += 1
                 entry["users"].append(r.user.username)
 
-            created_dt = getattr(msg, "timestamp", None) or getattr(msg, "created_at", None)
-            ts = timezone.localtime(created_dt).strftime("%H:%M") if created_dt else ""
+            ts = _format_time(msg)
             result.append({
                 "id": msg.id,
                 "client_id": msg.client_id or "",
@@ -259,8 +266,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
         elif attachment_url and not attachment_url.startswith("blob:"):
             att_final_url = attachment_url
 
-        created_dt = getattr(msg, "timestamp", None) or getattr(msg, "created_at", None)
-        ts = timezone.localtime(created_dt).strftime("%H:%M") if created_dt else ""
+        ts = _format_time(msg)
         return {
             "id": msg.id,
             "client_id": msg.client_id or "",
@@ -367,7 +373,7 @@ class DMConsumer(AsyncWebsocketConsumer):
 
             payload = await self._save_dm(
                 sender=self.user,
-                recipient=self.target_user,
+                receiver=self.target_user,
                 text=text,
                 attachment_url=attachment_url,
                 attachment_name=attachment_name,
@@ -409,15 +415,15 @@ class DMConsumer(AsyncWebsocketConsumer):
 
     @database_sync_to_async
     def _get_dm_history(self, u1, u2):
-        qs = (
+        recent_desc = list(
             DirectMessage.objects.filter(
-                Q(sender=u1, recipient=u2) | Q(sender=u2, recipient=u1)
+                Q(sender=u1, receiver=u2) | Q(sender=u2, receiver=u1)
             )
-            .select_related("sender", "recipient")
-            .order_by("timestamp", "id")[:60]
+            .select_related("sender", "receiver")
+            .order_by("-timestamp", "-id")[:60]
         )
         items = []
-        for dm in qs:
+        for dm in reversed(recent_desc):
             display_name, avatar_url = get_display_name_and_avatar(dm.sender)
             att_url = ""
             att_name = ""
@@ -427,13 +433,13 @@ class DMConsumer(AsyncWebsocketConsumer):
                     att_name = dm.attachment.name.split("/")[-1]
                 except Exception:
                     att_url = ""
-            created_dt = getattr(dm, "timestamp", None) or getattr(dm, "created_at", None)
-            ts = timezone.localtime(created_dt).strftime("%H:%M") if created_dt else ""
+            ts = _format_time(dm)
             items.append({
                 "id": dm.id,
                 "client_id": dm.client_id or "",
                 "sender": dm.sender.username,
-                "recipient": dm.recipient.username,
+                "receiver": dm.receiver.username,
+                "recipient": dm.receiver.username,
                 "display_name": display_name,
                 "avatar_url": avatar_url,
                 "message": dm.content or "",
@@ -450,7 +456,7 @@ class DMConsumer(AsyncWebsocketConsumer):
     def _save_dm(
         self,
         sender,
-        recipient,
+        receiver,
         text,
         attachment_url="",
         attachment_name="",
@@ -459,7 +465,7 @@ class DMConsumer(AsyncWebsocketConsumer):
     ):
         dm = DirectMessage.objects.create(
             sender=sender,
-            recipient=recipient,
+            receiver=receiver,
             content=(text or "")[:2000],
             attachment_type=(attachment_type or "")[:20],
             client_id=client_id,
@@ -480,13 +486,13 @@ class DMConsumer(AsyncWebsocketConsumer):
         elif attachment_url and not attachment_url.startswith("blob:"):
             att_final_url = attachment_url
 
-        created_dt = getattr(dm, "timestamp", None) or getattr(dm, "created_at", None)
-        ts = timezone.localtime(created_dt).strftime("%H:%M") if created_dt else ""
+        ts = _format_time(dm)
         return {
             "id": dm.id,
             "client_id": dm.client_id or "",
             "sender": sender.username,
-            "recipient": recipient.username,
+            "receiver": receiver.username,
+            "recipient": receiver.username,
             "display_name": display_name,
             "avatar_url": avatar_url,
             "message": dm.content or "",
