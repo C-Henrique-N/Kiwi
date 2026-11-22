@@ -13,6 +13,12 @@ def build_user_personal_group_name(username):
     return f"kiwi_user_{clean}"
 
 
+def _safe_display_name(profile, fallback_username):
+    if not profile:
+        return fallback_username
+    return (getattr(profile, "display_name", "") or "").strip() or fallback_username
+
+
 class ChatConsumer(AsyncWebsocketConsumer):
     async def connect(self):
         self.user = self.scope.get("user")
@@ -148,9 +154,8 @@ class ChatConsumer(AsyncWebsocketConsumer):
         for msg in reversed(list(qs)):
             p = getattr(msg.user, "profile", None)
             avatar_url = ""
-            display_name = msg.user.username
+            display_name = _safe_display_name(p, msg.user.username)
             if p:
-                display_name = (p.display_name or "").strip() or msg.user.username
                 try:
                     avatar_url = p.avatar.url if p.avatar else ""
                 except Exception:
@@ -232,7 +237,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
             "id": msg.id,
             "channel_id": channel.id,
             "sender": user.username,
-            "display_name": (p.display_name or "").strip() or user.username,
+            "display_name": _safe_display_name(p, user.username),
             "avatar_url": avatar_url,
             "message": msg.content or "",
             "text": msg.content or "",
@@ -381,9 +386,8 @@ class DMConsumer(AsyncWebsocketConsumer):
         for dm in qs:
             p = getattr(dm.sender, "profile", None)
             avatar_url = ""
-            display_name = dm.sender.username
+            display_name = _safe_display_name(p, dm.sender.username)
             if p:
-                display_name = (p.display_name or "").strip() or dm.sender.username
                 try:
                     avatar_url = p.avatar.url if p.avatar else ""
                 except Exception:
@@ -443,7 +447,7 @@ class DMConsumer(AsyncWebsocketConsumer):
             "id": dm.id,
             "sender": sender.username,
             "recipient": recipient.username,
-            "display_name": (p.display_name or "").strip() or sender.username,
+            "display_name": _safe_display_name(p, sender.username),
             "avatar_url": avatar_url,
             "message": dm.content or "",
             "text": dm.content or "",
