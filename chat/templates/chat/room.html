@@ -5,6 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <meta name="theme-color" content="#0b0714">
+    <meta name="csrf-token" content="">
     <title>🥝 Kiwi Chat</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -1030,8 +1031,8 @@ body {
             </div>
 
             <div class="chat-input-area" id="chat-input-area" style="display:none;">
-                <div id="attachment-preview-bar">
-                    <img id="attachment-preview-img" src="" alt="Prévia">
+                <div id="attachment-preview-bar" style="display:none;">
+                    <img id="attachment-preview-img" src="" alt="Prévia" style="display:none;">
                     <div id="attachment-preview-badge">📄</div>
                     <span id="attachment-preview-name"></span>
                     <button type="button" id="clear-attachment-btn" title="Remover anexo">✕</button>
@@ -1334,31 +1335,31 @@ body {
                             </div>
 
                             <div class="form-group">
-                                <label>Selecionar Foto de Perfil</label>
+                                <label for="edit-avatar-file">Selecionar Foto de Perfil</label>
                                 <input type="file" name="avatar" id="edit-avatar-file" accept="image/*">
                             </div>
                             <div class="form-group">
-                                <label>Selecionar / Enviar Banner</label>
+                                <label for="edit-banner-file">Selecionar / Enviar Banner</label>
                                 <input type="file" name="banner" id="edit-banner-file" accept="image/*">
                             </div>
 
                             <div class="form-group">
-                                <label>Nome de Usuário (Exibição)</label>
+                                <label for="edit-username">Nome de Usuário (Exibição)</label>
                                 <input type="text" name="username" id="edit-username" value="" maxlength="32" placeholder="Seu nome de usuário">
                             </div>
                             <div class="kiwi-editor-two-col-fields">
                                 <div class="form-group">
-                                    <label>Frase do Balão (Status)</label>
+                                    <label for="edit-bubble">Frase do Balão (Status)</label>
                                     <input type="text" name="bubble" id="edit-bubble" value="" placeholder="Ex.: 🌸 online">
                                 </div>
                                 <div class="form-group">
-                                    <label>Pronomes / Tags</label>
+                                    <label for="edit-pronouns">Pronomes / Tags</label>
                                     <input type="text" name="pronouns" id="edit-pronouns" value="" placeholder="Ex.: ele/he • 🥝">
                                 </div>
                             </div>
 
                             <div class="form-group">
-                                <label>Bio</label>
+                                <label for="edit-bio">Bio</label>
                                 <textarea name="bio" id="edit-bio" rows="3" placeholder="Escreva algo sobre você..."></textarea>
                             </div>
                             <div class="form-group">
@@ -1368,7 +1369,7 @@ body {
 
                             <div class="form-group" style="position: relative;">
                                 <div style="display:flex; justify-content:space-between; align-items:center; gap:8px;">
-                                    <label style="margin:0;">Música a ouvir (nome da faixa)</label>
+                                    <label for="edit-spotify-song" style="margin:0;">Música a ouvir (nome da faixa)</label>
                                     <button type="button" id="open-music-box-btn" class="kiwi-saved-music-pill-btn">
                                         🎵 Músicas salvas
                                     </button>
@@ -1382,13 +1383,13 @@ body {
                                     </div>
 
                                     <div id="quick-add-music-form" style="display:none; background:#232429; padding:8px; border-radius:8px; margin-bottom:8px;">
-                                        <input type="text" id="qm-title" placeholder="Nome da música" style="width:100%; margin-bottom:6px; padding:6px; font-size:12px;">
-                                        <input type="text" id="qm-artist" placeholder="Artista" style="width:100%; margin-bottom:6px; padding:6px; font-size:12px;">
-                                        <input type="text" id="qm-audio-url" placeholder="URL do áudio (.mp3/.ogg) opcional" style="width:100%; margin-bottom:6px; padding:6px; font-size:12px;">
-                                        <input type="text" id="qm-cover-url" placeholder="URL da capa (foto) opcional" style="width:100%; margin-bottom:6px; padding:6px; font-size:12px;">
-                                        <label style="font-size:11px; display:block; margin-bottom:2px;">MP3 / Áudio (arquivo)</label>
+                                        <input type="text" id="qm-title" placeholder="Nome da música" aria-label="Nome da música" style="width:100%; margin-bottom:6px; padding:6px; font-size:12px;">
+                                        <input type="text" id="qm-artist" placeholder="Artista" aria-label="Artista" style="width:100%; margin-bottom:6px; padding:6px; font-size:12px;">
+                                        <input type="text" id="qm-audio-url" placeholder="URL do áudio (.mp3/.ogg) opcional" aria-label="URL do áudio" style="width:100%; margin-bottom:6px; padding:6px; font-size:12px;">
+                                        <input type="text" id="qm-cover-url" placeholder="URL da capa (foto) opcional" aria-label="URL da capa" style="width:100%; margin-bottom:6px; padding:6px; font-size:12px;">
+                                        <label for="qm-audio-file" style="font-size:11px; display:block; margin-bottom:2px;">MP3 / Áudio (arquivo)</label>
                                         <input type="file" id="qm-audio-file" accept="audio/*" style="width:100%; margin-bottom:6px; font-size:11px;">
-                                        <label style="font-size:11px; display:block; margin-bottom:2px;">Capa (arquivo)</label>
+                                        <label for="qm-cover-file" style="font-size:11px; display:block; margin-bottom:2px;">Capa (arquivo)</label>
                                         <input type="file" id="qm-cover-file" accept="image/*" style="width:100%; margin-bottom:6px; font-size:11px;">
                                         <button type="button" id="qm-save-btn" style="width:100%; background:#22c55e; color:#fff; border:none; border-radius:6px; padding:7px; font-size:12px; font-weight:bold; cursor:pointer;">
                                             Guardar música
@@ -1403,11 +1404,11 @@ body {
 
                             <div class="kiwi-editor-two-col-fields">
                                 <div class="form-group">
-                                    <label>Artista</label>
+                                    <label for="edit-spotify-artist">Artista</label>
                                     <input type="text" name="spotify_artist" id="edit-spotify-artist" value="" placeholder="Nome do artista">
                                 </div>
                                 <div class="form-group">
-                                    <label>Link do YouTube ou Spotify (música)</label>
+                                    <label for="edit-yt-url">Link do YouTube ou Spotify (música)</label>
                                     <input type="url" name="music_url" id="edit-yt-url" placeholder="https://www.youtube.com/watch?v=... ou https://open.spotify.com/...">
                                 </div>
                             </div>
@@ -1423,7 +1424,7 @@ body {
                                     </div>
                                 </div>
                                 <div class="form-group">
-                                    <label>Colar link direto do som (.mp3, .ogg, .wav, etc.)</label>
+                                    <label for="edit-local-audio-url">Colar link direto do som (.mp3, .ogg, .wav, etc.)</label>
                                     <input type="text" name="music_audio_url" id="edit-local-audio-url" placeholder="https://.../som.mp3">
                                 </div>
                             </div>
@@ -1444,7 +1445,7 @@ body {
                                     </div>
                                 </div>
                                 <div class="form-group">
-                                    <label>Ou URL da foto da capa</label>
+                                    <label for="edit-music-cover-url">Ou URL da foto da capa</label>
                                     <input type="text" name="music_cover_url" id="edit-music-cover-url" placeholder="https://...">
                                 </div>
                             </div>
@@ -1970,9 +1971,12 @@ body {
             const recordAudioBtn = document.getElementById('record-audio-btn');
 
             const previewBar = document.getElementById('attachment-preview-bar');
+            const previewImg = document.getElementById('attachment-preview-img');
+            const previewBadge = document.getElementById('attachment-preview-badge');
             const previewName = document.getElementById('attachment-preview-name');
             const clearAttachmentBtn = document.getElementById('clear-attachment-btn');
             let pendingAttachmentFile = null;
+            let pendingAttachmentPreviewUrl = '';
 
             const dmTabsListEl = document.getElementById('dm-tabs-list');
             const headerMainTitle = document.getElementById('header-main-title');
@@ -2621,6 +2625,17 @@ body {
                 if (upMusicFallback) upMusicFallback.textContent = '';
             }
 
+            if (upLocalAudio) {
+                upLocalAudio.addEventListener('timeupdate', () => {
+                    if (isFinite(upLocalAudio.duration) && upLocalAudio.duration > 0) {
+                        syncProgressUi(upLocalAudio.currentTime / upLocalAudio.duration, upLocalAudio.currentTime, upLocalAudio.duration);
+                    }
+                });
+                upLocalAudio.addEventListener('ended', () => {
+                    if (upPlayPauseBtn) upPlayPauseBtn.textContent = '▶';
+                });
+            }
+
             if (upSeekInput) {
                 upSeekInput.addEventListener('input', () => {
                     const r = Number(upSeekInput.value || 0) / 1000;
@@ -2848,6 +2863,9 @@ body {
 
             let tempEditorAvatarUrl = '';
             let tempEditorBannerUrl = '';
+            let tempEditorAudioUrl = '';
+            let tempEditorAudioName = '';
+            let tempEditorCoverUrl = '';
 
             const editAvatarFileInput = document.getElementById('edit-avatar-file');
             const editBannerFileInput = document.getElementById('edit-banner-file');
@@ -2855,6 +2873,11 @@ body {
             switchToEditBtn.addEventListener('click', () => {
                 closeUnifiedProfileModal();
                 syncAdminVisualRestrictions();
+                tempEditorAvatarUrl = '';
+                tempEditorBannerUrl = '';
+                tempEditorAudioUrl = '';
+                tempEditorAudioName = '';
+                tempEditorCoverUrl = '';
                 if (editUsernameInput) editUsernameInput.value = activeUsername || myProfileData.username || '';
                 editBubble.value = myProfileData.bubble || '';
                 editPronouns.value = myProfileData.pronouns || '';
@@ -2863,10 +2886,10 @@ body {
                 editSong.value = myProfileData.song || '';
                 editArtist.value = myProfileData.artist || '';
                 if (editYtUrl) editYtUrl.value = myProfileData.musicUrl || '';
-                if (editLocalAudioUrl) editLocalAudioUrl.value = '';
+                if (editLocalAudioUrl) editLocalAudioUrl.value = myProfileData.audioSrc || '';
                 if (editLocalAudioFile) editLocalAudioFile.value = '';
                 if (editGoldCheckbox) editGoldCheckbox.checked = isAdminIdentity(activeUsername, myProfileData.is_admin);
-                if (editMusicCoverUrl) editMusicCoverUrl.value = '';
+                if (editMusicCoverUrl) editMusicCoverUrl.value = myProfileData.coverUrl || '';
                 if (editMusicCoverFile) editMusicCoverFile.value = '';
                 if (editAvatarFileInput) editAvatarFileInput.value = '';
                 if (editBannerFileInput) editBannerFileInput.value = '';
@@ -2876,7 +2899,27 @@ body {
 
             function refreshEditorLivePreview() {
                 const owner = ((editUsernameInput && editUsernameInput.value.trim()) || activeUsername || 'AkiiraPW').trim();
-                if (editorLiveAvatar) setAvatarStyle(editorLiveAvatar, tempEditorAvatarUrl || myProfileData.avatarUrl, owner);
+                const previewAv = tempEditorAvatarUrl || myProfileData.avatarUrl;
+                const previewBn = tempEditorBannerUrl || myProfileData.bannerUrl;
+                if (editorLiveAvatar) setAvatarStyle(editorLiveAvatar, previewAv, owner);
+                if (editorLiveBannerThumb) {
+                    if (previewBn && isSafeAssetUrl(previewBn)) {
+                        editorLiveBannerThumb.style.backgroundImage = `url("${encodeURI(previewBn.trim())}")`;
+                        editorLiveBannerThumb.style.backgroundSize = 'cover';
+                        editorLiveBannerThumb.style.backgroundPosition = 'center';
+                    } else {
+                        editorLiveBannerThumb.style.backgroundImage = 'linear-gradient(135deg, #2e1065 0%, #6d28d9 100%)';
+                    }
+                }
+                if (editorLiveBannerTop) {
+                    if (previewBn && isSafeAssetUrl(previewBn)) {
+                        editorLiveBannerTop.style.backgroundImage = `url("${encodeURI(previewBn.trim())}")`;
+                        editorLiveBannerTop.style.backgroundSize = 'cover';
+                        editorLiveBannerTop.style.backgroundPosition = 'center';
+                    } else {
+                        editorLiveBannerTop.style.backgroundImage = 'linear-gradient(135deg, #2e1065 0%, #6d28d9 100%)';
+                    }
+                }
                 if (editorLiveNameSample) editorLiveNameSample.textContent = owner;
                 if (editorLiveDisplayName) {
                     editorLiveDisplayName.innerHTML = `<span>${escapeHtmlText(owner)}</span><span style="color:#a855f7; font-size:14px;">✔</span>`;
@@ -2905,6 +2948,23 @@ body {
                     if (file) {
                         try { tempEditorBannerUrl = await readFileAsDataUrl(file); } catch (_) {}
                         refreshEditorLivePreview();
+                    }
+                });
+            }
+            if (editLocalAudioFile) {
+                editLocalAudioFile.addEventListener('change', async () => {
+                    const file = editLocalAudioFile.files && editLocalAudioFile.files[0];
+                    if (file) {
+                        tempEditorAudioName = file.name || 'áudio';
+                        try { tempEditorAudioUrl = await readFileAsDataUrl(file); } catch (_) {}
+                    }
+                });
+            }
+            if (editMusicCoverFile) {
+                editMusicCoverFile.addEventListener('change', async () => {
+                    const file = editMusicCoverFile.files && editMusicCoverFile.files[0];
+                    if (file) {
+                        try { tempEditorCoverUrl = await readFileAsDataUrl(file); } catch (_) {}
                     }
                 });
             }
@@ -2947,6 +3007,19 @@ body {
                 myProfileData.song = editSong.value.trim();
                 myProfileData.artist = editArtist.value.trim();
                 myProfileData.musicUrl = editYtUrl ? editYtUrl.value.trim() : '';
+                const typedAudioUrl = editLocalAudioUrl ? editLocalAudioUrl.value.trim() : '';
+                if (tempEditorAudioUrl) {
+                    myProfileData.audioSrc = tempEditorAudioUrl;
+                    myProfileData.audioFileName = tempEditorAudioName;
+                } else if (typedAudioUrl) {
+                    myProfileData.audioSrc = typedAudioUrl;
+                }
+                const typedCoverUrl = editMusicCoverUrl ? editMusicCoverUrl.value.trim() : '';
+                if (tempEditorCoverUrl) {
+                    myProfileData.coverUrl = tempEditorCoverUrl;
+                } else if (typedCoverUrl) {
+                    myProfileData.coverUrl = typedCoverUrl;
+                }
                 if (tempEditorAvatarUrl) myProfileData.avatarUrl = tempEditorAvatarUrl;
                 if (tempEditorBannerUrl) myProfileData.bannerUrl = tempEditorBannerUrl;
                 saveUserMusicToLocalCache(activeUsername, myProfileData);
@@ -2959,13 +3032,40 @@ body {
             });
 
             function setPendingAttachment(file) {
+                if (pendingAttachmentPreviewUrl && pendingAttachmentPreviewUrl.startsWith('blob:')) {
+                    try { URL.revokeObjectURL(pendingAttachmentPreviewUrl); } catch (_) {}
+                    pendingAttachmentPreviewUrl = '';
+                }
                 pendingAttachmentFile = file;
                 if (!file) {
-                    previewBar.style.display = 'none';
+                    if (previewBar) previewBar.style.display = 'none';
+                    if (previewImg) {
+                        previewImg.src = '';
+                        previewImg.style.display = 'none';
+                    }
+                    if (previewBadge) previewBadge.style.display = 'inline-flex';
+                    if (previewName) previewName.textContent = '';
                     return;
                 }
-                previewBar.style.display = 'flex';
-                previewName.textContent = file.name || 'anexo';
+                if (previewBar) previewBar.style.display = 'flex';
+                if (previewName) previewName.textContent = file.name || 'anexo';
+
+                const isImg = (file.type && file.type.startsWith('image/')) || /\.(png|jpe?g|gif|webp|avif)$/i.test(file.name || '');
+                if (isImg && previewImg) {
+                    pendingAttachmentPreviewUrl = URL.createObjectURL(file);
+                    previewImg.src = pendingAttachmentPreviewUrl;
+                    previewImg.style.display = 'block';
+                    if (previewBadge) previewBadge.style.display = 'none';
+                } else {
+                    if (previewImg) {
+                        previewImg.src = '';
+                        previewImg.style.display = 'none';
+                    }
+                    if (previewBadge) {
+                        previewBadge.style.display = 'inline-flex';
+                        previewBadge.textContent = (file.type && file.type.startsWith('audio/')) ? '🎵' : '📄';
+                    }
+                }
             }
 
             if (clearAttachmentBtn) {
@@ -2974,6 +3074,14 @@ body {
                     allFileInputs.forEach(inp => { if (inp) inp.value = ''; });
                 });
             }
+
+            allFileInputs.forEach(inp => {
+                if (!inp) return;
+                inp.addEventListener('change', () => {
+                    const f = inp.files && inp.files[0];
+                    if (f) setPendingAttachment(f);
+                });
+            });
 
             if (clipMenuBtn && attachMenu) {
                 clipMenuBtn.addEventListener('click', (e) => { e.stopPropagation(); attachMenu.classList.toggle('open'); });
@@ -2990,6 +3098,9 @@ body {
                 const messageText = data.message || data.text || '';
                 const timestamp = data.timestamp || new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
                 const avatarUrl = data.avatarUrl || data.avatar_url || ((sender === activeUsername && myProfileData.avatarUrl) ? myProfileData.avatarUrl : '');
+                const attachmentUrl = data.attachmentUrl || data.attachment_url || '';
+                const attachmentName = data.attachmentName || data.attachment_name || '';
+                const attachmentType = data.attachmentType || data.attachment_type || '';
 
                 const group = document.createElement('div');
                 group.className = 'message-group';
@@ -3026,6 +3137,34 @@ body {
                     contentDiv.appendChild(textDiv);
                 }
 
+                if (attachmentUrl && isSafeAssetUrl(attachmentUrl)) {
+                    const isImageAttach = (attachmentType && attachmentType.startsWith('image/')) || /\.(png|jpe?g|gif|webp|avif)$/i.test(attachmentName || attachmentUrl);
+                    const isAudioAttach = (attachmentType && attachmentType.startsWith('audio/')) || /\.(mp3|ogg|wav|m4a|webm)$/i.test(attachmentName || attachmentUrl);
+                    if (isImageAttach) {
+                        const imgEl = document.createElement('img');
+                        imgEl.className = 'msg-attachment-img';
+                        imgEl.src = attachmentUrl;
+                        imgEl.alt = attachmentName || 'Anexo de imagem';
+                        imgEl.style.cssText = 'max-width:260px;max-height:220px;border-radius:10px;margin-top:6px;cursor:pointer;display:block;';
+                        imgEl.onclick = () => openImageLightbox(attachmentUrl, attachmentName || 'Imagem');
+                        contentDiv.appendChild(imgEl);
+                    } else if (isAudioAttach) {
+                        const audioEl = document.createElement('audio');
+                        audioEl.controls = true;
+                        audioEl.src = attachmentUrl;
+                        audioEl.style.cssText = 'margin-top:6px;max-width:100%;';
+                        contentDiv.appendChild(audioEl);
+                    } else {
+                        const linkEl = document.createElement('a');
+                        linkEl.href = attachmentUrl;
+                        linkEl.target = '_blank';
+                        linkEl.rel = 'noopener noreferrer';
+                        linkEl.textContent = `📄 ${attachmentName || 'Baixar anexo'}`;
+                        linkEl.style.cssText = 'display:inline-block;margin-top:6px;font-size:12px;color:#c084fc;text-decoration:underline;';
+                        contentDiv.appendChild(linkEl);
+                    }
+                }
+
                 group.appendChild(avatarDiv);
                 group.appendChild(contentDiv);
                 enhanceMessageGroup(group, { isSystem: false });
@@ -3034,27 +3173,34 @@ body {
                 chatLog.scrollTop = chatLog.scrollHeight;
             }
 
-            chatLog.addEventListener('click', function(e) {
-                const target = e.target;
-                if (!(target instanceof Element)) return;
-                const group = target.closest('.message-group');
-                if (!group) return;
-                const reactBtn = target.closest('[data-react-emoji]');
-                if (reactBtn) {
-                    e.stopPropagation();
-                    toggleMessageReaction(group, reactBtn.getAttribute('data-react-emoji'));
-                    closeAllMessagePopovers();
-                }
-            });
-
             async function sendChatMessage() {
                 const msg = messageInput.value.trim();
                 if (!msg && !pendingAttachmentFile) return;
+
+                let attachmentUrl = '';
+                let attachmentName = '';
+                let attachmentType = '';
+                if (pendingAttachmentFile) {
+                    attachmentName = pendingAttachmentFile.name || 'anexo';
+                    attachmentType = pendingAttachmentFile.type || '';
+                    if (pendingAttachmentFile.size <= 350000) {
+                        try { attachmentUrl = await readFileAsDataUrl(pendingAttachmentFile); } catch (_) {}
+                    }
+                    if (!attachmentUrl && pendingAttachmentPreviewUrl) {
+                        attachmentUrl = pendingAttachmentPreviewUrl;
+                    } else if (!attachmentUrl) {
+                        try { attachmentUrl = URL.createObjectURL(pendingAttachmentFile); } catch (_) {}
+                    }
+                }
+
                 const payload = {
                     sender: activeUsername,
                     message: msg,
                     timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-                    avatarUrl: myProfileData.avatarUrl || ''
+                    avatarUrl: myProfileData.avatarUrl || '',
+                    attachmentUrl,
+                    attachmentName,
+                    attachmentType
                 };
                 appendMessage(payload);
                 const chObj = (serverChannelsStore[currentServerId] || []).find((c) => c.name === currentChannelName);
@@ -3067,7 +3213,9 @@ body {
                     author: payload.sender,
                     text: payload.message,
                     timestamp: payload.timestamp,
-                    avatarUrl: payload.avatarUrl
+                    avatarUrl: payload.avatarUrl,
+                    attachmentName: payload.attachmentName,
+                    attachmentType: payload.attachmentType
                 });
                 roomCtxManager.sendToContext({
                     type: 'channel',
@@ -3081,7 +3229,9 @@ body {
                 });
                 saveCurrentChannelSnapshot();
                 messageInput.value = '';
+                pendingAttachmentPreviewUrl = '';
                 setPendingAttachment(null);
+                allFileInputs.forEach(inp => { if (inp) inp.value = ''; });
             }
 
             submitButton.onclick = sendChatMessage;
@@ -3834,6 +3984,14 @@ body {
                 const group = target.closest('.message-group');
                 if (!group) return;
 
+                const reactBtn = target.closest('[data-react-emoji]');
+                if (reactBtn) {
+                    e.stopPropagation();
+                    toggleMessageReaction(group, reactBtn.getAttribute('data-react-emoji'));
+                    closeAllMessagePopovers();
+                    return;
+                }
+
                 if (target.closest('[data-toggle-picker]')) {
                     e.stopPropagation();
                     const picker = group.querySelector('.msg-emoji-picker');
@@ -4405,6 +4563,16 @@ body {
                         </div>
                         `
                     );
+                    const exploreSearchInp = document.getElementById('explore-server-search');
+                    if (exploreSearchInp) {
+                        exploreSearchInp.addEventListener('input', () => {
+                            const q = exploreSearchInp.value.trim().toLowerCase();
+                            chatLog.querySelectorAll('#explore-servers-grid [data-join-srv]').forEach(row => {
+                                const nameMatch = (row.getAttribute('data-join-name') || '').toLowerCase().includes(q);
+                                row.style.display = (!q || nameMatch) ? 'flex' : 'none';
+                            });
+                        });
+                    }
                     const shortcutBtn = document.getElementById('explore-create-server-shortcut');
                     if (shortcutBtn && createServerModal) {
                         shortcutBtn.onclick = () => openModalAnimated(createServerModal);
@@ -4424,6 +4592,10 @@ body {
                     headerMainTitle.textContent = '🔔 Notificações';
                     headerSubLabel.textContent = '| Atualizações e pedidos de amizade';
                     backToGeralBtn.classList.add('visible');
+                    const pendingReqs = readStorageJson(REQUESTS_STORAGE_KEY, []);
+                    const reqSummary = Array.isArray(pendingReqs) && pendingReqs.length
+                        ? pendingReqs.map(r => escapeHtmlText(typeof r === 'string' ? r : (r.from || 'Usuário'))).join(', ')
+                        : 'Nenhum pedido pendente no momento.';
                     renderInfoCardInChatLog(
                         '🔔 Notificações — Atualizações & Amizades',
                         `
@@ -4431,7 +4603,7 @@ body {
                         <div>• Card estético de perfil com música e aba dedicada de Seguidores / Seguindo.</div>
                         <div>• Bate-papo dividido com lista à esquerda e conversa à direita.</div>
                         <div style="margin-top:12px;font-weight:700;color:var(--kiwi-text-primary);">Pedidos de amizade</div>
-                        <div id="notif-friend-reqs" style="margin-top:6px;">Nenhum pedido pendente no momento.</div>
+                        <div id="notif-friend-reqs" style="margin-top:6px;">${reqSummary}</div>
                         `
                     );
                     return;
@@ -4578,6 +4750,21 @@ body {
                 const artCard = sidebarRightEl.querySelector('.sidebar-artwork-card');
                 if (artCard) sidebarRightEl.insertBefore(extraRightBox, artCard);
                 else sidebarRightEl.appendChild(extraRightBox);
+
+                const rightSearchInput = extraRightBox.querySelector('#kiwi-right-search-input');
+                if (rightSearchInput) {
+                    rightSearchInput.addEventListener('input', () => {
+                        const q = rightSearchInput.value.trim().toLowerCase();
+                        socialContentContainer.querySelectorAll('.social-list-item').forEach(item => {
+                            const txt = (item.textContent || '').toLowerCase();
+                            item.style.display = (!q || txt.includes(q)) ? 'flex' : 'none';
+                        });
+                        extraRightBox.querySelectorAll('.kiwi-follow-row').forEach(row => {
+                            const txt = (row.textContent || '').toLowerCase();
+                            row.style.display = (!q || txt.includes(q)) ? 'flex' : 'none';
+                        });
+                    });
+                }
 
                 extraRightBox.querySelectorAll('[data-follow-user]').forEach(btn => {
                     const target = (btn.getAttribute('data-follow-user') || '').trim();
