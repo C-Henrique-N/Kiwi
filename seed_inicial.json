@@ -1,80 +1,76 @@
 import json
 from pathlib import Path
-from django.core.management.base import BaseCommand
 from django.contrib.auth import get_user_model
 from chat.models import UserProfile, Server, Channel
 
 User = get_user_model()
 
 
-class Command(BaseCommand):
-    help = "Garante dados iniciais sem sobrescrever contas novas."
+def run():
+    caminho = Path(__file__).resolve().parent / "dados_iniciais.json"
+    if not caminho.exists():
+        print(f"Arquivo não encontrado: {caminho}")
+        return
 
-    def handle(self, *args, **options):
-        caminho = Path(__file__).resolve().parents[2] / "dados_iniciais.json"
-        if not caminho.exists():
-            self.stdout.write(self.style.WARNING(f"Arquivo não encontrado: {caminho}"))
-            return
+    itens = json.loads(caminho.read_text(encoding="utf-8"))
+    usuarios_por_pk = {}
 
-        itens = json.loads(caminho.read_text(encoding="utf-8"))
-        usuarios_por_pk = {}
+    for item in itens:
+        if item.get("model") == "auth.user":
+            fields = item["fields"]
+            username = fields["username"]
+            user, created = User.objects.get_or_create(
+                username=username,
+                defaults={
+                    "email": fields.get("email", ""),
+                    "first_name": fields.get("first_name", ""),
+                    "last_name": fields.get("last_name", ""),
+                    "is_staff": fields.get("is_staff", False),
+                    "is_superuser": fields.get("is_superuser", False),
+                    "is_active": fields.get("is_active", True),
+                },
+            )
+            if created and fields.get("password"):
+                user.password = fields["password"]
+                user.save(update_fields=["password"])
+            usuarios_por_pk[item["pk"]] = user
 
-        for item in itens:
-            if item.get("model") == "auth.user":
-                fields = item["fields"]
-                username = fields["username"]
-                user, created = User.objects.get_or_create(
-                    username=username,
+    for item in itens:
+        if item.get("model") == "chat.userprofile":
+            fields = item["fields"]
+            user = usuarios_por_pk.get(fields.get("user"))
+            if user:
+                UserProfile.objects.get_or_create(
+                    user=user,
                     defaults={
-                        "email": fields.get("email", ""),
-                        "first_name": fields.get("first_name", ""),
-                        "last_name": fields.get("last_name", ""),
-                        "is_staff": fields.get("is_staff", False),
-                        "is_superuser": fields.get("is_superuser", False),
-                        "is_active": fields.get("is_active", True),
+                        "avatar": fields.get("avatar", ""),
+                        "banner": fields.get("banner", ""),
+                        "bubble": fields.get("bubble", ""),
+                        "pronouns": fields.get("pronouns", ""),
+                        "bio": fields.get("bio", ""),
+                        "spotify_song": fields.get("spotify_song", ""),
+                        "spotify_artist": fields.get("spotify_artist", ""),
+                        "accent_color": fields.get("accent_color", ""),
                     },
                 )
-                if created and fields.get("password"):
-                    user.password = fields["password"]
-                    user.save(update_fields=["password"])
-                usuarios_por_pk[item["pk"]] = user
 
-        for item in itens:
-            if item.get("model") == "chat.userprofile":
-                fields = item["fields"]
-                user = usuarios_por_pk.get(fields.get("user"))
-                if user:
-                    UserProfile.objects.get_or_create(
-                        user=user,
-                        defaults={
-                            "avatar": fields.get("avatar", ""),
-                            "banner": fields.get("banner", ""),
-                            "bubble": fields.get("bubble", ""),
-                            "pronouns": fields.get("pronouns", ""),
-                            "bio": fields.get("bio", ""),
-                            "spotify_song": fields.get("spotify_song", ""),
-                            "spotify_artist": fields.get("spotify_artist", ""),
-                            "accent_color": fields.get("accent_color", ""),
-                        },
-                    )
+    for item in itens:
+        if item.get("model") == "chat.server":
+            fields = item["fields"]
+            owner = usuarios_por_pk.get(fields.get("owner"))
+            if owner:
+                server, _ = Server.objects.get_or_create(
+                    name=fields["name"],
+                    defaults={"owner": owner},
+                )
+                for ch in itens:
+                    if (
+                        ch.get("model") == "chat.channel"
+                        and ch["fields"].get("server") == item["pk"]
+                    ):
+                        Channel.objects.get_or_create(
+                            server=server,
+                            name=ch["fields"]["name"],
+                        )
 
-        for item in itens:
-            if item.get("model") == "chat.server":
-                fields = item["fields"]
-                owner = usuarios_por_pk.get(fields.get("owner"))
-                if owner:
-                    server, _ = Server.objects.get_or_create(
-                        name=fields["name"],
-                        defaults={"owner": owner},
-                    )
-                    for ch in itens:
-                        if (
-                            ch.get("model") == "chat.channel"
-                            and ch["fields"].get("server") == item["pk"]
-                        ):
-                            Channel.objects.get_or_create(
-                                server=server,
-                                name=ch["fields"]["name"],
-                            )
-
-        self.stdout.write(self.style.SUCCESS("Seed inicial aplicado com segurança."))
+    print("Seed inicial executado com sucesso.")
