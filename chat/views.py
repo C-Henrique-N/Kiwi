@@ -238,6 +238,7 @@ def _serialize_server_member(request, server, membership):
         'bubble': prof.bubble or '',
         'pronouns': prof.pronouns or '',
         'bio': prof.bio or '',
+        'location': getattr(prof, 'location', '') or '',
         'spotify_song': prof.spotify_song or '',
         'spotify_artist': prof.spotify_artist or '',
         'accent_color': _sanitize_accent_color(prof.accent_color, u, fallback=prof.accent_color or '#ff9de2'),
@@ -308,6 +309,8 @@ def room_view(request, server_id=None, channel_id=None):
         'bubble': profile.bubble or '',
         'pronouns': profile.pronouns or '',
         'bio': profile.bio or '',
+        'location': getattr(profile, 'location', '') or '',
+        'joinedAt': request.user.date_joined.isoformat() if getattr(request.user, 'date_joined', None) else '',
         'song': profile.spotify_song or '',
         'artist': profile.spotify_artist or '',
         'musicUrl': profile.music_url or '',
@@ -710,6 +713,8 @@ def update_profile(request):
     profile.bubble = (request.POST.get('bubble') if 'bubble' in request.POST else profile.bubble) or ''
     profile.pronouns = (request.POST.get('pronouns') if 'pronouns' in request.POST else profile.pronouns) or ''
     profile.bio = (request.POST.get('bio') if 'bio' in request.POST else profile.bio) or ''
+    if hasattr(profile, 'location'):
+        profile.location = ((request.POST.get('location') if 'location' in request.POST else getattr(profile, 'location', '')) or '')[:120]
     profile.spotify_song = (request.POST.get('spotify_song') if 'spotify_song' in request.POST else profile.spotify_song) or ''
     profile.spotify_artist = (request.POST.get('spotify_artist') if 'spotify_artist' in request.POST else profile.spotify_artist) or ''
 
@@ -827,6 +832,7 @@ def update_profile(request):
         'bubble': profile.bubble or '',
         'pronouns': profile.pronouns or '',
         'bio': profile.bio or '',
+        'location': getattr(profile, 'location', '') or '',
         'spotify_song': profile.spotify_song or '',
         'spotify_artist': profile.spotify_artist or '',
         'music_url': profile.music_url or '',
@@ -856,6 +862,8 @@ def get_user_profile(request, username):
         'bubble': profile.bubble,
         'pronouns': profile.pronouns,
         'bio': profile.bio,
+        'location': getattr(profile, 'location', '') or '',
+        'joinedAt': target_user.date_joined.isoformat() if getattr(target_user, 'date_joined', None) else '',
         'spotify_song': profile.spotify_song,
         'spotify_artist': profile.spotify_artist,
         'accent_color': safe_color,
