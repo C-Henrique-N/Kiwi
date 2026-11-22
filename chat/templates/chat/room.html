@@ -231,6 +231,34 @@ body {
     white-space: nowrap;
   }
 
+  #chat-log {
+    width: 100%;
+    max-width: 100%;
+    overflow-x: hidden;
+    overflow-y: auto;
+    padding: 12px;
+    box-sizing: border-box;
+  }
+
+  .kiwi-info-panel-card {
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
+    overflow-x: hidden;
+  }
+
+  .kiwi-info-panel-card .social-list-item {
+    min-width: 0;
+    max-width: 100%;
+    flex-wrap: nowrap;
+    gap: 10px;
+  }
+
+  .kiwi-info-panel-card .social-list-item .dm-quick-btn {
+    flex-shrink: 0;
+  }
+
   /* DM dividida: empilha lista e conversa no mobile para não espremer */
   .kiwi-dm-split-shell {
     display: flex;
@@ -859,7 +887,7 @@ body {
                 <div class="my-user-info" id="open-profile-trigger" title="Abrir Card Estético">
                     <div id="my-mini-avatar" class="mini-avatar" data-current-user-avatar="true">A</div>
                     <div style="min-width: 0;">
-                        <div id="my-name-label" style="font-size: 14px; font-weight: 600; color: var(--text-main); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">AkiiraPW</div>
+                        <div id="my-name-label" style="font-size: 14px; font-weight: 600; color: var(--text-main); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{{ username|default:'' }}</div>
                         <div style="font-size: 11px; color: #22c55e;">● Online</div>
                     </div>
                 </div>
@@ -935,7 +963,7 @@ body {
                     <div class="kiwi-x-topbar-left">
                         <button type="button" class="kiwi-x-back-btn" id="kiwi-x-back-btn" title="Voltar ao chat">←</button>
                         <div>
-                            <div id="kiwi-x-top-name" style="font-size:17px;font-weight:900;line-height:1.15;">AkiiraPW</div>
+                            <div id="kiwi-x-top-name" style="font-size:17px;font-weight:900;line-height:1.15;">{{ username|default:'' }}</div>
                             <div id="kiwi-x-top-posts-count" style="font-size:12px;color:var(--kiwi-text-muted);">0 posts</div>
                         </div>
                     </div>
@@ -958,11 +986,11 @@ body {
                     </div>
 
                     <div id="kiwi-x-display-name" class="kiwi-x-name">
-                        <span>AkiiraPW</span>
+                        <span>{{ username|default:'' }}</span>
                         <span style="color:#a855f7;font-size:15px;">✔</span>
                         <span id="kiwi-x-admin-badge" class="admin-gold-badge" style="display:none;">👑 ADMIN</span>
                     </div>
-                    <div id="kiwi-x-handle" class="kiwi-x-handle">@akiirapw</div>
+                    <div id="kiwi-x-handle" class="kiwi-x-handle"></div>
 
                     <div id="kiwi-x-bio" class="kiwi-x-bio">
                         人間は鳥のようなものだ。巣を作る鳥もいれば、ただ空を飛ぶ鳥もいる。<br>
@@ -1315,7 +1343,7 @@ body {
                                 </div>
                                 <div style="font-size:11px; color:var(--text-muted); margin-bottom:8px;">Clique para alternar fonte e estilo do nome</div>
                                 <div id="editor-name-style-toggle" class="kiwi-name-style-card" title="Alternar estilo de destaque do nome">
-                                    <span id="editor-live-name-sample" class="kiwi-name-style-sample">AkiiraPW</span>
+                                    <span id="editor-live-name-sample" class="kiwi-name-style-sample">{{ username|default:'' }}</span>
                                     <span style="font-weight:800;">›</span>
                                 </div>
                             </div>
@@ -1335,10 +1363,10 @@ body {
                             <div class="kiwi-live-identity-box">
                                 <div>
                                     <div id="editor-live-display-name" style="font-size:18px; font-weight:900; color:var(--text-main); display:flex; align-items:center; gap:6px;">
-                                        <span>AkiiraPW</span>
+                                        <span>{{ username|default:'' }}</span>
                                         <span style="color:#a855f7; font-size:14px;">✔</span>
                                     </div>
-                                    <div id="editor-live-sub-meta" style="font-size:12px; color:var(--text-muted);">@akiirapw</div>
+                                    <div id="editor-live-sub-meta" style="font-size:12px; color:var(--text-muted);"></div>
                                 </div>
                                 <span style="background:rgba(139,92,246,0.14); border:1px solid var(--border-subtle); color:var(--text-main); font-size:11px; font-weight:700; padding:5px 10px; border-radius:8px;">
                                     Perfil Estético
@@ -1722,7 +1750,7 @@ body {
                 ''
             ).trim();
             const hasExplicitUser = Boolean(explicitUser);
-            let activeUsername = explicitUser || 'AkiiraPW';
+            let activeUsername = explicitUser || '';
 
             const themesMap = {
                 '#7c3aed': { accent: '#7c3aed', main: '#0b0714', sidebar: '#160d29', darkest: '#120b21', input: '#1c1133', card: '#1c1133', soft: '#241642', textMain: '#f5f3ff', textMuted: '#a79bc4', border: 'rgba(167, 139, 250, 0.16)' },
@@ -2450,7 +2478,6 @@ body {
             function sanitizeCacheAssetUrl(val) {
                 const str = String(val || '').trim();
                 if (!str || str.startsWith('blob:')) return '';
-                if (str.startsWith('data:') && str.length > 2500000) return '';
                 return str;
             }
 
@@ -2496,7 +2523,30 @@ body {
             function readFileAsDataUrl(file) {
                 return new Promise((resolve, reject) => {
                     const reader = new FileReader();
-                    reader.onload = () => resolve(String(reader.result || ''));
+                    reader.onload = () => {
+                        const rawUrl = String(reader.result || '');
+                        if (!file.type || !file.type.startsWith('image/') || file.type === 'image/gif' || rawUrl.length < 220000) {
+                            resolve(rawUrl);
+                            return;
+                        }
+                        const img = new Image();
+                        img.onload = () => {
+                            try {
+                                const maxW = 1200;
+                                const scale = img.width > maxW ? (maxW / img.width) : 1;
+                                const canvas = document.createElement('canvas');
+                                canvas.width = Math.max(1, Math.round(img.width * scale));
+                                canvas.height = Math.max(1, Math.round(img.height * scale));
+                                const ctx = canvas.getContext('2d');
+                                ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                                resolve(canvas.toDataURL('image/jpeg', 0.82));
+                            } catch (_) {
+                                resolve(rawUrl);
+                            }
+                        };
+                        img.onerror = () => resolve(rawUrl);
+                        img.src = rawUrl;
+                    };
                     reader.onerror = reject;
                     reader.readAsDataURL(file);
                 });
@@ -2507,12 +2557,14 @@ body {
                 if (savedTheme && themesMap[savedTheme]) {
                     myProfileData.accentColor = savedTheme;
                 }
-                const cachedSelf = loadUserMusicFromLocalCache(activeUsername);
+                const cachedSelf = loadUserMusicFromLocalCache(activeUsername) || readStorageJson('kiwi_last_saved_profile_v1', null);
                 if (cachedSelf) {
                     myProfileData = {
                         ...myProfileData,
                         ...cachedSelf,
                         username: activeUsername,
+                        bannerUrl: cachedSelf.bannerUrl || myProfileData.bannerUrl || '',
+                        avatarUrl: cachedSelf.avatarUrl || myProfileData.avatarUrl || '',
                         accentColor: sanitizeThemeForUser(myProfileData.accentColor, activeUsername, myProfileData.is_admin)
                     };
                 }
@@ -2799,91 +2851,46 @@ body {
             }
 
             let inspectedTimelineUser = null;
-            let exploreAccountsList = readStorageJson('kiwi_explore_accounts_v1', [
-                {
-                    username: 'Hollow29',
-                    handle: '@hollow29',
-                    bubble: '🎧 Em call & teste',
-                    pronouns: 'ele/he • 🥝',
-                    bio: 'Testando responsividade mobile, chamadas e músicas no Kiwi Chat.',
-                    location: 'Brasil',
-                    joinedAt: '2025-04-10',
-                    bannerUrl: '',
-                    avatarUrl: '',
-                    is_admin: false,
-                    posts: [
-                        {
-                            id: 'ext-hollow-1',
-                            author: 'Hollow29',
-                            handle: '@hollow29',
-                            time: 'há 15m',
-                            text: 'Testando a nova timeline completa do perfil no Kiwi Chat! Ficou bem melhor que o card pequeno.',
-                            replies: 1,
-                            reposts: 0,
-                            likes: 3,
-                            views: '18',
-                            liked: false,
-                            replyItems: [
-                                { author: 'AkiiraPW', text: 'Curti demais esse visual de perfil completo!', time: 'há 10m' }
-                            ]
+            function getRealExploreAccounts() {
+                const mapByLower = new Map();
+                const currentFriends = readStorageJson(FRIENDS_STORAGE_KEY, []);
+                if (Array.isArray(currentFriends)) {
+                    currentFriends.forEach(fname => {
+                        const clean = String(fname || '').trim();
+                        if (!clean || clean.toLowerCase() === (activeUsername || '').toLowerCase()) return;
+                        const k = clean.toLowerCase();
+                        if (!mapByLower.has(k)) {
+                            const extra = profilesByUsername.get(k) || {};
+                            mapByLower.set(k, {
+                                username: clean,
+                                handle: `@${clean.toLowerCase()}`,
+                                bio: extra.bio || 'Conta adicionada aos seus amigos.',
+                                bannerUrl: extra.bannerUrl || '',
+                                avatarUrl: extra.avatarUrl || '',
+                                posts: []
+                            });
                         }
-                    ]
-                },
-                {
-                    username: 'Maomao',
-                    handle: '@maomao_apothecary',
-                    bubble: '🍵 Analisando ervas & mistérios',
-                    pronouns: 'ela/she • 🌿',
-                    bio: 'Observadora atenta, chás, botânica e trilhas calmas.',
-                    location: 'Império',
-                    joinedAt: '2024-08-22',
-                    bannerUrl: '',
-                    avatarUrl: '',
-                    is_admin: false,
-                    posts: [
-                        {
-                            id: 'ext-maomao-1',
-                            author: 'Maomao',
-                            handle: '@maomao_apothecary',
-                            time: 'há 1h',
-                            text: 'Nem toda flor bonita é inofensiva — vale sempre conferir os detalhes.',
-                            replies: 0,
-                            reposts: 1,
-                            likes: 7,
-                            views: '42',
-                            liked: false,
-                            replyItems: []
-                        }
-                    ]
-                },
-                {
-                    username: 'LoFi_Station',
-                    handle: '@lofistation',
-                    bubble: '🌙 Batidas noturnas',
-                    pronouns: 'canal • 🎵',
-                    bio: 'Seleção de lo-fi, trilhas de anime e estudos.',
-                    location: 'Tokyo / SP',
-                    joinedAt: '2025-01-15',
-                    bannerUrl: '',
-                    avatarUrl: '',
-                    is_admin: false,
-                    posts: [
-                        {
-                            id: 'ext-lofi-1',
-                            author: 'LoFi_Station',
-                            handle: '@lofistation',
-                            time: 'há 2h',
-                            text: 'Sessão de estudo aberta no canal de música com trilha lo-fi.',
-                            replies: 0,
-                            reposts: 2,
-                            likes: 9,
-                            views: '64',
-                            liked: false,
-                            replyItems: []
-                        }
-                    ]
+                    });
                 }
-            ]);
+                const customAdded = readStorageJson('kiwi_custom_explore_accounts_v1', []);
+                if (Array.isArray(customAdded)) {
+                    customAdded.forEach(acc => {
+                        if (!acc || !acc.username) return;
+                        const clean = String(acc.username).trim();
+                        if (!clean) return;
+                        mapByLower.set(clean.toLowerCase(), {
+                            username: clean,
+                            handle: acc.handle || `@${clean.toLowerCase()}`,
+                            bio: acc.bio || 'Conta no Kiwi Chat.',
+                            bannerUrl: acc.bannerUrl || '',
+                            avatarUrl: acc.avatarUrl || '',
+                            posts: Array.isArray(acc.posts) ? acc.posts : []
+                        });
+                    });
+                }
+                return Array.from(mapByLower.values());
+            }
+            let exploreAccountsList = getRealExploreAccounts();
 
             function getActiveTimelineProfile() {
                 if (inspectedTimelineUser) {
@@ -3052,7 +3059,7 @@ body {
             });
 
             function refreshEditorLivePreview() {
-                const owner = ((editUsernameInput && editUsernameInput.value.trim()) || activeUsername || 'AkiiraPW').trim();
+                const owner = ((editUsernameInput && editUsernameInput.value.trim()) || activeUsername || '').trim();
                 const previewAv = tempEditorAvatarUrl || myProfileData.avatarUrl;
                 const previewBn = tempEditorBannerUrl || myProfileData.bannerUrl;
                 if (editorLiveAvatar) setAvatarStyle(editorLiveAvatar, previewAv, owner);
@@ -3141,9 +3148,9 @@ body {
                 editorDismissPrivacyBtn.addEventListener('click', () => { editorPrivacyNotice.style.display = 'none'; });
             }
 
-            editProfileForm.addEventListener('submit', async (e) => {
+            editProfileForm.addEventListener('submit', (e) => {
                 e.preventDefault();
-                const newUsername = ((editUsernameInput && editUsernameInput.value.trim()) || activeUsername || 'AkiiraPW').trim();
+                const newUsername = ((editUsernameInput && editUsernameInput.value.trim()) || activeUsername || '').trim();
                 activeUsername = newUsername;
                 try { localStorage.setItem(USERNAME_STORAGE_KEY, activeUsername); } catch (_) {}
                 myProfileData.username = activeUsername;
@@ -3151,13 +3158,6 @@ body {
                 myProfileData.pronouns = editPronouns.value.trim();
                 myProfileData.bio = editBio.value.trim();
                 myProfileData.location = editLocationInput ? editLocationInput.value.trim() : (myProfileData.location || '');
-                try {
-                    if (window.KiwiClient && typeof window.KiwiClient.submitProfileUpdate === 'function') {
-                        const fd = new FormData(editProfileForm);
-                        fd.set('location', myProfileData.location);
-                        await window.KiwiClient.submitProfileUpdate(fd);
-                    }
-                } catch (_) {}
                 myProfileData.song = editSong.value.trim();
                 myProfileData.artist = editArtist.value.trim();
                 myProfileData.musicUrl = editYtUrl ? editYtUrl.value.trim() : '';
@@ -3182,13 +3182,21 @@ body {
                     myProfileData.bannerUrl = tempEditorBannerUrl;
                     tempEditorBannerUrl = '';
                 }
+
                 saveUserMusicToLocalCache(activeUsername, myProfileData);
+                writeStorageJson('kiwi_last_saved_profile_v1', myProfileData);
                 updateMySidebarUI();
                 syncXProfileHeader();
                 closeModalAnimated(editModal);
                 closeUnifiedProfileModal();
                 activateNavTab('perfil');
                 showKiwiToast("Perfil guardado!");
+
+                if (window.KiwiClient && typeof window.KiwiClient.submitProfileUpdate === 'function') {
+                    const fd = new FormData(editProfileForm);
+                    fd.set('location', myProfileData.location);
+                    window.KiwiClient.submitProfileUpdate(fd).catch(() => {});
+                }
             });
 
             function setPendingAttachment(file) {
@@ -4243,7 +4251,7 @@ body {
                 syncFollowerCountsUi();
                 const prof = getActiveTimelineProfile();
                 const isOwn = prof.username.toLowerCase() === (activeUsername || '').toLowerCase();
-                const uname = prof.username || activeUsername || 'AkiiraPW';
+                const uname = prof.username || activeUsername || '';
                 const postsSource = isOwn ? userProfilePosts : (Array.isArray(prof.posts) ? prof.posts : []);
                 const topName = document.getElementById('kiwi-x-top-name');
                 const topCount = document.getElementById('kiwi-x-top-posts-count');
@@ -4661,7 +4669,7 @@ body {
                 if (!txt) return;
                 if (!dmThreads[selectedDmPeer]) dmThreads[selectedDmPeer] = [];
                 const myNameEl = document.getElementById('my-name-label');
-                const sender = (myNameEl && myNameEl.textContent.trim()) || 'AkiiraPW';
+                const sender = (myNameEl && myNameEl.textContent.trim()) || '';
                 dmThreads[selectedDmPeer].push({
                     sender,
                     text: txt,
@@ -4802,7 +4810,7 @@ body {
 
                 if (tabKey === 'perfil') {
                     inspectedTimelineUser = null;
-                    headerMainTitle.textContent = `👤 ${activeUsername || 'AkiiraPW'}`;
+                    headerMainTitle.textContent = `👤 ${activeUsername || ''}`;
                     headerSubLabel.textContent = '| Perfil';
                     backToGeralBtn.classList.add('visible');
                     closeFollowersPanelAndShowFeed();
@@ -4856,19 +4864,22 @@ body {
                 }
 
                 if (tabKey === 'explorar') {
+                    exploreAccountsList = getRealExploreAccounts();
                     headerMainTitle.textContent = '🔍 Explorar Contas & Servidores';
                     headerSubLabel.textContent = '| Veja perfis completos e servidores';
                     backToGeralBtn.classList.add('visible');
-                    const accountsHtml = exploreAccountsList.map(acc => `
-                        <div class="social-list-item" data-open-account-profile="${escapeHtmlText(acc.username)}" data-search-name="${escapeHtmlText((acc.username + ' ' + (acc.handle || '') + ' ' + (acc.bio || '')).toLowerCase())}">
-                            <div class="social-avatar">${escapeHtmlText(acc.username.charAt(0).toUpperCase())}</div>
-                            <div style="flex:1;min-width:0;">
-                                <div style="font-weight:700;">${escapeHtmlText(acc.username)} <span style="font-weight:400;font-size:11px;color:var(--kiwi-text-muted);">${escapeHtmlText(acc.handle || '@' + acc.username.toLowerCase())}</span></div>
-                                <div style="font-size:11px;color:var(--kiwi-text-muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escapeHtmlText(acc.bio || '')}</div>
+                    const accountsHtml = exploreAccountsList.length
+                        ? exploreAccountsList.map(acc => `
+                            <div class="social-list-item" data-open-account-profile="${escapeHtmlText(acc.username)}" data-search-name="${escapeHtmlText((acc.username + ' ' + (acc.handle || '') + ' ' + (acc.bio || '')).toLowerCase())}">
+                                <div class="social-avatar">${escapeHtmlText(acc.username.charAt(0).toUpperCase())}</div>
+                                <div style="flex:1;min-width:0;">
+                                    <div style="font-weight:700;">${escapeHtmlText(acc.username)} <span style="font-weight:400;font-size:11px;color:var(--kiwi-text-muted);">${escapeHtmlText(acc.handle || '@' + acc.username.toLowerCase())}</span></div>
+                                    <div style="font-size:11px;color:var(--kiwi-text-muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escapeHtmlText(acc.bio || '')}</div>
+                                </div>
+                                <button type="button" class="dm-quick-btn">Ver perfil</button>
                             </div>
-                            <button type="button" class="dm-quick-btn">Ver perfil</button>
-                        </div>
-                    `).join('');
+                        `).join('')
+                        : `<div style="font-size:12px;color:var(--kiwi-text-muted);padding:6px 2px;">Nenhuma conta cadastrada ainda. Adicione amigos ou convide usuários reais para aparecerem aqui.</div>`;
 
                     renderInfoCardInChatLog(
                         '🔍 Explorar Contas & Servidores Kiwi',
@@ -4881,14 +4892,9 @@ body {
                         <div id="explore-accounts-grid" style="display:grid;gap:8px;margin-bottom:14px;">${accountsHtml}</div>
                         <div style="font-size:11px;font-weight:700;text-transform:uppercase;color:var(--kiwi-text-muted);margin-bottom:6px;">Servidores</div>
                         <div id="explore-servers-grid" style="display:grid;gap:8px;">
-                            <div class="social-list-item" data-join-srv="kiwi-hub" data-join-name="Kiwi Hub" data-search-name="kiwi hub geral música">
-                                <div class="social-avatar">KH</div>
-                                <div style="flex:1;"><div style="font-weight:700;">Kiwi Hub</div><div style="font-size:11px;color:var(--kiwi-text-muted);">Comunidade oficial • geral, música</div></div>
-                                <button type="button" class="dm-quick-btn">Entrar</button>
-                            </div>
-                            <div class="social-list-item" data-join-srv="anime-music" data-join-name="Anime & Lo-Fi" data-search-name="anime lo-fi trilhas música">
-                                <div class="social-avatar">AL</div>
-                                <div style="flex:1;"><div style="font-weight:700;">Anime &amp; Lo-Fi</div><div style="font-size:11px;color:var(--kiwi-text-muted);">Trilhas, recomendações e calls</div></div>
+                            <div class="social-list-item" data-join-srv="kiwi-servidor" data-join-name="Kiwi servidor" data-search-name="kiwi servidor geral">
+                                <div class="social-avatar">KS</div>
+                                <div style="flex:1;min-width:0;"><div style="font-weight:700;">Kiwi servidor</div><div style="font-size:11px;color:var(--kiwi-text-muted);">Servidor oficial • geral</div></div>
                                 <button type="button" class="dm-quick-btn">Entrar</button>
                             </div>
                         </div>
@@ -4905,10 +4911,19 @@ body {
                         });
                     }
                     chatLog.querySelectorAll('[data-open-account-profile]').forEach(row => {
-                        row.onclick = () => {
+                        row.onclick = (ev) => {
+                            if (ev) ev.stopPropagation();
                             const uname = row.getAttribute('data-open-account-profile');
                             if (uname) window.openFullProfilePage(uname);
                         };
+                        const btn = row.querySelector('.dm-quick-btn');
+                        if (btn) {
+                            btn.onclick = (ev) => {
+                                if (ev) ev.stopPropagation();
+                                const uname = row.getAttribute('data-open-account-profile');
+                                if (uname) window.openFullProfilePage(uname);
+                            };
+                        }
                     });
                     const shortcutBtn = document.getElementById('explore-create-server-shortcut');
                     if (shortcutBtn && createServerModal) {
@@ -5013,7 +5028,7 @@ body {
                     const imgVal = (imgInputEl && imgInputEl.value.trim()) || '';
                     if (!textVal && !imgVal) return;
 
-                    const uname = activeUsername || myProfileData.username || 'AkiiraPW';
+                    const uname = activeUsername || myProfileData.username || '';
                     const postObj = {
                         id: 'post-' + Date.now(),
                         author: uname,
