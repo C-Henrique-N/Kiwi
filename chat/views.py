@@ -305,6 +305,21 @@ def _serialize_dm(dm, current_user=None):
 
 
 @ensure_csrf_cookie
+
+
+def _render_first_existing(request, template_names, context):
+    from django.template import TemplateDoesNotExist
+    from django.template.loader import select_template
+    try:
+        tpl = select_template(template_names)
+        return render(request, tpl.template.name, context)
+    except TemplateDoesNotExist:
+        from django.http import HttpResponse
+        return HttpResponse(
+            f"<h1>Kiwi Chat</h1><p>Template nao encontrado ({', '.join(template_names)}).</p>",
+            status=200,
+        )
+
 def login_view(request):
     if request.user.is_authenticated:
         return redirect("room")
@@ -321,7 +336,7 @@ def login_view(request):
             return redirect("room")
         error_message = "Usuário ou senha inválidos."
 
-    return render(request, "kiwi_chat/login.html", {"error_message": error_message})
+    return _render_first_existing(request, ["kiwi_chat/login.html", "registration/login.html", "login.html"], {"error_message": error_message})
 
 
 @ensure_csrf_cookie
@@ -355,7 +370,7 @@ def register_view(request):
             except IntegrityError:
                 error_message = "Não foi possível criar a conta agora."
 
-    return render(request, "kiwi_chat/register.html", {"error_message": error_message})
+    return _render_first_existing(request, ["kiwi_chat/register.html", "registration/register.html", "register.html"], {"error_message": error_message})
 
 
 @require_POST
@@ -434,7 +449,7 @@ def room_view(request, room_name=None, server_id=None, channel_id=None):
         "friends_json": json.dumps(friends_payload),
         "pending_requests_json": json.dumps(pending_requests_payload),
     }
-    return render(request, "kiwi_chat/room.html", context)
+    return _render_first_existing(request, ["kiwi_chat/room.html", "chat/room.html", "room.html"], context)
 
 
 @login_required
@@ -443,9 +458,9 @@ def profile_page_view(request):
     user = request.user
     profile = _get_or_create_profile(user)
     profile_data = _serialize_profile(user, profile)
-    return render(
+    return _render_first_existing(
         request,
-        "kiwi_chat/profile.html",
+        ["kiwi_chat/profile.html", "chat/profile.html", "profile.html"],
         {
             "username": user.username,
             "profile": profile,
@@ -462,9 +477,9 @@ def loja_view(request):
     user = request.user
     profile = _get_or_create_profile(user)
     profile_data = _serialize_profile(user, profile)
-    return render(
+    return _render_first_existing(
         request,
-        "kiwi_chat/loja.html",
+        ["kiwi_chat/loja.html", "chat/loja.html", "loja.html"],
         {
             "username": user.username,
             "profile": profile,
