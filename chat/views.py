@@ -158,10 +158,13 @@ def _get_or_create_profile(user):
     is_admin = _is_kiwi_admin(user)
     changed = False
 
-    if is_admin and not profile.is_admin_badge:
-        profile.is_admin_badge = True
-        changed = True
-    if not profile.accent_color:
+    if is_admin and not getattr(profile, "is_admin_badge", False):
+        try:
+            profile.is_admin_badge = True
+            changed = True
+        except Exception:
+            pass
+    if not getattr(profile, "accent_color", None):
         profile.accent_color = "#7c3aed"
         changed = True
     if changed:
@@ -173,8 +176,8 @@ def _serialize_profile(user, profile):
     is_admin = _is_kiwi_admin(user) or bool(getattr(profile, "is_admin_badge", False))
     avatar_url = _safe_media_url(getattr(profile, "avatar", None))
     banner_url = _safe_media_url(getattr(profile, "banner", None))
-    music_url = _safe_media_url(getattr(profile, "music_file", None))
-    music_cover_url = _safe_media_url(getattr(profile, "music_cover", None))
+    music_url = _safe_media_url(getattr(profile, "music_file", None)) or _safe_media_url(getattr(profile, "music_audio_file", None))
+    music_cover_url = _safe_media_url(getattr(profile, "music_cover", None)) or _safe_media_url(getattr(profile, "music_cover_file", None))
 
     accent = _sanitize_accent_color(getattr(profile, "accent_color", "#7c3aed"), is_admin=is_admin)
     name_effect = _sanitize_name_effect(getattr(profile, "name_effect", "none"), is_admin=is_admin)
@@ -186,14 +189,14 @@ def _serialize_profile(user, profile):
         "bio": getattr(profile, "bio", "") or "",
         "pronouns": getattr(profile, "pronouns", "") or "",
         "status": _sanitize_status(getattr(profile, "status", "online")),
-        "custom_status": getattr(profile, "custom_status", "") or "",
+        "custom_status": getattr(profile, "custom_status", "") or getattr(profile, "bubble", "") or "",
         "accent_color": accent,
         "name_effect": name_effect,
         "avatar_frame": avatar_frame,
         "avatar_url": avatar_url,
         "banner_url": banner_url,
-        "music_title": getattr(profile, "music_title", "") or "",
-        "music_artist": getattr(profile, "music_artist", "") or "",
+        "music_title": getattr(profile, "music_title", "") or getattr(profile, "spotify_song", "") or "",
+        "music_artist": getattr(profile, "music_artist", "") or getattr(profile, "spotify_artist", "") or "",
         "music_url": music_url,
         "music_cover_url": music_cover_url,
         "is_admin": is_admin,
@@ -244,7 +247,7 @@ def _ensure_default_workspace(user):
 
 
 def _serialize_message(msg, current_user=None):
-    sender = msg.sender
+    sender = getattr(msg, "sender", None) or getattr(msg, "user", None)
     profile = _get_or_create_profile(sender)
     sender_data = _serialize_profile(sender, profile)
 
@@ -256,6 +259,8 @@ def _serialize_message(msg, current_user=None):
         reactions_summary[emoji]["count"] += 1
         if current_user and rx.user_id == current_user.id:
             reactions_summary[emoji]["me"] = True
+
+    created = getattr(msg, "created_at", None) or getattr(msg, "timestamp", None) or timezone.now()
 
     return {
         "id": msg.id,
@@ -270,31 +275,32 @@ def _serialize_message(msg, current_user=None):
         "attachment_url": _safe_media_url(msg.attachment),
         "attachment_name": os.path.basename(msg.attachment.name) if msg.attachment else "",
         "attachment_type": msg.attachment_type or "",
-        "timestamp": timezone.localtime(msg.created_at).strftime("%H:%M"),
-        "time": timezone.localtime(msg.created_at).strftime("%H:%M"),
+        "timestamp": timezone.localtime(created).strftime("%H:%M"),
+        "time": timezone.localtime(created).strftime("%H:%M"),
         "reactions": list(reactions_summary.values()),
     }
 
 
 def _serialize_dm(dm, current_user=None):
-    sender = dm.sender
-    recipient = dm.recipient
+    sender = getattr(dm, "sender", None)
+    recipient = getattr(dm, "recipient", None) or getattr(dm, "receiver", None)
     p_sender = _get_or_create_profile(sender)
     d_sender = _serialize_profile(sender, p_sender)
+    created = getattr(dm, "created_at", None) or getattr(dm, "timestamp", None) or timezone.now()
 
     return {
         "id": dm.id,
         "sender": sender.username,
-        "recipient": recipient.username,
+        "recipient": recipient.username if recipient else "",
         "display_name": d_sender["display_name"],
         "avatar_url": d_sender["avatar_url"],
         "message": dm.content or "",
         "text": dm.content or "",
-        "attachment_url": _safe_media_url(dm.attachment),
-        "attachment_name": os.path.basename(dm.attachment.name) if dm.attachment else "",
-        "attachment_type": dm.attachment_type or "",
-        "timestamp": timezone.localtime(dm.created_at).strftime("%H:%M"),
-        "time": timezone.localtime(dm.created_at).strftime("%H:%M"),
+        "attachment_url": _safe_media_url(getattr(dm, "attachment", None) or getattr(dm, "attachment_url", "")),
+        "attachment_name": os.path.basename(dm.attachment.name) if getattr(dm, "attachment", None) else "",
+        "attachment_type": getattr(dm, "attachment_type", "") or "",
+        "timestamp": timezone.localtime(created).strftime("%H:%M"),
+        "time": timezone.localtime(created).strftime("%H:%M"),
     }
 
 
@@ -360,16 +366,27 @@ def logout_view(request):
 
 @login_required
 @ensure_csrf_cookie
-def room_view(request):
+def room_view(request, room_name=None, server_id=None, channel_id=None):
     user = request.user
     profile = _get_or_create_profile(user)
     servers = _ensure_default_workspace(user)
     is_admin = _is_kiwi_admin(user)
 
-    first_server = servers[0] if servers else None
-    first_channel = None
-    if first_server:
-        first_channel = first_server.channels.order_by("id").first()
+    selected_server = None
+    if server_id:
+        selected_server = next((s for s in servers if s.id == int(server_id)), None)
+    if not selected_server:
+        selected_server = servers[0] if servers else None
+
+    selected_channel = None
+    if selected_server:
+        channels_sorted = list(selected_server.channels.order_by("id"))
+        if channel_id:
+            selected_channel = next((c for c in channels_sorted if c.id == int(channel_id)), None)
+        if not selected_channel and room_name:
+            selected_channel = next((c for c in channels_sorted if c.name.lower() == str(room_name).lower()), None)
+        if not selected_channel and channels_sorted:
+            selected_channel = channels_sorted[0]
 
     servers_payload = []
     for srv in servers:
@@ -386,18 +403,22 @@ def room_view(request):
 
     friends_payload = _get_friends_list(user)
     incoming_requests = FriendRequest.objects.filter(
-        to_user=user, status="pending"
-    ).select_related("from_user", "from_user__profile")
+        status="pending"
+    ).filter(
+        Q(to_user=user) | Q(receiver=user)
+    ).select_related("from_user", "to_user", "sender", "receiver")
 
     pending_requests_payload = []
     for req in incoming_requests:
-        p_from = _get_or_create_profile(req.from_user)
-        pending_requests_payload.append({
-            "id": req.id,
-            "from_username": req.from_user.username,
-            "display_name": p_from.display_name or req.from_user.username,
-            "avatar_url": _safe_media_url(p_from.avatar),
-        })
+        origin = getattr(req, "from_user", None) or getattr(req, "sender", None)
+        if origin and origin.id != user.id:
+            p_from = _get_or_create_profile(origin)
+            pending_requests_payload.append({
+                "id": req.id,
+                "from_username": origin.username,
+                "display_name": getattr(p_from, "display_name", "") or origin.username,
+                "avatar_url": _safe_media_url(p_from.avatar),
+            })
 
     profile_data = _serialize_profile(user, profile)
 
@@ -405,15 +426,53 @@ def room_view(request):
         "username": user.username,
         "display_name": profile_data["display_name"],
         "is_admin": is_admin,
-        "active_server_id": first_server.id if first_server else 1,
-        "active_channel_id": first_channel.id if first_channel else 1,
-        "active_channel_name": first_channel.name if first_channel else "geral",
+        "active_server_id": selected_server.id if selected_server else 1,
+        "active_channel_id": selected_channel.id if selected_channel else 1,
+        "active_channel_name": selected_channel.name if selected_channel else (room_name or "geral"),
         "servers_json": json.dumps(servers_payload),
         "profile_json": json.dumps(profile_data),
         "friends_json": json.dumps(friends_payload),
         "pending_requests_json": json.dumps(pending_requests_payload),
     }
     return render(request, "kiwi_chat/room.html", context)
+
+
+@login_required
+@ensure_csrf_cookie
+def profile_page_view(request):
+    user = request.user
+    profile = _get_or_create_profile(user)
+    profile_data = _serialize_profile(user, profile)
+    return render(
+        request,
+        "kiwi_chat/profile.html",
+        {
+            "username": user.username,
+            "profile": profile,
+            "profile_data": profile_data,
+            "profile_json": json.dumps(profile_data),
+            "is_admin": _is_kiwi_admin(user),
+        },
+    )
+
+
+@login_required
+@ensure_csrf_cookie
+def loja_view(request):
+    user = request.user
+    profile = _get_or_create_profile(user)
+    profile_data = _serialize_profile(user, profile)
+    return render(
+        request,
+        "kiwi_chat/loja.html",
+        {
+            "username": user.username,
+            "profile": profile,
+            "profile_data": profile_data,
+            "profile_json": json.dumps(profile_data),
+            "is_admin": _is_kiwi_admin(user),
+        },
+    )
 
 
 @login_required
@@ -437,17 +496,18 @@ def api_bootstrap(request):
         })
 
     friends = _get_friends_list(user)
-    incoming = FriendRequest.objects.filter(to_user=user, status="pending").select_related(
-        "from_user", "from_user__profile"
-    )
-    requests_data = [
-        {
-            "id": r.id,
-            "from_username": r.from_user.username,
-            "display_name": _format_user_label(r.from_user),
-        }
-        for r in incoming
-    ]
+    incoming = FriendRequest.objects.filter(status="pending").filter(
+        Q(to_user=user) | Q(receiver=user)
+    ).select_related("from_user", "sender")
+    requests_data = []
+    for r in incoming:
+        origin = getattr(r, "from_user", None) or getattr(r, "sender", None)
+        if origin and origin.id != user.id:
+            requests_data.append({
+                "id": r.id,
+                "from_username": origin.username,
+                "display_name": _format_user_label(origin),
+            })
 
     return JsonResponse({
         "ok": True,
@@ -465,11 +525,11 @@ def api_bootstrap(request):
 def api_channel_messages(request, channel_id):
     channel = get_object_or_404(Channel, id=channel_id)
     channel.server.members.add(request.user)
+    order_col = "-created_at" if hasattr(Message, "created_at") else "-timestamp"
     msgs = (
         Message.objects.filter(channel=channel)
-        .select_related("sender", "sender__profile")
         .prefetch_related("reactions", "reactions__user")
-        .order_by("-created_at")[:60]
+        .order_by(order_col, "-id")[:60]
     )
     ordered = list(reversed(msgs))
     return JsonResponse({
@@ -487,13 +547,13 @@ def api_dm_history(request, username):
     if target_user.id == request.user.id:
         return JsonResponse({"ok": False, "error": "Você não pode abrir DM consigo mesmo."}, status=400)
 
+    order_col = "created_at" if hasattr(DirectMessage, "created_at") else "timestamp"
     dms = (
         DirectMessage.objects.filter(
-            Q(sender=request.user, recipient=target_user)
-            | Q(sender=target_user, recipient=request.user)
+            Q(sender=request.user, recipient=target_user) | Q(sender=target_user, recipient=request.user)
+            | Q(sender=request.user, receiver=target_user) | Q(sender=target_user, receiver=request.user)
         )
-        .select_related("sender", "recipient", "sender__profile", "recipient__profile")
-        .order_by("created_at")[:80]
+        .order_by(order_col, "id")[:80]
     )
     return JsonResponse({
         "ok": True,
@@ -517,7 +577,7 @@ def api_send_dm(request, username):
     content = (payload.get("message") or payload.get("text") or "").strip()
     attachment_data = payload.get("attachment_url") or payload.get("attachment") or ""
 
-    if not content and not attachment_data:
+    if not content and not attachment_data and not request.FILES.get("file"):
         return JsonResponse({"ok": False, "error": "Mensagem vazia."}, status=400)
 
     dm = DirectMessage.objects.create(
@@ -560,11 +620,13 @@ def api_upload_attachment(request):
         servers = _ensure_default_workspace(request.user)
         channel = servers[0].channels.order_by("id").first()
 
-    msg = Message.objects.create(
-        channel=channel,
-        sender=request.user,
-        content=content[:2000],
-    )
+    create_kwargs = {"channel": channel, "content": content[:2000]}
+    if hasattr(Message, "sender"):
+        create_kwargs["sender"] = request.user
+    else:
+        create_kwargs["user"] = request.user
+
+    msg = Message.objects.create(**create_kwargs)
     if uploaded:
         msg.attachment = uploaded
         msg.attachment_type = (uploaded.content_type or "file")[:64]
@@ -607,7 +669,8 @@ def api_toggle_reaction(request, message_id):
 @require_POST
 def api_delete_message(request, message_id):
     msg = get_object_or_404(Message, id=message_id)
-    if msg.sender_id != request.user.id and not _is_kiwi_admin(request.user):
+    author_id = getattr(msg, "sender_id", None) or getattr(msg, "user_id", None)
+    if author_id != request.user.id and not _is_kiwi_admin(request.user):
         return JsonResponse({"ok": False, "error": "Sem permissão para excluir esta mensagem."}, status=403)
     msg.delete()
     return JsonResponse({"ok": True, "deleted_id": message_id})
@@ -740,7 +803,7 @@ def api_update_profile(request):
         if saved:
             profile.music_cover.name = saved.replace(settings.MEDIA_URL, "", 1).lstrip("/")
 
-    if is_admin:
+    if is_admin and hasattr(profile, "is_admin_badge"):
         profile.is_admin_badge = True
 
     profile.save()
@@ -787,23 +850,26 @@ def api_friend_request(request):
 @login_required
 @require_POST
 def api_respond_friend_request(request, request_id):
-    freq = get_object_or_404(FriendRequest, id=request_id, to_user=request.user)
+    freq = get_object_or_404(FriendRequest, id=request_id)
     try:
         payload = json.loads(request.body.decode("utf-8") or "{}")
     except Exception:
         payload = request.POST
 
+    origin = getattr(freq, "from_user", None) or getattr(freq, "sender", None)
     action = (payload.get("action") or "").strip().lower()
     if action in ("accept", "aceitar"):
         freq.status = "accepted"
         freq.save()
-        u1, u2 = sorted([request.user, freq.from_user], key=lambda u: u.id)
-        Friendship.objects.get_or_create(user1=u1, user2=u2)
-        return JsonResponse({
-            "ok": True,
-            "accepted": True,
-            "friend": _serialize_profile(freq.from_user, _get_or_create_profile(freq.from_user)),
-        })
+        if origin:
+            u1, u2 = sorted([request.user, origin], key=lambda u: u.id)
+            Friendship.objects.get_or_create(user1=u1, user2=u2)
+            return JsonResponse({
+                "ok": True,
+                "accepted": True,
+                "friend": _serialize_profile(origin, _get_or_create_profile(origin)),
+            })
+        return JsonResponse({"ok": True, "accepted": True})
     elif action in ("reject", "decline", "recusar"):
         freq.status = "rejected"
         freq.save()
