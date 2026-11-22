@@ -1574,20 +1574,28 @@ body {
             </div>
         </div>
 
-        <!-- Modal Detalhes e Respostas da Postagem -->
-        <div id="post-detail-modal" class="modal-overlay" role="dialog" aria-modal="true" aria-label="Detalhes da Postagem">
-            <div class="aesthetic-profile-card" style="padding: 20px; width: 460px; max-height: 88vh; overflow-y: auto;">
-                <button type="button" class="close-modal-btn" id="close-post-detail-btn">×</button>
-                <h3 style="color: var(--text-main); margin-bottom: 12px; font-size: 16px;">💬 Postagem &amp; Respostas</h3>
-                <div id="post-detail-body" style="background: var(--bg-soft); border: 1px solid var(--border-subtle); border-radius: 12px; padding: 12px; margin-bottom: 14px;"></div>
-                <div style="margin-bottom: 12px;">
-                    <div style="font-size: 12px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; margin-bottom: 8px;">Respostas</div>
-                    <div id="post-detail-replies-list" style="display: flex; flex-direction: column; gap: 8px;"></div>
+        <!-- Aba Detalhes e Respostas da Postagem -->
+        <div id="kiwi-post-detail-tab" style="display:none; flex:1; min-height:0; height:100%; flex-direction:column; overflow:hidden; background:var(--kiwi-bg-canvas);">
+            <div class="kiwi-thread-topbar">
+                <div class="kiwi-thread-topbar-left">
+                    <button type="button" class="kiwi-x-back-btn" id="kiwi-post-detail-back-btn" title="Voltar">←</button>
+                    <div class="kiwi-thread-title">💬 Postagem &amp; Respostas</div>
                 </div>
-                <form id="post-detail-reply-form" style="display: flex; flex-direction: column; gap: 8px;">
-                    <label for="post-detail-reply-input" style="font-size: 12px; font-weight: 600; color: var(--text-muted);">Escrever resposta</label>
-                    <textarea id="post-detail-reply-input" rows="3" required placeholder="Escreva sua resposta para esta postagem..."></textarea>
-                    <button type="submit" class="btn-aesthetic-edit">Responder Postagem</button>
+                <button type="button" class="section-mini-action-btn" id="kiwi-post-detail-return-feed-btn">← Voltar ao feed</button>
+            </div>
+
+            <div class="kiwi-thread-scroll" id="kiwi-post-detail-scroll" style="flex:1; overflow-y:auto; padding:16px 20px; display:flex; flex-direction:column; gap:14px;">
+                <div id="post-detail-body" style="background:var(--kiwi-bg-card); border:1px solid var(--kiwi-border); border-radius:14px; padding:14px 16px;"></div>
+                <div>
+                    <div style="font-size:12px; font-weight:700; color:var(--kiwi-text-muted); text-transform:uppercase; margin-bottom:8px;">Respostas</div>
+                    <div id="post-detail-replies-list" style="display:flex; flex-direction:column; gap:8px;"></div>
+                </div>
+            </div>
+
+            <div class="kiwi-thread-reply-bar-wrap" style="padding:12px 18px; border-top:1px solid var(--kiwi-border); background:var(--kiwi-bg-panel);">
+                <form id="post-detail-reply-form" style="display:flex; gap:8px; align-items:center;">
+                    <input type="text" id="post-detail-reply-input" required placeholder="Escreva sua resposta para esta postagem..." style="flex:1; padding:10px 14px; border-radius:999px; border:1px solid var(--kiwi-border); background:var(--kiwi-bg-card); color:var(--kiwi-text-primary); font-size:13px; outline:none;">
+                    <button type="submit" class="kiwi-thread-reply-submit">Responder</button>
                 </form>
             </div>
         </div>
@@ -1866,17 +1874,18 @@ body {
 
             function isAdminIdentity(username, isAdminFlag) {
                 const clean = (username || '').trim().toLowerCase();
-                if (!clean || !hasExplicitUser) return false;
+                if (!clean) return false;
                 if (clean === 'akiirapw') {
-                    return Boolean(isAdminFlag) || injectedIsAdmin || clean === 'akiirapw';
+                    return Boolean(isAdminFlag) || (hasExplicitUser && activeUsername.toLowerCase() === 'akiirapw' && injectedIsAdmin) || true;
                 }
-                return Boolean(isAdminFlag);
+                const stored = profilesByUsername.get(clean);
+                return Boolean(isAdminFlag) || Boolean(stored && stored.is_admin);
             }
 
             function isAkiiraAdminIdentity(username, isAdminFlag) {
                 const clean = (username || '').trim().toLowerCase();
-                if (!clean || !hasExplicitUser || clean !== 'akiirapw') return false;
-                return Boolean(isAdminFlag) || injectedIsAdmin || clean === 'akiirapw';
+                if (!clean || clean !== 'akiirapw') return false;
+                return Boolean(isAdminFlag) || true;
             }
 
             function sanitizeThemeForUser(colorKey, username, isAdminFlag) {
@@ -2065,20 +2074,28 @@ body {
                         if (ctx.type === 'dm' && ctx.targetUser) {
                             const peer = ctx.targetUser;
                             if (!dmThreads[peer]) dmThreads[peer] = [];
-                            const exists = dmThreads[peer].some(m => m.id && item.id && String(m.id) === String(item.id));
-                            if (!exists) {
+                            const msgTextFinal = cleanText || (item.attachmentName ? `📎 ${item.attachmentName}` : 'Anexo');
+                            const msgTimeFinal = item.timestamp || new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                            const existsById = item.id && dmThreads[peer].some(m => m.id && String(m.id) === String(item.id));
+                            const existsByContent = dmThreads[peer].some(m =>
+                                String(m.sender || '').toLowerCase() === String(item.author || '').toLowerCase() &&
+                                String(m.text || '').trim() === String(msgTextFinal).trim() &&
+                                String(m.time || '').trim() === String(msgTimeFinal).trim()
+                            );
+                            if (!existsById && !existsByContent) {
                                 dmThreads[peer].push({
-                                    id: item.id,
+                                    id: item.id || `dm-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
                                     sender: item.author,
-                                    text: cleanText || (item.attachmentName ? `📎 ${item.attachmentName}` : 'Anexo'),
+                                    text: msgTextFinal,
                                     attachmentUrl: cleanAttach,
                                     attachmentName: item.attachmentName || '',
                                     attachmentType: item.attachmentType || '',
-                                    time: item.timestamp || new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+                                    time: msgTimeFinal
                                 });
                             }
                             if (currentView === 'dm' && selectedDmPeer && selectedDmPeer.toLowerCase() === peer.toLowerCase()) {
-                                openDmPeerThread(selectedDmPeer);
+                                renderDmMessagesList(selectedDmPeer);
+                                renderDmSplitPane(dmSearchInp ? dmSearchInp.value : '');
                             }
                         }
 
@@ -3209,24 +3226,30 @@ body {
 
             function getActiveTimelineProfile() {
                 if (inspectedTimelineUser) {
-                    const found = exploreAccountsList.find(a => a.username.toLowerCase() === inspectedTimelineUser.toLowerCase());
-                    if (found) {
-                        const extraSaved = profilesByUsername.get(found.username.toLowerCase()) || {};
-                        return { ...found, ...extraSaved, username: found.username };
-                    }
-                    const extraSaved = profilesByUsername.get(inspectedTimelineUser.toLowerCase()) || {};
+                    const cleanTarget = inspectedTimelineUser.trim();
+                    const lowerTarget = cleanTarget.toLowerCase();
+                    const found = exploreAccountsList.find(a => a.username.toLowerCase() === lowerTarget) || {};
+                    const extraSaved = profilesByUsername.get(lowerTarget) || {};
+                    const isPeerAkiira = lowerTarget === 'akiirapw';
                     return {
-                        username: inspectedTimelineUser,
-                        handle: `@${inspectedTimelineUser.toLowerCase()}`,
-                        bubble: extraSaved.bubble || '✨ Online',
-                        pronouns: extraSaved.pronouns || `@${inspectedTimelineUser.toLowerCase()}`,
-                        bio: extraSaved.bio || `Perfil de ${inspectedTimelineUser} no Kiwi Chat.`,
-                        location: extraSaved.location || 'Brasil',
-                        joinedAt: extraSaved.joinedAt || '2025-01-01',
-                        bannerUrl: extraSaved.bannerUrl || '',
-                        avatarUrl: extraSaved.avatarUrl || '',
-                        is_admin: Boolean(extraSaved.is_admin),
-                        posts: []
+                        username: found.username || extraSaved.username || cleanTarget,
+                        handle: found.handle || `@${lowerTarget}`,
+                        bubble: extraSaved.bubble || found.bubble || '✨ Online',
+                        pronouns: extraSaved.pronouns || found.pronouns || `@${lowerTarget}`,
+                        bio: extraSaved.bio || found.bio || `Perfil de ${cleanTarget} no Kiwi Chat.`,
+                        location: extraSaved.location || found.location || 'Brasil',
+                        joinedAt: extraSaved.joinedAt || found.joinedAt || '2025-01-01',
+                        bannerUrl: extraSaved.bannerUrl || found.bannerUrl || '',
+                        avatarUrl: extraSaved.avatarUrl || found.avatarUrl || '',
+                        song: extraSaved.song || found.song || '',
+                        artist: extraSaved.artist || found.artist || '',
+                        musicUrl: extraSaved.musicUrl || found.musicUrl || '',
+                        audioSrc: extraSaved.audioSrc || found.audioSrc || '',
+                        coverUrl: extraSaved.coverUrl || found.coverUrl || '',
+                        goldGlowFrame: isPeerAkiira ? Boolean(extraSaved.goldGlowFrame ?? found.goldGlowFrame) : false,
+                        profileGlow: isPeerAkiira ? Boolean(extraSaved.profileGlow ?? found.profileGlow) : false,
+                        is_admin: isPeerAkiira ? true : Boolean(extraSaved.is_admin ?? found.is_admin ?? false),
+                        posts: Array.isArray(found.posts) ? found.posts : []
                     };
                 }
                 return myProfileData;
@@ -3824,6 +3847,8 @@ body {
             function hideAllMainSurfaces() {
                 if (profileTimelineView) profileTimelineView.classList.remove('active');
                 if (window.kiwiPostThreadViewEl) window.kiwiPostThreadViewEl.classList.remove('active');
+                const pdTab = document.getElementById('kiwi-post-detail-tab');
+                if (pdTab) pdTab.style.display = 'none';
                 if (dmSplitView) dmSplitView.style.display = 'none';
                 if (chatLog) chatLog.style.display = 'none';
                 if (chatInputAreaEl) chatInputAreaEl.style.display = 'none';
@@ -5367,28 +5392,43 @@ body {
                 if (!txt) return;
                 if (!dmThreads[selectedDmPeer]) dmThreads[selectedDmPeer] = [];
                 const timeStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                const dmClientId = `dm-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
                 const entry = {
+                    id: dmClientId,
                     sender: activeUsername,
                     text: txt,
                     time: timeStr
                 };
-                dmThreads[selectedDmPeer].push(entry);
+                const alreadyInThread = dmThreads[selectedDmPeer].some(m =>
+                    (m.id && String(m.id) === dmClientId) ||
+                    (String(m.sender || '').toLowerCase() === String(activeUsername || '').toLowerCase() &&
+                     String(m.text || '').trim() === txt &&
+                     String(m.time || '').trim() === timeStr)
+                );
+                if (!alreadyInThread) {
+                    dmThreads[selectedDmPeer].push(entry);
+                }
                 roomCtxManager.appendMessageToContext({ type: 'dm', targetUser: selectedDmPeer }, {
+                    id: dmClientId,
                     author: activeUsername,
                     text: txt,
                     timestamp: timeStr
                 });
-                roomCtxManager.sendToContext({ type: 'dm', targetUser: selectedDmPeer }, {
+                const sentViaWs = roomCtxManager.sendToContext({ type: 'dm', targetUser: selectedDmPeer }, {
                     type: 'dm_message',
+                    id: dmClientId,
+                    client_id: dmClientId,
                     recipient: selectedDmPeer,
                     message: txt,
                     username: activeUsername
                 });
-                apiRequestJson('/api/dm/send/', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ recipient: selectedDmPeer, message: txt })
-                }).catch(() => {});
+                if (!sentViaWs) {
+                    apiRequestJson('/api/dm/send/', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ recipient: selectedDmPeer, message: txt })
+                    }).catch(() => {});
+                }
                 dmRightInputEl.value = '';
                 renderDmMessagesList(selectedDmPeer);
                 renderDmSplitPane(dmSearchInp ? dmSearchInp.value : '');
@@ -5688,22 +5728,37 @@ body {
                 }
             }
 
+            const postDetailTabEl = document.getElementById('kiwi-post-detail-tab');
+            const postDetailBackBtn = document.getElementById('kiwi-post-detail-back-btn');
+            const postDetailReturnFeedBtn = document.getElementById('kiwi-post-detail-return-feed-btn');
+
+            function closePostDetailTab() {
+                if (postDetailTabEl) postDetailTabEl.style.display = 'none';
+                activateNavTab('perfil');
+            }
+
             window.openPostDetailModal = function(postId) {
                 const post = findPostById(postId);
-                if (!post || !postDetailModal) return;
+                if (!post || !postDetailTabEl) return;
                 activeDetailPostId = post.id;
+                currentView = 'post_detail';
+                if (headerMainTitle) headerMainTitle.textContent = '💬 Postagem & Respostas';
+                if (headerSubLabel) headerSubLabel.textContent = '| Discussão da postagem';
+                if (backToGeralBtn) backToGeralBtn.classList.add('visible');
+                if (headerCallBtn) headerCallBtn.classList.remove('visible');
+                hideAllMainSurfaces();
                 renderPostDetailModal(post);
-                openModalAnimated(postDetailModal);
+                postDetailTabEl.style.display = 'flex';
+                openMobileChatView();
+                triggerChatAreaTransition();
                 setTimeout(() => { if (postDetailReplyInput) postDetailReplyInput.focus(); }, 100);
             };
 
-            if (closePostDetailBtn && postDetailModal) {
-                closePostDetailBtn.addEventListener('click', () => closeModalAnimated(postDetailModal));
+            if (postDetailBackBtn) {
+                postDetailBackBtn.addEventListener('click', closePostDetailTab);
             }
-            if (postDetailModal) {
-                postDetailModal.addEventListener('click', (e) => {
-                    if (e.target === postDetailModal) closeModalAnimated(postDetailModal);
-                });
+            if (postDetailReturnFeedBtn) {
+                postDetailReturnFeedBtn.addEventListener('click', closePostDetailTab);
             }
             if (postDetailReplyForm) {
                 postDetailReplyForm.addEventListener('submit', (e) => {
