@@ -795,10 +795,17 @@ def api_update_profile(request):
         profile.name_effect = _sanitize_name_effect(data.get("name_effect"), is_admin=is_admin)
     if "avatar_frame" in data:
         profile.avatar_frame = _sanitize_avatar_frame(data.get("avatar_frame"), is_admin=is_admin)
-    if "music_title" in data:
-        profile.music_title = (data.get("music_title") or "").strip()[:120]
-    if "music_artist" in data:
-        profile.music_artist = (data.get("music_artist") or "").strip()[:120]
+    raw_custom_status = data.get("custom_status") if "custom_status" in data else data.get("bubble")
+    if raw_custom_status is not None:
+        profile.custom_status = str(raw_custom_status or "").strip()[:120]
+
+    raw_music_title = data.get("music_title") if "music_title" in data else data.get("spotify_song")
+    if raw_music_title is not None:
+        profile.music_title = str(raw_music_title or "").strip()[:120]
+
+    raw_music_artist = data.get("music_artist") if "music_artist" in data else data.get("spotify_artist")
+    if raw_music_artist is not None:
+        profile.music_artist = str(raw_music_artist or "").strip()[:120]
 
     if request.FILES.get("avatar"):
         profile.avatar = request.FILES["avatar"]
@@ -826,8 +833,9 @@ def api_update_profile(request):
         elif raw_banner.startswith(("http://", "https://")) and hasattr(profile, "banner_url"):
             profile.banner_url = raw_banner
 
-    if request.FILES.get("music_file"):
-        profile.music_file = request.FILES["music_file"]
+    uploaded_music = request.FILES.get("music_file") or request.FILES.get("music_audio")
+    if uploaded_music:
+        profile.music_file = uploaded_music
     elif isinstance(data.get("music_url"), str) and data.get("music_url").startswith("data:"):
         saved = _save_base64_media(data.get("music_url"), prefix="music")
         if saved:
@@ -886,15 +894,23 @@ def api_friend_request(request):
 
 @login_required
 @require_POST
-def api_respond_friend_request(request, request_id):
-    freq = get_object_or_404(FriendRequest, id=request_id)
+def api_respond_friend_request(request, request_id=None):
     try:
         payload = json.loads(request.body.decode("utf-8") or "{}")
     except Exception:
         payload = request.POST
 
+    resolved_id = request_id or payload.get("request_id") or payload.get("id")
+    freq = get_object_or_404(FriendRequest, id=int(resolved_id))
+
     origin = getattr(freq, "from_user", None) or getattr(freq, "sender", None)
     action = (payload.get("action") or "").strip().lower()
+    if not action:
+        path_lower = (request.path or "").lower()
+        if "reject" in path_lower or "decline" in path_lower or "recusar" in path_lower:
+            action = "reject"
+        elif "accept" in path_lower or "aceitar" in path_lower:
+            action = "accept"
     if action in ("accept", "aceitar"):
         freq.status = "accepted"
         freq.save()
@@ -917,8 +933,15 @@ def api_respond_friend_request(request, request_id):
 
 @login_required
 @require_POST
-def api_remove_friend(request, username):
-    target_user = get_object_or_404(User, username__iexact=username)
+def api_remove_friend(request, username=None):
+    try:
+        payload = json.loads(request.body.decode("utf-8") or "{}")
+    except Exception:
+        payload = request.POST
+    resolved_username = (username or payload.get("username") or "").strip()
+    if not resolved_username:
+        return JsonResponse({"ok": False, "error": "Usuário não informado."}, status=400)
+    target_user = get_object_or_404(User, username__iexact=resolved_username)
     Friendship.objects.filter(
         Q(user1=request.user, user2=target_user) | Q(user1=target_user, user2=request.user)
     ).delete()
