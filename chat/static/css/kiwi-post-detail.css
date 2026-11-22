@@ -1,0 +1,270 @@
+/* CSS específico para a aba de Detalhes e Respostas da Postagem (#kiwi-post-detail-tab) */
+
+#kiwi-post-detail-tab {
+    display: none;
+    flex: 1 1 auto;
+    flex-direction: column;
+    width: 100%;
+    height: 100%;
+    min-height: 0;
+    overflow: hidden;
+    background: var(--kiwi-bg-canvas, #0b0714);
+    color: var(--kiwi-text-primary, #f5f3ff);
+}
+
+#kiwi-post-detail-tab.is-open {
+    display: flex;
+}
+
+/* Cabeçalho superior da thread de postagem */
+#kiwi-post-detail-tab .kiwi-thread-topbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 12px 18px;
+    background: var(--kiwi-bg-panel, #160d29);
+    border-bottom: 1px solid var(--kiwi-border, rgba(167, 139, 250, 0.16));
+    flex-shrink: 0;
+    z-index: 4;
+}
+
+#kiwi-post-detail-tab .kiwi-thread-topbar-left {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-width: 0;
+}
+
+#kiwi-post-detail-tab .kiwi-thread-title {
+    font-size: 16px;
+    font-weight: 800;
+    letter-spacing: -0.01em;
+    color: var(--kiwi-text-primary, #f5f3ff);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* Área rolável central (post principal + respostas) */
+#kiwi-post-detail-scroll {
+    flex: 1 1 auto;
+    min-height: 0;
+    width: 100%;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
+    padding: 16px 20px 28px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+/* Card da postagem principal em destaque */
+#post-detail-body {
+    width: 100%;
+    max-width: 780px;
+    margin: 0 auto;
+    background: var(--kiwi-bg-card, #1c1133);
+    border: 1px solid var(--kiwi-border, rgba(167, 139, 250, 0.18));
+    border-radius: 16px;
+    padding: 16px 18px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.28);
+}
+
+#post-detail-body .kiwi-post-detail-author-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    margin-bottom: 10px;
+}
+
+#post-detail-body .kiwi-post-detail-author {
+    font-weight: 800;
+    font-size: 15px;
+    color: var(--kiwi-text-primary, #f5f3ff);
+}
+
+#post-detail-body .kiwi-post-detail-meta {
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--kiwi-text-muted, #a79bc4);
+}
+
+#post-detail-body .kiwi-post-detail-content {
+    font-size: 15px;
+    line-height: 1.55;
+    color: var(--kiwi-text-primary, #f5f3ff);
+    white-space: pre-wrap;
+    word-break: break-word;
+}
+
+/* Seção e lista de respostas */
+.kiwi-post-detail-replies-section {
+    width: 100%;
+    max-width: 780px;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.kiwi-post-detail-replies-heading {
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--kiwi-text-muted, #a79bc4);
+    padding-left: 2px;
+}
+
+#post-detail-replies-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.kiwi-post-reply-card {
+    background: var(--kiwi-bg-card, #1c1133);
+    border: 1px solid var(--kiwi-border, rgba(167, 139, 250, 0.14));
+    border-radius: 12px;
+    padding: 11px 14px;
+    transition: border-color 0.15s ease, background 0.15s ease;
+}
+
+.kiwi-post-reply-card:hover {
+    border-color: rgba(167, 139, 250, 0.34);
+    background: var(--kiwi-bg-elevated, #241642);
+}
+
+.kiwi-post-reply-header {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--kiwi-text-primary, #f5f3ff);
+    margin-bottom: 4px;
+}
+
+.kiwi-post-reply-time {
+    font-weight: 400;
+    color: var(--kiwi-text-muted, #a79bc4);
+}
+
+.kiwi-post-reply-text {
+    font-size: 13.5px;
+    line-height: 1.45;
+    color: var(--kiwi-text-primary, #f5f3ff);
+    white-space: pre-wrap;
+    word-break: break-word;
+}
+
+.kiwi-post-replies-empty {
+    font-size: 13px;
+    color: var(--kiwi-text-muted, #a79bc4);
+    background: rgba(28, 17, 51, 0.55);
+    border: 1px dashed var(--kiwi-border, rgba(167, 139, 250, 0.2));
+    border-radius: 12px;
+    padding: 14px;
+    text-align: center;
+}
+
+/* Barra fixa inferior para escrever resposta */
+#kiwi-post-detail-tab .kiwi-thread-reply-bar-wrap {
+    padding: 12px 18px;
+    background: var(--kiwi-bg-panel, #160d29);
+    border-top: 1px solid var(--kiwi-border, rgba(167, 139, 250, 0.16));
+    flex-shrink: 0;
+}
+
+#post-detail-reply-form {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    max-width: 780px;
+    margin: 0 auto;
+    width: 100%;
+}
+
+#post-detail-reply-input {
+    flex: 1 1 auto;
+    min-width: 0;
+    padding: 10px 16px;
+    border-radius: 999px;
+    border: 1px solid var(--kiwi-border, rgba(167, 139, 250, 0.22));
+    background: var(--kiwi-bg-card, #1c1133);
+    color: var(--kiwi-text-primary, #f5f3ff);
+    font-family: inherit;
+    font-size: 13.5px;
+    outline: none;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+#post-detail-reply-input:focus {
+    border-color: var(--kiwi-accent-purple, #7c3aed);
+    box-shadow: 0 0 0 2px rgba(124, 58, 237, 0.22);
+}
+
+#post-detail-reply-form .kiwi-thread-reply-submit {
+    flex-shrink: 0;
+    padding: 10px 18px;
+    border-radius: 999px;
+    border: none;
+    background: var(--kiwi-accent-purple, #7c3aed);
+    color: #ffffff;
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background 0.15s ease, transform 0.12s ease;
+}
+
+#post-detail-reply-form .kiwi-thread-reply-submit:hover {
+    background: var(--kiwi-accent-purple-bright, #9333ea);
+}
+
+#post-detail-reply-form .kiwi-thread-reply-submit:active {
+    transform: scale(0.97);
+}
+
+/* Ajustes para telas menores / mobile */
+@media (max-width: 768px) {
+    #kiwi-post-detail-tab .kiwi-thread-topbar {
+        padding: 10px 12px;
+        gap: 8px;
+    }
+
+    #kiwi-post-detail-tab .kiwi-thread-title {
+        font-size: 14px;
+    }
+
+    #kiwi-post-detail-scroll {
+        padding: 12px 12px 24px;
+        gap: 12px;
+    }
+
+    #post-detail-body {
+        border-radius: 12px;
+        padding: 12px 14px;
+    }
+
+    #post-detail-body .kiwi-post-detail-content {
+        font-size: 14px;
+    }
+
+    #kiwi-post-detail-tab .kiwi-thread-reply-bar-wrap {
+        padding: 10px 12px calc(10px + env(safe-area-inset-bottom));
+    }
+
+    #post-detail-reply-input {
+        padding: 9px 14px;
+        font-size: 13px;
+    }
+
+    #post-detail-reply-form .kiwi-thread-reply-submit {
+        padding: 9px 14px;
+        font-size: 12.5px;
+    }
+}
