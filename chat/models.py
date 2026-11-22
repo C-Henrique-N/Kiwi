@@ -8,27 +8,52 @@ from django.db.models.signals import m2m_changed, post_save
 from django.dispatch import receiver
 
 
-def _short_upload(folder):
-    def _upload(instance, filename):
-        ext = os.path.splitext(filename or "")[1].lower()
-        if not ext or len(ext) > 10:
-            ext = ".png"
-        owner_id = (
-            getattr(instance, "user_id", None)
-            or getattr(instance, "author_id", None)
-            or getattr(instance, "sender_id", None)
-            or getattr(instance, "owner_id", None)
-            or "item"
-        )
-        return f"{folder}/{owner_id}_{uuid.uuid4().hex[:12]}{ext}"
+def _upload_to(instance, filename, folder):
+    ext = os.path.splitext(filename or "")[1].lower()
+    if not ext or len(ext) > 10:
+        ext = ".png"
+    owner_id = (
+        getattr(instance, "user_id", None)
+        or getattr(instance, "author_id", None)
+        or getattr(instance, "sender_id", None)
+        or getattr(instance, "owner_id", None)
+        or "item"
+    )
+    return f"{folder}/{owner_id}_{uuid.uuid4().hex[:12]}{ext}"
 
-    return _upload
+
+def upload_avatar(instance, filename):
+    return _upload_to(instance, filename, "avatars")
+
+
+def upload_banner(instance, filename):
+    return _upload_to(instance, filename, "banners")
+
+
+def upload_music_audio(instance, filename):
+    return _upload_to(instance, filename, "music_audios")
+
+
+def upload_music_cover(instance, filename):
+    return _upload_to(instance, filename, "music_covers")
+
+
+def upload_server_icon(instance, filename):
+    return _upload_to(instance, filename, "server_icons")
+
+
+def upload_chat_attachment(instance, filename):
+    return _upload_to(instance, filename, "chat_attachments")
+
+
+def upload_profile_post(instance, filename):
+    return _upload_to(instance, filename, "profile_posts")
 
 
 class UserProfile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='profile')
-    avatar = models.ImageField(upload_to=_short_upload('avatars'), max_length=255, blank=True, null=True)
-    banner = models.ImageField(upload_to=_short_upload('banners'), max_length=255, blank=True, null=True)
+    avatar = models.ImageField(upload_to=upload_avatar, max_length=255, blank=True, null=True)
+    banner = models.ImageField(upload_to=upload_banner, max_length=255, blank=True, null=True)
     bubble = models.CharField(max_length=255, blank=True, default='🌸 a testar o novo kiwi chat...')
     pronouns = models.CharField(max_length=100, blank=True, default='utilizador • 🥝')
     bio = models.TextField(blank=True, default='Perfil estético ativo.')
@@ -41,9 +66,9 @@ class UserProfile(models.Model):
     avatar_pulse = models.BooleanField(default=False)
     name_style = models.CharField(max_length=50, blank=True, default='')
     music_url = models.URLField(blank=True, default='')
-    music_audio_file = models.FileField(upload_to=_short_upload('music_audios'), max_length=255, blank=True, null=True)
+    music_audio_file = models.FileField(upload_to=upload_music_audio, max_length=255, blank=True, null=True)
     music_audio_url = models.TextField(blank=True, default='')
-    music_cover_file = models.ImageField(upload_to=_short_upload('music_covers'), max_length=255, blank=True, null=True)
+    music_cover_file = models.ImageField(upload_to=upload_music_cover, max_length=255, blank=True, null=True)
     music_cover_url = models.TextField(blank=True, default='')
 
     @property
@@ -109,7 +134,7 @@ class UserProfile(models.Model):
 
 class Server(models.Model):
     name = models.CharField(max_length=120)
-    icon = models.ImageField(upload_to=_short_upload('server_icons'), max_length=255, blank=True, null=True)
+    icon = models.ImageField(upload_to=upload_server_icon, max_length=255, blank=True, null=True)
     owner = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
@@ -279,7 +304,7 @@ class Message(models.Model):
         blank=True,
     )
     content = models.TextField(blank=True)
-    attachment = models.FileField(upload_to=_short_upload('chat_attachments'), max_length=255, blank=True, null=True)
+    attachment = models.FileField(upload_to=upload_chat_attachment, max_length=255, blank=True, null=True)
     attachment_type = models.CharField(max_length=20, blank=True)
     client_id = models.CharField(max_length=100, blank=True, default='', db_index=True)
     timestamp = models.DateTimeField(auto_now_add=True)
@@ -323,7 +348,7 @@ class PrivateMessage(models.Model):
         blank=True,
     )
     content = models.TextField(blank=True)
-    attachment = models.FileField(upload_to=_short_upload('chat_attachments'), max_length=255, blank=True, null=True)
+    attachment = models.FileField(upload_to=upload_chat_attachment, max_length=255, blank=True, null=True)
     attachment_type = models.CharField(max_length=20, blank=True)
     client_id = models.CharField(max_length=100, blank=True, default='', db_index=True)
     timestamp = models.DateTimeField(auto_now_add=True)
@@ -360,9 +385,9 @@ class SavedMusic(models.Model):
     title = models.CharField(max_length=150, blank=True)
     artist = models.CharField(max_length=150, blank=True)
     music_url = models.URLField(blank=True)
-    audio_file = models.FileField(upload_to=_short_upload('music_audios'), max_length=255, blank=True, null=True)
+    audio_file = models.FileField(upload_to=upload_music_audio, max_length=255, blank=True, null=True)
     audio_url = models.TextField(blank=True)
-    cover_file = models.ImageField(upload_to=_short_upload('music_covers'), max_length=255, blank=True, null=True)
+    cover_file = models.ImageField(upload_to=upload_music_cover, max_length=255, blank=True, null=True)
     cover_url = models.TextField(blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
@@ -397,7 +422,7 @@ class SavedMusic(models.Model):
 class ProfilePost(models.Model):
     author = models.ForeignKey(User, on_delete=models.CASCADE, related_name='profile_posts')
     content = models.TextField()
-    image = models.ImageField(upload_to=_short_upload('profile_posts'), max_length=255, blank=True, null=True)
+    image = models.ImageField(upload_to=upload_profile_post, max_length=255, blank=True, null=True)
     image_url = models.TextField(blank=True, default='')
     liked_by = models.ManyToManyField(User, related_name='liked_profile_posts', blank=True)
     reposts_count = models.PositiveIntegerField(default=0)
@@ -530,44 +555,3 @@ class MessageReaction(models.Model):
 
 
 Profile = UserProfile
-
-def _upload_to(instance, filename, folder):
-    ext = os.path.splitext(filename or "")[1].lower()
-    if not ext or len(ext) > 10:
-        ext = ".png"
-    owner_id = (
-        getattr(instance, "user_id", None)
-        or getattr(instance, "author_id", None)
-        or getattr(instance, "sender_id", None)
-        or getattr(instance, "owner_id", None)
-        or "item"
-    )
-    return f"{folder}/{owner_id}_{uuid.uuid4().hex[:12]}{ext}"
-
-
-def upload_avatar(instance, filename):
-    return _upload_to(instance, filename, "avatars")
-
-
-def upload_banner(instance, filename):
-    return _upload_to(instance, filename, "banners")
-
-
-def upload_music_audio(instance, filename):
-    return _upload_to(instance, filename, "music_audios")
-
-
-def upload_music_cover(instance, filename):
-    return _upload_to(instance, filename, "music_covers")
-
-
-def upload_server_icon(instance, filename):
-    return _upload_to(instance, filename, "server_icons")
-
-
-def upload_chat_attachment(instance, filename):
-    return _upload_to(instance, filename, "chat_attachments")
-
-
-def upload_profile_post(instance, filename):
-    return _upload_to(instance, filename, "profile_posts")
