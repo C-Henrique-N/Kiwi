@@ -323,9 +323,9 @@ def _render_first_existing(request, template_names, context):
 def login_view(request):
     if request.user.is_authenticated:
         try:
-                return redirect("room")
-            except Exception:
-                return redirect("room_home")
+            return redirect("room")
+        except Exception:
+            return redirect("room_home")
 
     error_message = None
     if request.method == "POST":
@@ -349,9 +349,9 @@ def login_view(request):
 def register_view(request):
     if request.user.is_authenticated:
         try:
-                return redirect("room")
-            except Exception:
-                return redirect("room_home")
+            return redirect("room")
+        except Exception:
+            return redirect("room_home")
 
     error_message = None
     if request.method == "POST":
@@ -376,9 +376,9 @@ def register_view(request):
                 _ensure_default_workspace(user)
                 login(request, user)
                 try:
-                return redirect("room")
-            except Exception:
-                return redirect("room_home")
+                    return redirect("room")
+                except Exception:
+                    return redirect("room_home")
             except IntegrityError:
                 error_message = "Não foi possível criar a conta agora."
 
