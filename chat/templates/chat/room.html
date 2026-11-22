@@ -393,10 +393,10 @@ body {
 </style>
 </head>
 <body>
-    <script id="kiwi-username-data" type="application/json">null</script>
-    <script id="kiwi-is-admin-data" type="application/json">false</script>
-    <script id="kiwi-channel-id-data" type="application/json">null</script>
-    <script id="kiwi-server-id-data" type="application/json">null</script>
+    <script id="kiwi-username-data" type="application/json">"{{ username|default:''|escapejs }}"</script>
+    <script id="kiwi-is-admin-data" type="application/json">{% if is_admin %}true{% else %}false{% endif %}</script>
+    <script id="kiwi-channel-id-data" type="application/json">{{ active_channel_id|default:"null" }}</script>
+    <script id="kiwi-server-id-data" type="application/json">{{ active_server_id|default:"null" }}</script>
     <script id="kiwi-profile-data" type="application/json">{{ profile_json|default:"null"|safe }}</script>
 
     <script>
