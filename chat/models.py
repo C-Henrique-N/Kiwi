@@ -530,3 +530,44 @@ class MessageReaction(models.Model):
 
 
 Profile = UserProfile
+
+def _upload_to(instance, filename, folder):
+    ext = os.path.splitext(filename or "")[1].lower()
+    if not ext or len(ext) > 10:
+        ext = ".png"
+    owner_id = (
+        getattr(instance, "user_id", None)
+        or getattr(instance, "author_id", None)
+        or getattr(instance, "sender_id", None)
+        or getattr(instance, "owner_id", None)
+        or "item"
+    )
+    return f"{folder}/{owner_id}_{uuid.uuid4().hex[:12]}{ext}"
+
+
+def upload_avatar(instance, filename):
+    return _upload_to(instance, filename, "avatars")
+
+
+def upload_banner(instance, filename):
+    return _upload_to(instance, filename, "banners")
+
+
+def upload_music_audio(instance, filename):
+    return _upload_to(instance, filename, "music_audios")
+
+
+def upload_music_cover(instance, filename):
+    return _upload_to(instance, filename, "music_covers")
+
+
+def upload_server_icon(instance, filename):
+    return _upload_to(instance, filename, "server_icons")
+
+
+def upload_chat_attachment(instance, filename):
+    return _upload_to(instance, filename, "chat_attachments")
+
+
+def upload_profile_post(instance, filename):
+    return _upload_to(instance, filename, "profile_posts")
