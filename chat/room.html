@@ -1954,7 +1954,7 @@ html, body {
             function isSafeAssetUrl(url) {
                 if (!url || typeof url !== 'string') return false;
                 const trimmed = url.trim();
-                if (!trimmed || /["'()<>\]/.test(trimmed)) return false;
+                if (!trimmed || /["'()<>\\]/.test(trimmed)) return false;
                 if (trimmed.startsWith('/') && !trimmed.startsWith('//')) return true;
                 if (/^https?:\/\//i.test(trimmed)) return true;
                 if (/^data:image\/(png|jpe?g|gif|webp|avif);base64,[a-z0-9+/=]+$/i.test(trimmed)) return true;
@@ -5024,10 +5024,10 @@ html, body {
                     const list = Array.isArray(data.musics) ? data.musics : (Array.isArray(data) ? data : null);
                     if (list) {
                         savedTracks = list.map(m => ({
-                            id: m.id || `trk-${Math.random().toString(36).slice(2, 7)}`,
-                            title: m.title || m.song || m.name || 'Faixa',
+                            id: m.id,
+                            title: m.title || m.song || 'Faixa',
                             artist: m.artist || '',
-                            audioSrc: m.audio_url || m.audioSrc || '',
+                            audioUrl: m.audio_url || m.audioUrl || '',
                             coverUrl: m.cover_url || m.coverUrl || ''
                         }));
                         writeStorageJson(SAVED_TRACKS_KEY, savedTracks);
@@ -5038,53 +5038,33 @@ html, body {
 
             function renderSavedMusicList() {
                 if (!savedMusicList) return;
-                if (!Array.isArray(savedTracks) || !savedTracks.length) {
+                savedMusicList.innerHTML = '';
+                if (!savedTracks.length) {
                     savedMusicList.innerHTML = '<div style="opacity:0.7;">Nenhuma música salva ainda. Clique em "+ Adicionar".</div>';
                     return;
                 }
-                savedMusicList.innerHTML = '';
-                savedTracks.forEach((trk, idx) => {
-                    const row = document.createElement('div');
-                    row.style.cssText = 'display:flex;align-items:center;justify-content:space-between;gap:8px;background:#232429;padding:6px 8px;border-radius:7px;';
-                    const info = document.createElement('div');
-                    info.style.cssText = 'min-width:0;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;';
-                    info.innerHTML = `<strong>${escapeHtmlText(trk.title)}</strong> <span style="opacity:0.7;">${escapeHtmlText(trk.artist || '')}</span>`;
-                    const btns = document.createElement('div');
-                    btns.style.cssText = 'display:flex;gap:5px;flex-shrink:0;';
-
+                savedTracks.forEach((tr) => {
+                    const item = document.createElement('div');
+                    item.style.cssText = 'display:flex;align-items:center;justify-content:space-between;gap:8px;padding:6px 8px;border-radius:7px;background:#232429;';
+                    const meta = document.createElement('div');
+                    meta.style.cssText = 'min-width:0;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;';
+                    meta.textContent = `🎵 ${tr.title}${tr.artist ? ' — ' + tr.artist : ''}`;
                     const useBtn = document.createElement('button');
                     useBtn.type = 'button';
+                    useBtn.style.cssText = 'background:#7c3aed;color:#fff;border:none;border-radius:5px;padding:3px 8px;font-size:11px;cursor:pointer;';
                     useBtn.textContent = 'Usar';
-                    useBtn.style.cssText = 'background:#7c3aed;color:#fff;border:none;border-radius:5px;padding:3px 7px;font-size:11px;cursor:pointer;';
                     useBtn.onclick = () => {
-                        if (editSong) editSong.value = trk.title || '';
-                        if (editArtist) editArtist.value = trk.artist || '';
-                        if (trk.audioSrc) {
-                            tempEditorAudioUrl = trk.audioSrc;
-                            if (editLocalAudioUrl) editLocalAudioUrl.value = trk.audioSrc;
-                        }
-                        if (trk.coverUrl) {
-                            tempEditorCoverUrl = trk.coverUrl;
-                            if (editMusicCoverUrl) editMusicCoverUrl.value = trk.coverUrl;
-                        }
-                        showKiwiToast(`Música "${trk.title}" selecionada!`);
+                        if (editSong) editSong.value = tr.title || '';
+                        if (editArtist) editArtist.value = tr.artist || '';
+                        if (editLocalAudioUrl && tr.audioUrl) editLocalAudioUrl.value = tr.audioUrl;
+                        if (editMusicCoverUrl && tr.coverUrl) editMusicCoverUrl.value = tr.coverUrl;
+                        if (tr.audioUrl) tempEditorAudioUrl = tr.audioUrl;
+                        if (tr.coverUrl) tempEditorCoverUrl = tr.coverUrl;
+                        showKiwiToast('Música carregada no perfil!');
                     };
-
-                    const delBtn = document.createElement('button');
-                    delBtn.type = 'button';
-                    delBtn.textContent = '✕';
-                    delBtn.style.cssText = 'background:rgba(239,68,68,0.22);color:#fca5a5;border:none;border-radius:5px;padding:3px 6px;font-size:11px;cursor:pointer;';
-                    delBtn.onclick = () => {
-                        savedTracks.splice(idx, 1);
-                        writeStorageJson(SAVED_TRACKS_KEY, savedTracks);
-                        renderSavedMusicList();
-                    };
-
-                    btns.appendChild(useBtn);
-                    btns.appendChild(delBtn);
-                    row.appendChild(info);
-                    row.appendChild(btns);
-                    savedMusicList.appendChild(row);
+                    item.appendChild(meta);
+                    item.appendChild(useBtn);
+                    savedMusicList.appendChild(item);
                 });
             }
 
@@ -5093,141 +5073,315 @@ html, body {
                     const isOpen = savedMusicBox.style.display === 'block';
                     savedMusicBox.style.display = isOpen ? 'none' : 'block';
                     if (!isOpen) loadSavedTracksFromBackend();
-                    renderSavedMusicList();
                 });
             }
             if (quickAddMusicToggle && quickAddMusicForm) {
                 quickAddMusicToggle.addEventListener('click', () => {
-                    quickAddMusicForm.style.display = quickAddMusicForm.style.display === 'block' ? 'none' : 'block';
+                    quickAddMusicForm.style.display = quickAddMusicForm.style.display === 'none' ? 'block' : 'none';
                 });
             }
             if (qmSaveBtn) {
                 qmSaveBtn.addEventListener('click', async () => {
                     const tInp = document.getElementById('qm-title');
                     const aInp = document.getElementById('qm-artist');
-                    const auUrlInp = document.getElementById('qm-audio-url');
-                    const cuUrlInp = document.getElementById('qm-cover-url');
-                    const auFileInp = document.getElementById('qm-audio-file');
-                    const cuFileInp = document.getElementById('qm-cover-file');
+                    const auInp = document.getElementById('qm-audio-url');
+                    const cuInp = document.getElementById('qm-cover-url');
+                    const afInp = document.getElementById('qm-audio-file');
+                    const cfInp = document.getElementById('qm-cover-file');
 
                     const title = (tInp && tInp.value.trim()) || '';
+                    const artist = (aInp && aInp.value.trim()) || '';
                     if (!title) {
                         showKiwiToast('Informe o nome da música.');
                         return;
                     }
-                    const artist = (aInp && aInp.value.trim()) || '';
-                    let audioSrc = (auUrlInp && auUrlInp.value.trim()) || '';
-                    let coverUrl = (cuUrlInp && cuUrlInp.value.trim()) || '';
-
-                    if (auFileInp && auFileInp.files && auFileInp.files[0]) {
-                        try { audioSrc = await readFileAsDataUrl(auFileInp.files[0]); } catch (_) {}
+                    let audioUrl = (auInp && auInp.value.trim()) || '';
+                    let coverUrl = (cuInp && cuInp.value.trim()) || '';
+                    if (afInp && afInp.files && afInp.files[0]) {
+                        try { audioUrl = await readFileAsDataUrl(afInp.files[0]); } catch (_) {}
                     }
-                    if (cuFileInp && cuFileInp.files && cuFileInp.files[0]) {
-                        try { coverUrl = await readFileAsDataUrl(cuFileInp.files[0]); } catch (_) {}
+                    if (cfInp && cfInp.files && cfInp.files[0]) {
+                        try { coverUrl = await readFileAsDataUrl(cfInp.files[0]); } catch (_) {}
                     }
 
-                    savedTracks.unshift({
-                        id: `trk-${Date.now()}`,
-                        title,
-                        artist,
-                        audioSrc,
-                        coverUrl
-                    });
+                    const newTrack = { id: 'trk-' + Date.now().toString(36), title, artist, audioUrl, coverUrl };
+                    savedTracks.unshift(newTrack);
                     writeStorageJson(SAVED_TRACKS_KEY, savedTracks);
                     renderSavedMusicList();
 
-                    apiRequestJson('/api/musics/saved/', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ title, artist, audio_url: audioSrc, cover_url: coverUrl })
-                    }).catch(() => {});
+                    try {
+                        await apiRequestJson('/api/musics/save/', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ title, artist, audio_url: audioUrl, cover_url: coverUrl })
+                        });
+                    } catch (_) {}
 
                     if (tInp) tInp.value = '';
                     if (aInp) aInp.value = '';
-                    if (auUrlInp) auUrlInp.value = '';
-                    if (cuUrlInp) cuUrlInp.value = '';
-                    if (auFileInp) auFileInp.value = '';
-                    if (cuFileInp) cuFileInp.value = '';
+                    if (auInp) auInp.value = '';
+                    if (cuInp) cuInp.value = '';
+                    if (afInp) afInp.value = '';
+                    if (cfInp) cfInp.value = '';
                     if (quickAddMusicForm) quickAddMusicForm.style.display = 'none';
                     showKiwiToast('Música guardada!');
                 });
             }
 
-            const xBackBtn = document.getElementById('kiwi-x-back-btn');
-            const xEditProfileBtn = document.getElementById('kiwi-x-edit-profile-btn');
-            const xOpenCardBtn = document.getElementById('kiwi-x-open-card-btn');
+            document.querySelectorAll('.kiwi-file-picker-wrap').forEach(wrap => {
+                const targetId = wrap.getAttribute('data-file-picker-for');
+                const emptyText = wrap.getAttribute('data-empty-text') || 'Nenhum ficheiro escolhido';
+                const btn = wrap.querySelector('.kiwi-file-picker-btn');
+                const nameSpan = wrap.querySelector('.kiwi-file-picker-name');
+                const clearBtn = wrap.querySelector('.kiwi-file-picker-clear');
+                const fileInp = targetId ? document.getElementById(targetId) : null;
+                if (!fileInp) return;
+
+                if (btn) btn.addEventListener('click', () => fileInp.click());
+                if (clearBtn) {
+                    clearBtn.addEventListener('click', () => {
+                        fileInp.value = '';
+                        if (nameSpan) nameSpan.textContent = emptyText;
+                        if (targetId === 'edit-local-audio-file') { tempEditorAudioUrl = ''; tempEditorAudioName = ''; }
+                        if (targetId === 'edit-music-cover-file') { tempEditorCoverUrl = ''; }
+                    });
+                }
+                fileInp.addEventListener('change', () => {
+                    const f = fileInp.files && fileInp.files[0];
+                    if (nameSpan) nameSpan.textContent = f ? f.name : emptyText;
+                });
+            });
+
+            chatLog.addEventListener('click', async function(e) {
+                const target = e.target;
+                if (!(target instanceof Element)) return;
+
+                const imgEl = target.closest('img.msg-attachment-img');
+                if (imgEl && imgEl.src) {
+                    e.stopPropagation();
+                    openImageLightbox(imgEl.src, imgEl.alt || 'Imagem');
+                    return;
+                }
+
+                const reactBtn = target.closest('[data-react-emoji]');
+                if (reactBtn) {
+                    e.stopPropagation();
+                    const emoji = reactBtn.getAttribute('data-react-emoji');
+                    const grp = reactBtn.closest('.message-group');
+                    toggleMessageReaction(grp, emoji);
+                    closeAllMessagePopovers();
+                    return;
+                }
+
+                const pickerBtn = target.closest('[data-toggle-picker]');
+                if (pickerBtn) {
+                    e.stopPropagation();
+                    const grp = pickerBtn.closest('.message-group');
+                    const picker = grp ? grp.querySelector('.msg-emoji-picker') : null;
+                    const wasOpen = picker && picker.classList.contains('open');
+                    closeAllMessagePopovers();
+                    if (picker && !wasOpen) {
+                        picker.classList.add('open');
+                        if (grp) grp.classList.add('menu-open');
+                    }
+                    return;
+                }
+
+                const moreBtn = target.closest('[data-toggle-more]');
+                if (moreBtn) {
+                    e.stopPropagation();
+                    const grp = moreBtn.closest('.message-group');
+                    const popover = grp ? grp.querySelector('.msg-more-popover') : null;
+                    const wasOpen = popover && popover.classList.contains('open');
+                    closeAllMessagePopovers();
+                    if (popover && !wasOpen) {
+                        popover.classList.add('open');
+                        if (grp) grp.classList.add('menu-open');
+                    }
+                    return;
+                }
+
+                const replyBtn = target.closest('[data-reply-msg]');
+                if (replyBtn) {
+                    e.stopPropagation();
+                    const grp = replyBtn.closest('.message-group');
+                    const authorName = (grp && grp.querySelector('.username') && grp.querySelector('.username').textContent) || 'Usuário';
+                    if (messageInput) {
+                        messageInput.value = `@${authorName} ${messageInput.value}`;
+                        messageInput.focus();
+                    }
+                    closeAllMessagePopovers();
+                    return;
+                }
+
+                const copyBtn = target.closest('[data-copy-msg]');
+                if (copyBtn) {
+                    e.stopPropagation();
+                    const grp = copyBtn.closest('.message-group');
+                    const textEl = grp ? grp.querySelector('.message-text') : null;
+                    const rawText = textEl ? textEl.textContent : '';
+                    if (rawText && navigator.clipboard && navigator.clipboard.writeText) {
+                        navigator.clipboard.writeText(rawText).catch(() => {});
+                        showKiwiToast('Texto copiado!');
+                    }
+                    closeAllMessagePopovers();
+                    return;
+                }
+
+                const delBtn = target.closest('[data-delete-id], [data-delete-dm-id]');
+                if (delBtn) {
+                    e.stopPropagation();
+                    const msgId = delBtn.getAttribute('data-delete-id');
+                    const dmId = delBtn.getAttribute('data-delete-dm-id');
+                    const grp = delBtn.closest('.message-group');
+                    closeAllMessagePopovers();
+                    if (msgId) {
+                        roomCtxManager.sendToContext(getActiveSignalContextMeta(), { type: 'delete_message', message_id: msgId });
+                        roomCtxManager.removeMessageFromContext(getActiveSignalContextMeta(), msgId);
+                        try {
+                            await apiRequestJson(`/api/messages/${encodeURIComponent(msgId)}/delete/`, { method: 'POST' });
+                        } catch (_) {}
+                    } else if (dmId) {
+                        try {
+                            await apiRequestJson(`/api/dm/${encodeURIComponent(dmId)}/delete/`, { method: 'POST' });
+                        } catch (_) {}
+                    }
+                    if (grp) grp.remove();
+                    if (currentView === 'geral') saveCurrentChannelSnapshot();
+                    showKiwiToast('Mensagem excluída.');
+                    return;
+                }
+
+                const chipBtn = target.closest('.msg-reaction-chip');
+                if (chipBtn) {
+                    e.stopPropagation();
+                    const emoji = chipBtn.getAttribute('data-emoji');
+                    const grp = chipBtn.closest('.message-group');
+                    toggleMessageReaction(grp, emoji);
+                    return;
+                }
+
+                const avatarOrName = target.closest('.avatar, .username');
+                if (avatarOrName) {
+                    const uName = avatarOrName.textContent.trim();
+                    if (uName && uName !== 'Sistema Kiwi' && !isRemovedFakeAccount(uName)) {
+                        openUserProfile(uName);
+                    }
+                }
+            });
+
+            document.addEventListener('click', function(e) {
+                if (!e.target.closest('.msg-hover-toolbar') && !e.target.closest('.msg-emoji-picker') && !e.target.closest('.msg-more-popover')) {
+                    closeAllMessagePopovers();
+                }
+            });
+
+            const xTopName = document.getElementById('kiwi-x-top-name');
+            const xTopPostsCount = document.getElementById('kiwi-x-top-posts-count');
+            const xBanner = document.getElementById('kiwi-x-banner');
             const xAvatar = document.getElementById('kiwi-x-avatar');
+            const xDisplayName = document.getElementById('kiwi-x-display-name');
+            const xAdminBadge = document.getElementById('kiwi-x-admin-badge');
+            const xHandle = document.getElementById('kiwi-x-handle');
+            const xBio = document.getElementById('kiwi-x-bio');
+            const xLocationLabel = document.getElementById('kiwi-x-location-label');
+            const xJoinedLabel = document.getElementById('kiwi-x-joined-label');
+            const xBackBtn = document.getElementById('kiwi-x-back-btn');
+            const xOpenCardBtn = document.getElementById('kiwi-x-open-card-btn');
+            const xEditProfileBtn = document.getElementById('kiwi-x-edit-profile-btn');
             const xMoreBtn = document.getElementById('kiwi-x-more-btn');
             const xDmBtn = document.getElementById('kiwi-x-dm-btn');
             const xFollowBtn = document.getElementById('kiwi-x-follow-btn');
-            const xOpenFollowersBtn = document.getElementById('kiwi-x-open-followers-btn');
-            const xOpenFollowingBtn = document.getElementById('kiwi-x-open-following-btn');
-            const xFollowersPanel = document.getElementById('kiwi-x-followers-panel');
-            const xFeedList = document.getElementById('kiwi-x-feed-list');
             const xSubtabs = document.querySelectorAll('.kiwi-x-subtab');
+            const xFeedList = document.getElementById('kiwi-x-feed-list');
+            const xFollowersPanel = document.getElementById('kiwi-x-followers-panel');
+            const xOpenFollowingBtn = document.getElementById('kiwi-x-open-following-btn');
+            const xOpenFollowersBtn = document.getElementById('kiwi-x-open-followers-btn');
+            const createPostModal = document.getElementById('create-post-modal');
+            const closeCreatePostBtn = document.getElementById('close-create-post-btn');
+            const createPostForm = document.getElementById('create-post-form');
+            const navOpenPostModalBtn = document.getElementById('nav-open-post-modal-btn');
 
             let activeXSubtab = 'posts';
+            let userPostsList = readStorageJson(USER_POSTS_KEY, []);
 
-            function updateXFollowButtonState() {
-                if (!xFollowBtn) return;
-                const prof = getActiveTimelineProfile();
-                const isOwn = (prof.username || '').toLowerCase() === (activeUsername || '').toLowerCase();
+            function getPostsForActiveTimeline(profileObj) {
+                const isOwn = !inspectedTimelineUser || String(inspectedTimelineUser).toLowerCase() === String(activeUsername || '').toLowerCase();
                 if (isOwn) {
-                    xFollowBtn.style.display = 'none';
+                    return Array.isArray(userPostsList) ? userPostsList : [];
+                }
+                const targetLower = String(profileObj.username || inspectedTimelineUser || '').toLowerCase();
+                const fromExplore = (exploreAccountsList.find(a => a.username.toLowerCase() === targetLower) || {}).posts;
+                const ownMatching = (Array.isArray(userPostsList) ? userPostsList : []).filter(p => String(p.author || '').toLowerCase() === targetLower);
+                const merged = [...(Array.isArray(fromExplore) ? fromExplore : []), ...ownMatching];
+                return merged.length ? merged : [{
+                    id: `welcome-${targetLower}`,
+                    author: profileObj.username,
+                    text: `Olá! Este é o perfil de ${profileObj.username} no Kiwi Chat.`,
+                    createdAt: 'Hoje',
+                    likes: 1,
+                    liked: false,
+                    mediaUrl: '',
+                    replies: []
+                }];
+            }
+
+            function syncFollowButtonUi() {
+                if (!xFollowBtn) return;
+                const targetProfile = getActiveTimelineProfile();
+                const isOwn = !inspectedTimelineUser || String(targetProfile.username || '').toLowerCase() === String(activeUsername || '').toLowerCase();
+                if (isOwn) {
+                    xFollowBtn.textContent = 'Editar Perfil';
+                    xFollowBtn.classList.remove('following');
                     return;
                 }
-                xFollowBtn.style.display = 'inline-flex';
-                const isFollowed = followingList.some(item => {
-                    const n = typeof item === 'string' ? item : (item.username || '');
-                    return n.toLowerCase() === (prof.username || '').toLowerCase();
+                const isFollowing = followingList.some(item => {
+                    const uname = typeof item === 'string' ? item : (item && item.username);
+                    return String(uname || '').toLowerCase() === String(targetProfile.username || '').toLowerCase();
                 });
-                xFollowBtn.textContent = isFollowed ? 'Seguindo ✓' : 'Seguir';
-                xFollowBtn.classList.toggle('following', isFollowed);
+                xFollowBtn.textContent = isFollowing ? 'Seguindo ✓' : 'Seguir';
+                xFollowBtn.classList.toggle('following', isFollowing);
             }
 
             function syncXProfileHeader() {
-                const prof = getActiveTimelineProfile();
-                const displayName = prof.username || activeUsername || 'AkiiraPW';
-                const handleStr = `@${displayName.toLowerCase()}`;
-                const postsArr = readStorageJson(USER_POSTS_KEY, []);
-                const postsCount = Array.isArray(postsArr) ? postsArr.length : 0;
+                const profileObj = getActiveTimelineProfile();
+                const isOwn = !inspectedTimelineUser || String(profileObj.username || '').toLowerCase() === String(activeUsername || '').toLowerCase();
+                const displayUser = profileObj.username || activeUsername || 'AkiiraPW';
+                const currentPosts = getPostsForActiveTimeline(profileObj);
 
-                const topName = document.getElementById('kiwi-x-top-name');
-                const topCount = document.getElementById('kiwi-x-top-posts-count');
-                const bannerEl = document.getElementById('kiwi-x-banner');
-                const dispNameEl = document.getElementById('kiwi-x-display-name');
-                const handleEl = document.getElementById('kiwi-x-handle');
-                const bioEl = document.getElementById('kiwi-x-bio');
-                const locEl = document.getElementById('kiwi-x-location-label');
-                const joinedEl = document.getElementById('kiwi-x-joined-label');
+                if (xTopName) xTopName.textContent = displayUser;
+                if (xTopPostsCount) xTopPostsCount.textContent = `${currentPosts.length} ${currentPosts.length === 1 ? 'post' : 'posts'}`;
+                if (xDisplayName) {
+                    xDisplayName.innerHTML = `<span>${escapeHtmlText(displayUser)}</span><span style="color:#a855f7;font-size:15px;">✔</span>${isAdminIdentity(displayUser, profileObj.is_admin) ? '<span id="kiwi-x-admin-badge" class="admin-gold-badge">👑 ADMIN</span>' : ''}`;
+                }
+                if (xHandle) xHandle.textContent = `@${String(displayUser).toLowerCase()}`;
+                if (xBio) {
+                    xBio.innerHTML = profileObj.bio ? formatSafeBioHtml(profileObj.bio) : 'Perfil estético ativo no Kiwi Chat.';
+                }
+                if (xLocationLabel) {
+                    xLocationLabel.textContent = `📍 ${(profileObj.location || 'Brasil').trim() || 'Brasil'}`;
+                }
+                if (xJoinedLabel) {
+                    xJoinedLabel.textContent = profileObj.joinedAt ? `📅 ${profileObj.joinedAt}` : '📅 Kiwi Chat';
+                }
+                setAvatarStyle(xAvatar, profileObj.avatarUrl, displayUser);
+                if (xAvatar) {
+                    xAvatar.classList.toggle('akiira-gold-frame', Boolean(isAkiiraAdminIdentity(displayUser, profileObj.is_admin) && profileObj.goldGlowFrame));
+                }
 
-                if (topName) topName.textContent = displayName;
-                if (topCount) topCount.textContent = `${postsCount} ${postsCount === 1 ? 'post' : 'posts'}`;
-                if (bannerEl) {
-                    const resolvedBanner = resolveBannerUrlForUser(displayName, prof.bannerUrl);
-                    if (resolvedBanner) {
-                        bannerEl.style.backgroundImage = `url("${encodeURI(resolvedBanner)}")`;
-                        bannerEl.style.backgroundSize = 'cover';
-                        bannerEl.style.backgroundPosition = 'center';
+                const resolvedBanner = resolveBannerUrlForUser(displayUser, profileObj.bannerUrl);
+                if (xBanner) {
+                    if (resolvedBanner && isSafeAssetUrl(resolvedBanner)) {
+                        xBanner.style.backgroundImage = `url("${encodeURI(resolvedBanner)}")`;
+                        xBanner.style.backgroundSize = 'cover';
+                        xBanner.style.backgroundPosition = 'center';
                     } else {
-                        bannerEl.style.backgroundImage = 'linear-gradient(135deg, #2e1065 0%, #6d28d9 60%, #7c3aed 100%)';
+                        xBanner.style.backgroundImage = 'linear-gradient(135deg, #2e1065 0%, #6d28d9 60%, #7c3aed 100%)';
                     }
                 }
-                if (xAvatar) {
-                    setAvatarStyle(xAvatar, prof.avatarUrl, displayName);
-                    xAvatar.classList.toggle('akiira-gold-frame', Boolean(isAkiiraAdminIdentity(displayName, prof.is_admin) && prof.goldGlowFrame));
-                }
-                if (dispNameEl) {
-                    const adminBadgeHtml = isAdminIdentity(displayName, prof.is_admin) ? '<span class="admin-gold-badge">👑 ADMIN</span>' : '';
-                    dispNameEl.innerHTML = `<span>${escapeHtmlText(displayName)}</span><span style="color:#a855f7;font-size:15px;">✔</span>${adminBadgeHtml}`;
-                }
-                if (handleEl) handleEl.textContent = handleStr;
-                if (bioEl) bioEl.innerHTML = prof.bio ? formatSafeBioHtml(prof.bio) : 'Perfil estético ativo.';
-                if (locEl) locEl.textContent = `📍 ${prof.location || 'Brasil'}`;
-                if (joinedEl) joinedEl.textContent = '📅 Kiwi Chat';
-
+                if (xEditProfileBtn) xEditProfileBtn.style.display = isOwn ? 'inline-flex' : 'none';
                 syncFollowerCountsUi();
-                updateXFollowButtonState();
+                syncFollowButtonUi();
             }
 
             function closeFollowersPanelAndShowFeed() {
@@ -5235,27 +5389,33 @@ html, body {
                 if (xFeedList) xFeedList.style.display = 'flex';
             }
 
-            function openFollowersOrFollowingPanel(mode) {
-                if (!xFollowersPanel || !xFeedList) return;
-                xFeedList.style.display = 'none';
+            function renderFollowersOrFollowingPanel(mode) {
+                if (!xFollowersPanel) return;
+                const isFollowers = mode === 'followers';
+                const list = isFollowers ? followersList : followingList;
+                if (xFeedList) xFeedList.style.display = 'none';
                 xFollowersPanel.style.display = 'block';
-                const list = mode === 'followers' ? followersList : followingList;
-                const titleText = mode === 'followers' ? 'Seguidores' : 'Seguindo';
+                xFollowersPanel.innerHTML = '';
 
-                xFollowersPanel.innerHTML = `
-                    <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 18px;border-bottom:1px solid var(--kiwi-border);">
-                        <strong style="font-size:14px;">${titleText} (${list.length})</strong>
-                        <button type="button" class="section-mini-action-btn" id="kiwi-close-follow-panel-btn">← Voltar ao feed</button>
-                    </div>
-                `;
-                const closeBtn = document.getElementById('kiwi-close-follow-panel-btn');
-                if (closeBtn) closeBtn.onclick = closeFollowersPanelAndShowFeed;
+                const headerBar = document.createElement('div');
+                headerBar.style.cssText = 'display:flex;align-items:center;justify-content:space-between;padding:12px 18px;border-bottom:1px solid var(--kiwi-border);';
+                const titleEl = document.createElement('strong');
+                titleEl.style.fontSize = '14px';
+                titleEl.textContent = isFollowers ? `Seguidores (${list.length})` : `Seguindo (${list.length})`;
+                const closeBtn = document.createElement('button');
+                closeBtn.type = 'button';
+                closeBtn.className = 'section-mini-action-btn';
+                closeBtn.textContent = '← Voltar aos posts';
+                closeBtn.onclick = closeFollowersPanelAndShowFeed;
+                headerBar.appendChild(titleEl);
+                headerBar.appendChild(closeBtn);
+                xFollowersPanel.appendChild(headerBar);
 
                 if (!list.length) {
-                    const empty = document.createElement('div');
-                    empty.style.cssText = 'padding:24px 18px;color:var(--kiwi-text-muted);font-size:13px;';
-                    empty.textContent = mode === 'followers' ? 'Nenhum seguidor ainda.' : 'Você ainda não segue ninguém.';
-                    xFollowersPanel.appendChild(empty);
+                    const emptyEl = document.createElement('div');
+                    emptyEl.style.cssText = 'padding:22px 18px;font-size:13px;color:var(--kiwi-text-muted);text-align:center;';
+                    emptyEl.textContent = isFollowers ? 'Nenhum seguidor ainda.' : 'Você ainda não segue ninguém.';
+                    xFollowersPanel.appendChild(emptyEl);
                     return;
                 }
 
@@ -5263,44 +5423,213 @@ html, body {
                     const uname = typeof item === 'string' ? item : (item.username || 'Usuário');
                     if (isRemovedFakeAccount(uname)) return;
                     const row = document.createElement('div');
-                    row.className = 'social-list-item';
-                    row.style.margin = '8px 18px';
-                    const av = document.createElement('div');
-                    av.className = 'social-avatar';
-                    av.textContent = uname.charAt(0).toUpperCase();
-                    const label = document.createElement('div');
-                    label.style.fontWeight = '700';
-                    label.style.fontSize = '13px';
-                    label.textContent = uname;
-                    row.appendChild(av);
-                    row.appendChild(label);
-                    row.onclick = () => openUserProfile(uname);
+                    row.className = 'kiwi-follow-row';
+                    row.innerHTML = `<div class="social-avatar">${escapeHtmlText(uname.charAt(0).toUpperCase())}</div><div style="flex:1;min-width:0;"><div style="font-weight:700;font-size:13px;">${escapeHtmlText(uname)}</div><div style="font-size:11px;color:var(--kiwi-text-muted);">@${escapeHtmlText(uname.toLowerCase())}</div></div>`;
+                    row.onclick = () => window.openUserProfile(uname);
                     xFollowersPanel.appendChild(row);
                 });
             }
 
-            if (xBackBtn) xBackBtn.addEventListener('click', closeMobileChatView);
+            let activePostDetailId = null;
+
+            function openPostDetailTab(postId) {
+                const profileObj = getActiveTimelineProfile();
+                const posts = getPostsForActiveTimeline(profileObj);
+                const post = posts.find(p => String(p.id) === String(postId));
+                if (!post) return;
+                activePostDetailId = post.id;
+
+                const pdTab = document.getElementById('kiwi-post-detail-tab');
+                const pdBody = document.getElementById('post-detail-body');
+                const pdReplies = document.getElementById('post-detail-replies-list');
+                if (!pdTab || !pdBody || !pdReplies) return;
+
+                hideAllMainSurfaces();
+                pdTab.style.display = 'flex';
+                if (headerMainTitle) headerMainTitle.textContent = '💬 Postagem & Respostas';
+                if (headerSubLabel) headerSubLabel.textContent = `| @${String(post.author || activeUsername).toLowerCase()}`;
+
+                const mediaHtml = (post.mediaUrl && isSafeAssetUrl(post.mediaUrl))
+                    ? `<img src="${escapeHtmlText(post.mediaUrl)}" alt="Mídia da postagem" class="kiwi-x-post-media">`
+                    : '';
+
+                pdBody.innerHTML = `
+                    <div class="kiwi-x-post-header">
+                        <span class="kiwi-x-post-author">${escapeHtmlText(post.author || activeUsername)}</span>
+                        <span class="kiwi-x-post-handle">@${escapeHtmlText(String(post.author || activeUsername).toLowerCase())} • ${escapeHtmlText(post.createdAt || 'Agora')}</span>
+                    </div>
+                    <div class="kiwi-x-post-text" style="margin-top:6px;">${escapeHtmlText(post.text || '')}</div>
+                    ${mediaHtml}
+                `;
+
+                const replies = Array.isArray(post.replies) ? post.replies : [];
+                pdReplies.innerHTML = '';
+                if (!replies.length) {
+                    pdReplies.innerHTML = '<div style="font-size:12px;color:var(--kiwi-text-muted);padding:8px 0;">Nenhuma resposta ainda. Seja o primeiro a responder!</div>';
+                } else {
+                    replies.forEach(rep => {
+                        const rCard = document.createElement('div');
+                        rCard.style.cssText = 'background:var(--kiwi-bg-card);border:1px solid var(--kiwi-border);border-radius:12px;padding:10px 14px;';
+                        rCard.innerHTML = `<div style="font-size:12px;font-weight:700;">${escapeHtmlText(rep.author || activeUsername)} <span style="font-weight:400;color:var(--kiwi-text-muted);">• ${escapeHtmlText(rep.createdAt || 'Agora')}</span></div><div style="font-size:13px;margin-top:4px;white-space:pre-line;">${escapeHtmlText(rep.text || '')}</div>`;
+                        pdReplies.appendChild(rCard);
+                    });
+                }
+            }
+
+            const pdBackBtn = document.getElementById('kiwi-post-detail-back-btn');
+            const pdReturnFeedBtn = document.getElementById('kiwi-post-detail-return-feed-btn');
+            const pdReplyForm = document.getElementById('post-detail-reply-form');
+            const pdReplyInput = document.getElementById('post-detail-reply-input');
+
+            if (pdBackBtn) pdBackBtn.addEventListener('click', showProfileTimelineSurface);
+            if (pdReturnFeedBtn) pdReturnFeedBtn.addEventListener('click', showProfileTimelineSurface);
+            const threadBackBtn = document.getElementById('kiwi-thread-back-btn');
+            const threadMoreBtn = document.getElementById('kiwi-thread-more-btn');
+            if (threadBackBtn) threadBackBtn.addEventListener('click', showProfileTimelineSurface);
+            if (threadMoreBtn) {
+                threadMoreBtn.addEventListener('click', () => {
+                    renderUnifiedProfileModal(getActiveTimelineProfile());
+                });
+            }
+            if (pdReplyForm && pdReplyInput) {
+                pdReplyForm.addEventListener('submit', (e) => {
+                    e.preventDefault();
+                    const txt = pdReplyInput.value.trim();
+                    if (!txt || !activePostDetailId) return;
+                    const profileObj = getActiveTimelineProfile();
+                    const posts = getPostsForActiveTimeline(profileObj);
+                    const targetPost = posts.find(p => String(p.id) === String(activePostDetailId));
+                    if (targetPost) {
+                        if (!Array.isArray(targetPost.replies)) targetPost.replies = [];
+                        targetPost.replies.push({
+                            author: activeUsername,
+                            text: txt,
+                            createdAt: 'Agora'
+                        });
+                        writeStorageJson(USER_POSTS_KEY, userPostsList);
+                        pdReplyInput.value = '';
+                        openPostDetailTab(activePostDetailId);
+                        showKiwiToast('Resposta publicada!');
+                    }
+                });
+            }
+
+            function renderCleanUserPosts() {
+                if (!xFeedList) return;
+                const profileObj = getActiveTimelineProfile();
+                const allPosts = getPostsForActiveTimeline(profileObj);
+                let list = allPosts;
+
+                if (activeXSubtab === 'respostas') {
+                    list = allPosts.filter(p => Array.isArray(p.replies) && p.replies.length > 0);
+                } else if (activeXSubtab === 'midia') {
+                    list = allPosts.filter(p => Boolean(p.mediaUrl && isSafeAssetUrl(p.mediaUrl)));
+                } else if (activeXSubtab === 'curtidas') {
+                    list = allPosts.filter(p => Boolean(p.liked));
+                }
+
+                xFeedList.innerHTML = '';
+                if (!list.length) {
+                    const emptyMsg = document.createElement('div');
+                    emptyMsg.style.cssText = 'padding:28px 18px;text-align:center;color:var(--kiwi-text-muted);font-size:13px;';
+                    emptyMsg.textContent = 'Nenhum post nesta aba ainda.';
+                    xFeedList.appendChild(emptyMsg);
+                    return;
+                }
+
+                list.forEach(post => {
+                    const card = document.createElement('article');
+                    card.className = 'kiwi-x-post-card';
+
+                    const av = document.createElement('div');
+                    av.className = 'kiwi-x-post-avatar';
+                    const authorName = post.author || profileObj.username || activeUsername;
+                    const authorProf = profilesByUsername.get(String(authorName).toLowerCase()) || profileObj;
+                    setAvatarStyle(av, authorProf.avatarUrl, authorName);
+
+                    const body = document.createElement('div');
+                    body.className = 'kiwi-x-post-body';
+
+                    const header = document.createElement('div');
+                    header.className = 'kiwi-x-post-header';
+                    header.innerHTML = `<span class="kiwi-x-post-author">${escapeHtmlText(authorName)}</span><span class="kiwi-x-post-handle">@${escapeHtmlText(String(authorName).toLowerCase())} • ${escapeHtmlText(post.createdAt || 'Agora')}</span>`;
+
+                    const textEl = document.createElement('div');
+                    textEl.className = 'kiwi-x-post-text';
+                    textEl.textContent = post.text || '';
+
+                    body.appendChild(header);
+                    body.appendChild(textEl);
+
+                    if (post.mediaUrl && isSafeAssetUrl(post.mediaUrl)) {
+                        const mediaEl = document.createElement('img');
+                        mediaEl.className = 'kiwi-x-post-media';
+                        mediaEl.src = post.mediaUrl;
+                        mediaEl.alt = 'Imagem do post';
+                        mediaEl.onclick = (ev) => {
+                            ev.stopPropagation();
+                            openImageLightbox(post.mediaUrl, 'Imagem do post');
+                        };
+                        body.appendChild(mediaEl);
+                    }
+
+                    const actions = document.createElement('div');
+                    actions.className = 'kiwi-x-post-actions';
+
+                    const replyCount = Array.isArray(post.replies) ? post.replies.length : 0;
+                    const replyBtn = document.createElement('button');
+                    replyBtn.type = 'button';
+                    replyBtn.className = 'kiwi-x-action-btn';
+                    replyBtn.innerHTML = `💬 <span>${replyCount}</span>`;
+                    replyBtn.onclick = (ev) => {
+                        ev.stopPropagation();
+                        openPostDetailTab(post.id);
+                    };
+
+                    const likeCount = Number(post.likes || 0);
+                    const likeBtn = document.createElement('button');
+                    likeBtn.type = 'button';
+                    likeBtn.className = 'kiwi-x-action-btn' + (post.liked ? ' liked' : '');
+                    likeBtn.innerHTML = `${post.liked ? '❤️' : '🤍'} <span>${likeCount}</span>`;
+                    likeBtn.onclick = (ev) => {
+                        ev.stopPropagation();
+                        post.liked = !post.liked;
+                        post.likes = Math.max(0, Number(post.likes || 0) + (post.liked ? 1 : -1));
+                        writeStorageJson(USER_POSTS_KEY, userPostsList);
+                        renderCleanUserPosts();
+                    };
+
+                    actions.appendChild(replyBtn);
+                    actions.appendChild(likeBtn);
+                    body.appendChild(actions);
+
+                    card.appendChild(av);
+                    card.appendChild(body);
+                    card.onclick = () => openPostDetailTab(post.id);
+                    xFeedList.appendChild(card);
+                });
+            }
+
+            xSubtabs.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    xSubtabs.forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                    activeXSubtab = btn.getAttribute('data-x-subtab') || 'posts';
+                    closeFollowersPanelAndShowFeed();
+                });
+            });
+
+            if (xOpenFollowingBtn) xOpenFollowingBtn.addEventListener('click', () => renderFollowersOrFollowingPanel('following'));
+            if (xOpenFollowersBtn) xOpenFollowersBtn.addEventListener('click', () => renderFollowersOrFollowingPanel('followers'));
+            if (xBackBtn) xBackBtn.addEventListener('click', switchToGeral);
+            if (xOpenCardBtn) xOpenCardBtn.addEventListener('click', () => renderUnifiedProfileModal(getActiveTimelineProfile()));
+            if (xMoreBtn) xMoreBtn.addEventListener('click', () => renderUnifiedProfileModal(getActiveTimelineProfile()));
             if (xEditProfileBtn) xEditProfileBtn.addEventListener('click', () => switchToEditBtn.click());
-            if (xOpenCardBtn) {
-                xOpenCardBtn.addEventListener('click', () => {
-                    renderUnifiedProfileModal(getActiveTimelineProfile());
-                });
-            }
-            if (xAvatar) {
-                xAvatar.addEventListener('click', () => {
-                    renderUnifiedProfileModal(getActiveTimelineProfile());
-                });
-            }
-            if (xMoreBtn) {
-                xMoreBtn.addEventListener('click', () => {
-                    renderUnifiedProfileModal(getActiveTimelineProfile());
-                });
-            }
             if (xDmBtn) {
                 xDmBtn.addEventListener('click', () => {
                     const prof = getActiveTimelineProfile();
-                    if (prof && prof.username && prof.username.toLowerCase() !== (activeUsername || '').toLowerCase()) {
-                        openPrivateChat(prof.username, prof.avatarUrl);
+                    if (prof && prof.username && prof.username.toLowerCase() !== activeUsername.toLowerCase()) {
+                        window.openPrivateChat(prof.username);
                     } else {
                         activateNavTab('mensagens');
                     }
@@ -5309,49 +5638,31 @@ html, body {
             if (xFollowBtn) {
                 xFollowBtn.addEventListener('click', () => {
                     const prof = getActiveTimelineProfile();
-                    const target = (prof && prof.username) || '';
-                    if (!target || target.toLowerCase() === (activeUsername || '').toLowerCase()) return;
+                    const isOwn = !inspectedTimelineUser || String(prof.username || '').toLowerCase() === String(activeUsername || '').toLowerCase();
+                    if (isOwn) {
+                        switchToEditBtn.click();
+                        return;
+                    }
+                    const targetUname = prof.username;
                     const idx = followingList.findIndex(item => {
-                        const n = typeof item === 'string' ? item : (item.username || '');
-                        return n.toLowerCase() === target.toLowerCase();
+                        const n = typeof item === 'string' ? item : item.username;
+                        return String(n || '').toLowerCase() === String(targetUname || '').toLowerCase();
                     });
                     if (idx >= 0) {
                         followingList.splice(idx, 1);
-                        showKiwiToast(`Deixou de seguir ${target}.`);
+                        showKiwiToast(`Deixou de seguir ${targetUname}.`);
                     } else {
-                        followingList.push({ username: target, bio: prof.bio || `Perfil de ${target}` });
-                        showKiwiToast(`Agora você segue ${target}!`);
+                        followingList.push({ username: targetUname, bio: prof.bio || '' });
+                        showKiwiToast(`Agora você segue ${targetUname}!`);
                     }
                     writeStorageJson(FOLLOWING_STORAGE_KEY, followingList);
                     syncFollowerCountsUi();
-                    updateXFollowButtonState();
+                    syncFollowButtonUi();
                 });
             }
-            if (xOpenFollowersBtn) xOpenFollowersBtn.addEventListener('click', () => openFollowersOrFollowingPanel('followers'));
-            if (xOpenFollowingBtn) xOpenFollowingBtn.addEventListener('click', () => openFollowersOrFollowingPanel('following'));
-
-            xSubtabs.forEach(btn => {
-                btn.addEventListener('click', () => {
-                    xSubtabs.forEach(b => b.classList.remove('active'));
-                    btn.classList.add('active');
-                    activeXSubtab = btn.getAttribute('data-x-subtab') || 'posts';
-                    closeFollowersPanelAndShowFeed();
-                    renderCleanUserPosts();
-                });
-            });
-
-            const createPostModal = document.getElementById('create-post-modal');
-            const navOpenPostModalBtn = document.getElementById('nav-open-post-modal-btn');
-            const closeCreatePostBtn = document.getElementById('close-create-post-btn');
-            const createPostForm = document.getElementById('create-post-form');
-            const newPostTextInput = document.getElementById('new-post-text');
-            const newPostImageInput = document.getElementById('new-post-image-url');
 
             if (navOpenPostModalBtn && createPostModal) {
-                navOpenPostModalBtn.addEventListener('click', () => {
-                    openModalAnimated(createPostModal);
-                    setTimeout(() => { if (newPostTextInput) newPostTextInput.focus(); }, 100);
-                });
+                navOpenPostModalBtn.addEventListener('click', () => openModalAnimated(createPostModal));
             }
             if (closeCreatePostBtn && createPostModal) {
                 closeCreatePostBtn.addEventListener('click', () => closeModalAnimated(createPostModal));
@@ -5361,785 +5672,535 @@ html, body {
                     if (e.target === createPostModal) closeModalAnimated(createPostModal);
                 });
             }
-
-            let activeDetailPostId = null;
-
-            function loadAllPosts() {
-                const raw = readStorageJson(USER_POSTS_KEY, []);
-                return Array.isArray(raw) ? raw : [];
-            }
-
-            function saveAllPosts(postsArr) {
-                writeStorageJson(USER_POSTS_KEY, postsArr.slice(0, 80));
-            }
-
-            function renderCleanUserPosts() {
-                if (!xFeedList) return;
-                const prof = getActiveTimelineProfile();
-                const displayName = prof.username || activeUsername || 'AkiiraPW';
-                const handleStr = `@${displayName.toLowerCase()}`;
-                const allPosts = loadAllPosts();
-
-                let filtered = allPosts.filter(p => p && p.text);
-                if (activeXSubtab === 'midia') {
-                    filtered = filtered.filter(p => Boolean(p.imageUrl));
-                } else if (activeXSubtab === 'curtidas') {
-                    filtered = filtered.filter(p => Boolean(p.liked));
-                } else if (activeXSubtab === 'respostas') {
-                    filtered = filtered.filter(p => Array.isArray(p.replies) && p.replies.length > 0);
-                }
-
-                xFeedList.innerHTML = '';
-                if (!filtered.length) {
-                    const empty = document.createElement('div');
-                    empty.style.cssText = 'padding: 28px 18px; text-align: center; color: var(--kiwi-text-muted); font-size: 13px;';
-                    empty.textContent = 'Nenhuma postagem por aqui ainda. Clique em "Postar" para publicar algo!';
-                    xFeedList.appendChild(empty);
-                    return;
-                }
-
-                filtered.forEach(post => {
-                    const card = document.createElement('article');
-                    card.className = 'kiwi-x-post-card';
-
-                    const av = document.createElement('div');
-                    av.className = 'kiwi-x-post-avatar';
-                    setAvatarStyle(av, prof.avatarUrl, displayName);
-
-                    const body = document.createElement('div');
-                    body.className = 'kiwi-x-post-body';
-
-                    const header = document.createElement('div');
-                    header.className = 'kiwi-x-post-header';
-                    header.innerHTML = `
-                        <span class="kiwi-x-post-author">${escapeHtmlText(displayName)}</span>
-                        <span class="kiwi-x-post-handle">${escapeHtmlText(handleStr)} • ${escapeHtmlText(post.time || 'Agora')}</span>
-                    `;
-
-                    const textEl = document.createElement('div');
-                    textEl.className = 'kiwi-x-post-text';
-                    textEl.textContent = post.text || '';
-
-                    body.appendChild(header);
-                    body.appendChild(textEl);
-
-                    if (post.imageUrl && isSafeAssetUrl(post.imageUrl)) {
-                        const imgEl = document.createElement('img');
-                        imgEl.className = 'kiwi-x-post-media';
-                        imgEl.src = post.imageUrl;
-                        imgEl.alt = 'Mídia da postagem';
-                        imgEl.onclick = (ev) => {
-                            ev.stopPropagation();
-                            openImageLightbox(post.imageUrl, 'Mídia da postagem');
-                        };
-                        body.appendChild(imgEl);
-                    }
-
-                    const actionsRow = document.createElement('div');
-                    actionsRow.className = 'kiwi-x-post-actions';
-
-                    const repliesCount = Array.isArray(post.replies) ? post.replies.length : 0;
-                    const replyBtn = document.createElement('button');
-                    replyBtn.type = 'button';
-                    replyBtn.className = 'kiwi-x-action-btn';
-                    replyBtn.innerHTML = `<span>💬</span><span>${repliesCount}</span>`;
-                    replyBtn.onclick = (ev) => {
-                        ev.stopPropagation();
-                        openPostDetailTab(post.id);
-                    };
-
-                    const likesCount = Number(post.likes || 0);
-                    const likeBtn = document.createElement('button');
-                    likeBtn.type = 'button';
-                    likeBtn.className = 'kiwi-x-action-btn' + (post.liked ? ' liked' : '');
-                    likeBtn.innerHTML = `<span>${post.liked ? '❤️' : '🤍'}</span><span>${likesCount}</span>`;
-                    likeBtn.onclick = (ev) => {
-                        ev.stopPropagation();
-                        const posts = loadAllPosts();
-                        const targetPost = posts.find(x => String(x.id) === String(post.id));
-                        if (targetPost) {
-                            targetPost.liked = !targetPost.liked;
-                            targetPost.likes = Math.max(0, Number(targetPost.likes || 0) + (targetPost.liked ? 1 : -1));
-                            saveAllPosts(posts);
-                            renderCleanUserPosts();
-                        }
-                    };
-
-                    actionsRow.appendChild(replyBtn);
-                    actionsRow.appendChild(likeBtn);
-                    body.appendChild(actionsRow);
-
-                    card.appendChild(av);
-                    card.appendChild(body);
-                    card.onclick = () => openPostDetailTab(post.id);
-                    xFeedList.appendChild(card);
-                });
-            }
-
             if (createPostForm) {
-                createPostForm.addEventListener('submit', (e) => {
+                createPostForm.addEventListener('submit', async (e) => {
                     e.preventDefault();
-                    const txt = (newPostTextInput && newPostTextInput.value.trim()) || '';
-                    const imgUrl = (newPostImageInput && newPostImageInput.value.trim()) || '';
-                    if (!txt) return;
+                    const txtEl = document.getElementById('new-post-text');
+                    const imgEl = document.getElementById('new-post-image-url');
+                    const postText = (txtEl && txtEl.value.trim()) || '';
+                    const mediaUrl = (imgEl && imgEl.value.trim()) || '';
+                    if (!postText) return;
 
-                    const posts = loadAllPosts();
+                    let createdId = 'post-' + Date.now().toString(36);
+                    try {
+                        const apiRes = await apiRequestJson('/api/posts/create/', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ text: postText, media_url: mediaUrl })
+                        });
+                        if (apiRes && (apiRes.id || apiRes.post_id)) createdId = String(apiRes.id || apiRes.post_id);
+                    } catch (_) {}
+
                     const newPost = {
-                        id: `post-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
-                        author: activeUsername || 'AkiiraPW',
-                        text: txt,
-                        imageUrl: imgUrl && isSafeAssetUrl(imgUrl) ? imgUrl : '',
-                        time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+                        id: createdId,
+                        author: activeUsername,
+                        text: postText,
+                        createdAt: 'Agora',
                         likes: 0,
                         liked: false,
+                        mediaUrl: isSafeAssetUrl(mediaUrl) ? mediaUrl : '',
                         replies: []
                     };
-                    posts.unshift(newPost);
-                    saveAllPosts(posts);
-
-                    if (newPostTextInput) newPostTextInput.value = '';
-                    if (newPostImageInput) newPostImageInput.value = '';
+                    userPostsList.unshift(newPost);
+                    writeStorageJson(USER_POSTS_KEY, userPostsList);
+                    if (txtEl) txtEl.value = '';
+                    if (imgEl) imgEl.value = '';
                     closeModalAnimated(createPostModal);
+                    inspectedTimelineUser = null;
                     syncXProfileHeader();
                     activateNavTab('perfil');
-                    showKiwiToast('Post publicado no seu perfil!');
-                });
-            }
-
-            const postDetailTab = document.getElementById('kiwi-post-detail-tab');
-            const postDetailBackBtn = document.getElementById('kiwi-post-detail-back-btn');
-            const postDetailReturnFeedBtn = document.getElementById('kiwi-post-detail-return-feed-btn');
-            const postDetailBody = document.getElementById('post-detail-body');
-            const postDetailRepliesList = document.getElementById('post-detail-replies-list');
-            const postDetailReplyForm = document.getElementById('post-detail-reply-form');
-            const postDetailReplyInput = document.getElementById('post-detail-reply-input');
-
-            function renderPostDetailView(postId) {
-                const posts = loadAllPosts();
-                const post = posts.find(p => String(p.id) === String(postId));
-                if (!post || !postDetailBody || !postDetailRepliesList) return;
-
-                postDetailBody.innerHTML = `
-                    <div style="font-size:13px;font-weight:800;color:var(--kiwi-text-primary);margin-bottom:6px;">
-                        ${escapeHtmlText(post.author || activeUsername)} <span style="font-weight:500;color:var(--kiwi-text-muted);font-size:12px;">• ${escapeHtmlText(post.time || '')}</span>
-                    </div>
-                    <div style="font-size:14px;line-height:1.5;color:var(--kiwi-text-primary);white-space:pre-line;">${escapeHtmlText(post.text || '')}</div>
-                `;
-                if (post.imageUrl && isSafeAssetUrl(post.imageUrl)) {
-                    const img = document.createElement('img');
-                    img.src = post.imageUrl;
-                    img.alt = 'Imagem do post';
-                    img.style.cssText = 'margin-top:10px;max-width:100%;max-height:320px;border-radius:12px;display:block;';
-                    postDetailBody.appendChild(img);
-                }
-
-                const replies = Array.isArray(post.replies) ? post.replies : [];
-                postDetailRepliesList.innerHTML = '';
-                if (!replies.length) {
-                    const empty = document.createElement('div');
-                    empty.style.cssText = 'color:var(--kiwi-text-muted);font-size:12px;';
-                    empty.textContent = 'Nenhuma resposta ainda. Seja o primeiro a responder!';
-                    postDetailRepliesList.appendChild(empty);
-                } else {
-                    replies.forEach(rep => {
-                        const rCard = document.createElement('div');
-                        rCard.style.cssText = 'background:var(--kiwi-bg-card);border:1px solid var(--kiwi-border);border-radius:12px;padding:10px 14px;';
-                        rCard.innerHTML = `
-                            <div style="font-size:12px;font-weight:700;color:var(--kiwi-text-primary);">${escapeHtmlText(rep.author || activeUsername)} <span style="color:var(--kiwi-text-muted);font-weight:400;">• ${escapeHtmlText(rep.time || '')}</span></div>
-                            <div style="font-size:13px;color:var(--kiwi-text-primary);margin-top:4px;">${escapeHtmlText(rep.text || '')}</div>
-                        `;
-                        postDetailRepliesList.appendChild(rCard);
-                    });
-                }
-            }
-
-            window.openPostDetailTab = function(postId) {
-                activeDetailPostId = postId;
-                hideAllMainSurfaces();
-                if (postDetailTab) postDetailTab.style.display = 'flex';
-                renderPostDetailView(postId);
-                openMobileChatView();
-                triggerChatAreaTransition();
-            };
-
-            if (postDetailBackBtn) postDetailBackBtn.addEventListener('click', () => activateNavTab('perfil'));
-            if (postDetailReturnFeedBtn) postDetailReturnFeedBtn.addEventListener('click', () => activateNavTab('perfil'));
-
-            if (postDetailReplyForm) {
-                postDetailReplyForm.addEventListener('submit', (e) => {
-                    e.preventDefault();
-                    const txt = (postDetailReplyInput && postDetailReplyInput.value.trim()) || '';
-                    if (!txt || !activeDetailPostId) return;
-                    const posts = loadAllPosts();
-                    const post = posts.find(p => String(p.id) === String(activeDetailPostId));
-                    if (!post) return;
-                    if (!Array.isArray(post.replies)) post.replies = [];
-                    post.replies.push({
-                        author: activeUsername || 'AkiiraPW',
-                        text: txt,
-                        time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-                    });
-                    saveAllPosts(posts);
-                    if (postDetailReplyInput) postDetailReplyInput.value = '';
-                    renderPostDetailView(activeDetailPostId);
-                    showKiwiToast('Resposta enviada!');
+                    showKiwiToast('Post publicado no perfil!');
                 });
             }
 
             const dmSearchInp = document.getElementById('kiwi-dm-search-input');
-            const dmConvListEl = document.getElementById('kiwi-dm-conversations-list');
+            const dmConversationsListEl = document.getElementById('kiwi-dm-conversations-list');
             const dmSuggestedListEl = document.getElementById('kiwi-dm-suggested-list');
+            const dmActiveAvatarEl = document.getElementById('kiwi-dm-active-avatar');
+            const dmActiveTitleEl = document.getElementById('kiwi-dm-active-title');
+            const dmActiveSubEl = document.getElementById('kiwi-dm-active-sub');
+            const dmRightCallBtn = document.getElementById('kiwi-dm-right-call-btn');
+            const dmRightInfoBtn = document.getElementById('kiwi-dm-right-info-btn');
             const dmRightMessagesEl = document.getElementById('kiwi-dm-right-messages');
             const dmRightEmptyEl = document.getElementById('kiwi-dm-right-empty');
             const dmRightInputBarEl = document.getElementById('kiwi-dm-right-input-bar');
             const dmRightInputEl = document.getElementById('kiwi-dm-right-input');
-            const dmRightSendBtn = document.getElementById('kiwi-dm-right-send-btn');
-            const dmActiveTitleEl = document.getElementById('kiwi-dm-active-title');
-            const dmActiveSubEl = document.getElementById('kiwi-dm-active-sub');
-            const dmActiveAvatarEl = document.getElementById('kiwi-dm-active-avatar');
-            const dmRightCallBtn = document.getElementById('kiwi-dm-right-call-btn');
-            const dmRightInfoBtn = document.getElementById('kiwi-dm-right-info-btn');
-            const dmEmptyCodeBtn = document.getElementById('kiwi-dm-empty-code-btn');
-            const dmEmptyLaterBtn = document.getElementById('kiwi-dm-empty-later-btn');
+            const dmRightSendBtnEl = document.getElementById('kiwi-dm-right-send-btn');
 
             function getAvailableDmContacts() {
                 const map = new Map();
-                friendsList.forEach(fname => {
-                    if (fname && !isRemovedFakeAccount(fname) && fname.toLowerCase() !== activeUsername.toLowerCase()) {
-                        map.set(fname.toLowerCase(), { username: fname, subtitle: 'Amigo no Kiwi Chat' });
+                const addContact = (uname, subtitle = 'Contato Kiwi') => {
+                    if (!uname || isRemovedFakeAccount(uname)) return;
+                    if (String(uname).toLowerCase() === String(activeUsername || '').toLowerCase()) return;
+                    const key = String(uname).toLowerCase();
+                    if (!map.has(key)) {
+                        map.set(key, { username: uname, subtitle });
                     }
-                });
-                Object.keys(dmThreads).forEach(peer => {
-                    if (peer && !isRemovedFakeAccount(peer) && peer.toLowerCase() !== activeUsername.toLowerCase() && !map.has(peer.toLowerCase())) {
-                        map.set(peer.toLowerCase(), { username: peer, subtitle: 'Conversa recente' });
-                    }
-                });
+                };
+                (friendsList || []).forEach(f => addContact(f, 'Amigo'));
+                (followingList || []).forEach(f => addContact(typeof f === 'string' ? f : f.username, 'Seguindo'));
+                (followersList || []).forEach(f => addContact(typeof f === 'string' ? f : f.username, 'Seguidor'));
+                Object.keys(dmThreads).forEach(u => addContact(u, 'Conversa ativa'));
                 return Array.from(map.values());
             }
 
-            function renderDmMessagesList(peerUsername) {
+            function renderDmMessagesList(peerName) {
                 if (!dmRightMessagesEl) return;
-                const thread = dmThreads[peerUsername] || [];
+                const msgs = (dmThreads[peerName] || []).filter(m => m && !isRemovedFakeAccount(m.sender));
                 dmRightMessagesEl.innerHTML = '';
-                if (!thread.length) {
-                    const empty = document.createElement('div');
-                    empty.style.cssText = 'color:var(--kiwi-text-muted);font-size:12px;text-align:center;margin:auto;';
-                    empty.textContent = `Nenhuma mensagem ainda com ${peerUsername}. Diga olá!`;
-                    dmRightMessagesEl.appendChild(empty);
+                if (!msgs.length) {
+                    dmRightMessagesEl.innerHTML = `<div style="font-size:12px;color:var(--kiwi-text-muted);text-align:center;padding:18px;">Nenhuma mensagem ainda com <strong>${escapeHtmlText(peerName)}</strong>. Envie a primeira abaixo!</div>`;
                     return;
                 }
-                thread.forEach(item => {
-                    const row = document.createElement('div');
-                    const isMine = String(item.sender || '').toLowerCase() === String(activeUsername || '').toLowerCase();
-                    row.style.cssText = `
-                        align-self: ${isMine ? 'flex-end' : 'flex-start'};
-                        max-width: 78%;
-                        background: ${isMine ? 'var(--kiwi-accent-purple)' : 'var(--kiwi-bg-card)'};
-                        border: 1px solid var(--kiwi-border);
-                        color: var(--kiwi-text-primary);
-                        padding: 9px 13px;
-                        border-radius: 14px;
-                        font-size: 13px;
-                    `;
-                    row.innerHTML = `<div style="font-size:11px;opacity:0.75;margin-bottom:2px;"><strong>${escapeHtmlText(item.sender)}</strong> • ${escapeHtmlText(item.time || '')}</div><div>${escapeHtmlText(item.text || '')}</div>`;
-                    dmRightMessagesEl.appendChild(row);
+                msgs.forEach(m => {
+                    const isMine = String(m.sender || '').toLowerCase() === String(activeUsername || '').toLowerCase();
+                    const bubble = document.createElement('div');
+                    bubble.style.cssText = `max-width:78%;align-self:${isMine ? 'flex-end' : 'flex-start'};background:${isMine ? 'var(--kiwi-accent-purple)' : 'var(--kiwi-bg-card)'};border:1px solid var(--kiwi-border);border-radius:14px;padding:9px 13px;`;
+                    bubble.innerHTML = `<div style="font-size:11px;font-weight:700;opacity:0.85;">${escapeHtmlText(m.sender)} • ${escapeHtmlText(m.time || '')}</div><div style="font-size:13px;margin-top:3px;white-space:pre-line;">${escapeHtmlText(m.text || '')}</div>`;
+                    dmRightMessagesEl.appendChild(bubble);
                 });
                 dmRightMessagesEl.scrollTop = dmRightMessagesEl.scrollHeight;
             }
 
-            function openDmPeerThread(peerUsername) {
-                if (!peerUsername || isRemovedFakeAccount(peerUsername)) return;
-                selectedDmPeer = peerUsername;
-                currentDmUser = peerUsername;
-                roomCtxManager.activateContext({ type: 'dm', targetUser: peerUsername });
-                if (dmActiveTitleEl) dmActiveTitleEl.textContent = `@ ${peerUsername}`;
-                if (dmActiveSubEl) dmActiveSubEl.textContent = 'Bate-papo direto';
+            function openDmPeerThread(peerName) {
+                if (!peerName || isRemovedFakeAccount(peerName)) return;
+                selectedDmPeer = peerName;
+                currentDmUser = peerName;
+                roomCtxManager.activateContext({ type: 'dm', targetUser: peerName });
+                if (dmActiveTitleEl) dmActiveTitleEl.textContent = peerName;
+                if (dmActiveSubEl) dmActiveSubEl.textContent = `@${peerName.toLowerCase()} • Bate-papo direto`;
                 if (dmActiveAvatarEl) {
-                    const prof = profilesByUsername.get(peerUsername.toLowerCase());
-                    setAvatarStyle(dmActiveAvatarEl, prof ? prof.avatarUrl : '', peerUsername);
+                    const prof = profilesByUsername.get(peerName.toLowerCase());
+                    setAvatarStyle(dmActiveAvatarEl, prof ? prof.avatarUrl : '', peerName);
                 }
                 if (dmRightEmptyEl) dmRightEmptyEl.style.display = 'none';
                 if (dmRightMessagesEl) dmRightMessagesEl.style.display = 'flex';
                 if (dmRightInputBarEl) dmRightInputBarEl.style.display = 'flex';
-                renderDmMessagesList(peerUsername);
+                renderDmMessagesList(peerName);
                 renderDmSplitPane(dmSearchInp ? dmSearchInp.value : '');
+                if (dmRightInputEl) dmRightInputEl.focus();
             }
 
-            function renderDmSplitPane(filterText = '') {
-                const q = (filterText || '').trim().toLowerCase();
-                const contacts = getAvailableDmContacts().filter(c => !q || c.username.toLowerCase().includes(q));
+            function sendDmMessageFromPane() {
+                if (!selectedDmPeer || !dmRightInputEl) return;
+                const txt = dmRightInputEl.value.trim();
+                if (!txt) return;
+                if (!dmThreads[selectedDmPeer]) dmThreads[selectedDmPeer] = [];
+                const timeStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                const dmId = 'dm-' + Date.now().toString(36);
+                dmThreads[selectedDmPeer].push({ id: dmId, sender: activeUsername, text: txt, time: timeStr });
+                dmRightInputEl.value = '';
+                renderDmMessagesList(selectedDmPeer);
+                renderDmSplitPane(dmSearchInp ? dmSearchInp.value : '');
+                roomCtxManager.appendMessageToContext({ type: 'dm', targetUser: selectedDmPeer }, {
+                    id: dmId,
+                    author: activeUsername,
+                    text: txt,
+                    timestamp: timeStr
+                });
+                const sentWs = roomCtxManager.sendToContext({ type: 'dm', targetUser: selectedDmPeer }, {
+                    type: 'dm_message',
+                    id: dmId,
+                    recipient: selectedDmPeer,
+                    message: txt,
+                    username: activeUsername
+                });
+                if (!sentWs) {
+                    apiRequestJson('/api/dm/send/', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ recipient: selectedDmPeer, message: txt })
+                    }).catch(() => {});
+                }
+            }
 
-                if (dmConvListEl) {
-                    dmConvListEl.innerHTML = '';
-                    if (!contacts.length) {
-                        dmConvListEl.innerHTML = '<div style="padding:12px 14px;font-size:12px;color:var(--kiwi-text-muted);">Nenhum contato encontrado. Adicione amigos em "+ Amigo".</div>';
+            if (dmRightSendBtnEl) dmRightSendBtnEl.addEventListener('click', sendDmMessageFromPane);
+            if (dmRightInputEl) dmRightInputEl.addEventListener('keydown', (e) => { if (e.key === 'Enter') sendDmMessageFromPane(); });
+            if (dmRightCallBtn) dmRightCallBtn.addEventListener('click', () => { if (selectedDmPeer) startVoiceCall(selectedDmPeer); });
+            if (dmRightInfoBtn) dmRightInfoBtn.addEventListener('click', () => { if (selectedDmPeer) openUserProfile(selectedDmPeer); });
+
+            function renderDmSplitPane(filterQuery = '') {
+                const q = (filterQuery || '').trim().toLowerCase();
+                const contacts = getAvailableDmContacts().filter(c => !q || c.username.toLowerCase().includes(q));
+                if (dmConversationsListEl) {
+                    dmConversationsListEl.innerHTML = '';
+                    const activeConvs = contacts.filter(c => (dmThreads[c.username] && dmThreads[c.username].length > 0) || (selectedDmPeer && selectedDmPeer.toLowerCase() === c.username.toLowerCase()));
+                    if (!activeConvs.length) {
+                        dmConversationsListEl.innerHTML = '<div style="font-size:12px;color:var(--kiwi-text-muted);padding:6px 10px;">Nenhuma conversa iniciada ainda.</div>';
                     } else {
-                        contacts.forEach(c => {
-                            const isSel = selectedDmPeer && selectedDmPeer.toLowerCase() === c.username.toLowerCase();
+                        activeConvs.forEach(c => {
+                            const lastMsg = (dmThreads[c.username] || []).slice(-1)[0];
                             const row = document.createElement('div');
-                            row.className = 'social-list-item' + (isSel ? ' active' : '');
-                            row.style.margin = '4px 10px';
-                            const av = document.createElement('div');
-                            av.className = 'social-avatar';
-                            av.textContent = c.username.charAt(0).toUpperCase();
-                            const meta = document.createElement('div');
-                            meta.style.minWidth = '0';
-                            meta.style.flex = '1';
-                            meta.innerHTML = `<div style="font-weight:700;font-size:13px;">${escapeHtmlText(c.username)}</div><div style="font-size:11px;color:var(--kiwi-text-muted);">${escapeHtmlText(c.subtitle)}</div>`;
-                            row.appendChild(av);
-                            row.appendChild(meta);
+                            row.className = 'kiwi-dm-conv-item' + (selectedDmPeer && selectedDmPeer.toLowerCase() === c.username.toLowerCase() ? ' active' : '');
+                            row.innerHTML = `<div class="social-avatar">${escapeHtmlText(c.username.charAt(0).toUpperCase())}</div><div style="min-width:0;flex:1;"><div style="font-size:13px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escapeHtmlText(c.username)}</div><div style="font-size:11px;color:var(--kiwi-text-muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escapeHtmlText(lastMsg ? lastMsg.text : c.subtitle)}</div></div>`;
                             row.onclick = () => openDmPeerThread(c.username);
-                            dmConvListEl.appendChild(row);
+                            dmConversationsListEl.appendChild(row);
                         });
                     }
                 }
 
                 if (dmSuggestedListEl) {
                     dmSuggestedListEl.innerHTML = '';
-                    const addBtn = document.createElement('button');
-                    addBtn.type = 'button';
-                    addBtn.className = 'section-mini-action-btn';
-                    addBtn.style.margin = '0 12px';
-                    addBtn.textContent = '+ Buscar ou adicionar contato';
-                    addBtn.onclick = openAddFriendModalWithFocus;
-                    dmSuggestedListEl.appendChild(addBtn);
+                    if (!contacts.length) {
+                        dmSuggestedListEl.innerHTML = '<div style="font-size:12px;color:var(--kiwi-text-muted);padding:6px 10px;">Adicione amigos em "+ Amigo" para iniciar um bate-papo.</div>';
+                    } else {
+                        contacts.forEach(c => {
+                            const row = document.createElement('div');
+                            row.className = 'kiwi-dm-conv-item';
+                            row.innerHTML = `<div class="social-avatar">${escapeHtmlText(c.username.charAt(0).toUpperCase())}</div><div style="min-width:0;flex:1;"><div style="font-size:13px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escapeHtmlText(c.username)}</div><div style="font-size:11px;color:var(--kiwi-text-muted);">${escapeHtmlText(c.subtitle)}</div></div>`;
+                            row.onclick = () => openDmPeerThread(c.username);
+                            dmSuggestedListEl.appendChild(row);
+                        });
+                    }
                 }
             }
 
-            async function sendDmFromSplitPane() {
-                if (!selectedDmPeer) {
-                    showKiwiToast('Escolha um contato ao lado primeiro.');
-                    return;
-                }
-                const txt = (dmRightInputEl && dmRightInputEl.value.trim()) || '';
-                if (!txt) return;
-
-                if (!dmThreads[selectedDmPeer]) dmThreads[selectedDmPeer] = [];
-                const timeNow = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-                const entry = {
-                    id: `dm-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
-                    sender: activeUsername,
-                    text: txt,
-                    time: timeNow
-                };
-                dmThreads[selectedDmPeer].push(entry);
-                roomCtxManager.appendMessageToContext({ type: 'dm', targetUser: selectedDmPeer }, {
-                    id: entry.id,
-                    author: entry.sender,
-                    text: entry.text,
-                    timestamp: entry.time
-                });
-                roomCtxManager.sendToContext({ type: 'dm', targetUser: selectedDmPeer }, {
-                    type: 'dm_message',
-                    id: entry.id,
-                    message: txt,
-                    recipient: selectedDmPeer,
-                    username: activeUsername
-                });
-                apiRequestJson('/api/dm/send/', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ recipient: selectedDmPeer, message: txt })
-                }).catch(() => {});
-
-                if (dmRightInputEl) dmRightInputEl.value = '';
-                renderDmMessagesList(selectedDmPeer);
+            if (dmSearchInp) {
+                dmSearchInp.addEventListener('input', () => renderDmSplitPane(dmSearchInp.value));
             }
 
-            if (dmSearchInp) dmSearchInp.addEventListener('input', () => renderDmSplitPane(dmSearchInp.value));
-            if (dmRightSendBtn) dmRightSendBtn.addEventListener('click', sendDmFromSplitPane);
-            if (dmRightInputEl) {
-                dmRightInputEl.addEventListener('keydown', (e) => {
-                    if (e.key === 'Enter') sendDmFromSplitPane();
-                });
-            }
-            if (dmRightCallBtn) {
-                dmRightCallBtn.addEventListener('click', () => {
-                    if (selectedDmPeer) startVoiceCall(selectedDmPeer);
-                    else showKiwiToast('Selecione uma conversa para chamar.');
-                });
-            }
-            if (dmRightInfoBtn) {
-                dmRightInfoBtn.addEventListener('click', () => {
-                    if (selectedDmPeer) openUserProfile(selectedDmPeer);
-                });
-            }
+            const dmEmptyLaterBtn = document.getElementById('kiwi-dm-empty-later-btn');
+            const dmEmptyCodeBtn = document.getElementById('kiwi-dm-empty-code-btn');
+            if (dmEmptyLaterBtn) dmEmptyLaterBtn.addEventListener('click', switchToGeral);
             if (dmEmptyCodeBtn) {
                 dmEmptyCodeBtn.addEventListener('click', () => {
-                    const contacts = getAvailableDmContacts();
-                    if (contacts.length) openDmPeerThread(contacts[0].username);
+                    const firstContact = getAvailableDmContacts()[0];
+                    if (firstContact) openDmPeerThread(firstContact.username);
                     else openAddFriendModalWithFocus();
                 });
             }
-            if (dmEmptyLaterBtn) {
-                dmEmptyLaterBtn.addEventListener('click', () => activateNavTab('perfil'));
-            }
 
-            const navTabs = document.querySelectorAll('.kiwi-nav-item[data-nav-tab]');
+            function renderExploreResultsOnly(queryText = '') {
+                const q = (queryText || '').trim().toLowerCase();
+                const resultsEl = document.getElementById('kiwi-explore-results');
+                const hintEl = document.getElementById('kiwi-explore-hint');
+                if (!resultsEl) return;
 
-            function renderInicioFeedTab() {
-                showChatLogSurface(false);
-                if (!chatLog) return;
-                const prof = getActiveTimelineProfile();
-                const displayName = prof.username || activeUsername || 'AkiiraPW';
-                const bannerUrl = resolveBannerUrlForUser(displayName, prof.bannerUrl);
-                const posts = loadAllPosts();
-
-                chatLog.innerHTML = '';
-                const wrap = document.createElement('div');
-                wrap.className = 'kiwi-home-profile-wrap';
-
-                const card = document.createElement('div');
-                card.className = 'kiwi-home-profile-card';
-                card.onclick = () => activateNavTab('perfil');
-
-                const banner = document.createElement('div');
-                banner.className = 'kiwi-home-profile-banner';
-                if (bannerUrl && isSafeAssetUrl(bannerUrl)) {
-                    banner.style.backgroundImage = `url("${encodeURI(bannerUrl)}")`;
+                if (hintEl) {
+                    hintEl.textContent = q
+                        ? `Mostrando resultados para "${queryText}"`
+                        : 'Pesquise por usuários ou tópicos do Kiwi';
                 }
 
-                const body = document.createElement('div');
-                body.className = 'kiwi-home-profile-body';
+                const accounts = getExploreAccountsWithAdminPriority().filter(acc => {
+                    if (!acc || isRemovedFakeAccount(acc.username)) return false;
+                    if (!q) return true;
+                    return (
+                        acc.username.toLowerCase().includes(q) ||
+                        (acc.handle || '').toLowerCase().includes(q) ||
+                        (acc.bio || '').toLowerCase().includes(q)
+                    );
+                });
 
-                const top = document.createElement('div');
-                top.className = 'kiwi-home-profile-top';
-
-                const av = document.createElement('div');
-                av.className = 'kiwi-home-profile-avatar';
-                setAvatarStyle(av, prof.avatarUrl, displayName);
-
-                const editPill = document.createElement('button');
-                editPill.type = 'button';
-                editPill.className = 'section-mini-action-btn';
-                editPill.textContent = '✏️ Editar Perfil';
-                editPill.onclick = (ev) => {
-                    ev.stopPropagation();
-                    switchToEditBtn.click();
-                };
-
-                top.appendChild(av);
-                top.appendChild(editPill);
-
-                const titleRow = document.createElement('div');
-                titleRow.style.cssText = 'font-size:17px;font-weight:900;color:var(--kiwi-text-primary);';
-                titleRow.textContent = displayName;
-
-                const subRow = document.createElement('div');
-                subRow.style.cssText = 'font-size:12px;color:var(--kiwi-text-muted);margin-top:2px;';
-                subRow.textContent = `${prof.bubble || '✨ Online'} • ${posts.length} ${posts.length === 1 ? 'post' : 'posts'}`;
-
-                body.appendChild(top);
-                body.appendChild(titleRow);
-                body.appendChild(subRow);
-
-                card.appendChild(banner);
-                card.appendChild(body);
-                wrap.appendChild(card);
-
-                if (posts.length) {
-                    posts.slice(0, 15).forEach(p => {
-                        const pCard = document.createElement('div');
-                        pCard.className = 'kiwi-x-post-card';
-                        pCard.style.background = 'var(--kiwi-bg-card)';
-                        pCard.style.borderRadius = '14px';
-                        pCard.style.border = '1px solid var(--kiwi-border)';
-                        pCard.innerHTML = `
+                resultsEl.innerHTML = accounts.map(acc => {
+                    const safeName = escapeHtmlText(acc.username);
+                    const safeHandle = escapeHtmlText(acc.handle || `@${acc.username.toLowerCase()}`);
+                    const safeBio = escapeHtmlText(acc.bio || 'Perfil ativo no Kiwi Chat.');
+                    const safeAv = escapeHtmlText(acc.username.charAt(0).toUpperCase());
+                    return `
+                        <div class="kiwi-x-post-card" data-explore-user="${safeName}">
+                            <div class="kiwi-x-post-avatar">${safeAv}</div>
                             <div class="kiwi-x-post-body">
                                 <div class="kiwi-x-post-header">
-                                    <span class="kiwi-x-post-author">${escapeHtmlText(p.author || displayName)}</span>
-                                    <span class="kiwi-x-post-handle">• ${escapeHtmlText(p.time || 'Agora')}</span>
+                                    <span class="kiwi-x-post-author">${safeName}</span>
+                                    <span class="kiwi-x-post-handle">${safeHandle}</span>
+                                    ${acc.is_admin ? '<span class="admin-gold-badge">👑 ADMIN</span>' : ''}
                                 </div>
-                                <div class="kiwi-x-post-text">${escapeHtmlText(p.text || '')}</div>
+                                <div class="kiwi-x-post-text">${safeBio}</div>
                             </div>
-                        `;
-                        pCard.onclick = () => openPostDetailTab(p.id);
-                        wrap.appendChild(pCard);
-                    });
-                }
+                        </div>
+                    `;
+                }).join('') || '<div class="kiwi-search-dropdown-hint">Nenhum perfil encontrado para essa busca.</div>';
 
-                chatLog.appendChild(wrap);
+                resultsEl.querySelectorAll('[data-explore-user]').forEach(card => {
+                    card.addEventListener('click', () => {
+                        const uname = card.getAttribute('data-explore-user');
+                        if (uname) window.openFullProfilePage(uname);
+                    });
+                });
             }
 
-            function renderExplorarSearchTab() {
+            function renderExploreView(queryText = '') {
                 showChatLogSurface(false);
                 if (!chatLog) return;
-                chatLog.innerHTML = '';
 
-                const shell = document.createElement('div');
-                shell.className = 'kiwi-explore-shell';
-
-                const boxWrap = document.createElement('div');
-                boxWrap.className = 'kiwi-search-box-wrap';
-
-                const inputRow = document.createElement('div');
-                inputRow.className = 'kiwi-search-input-row';
-                inputRow.innerHTML = `<span>🔍</span>`;
-
-                const searchInput = document.createElement('input');
-                searchInput.type = 'text';
-                searchInput.className = 'kiwi-search-input';
-                searchInput.placeholder = 'Buscar perfis, usuários ou posts no Kiwi...';
-                inputRow.appendChild(searchInput);
-
-                const resultsBox = document.createElement('div');
-                resultsBox.className = 'kiwi-search-dropdown-hint';
-                resultsBox.textContent = 'Digite um nome de usuário ou palavra-chave para pesquisar.';
-
-                function runExploreSearch(queryStr) {
-                    const q = (queryStr || '').trim().toLowerCase();
-                    if (!q) {
-                        resultsBox.innerHTML = 'Digite um nome de usuário ou palavra-chave para pesquisar.';
-                        return;
-                    }
-                    const matches = [];
-                    const accounts = getExploreAccountsWithAdminPriority();
-                    accounts.forEach(acc => {
-                        if (acc && acc.username && acc.username.toLowerCase().includes(q)) {
-                            matches.push({ type: 'user', username: acc.username, bio: acc.bio || '' });
-                        }
-                    });
-                    friendsList.forEach(fname => {
-                        if (fname && !isRemovedFakeAccount(fname) && fname.toLowerCase().includes(q) && !matches.some(m => m.username.toLowerCase() === fname.toLowerCase())) {
-                            matches.push({ type: 'user', username: fname, bio: 'Amigo no Kiwi Chat' });
-                        }
-                    });
-                    const posts = loadAllPosts().filter(p => p && p.text && p.text.toLowerCase().includes(q));
-
-                    resultsBox.innerHTML = '';
-                    if (!matches.length && !posts.length) {
-                        resultsBox.textContent = `Nenhum resultado encontrado para "${queryStr.trim()}".`;
-                        return;
-                    }
-
-                    matches.forEach(m => {
-                        const row = document.createElement('div');
-                        row.className = 'social-list-item';
-                        row.style.textAlign = 'left';
-                        row.innerHTML = `
-                            <div class="social-avatar">${escapeHtmlText(m.username.charAt(0).toUpperCase())}</div>
-                            <div style="min-width:0;flex:1;">
-                                <div style="font-weight:700;font-size:13px;">@${escapeHtmlText(m.username)}</div>
-                                <div style="font-size:11px;color:var(--kiwi-text-muted);">${escapeHtmlText(m.bio || 'Perfil Kiwi')}</div>
-                            </div>
-                        `;
-                        row.onclick = () => openUserProfile(m.username);
-                        resultsBox.appendChild(row);
-                    });
-
-                    posts.slice(0, 8).forEach(p => {
-                        const row = document.createElement('div');
-                        row.className = 'social-list-item';
-                        row.style.textAlign = 'left';
-                        row.innerHTML = `
-                            <div style="min-width:0;flex:1;">
-                                <div style="font-weight:700;font-size:12px;color:#c084fc;">Post de @${escapeHtmlText(p.author || activeUsername)}</div>
-                                <div style="font-size:13px;color:var(--kiwi-text-primary);">${escapeHtmlText(p.text)}</div>
-                            </div>
-                        `;
-                        row.onclick = () => openPostDetailTab(p.id);
-                        resultsBox.appendChild(row);
-                    });
-                }
-
-                searchInput.addEventListener('input', () => runExploreSearch(searchInput.value));
-                boxWrap.appendChild(inputRow);
-                boxWrap.appendChild(resultsBox);
-                shell.appendChild(boxWrap);
-                chatLog.appendChild(shell);
-                setTimeout(() => searchInput.focus(), 60);
-            }
-
-            function renderNotificacoesTab() {
-                showChatLogSurface(false);
-                if (!chatLog) return;
                 chatLog.innerHTML = `
-                    <div style="padding:20px;display:flex;flex-direction:column;gap:12px;">
-                        <div style="font-size:15px;font-weight:800;">🔔 Notificações</div>
-                        <div style="background:var(--kiwi-bg-card);border:1px solid var(--kiwi-border);border-radius:14px;padding:14px;font-size:13px;color:var(--kiwi-text-muted);">
-                            Nenhuma notificação nova no momento. Pedidos de amizade também aparecem na caixa de mensagens (✉️ no rodapé esquerdo).
+                    <div class="kiwi-explore-shell">
+                        <div class="kiwi-search-box-wrap">
+                            <div class="kiwi-search-input-row">
+                                <span>🔍</span>
+                                <input type="text" id="kiwi-explore-search-input" class="kiwi-search-input" value="${escapeHtmlText(queryText)}" placeholder="Buscar no Kiwi...">
+                            </div>
+                            <div id="kiwi-explore-hint" class="kiwi-search-dropdown-hint"></div>
+                        </div>
+                        <div id="kiwi-explore-results"></div>
+                    </div>
+                `;
+
+                renderExploreResultsOnly(queryText);
+
+                const expInput = document.getElementById('kiwi-explore-search-input');
+                if (expInput) {
+                    expInput.addEventListener('input', () => renderExploreResultsOnly(expInput.value));
+                }
+            }
+
+            function renderInicioView() {
+                showChatLogSurface(false);
+                if (!chatLog) return;
+
+                const adminProfile = typeof buildAdminFeaturedAccount === 'function'
+                    ? buildAdminFeaturedAccount()
+                    : { username: 'AkiiraPW', bio: 'Perfil oficial do administrador no Kiwi Chat.' };
+                const adminName = 'AkiiraPW';
+                const isViewingOwnAdmin = String(activeUsername || '').trim().toLowerCase() === adminName.toLowerCase();
+
+                const rawBanner = myProfileData.bannerUrl || adminProfile.bannerUrl || '';
+                const bannerUrl = resolveBannerUrlForUser(adminName, rawBanner);
+                const bannerStyle = bannerUrl && isSafeAssetUrl(bannerUrl)
+                    ? `background-image:url("${encodeURI(bannerUrl)}");background-size:cover;background-position:center;`
+                    : 'background:linear-gradient(135deg, #2e1065 0%, #6d28d9 60%, #7c3aed 100%);';
+
+                const avatarSrc = myProfileData.avatarUrl || adminProfile.avatarUrl || '';
+                const hasAvatar = Boolean(avatarSrc && isSafeAssetUrl(avatarSrc));
+                const avatarStyle = hasAvatar
+                    ? `background-image:url("${encodeURI(avatarSrc)}");background-size:cover;background-position:center;color:transparent;`
+                    : '';
+
+                const goldRingClass = (typeof isAkiiraAdminIdentity === 'function' && isAkiiraAdminIdentity(adminName, true) && myProfileData.goldGlowFrame)
+                    ? ' akiira-gold-frame'
+                    : '';
+                const bioContent = (myProfileData.bio || adminProfile.bio || '').trim();
+
+                const postsSource = Array.isArray(userPostsList) ? userPostsList : [];
+                const postsHtml = postsSource.map(post => {
+                    const safeMedia = (post.mediaUrl && isSafeAssetUrl(post.mediaUrl)) ? escapeHtmlText(post.mediaUrl) : '';
+                    return `
+                        <article class="kiwi-x-post-card" data-home-post-id="${escapeHtmlText(post.id)}">
+                            <div class="kiwi-x-post-avatar${goldRingClass}" style="${avatarStyle}">${hasAvatar ? '' : escapeHtmlText(adminName.charAt(0).toUpperCase())}</div>
+                            <div class="kiwi-x-post-body">
+                                <div class="kiwi-x-post-header">
+                                    <span class="kiwi-x-post-author">${escapeHtmlText(adminName)}</span>
+                                    <span class="kiwi-x-post-handle">@${escapeHtmlText(adminName.toLowerCase())} • ${escapeHtmlText(post.createdAt || 'Agora')}</span>
+                                    <span class="admin-gold-badge">👑 ADMIN</span>
+                                </div>
+                                <div class="kiwi-x-post-text">${escapeHtmlText(post.text || '')}</div>
+                                ${safeMedia ? `<img src="${safeMedia}" alt="Mídia" class="kiwi-x-post-media" onerror="this.remove();">` : ''}
+                            </div>
+                        </article>
+                    `;
+                }).join('');
+
+                chatLog.innerHTML = `
+                    <div class="kiwi-home-profile-wrap">
+                        <div class="kiwi-home-profile-card" id="kiwi-home-open-profile-card">
+                            <div class="kiwi-home-profile-banner" style="${bannerStyle}"></div>
+                            <div class="kiwi-home-profile-body">
+                                <div class="kiwi-home-profile-top">
+                                    <div class="kiwi-home-profile-avatar${goldRingClass}" style="${avatarStyle}">${hasAvatar ? '' : escapeHtmlText(adminName.charAt(0).toUpperCase())}</div>
+                                    ${isViewingOwnAdmin ? '<button type="button" class="section-mini-action-btn" id="kiwi-home-edit-btn">✏️ Editar Perfil</button>' : ''}
+                                </div>
+                                <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+                                    <span style="font-size:17px;font-weight:900;">${escapeHtmlText(adminName)}</span>
+                                    <span style="color:#a855f7;font-size:14px;">✔</span>
+                                    <span class="admin-gold-badge">👑 ADMIN</span>
+                                </div>
+                                <div style="font-size:12px;color:var(--kiwi-text-muted);">@${escapeHtmlText(adminName.toLowerCase())}</div>
+                                <div style="font-size:13px;margin-top:8px;line-height:1.45;">${bioContent ? formatSafeBioHtml(bioContent) : 'Perfil oficial do administrador no Kiwi Chat.'}</div>
+                            </div>
+                        </div>
+                        <div id="kiwi-home-posts-feed">
+                            ${postsHtml || '<div class="kiwi-search-dropdown-hint">Nenhuma postagem publicada ainda.</div>'}
+                        </div>
+                    </div>
+                `;
+
+                const homeCard = document.getElementById('kiwi-home-open-profile-card');
+                if (homeCard && typeof window.openFullProfilePage === 'function') {
+                    homeCard.addEventListener('click', () => window.openFullProfilePage(adminName));
+                }
+
+                const homeEditBtn = document.getElementById('kiwi-home-edit-btn');
+                if (homeEditBtn && typeof switchToEditBtn !== 'undefined' && switchToEditBtn) {
+                    homeEditBtn.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        switchToEditBtn.click();
+                    });
+                }
+
+                chatLog.querySelectorAll('[data-home-post-id]').forEach(el => {
+                    el.addEventListener('click', () => {
+                        const pid = el.getAttribute('data-home-post-id');
+                        if (pid && typeof openPostDetailTab === 'function') openPostDetailTab(pid);
+                    });
+                });
+            }
+
+            function renderNotificacoesView() {
+                showChatLogSurface(false);
+                if (!chatLog) return;
+                const badgeEl = document.getElementById('nav-notif-badge');
+                if (badgeEl) badgeEl.textContent = '0';
+                chatLog.innerHTML = `
+                    <div class="kiwi-home-profile-wrap">
+                        <div class="kiwi-search-dropdown-hint">
+                            🔔 Nenhuma notificação nova no momento.
                         </div>
                     </div>
                 `;
             }
 
-            function renderListasTab() {
+            function renderListasView() {
                 showChatLogSurface(false);
                 if (!chatLog) return;
                 chatLog.innerHTML = `
-                    <div style="padding:20px;display:flex;flex-direction:column;gap:12px;">
-                        <div style="font-size:15px;font-weight:800;">📋 Listas &amp; Conexões</div>
-                        <div style="background:var(--kiwi-bg-card);border:1px solid var(--kiwi-border);border-radius:14px;padding:14px;font-size:13px;">
-                            <div><strong>Amigos:</strong> ${friendsList.length}</div>
-                            <div style="margin-top:6px;"><strong>Seguindo:</strong> ${followingList.length}</div>
-                            <div style="margin-top:6px;"><strong>Seguidores:</strong> ${followersList.length}</div>
+                    <div class="kiwi-home-profile-wrap">
+                        <div class="kiwi-home-profile-card" style="padding:18px;cursor:default;">
+                            <div style="font-size:16px;font-weight:800;margin-bottom:6px;">📋 Listas &amp; Conexões</div>
+                            <div style="font-size:13px;color:var(--kiwi-text-muted);margin-bottom:14px;">
+                                Amigos salvos: <strong>${friendsList.length}</strong> • Seguindo: <strong>${followingList.length}</strong> • Seguidores: <strong>${followersList.length}</strong>
+                            </div>
+                            <button type="button" class="section-mini-action-btn" id="kiwi-listas-add-friend-btn">+ Adicionar Amigo</button>
                         </div>
                     </div>
                 `;
+                const btn = document.getElementById('kiwi-listas-add-friend-btn');
+                if (btn) btn.addEventListener('click', openAddFriendModalWithFocus);
             }
 
-            function renderMaisTab() {
+            function renderMaisView() {
                 showChatLogSurface(false);
                 if (!chatLog) return;
-                chatLog.innerHTML = '';
-                const wrap = document.createElement('div');
-                wrap.style.cssText = 'padding:20px;display:flex;flex-direction:column;gap:10px;';
-                wrap.innerHTML = `<div style="font-size:15px;font-weight:800;margin-bottom:4px;">••• Mais opções</div>`;
-
-                const makeActionBtn = (label, fn) => {
-                    const b = document.createElement('button');
-                    b.type = 'button';
-                    b.className = 'btn-aesthetic-edit';
-                    b.style.textAlign = 'left';
-                    b.textContent = label;
-                    b.onclick = fn;
-                    return b;
-                };
-
-                wrap.appendChild(makeActionBtn('⚙️ Definições & Cores do Tema', () => {
-                    if (settingsColorsModal) { syncAdminVisualRestrictions(); openModalAnimated(settingsColorsModal); }
-                }));
-                wrap.appendChild(makeActionBtn('✏️ Editar Perfil Estético', () => switchToEditBtn.click()));
-                wrap.appendChild(makeActionBtn('👥 Adicionar Amigo', openAddFriendModalWithFocus));
-                wrap.appendChild(makeActionBtn('🥝 Criar Novo Servidor', () => {
-                    if (createServerModal) openModalAnimated(createServerModal);
-                }));
-                wrap.appendChild(makeActionBtn('#️⃣ Criar Novo Canal', () => {
-                    if (createChannelModal) openModalAnimated(createChannelModal);
-                }));
-
-                chatLog.appendChild(wrap);
+                chatLog.innerHTML = `
+                    <div class="kiwi-home-profile-wrap">
+                        <div class="kiwi-home-profile-card" style="padding:18px;cursor:default;display:flex;flex-direction:column;gap:10px;">
+                            <div style="font-size:16px;font-weight:800;">••• Mais opções do Kiwi</div>
+                            <div style="display:flex;flex-wrap:wrap;gap:8px;">
+                                <button type="button" class="section-mini-action-btn" id="kiwi-mais-card-btn">🪪 Card Estético</button>
+                                <button type="button" class="section-mini-action-btn" id="kiwi-mais-theme-btn">🎨 Temas e Cores</button>
+                                <button type="button" class="section-mini-action-btn" id="kiwi-mais-geral-btn"># Ir para #geral</button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                const cBtn = document.getElementById('kiwi-mais-card-btn');
+                const tBtn = document.getElementById('kiwi-mais-theme-btn');
+                const gBtn = document.getElementById('kiwi-mais-geral-btn');
+                if (cBtn) cBtn.addEventListener('click', () => renderUnifiedProfileModal(myProfileData));
+                if (tBtn && settingsColorsModal) tBtn.addEventListener('click', () => openModalAnimated(settingsColorsModal));
+                if (gBtn) gBtn.addEventListener('click', () => switchToServerChannel('geral', 'text'));
             }
 
             function activateNavTab(tabName) {
-                navTabs.forEach(b => b.classList.toggle('active', b.getAttribute('data-nav-tab') === tabName));
+                if (currentView === 'geral') saveCurrentChannelSnapshot();
+                inspectedTimelineUser = null;
                 document.querySelectorAll('#server-channels-list .channel-item').forEach(c => c.classList.remove('active'));
+                document.querySelectorAll('.kiwi-nav-item[data-nav-tab]').forEach(btn => {
+                    btn.classList.toggle('active', btn.getAttribute('data-nav-tab') === tabName);
+                });
+
+                headerCallBtn.classList.remove('visible');
+                if (backToGeralBtn) backToGeralBtn.classList.toggle('visible', tabName !== 'inicio');
 
                 if (tabName === 'perfil') {
                     currentView = 'perfil';
-                    inspectedTimelineUser = null;
                     if (headerMainTitle) headerMainTitle.textContent = `👤 ${activeUsername}`;
                     if (headerSubLabel) headerSubLabel.textContent = '| Perfil';
-                    if (backToGeralBtn) backToGeralBtn.classList.add('visible');
-                    if (headerCallBtn) headerCallBtn.classList.remove('visible');
                     syncXProfileHeader();
                     closeFollowersPanelAndShowFeed();
                     showProfileTimelineSurface();
                 } else if (tabName === 'mensagens') {
                     currentView = 'dm';
-                    if (headerMainTitle) headerMainTitle.textContent = '✉️ Bate-papo';
-                    if (headerSubLabel) headerSubLabel.textContent = '| Mensagens diretas';
-                    if (backToGeralBtn) backToGeralBtn.classList.add('visible');
-                    if (headerCallBtn) headerCallBtn.classList.remove('visible');
+                    if (headerMainTitle) headerMainTitle.textContent = '✉️ Mensagens';
+                    if (headerSubLabel) headerSubLabel.textContent = '| Bate-papo direto';
                     showDmSplitSurface();
-                } else if (tabName === 'inicio') {
-                    currentView = 'inicio';
-                    if (headerMainTitle) headerMainTitle.textContent = '🏠 Início';
-                    if (headerSubLabel) headerSubLabel.textContent = '| Feed inicial';
-                    if (backToGeralBtn) backToGeralBtn.classList.add('visible');
-                    if (headerCallBtn) headerCallBtn.classList.remove('visible');
-                    renderInicioFeedTab();
                 } else if (tabName === 'explorar') {
                     currentView = 'explorar';
                     if (headerMainTitle) headerMainTitle.textContent = '🔍 Explorar';
-                    if (headerSubLabel) headerSubLabel.textContent = '| Pesquisar no Kiwi';
-                    if (backToGeralBtn) backToGeralBtn.classList.add('visible');
-                    if (headerCallBtn) headerCallBtn.classList.remove('visible');
-                    renderExplorarSearchTab();
+                    if (headerSubLabel) headerSubLabel.textContent = '| Descobrir no Kiwi';
+                    renderExploreView('');
+                } else if (tabName === 'inicio') {
+                    currentView = 'inicio';
+                    if (headerMainTitle) headerMainTitle.textContent = '🏠 Início';
+                    if (headerSubLabel) headerSubLabel.textContent = '| Seu feed inicial';
+                    renderInicioView();
                 } else if (tabName === 'notificacoes') {
                     currentView = 'notificacoes';
                     if (headerMainTitle) headerMainTitle.textContent = '🔔 Notificações';
-                    if (headerSubLabel) headerSubLabel.textContent = '| Alertas e atividades';
-                    if (backToGeralBtn) backToGeralBtn.classList.add('visible');
-                    if (headerCallBtn) headerCallBtn.classList.remove('visible');
-                    renderNotificacoesTab();
+                    if (headerSubLabel) headerSubLabel.textContent = '| Atualizações e alertas';
+                    renderNotificacoesView();
                 } else if (tabName === 'listas') {
                     currentView = 'listas';
                     if (headerMainTitle) headerMainTitle.textContent = '📋 Listas';
-                    if (headerSubLabel) headerSubLabel.textContent = '| Listas e conexões';
-                    if (backToGeralBtn) backToGeralBtn.classList.add('visible');
-                    if (headerCallBtn) headerCallBtn.classList.remove('visible');
-                    renderListasTab();
+                    if (headerSubLabel) headerSubLabel.textContent = '| Conexões e listas';
+                    renderListasView();
                 } else if (tabName === 'mais') {
                     currentView = 'mais';
                     if (headerMainTitle) headerMainTitle.textContent = '••• Mais';
-                    if (headerSubLabel) headerSubLabel.textContent = '| Ferramentas e ajustes';
-                    if (backToGeralBtn) backToGeralBtn.classList.add('visible');
-                    if (headerCallBtn) headerCallBtn.classList.remove('visible');
-                    renderMaisTab();
+                    if (headerSubLabel) headerSubLabel.textContent = '| Ferramentas do Kiwi';
+                    renderMaisView();
                 }
 
                 openMobileChatView();
                 triggerChatAreaTransition();
             }
 
-            navTabs.forEach(btn => {
+            document.querySelectorAll('.kiwi-nav-item[data-nav-tab]').forEach(btn => {
                 btn.addEventListener('click', () => {
-                    const tab = btn.getAttribute('data-nav-tab');
-                    if (tab) activateNavTab(tab);
+                    const tName = btn.getAttribute('data-nav-tab');
+                    if (tName) activateNavTab(tName);
                 });
             });
 
-            document.querySelectorAll('#server-channels-list .channel-item').forEach(item => {
-                const chName = item.getAttribute('data-channel-name') || 'geral';
-                const chType = item.getAttribute('data-channel-type') || 'text';
-                item.addEventListener('click', () => switchToServerChannel(chName, chType));
-            });
-
-            renderSidebarSavedFriends();
-            fetchOnlineUsers();
-            syncFollowerCountsUi();
-            syncXProfileHeader();
-            renderUnreadBadges();
-
-            if (currentView === 'perfil') {
-                activateNavTab('perfil');
+            const initialGeralItem = document.getElementById('tab-geral');
+            if (initialGeralItem) {
+                initialGeralItem.addEventListener('click', () => switchToServerChannel('geral', 'text'));
             }
+            const initialMusicItem = document.querySelector('#server-channels-list .channel-item[data-channel-name="música"]');
+            if (initialMusicItem) {
+                initialMusicItem.addEventListener('click', () => switchToServerChannel('música', 'audio'));
+            }
+
+            syncXProfileHeader();
+            activateNavTab('inicio');
+            fetchOnlineUsers();
+            renderUnreadBadges();
         });
     </script>
 
-    <nav class="kiwi-mobile-bottom-pill" id="kiwi-mobile-bottom-pill" aria-label="Navegação rápida mobile">
-        <button type="button" id="m-pill-chat-btn" class="active">
+    <div class="kiwi-mobile-bottom-pill" role="navigation" aria-label="Navegação rápida">
+        <button type="button" id="mobile-pill-canais" class="active">
             <span>💬</span>
-            <span>Chat</span>
+            <span>Canais</span>
         </button>
-        <button type="button" id="m-pill-profile-btn">
+        <button type="button" id="mobile-pill-perfil">
             <span>👤</span>
             <span>Perfil</span>
         </button>
-    </nav>
+    </div>
 
     <script>
-        (function() {
-            const pillChatBtn = document.getElementById('m-pill-chat-btn');
-            const pillProfileBtn = document.getElementById('m-pill-profile-btn');
-            if (!pillChatBtn || !pillProfileBtn) return;
+        (function initMobileBottomPill() {
+            const pillCanais = document.getElementById('mobile-pill-canais');
+            const pillPerfil = document.getElementById('mobile-pill-perfil');
+            if (!pillCanais || !pillPerfil) return;
 
-            function syncMobilePillActiveState() {
-                const isProfile = document.getElementById('nav-tab-perfil')?.classList.contains('active') ||
-                    document.getElementById('kiwi-profile-timeline-view')?.style.display === 'block';
-                pillProfileBtn.classList.toggle('active', Boolean(isProfile));
-                pillChatBtn.classList.toggle('active', !isProfile);
-            }
-
-            pillChatBtn.addEventListener('click', function() {
-                const geralTab = document.getElementById('tab-geral') || document.querySelector('#server-channels-list .channel-item');
-                if (geralTab) geralTab.click();
-                if (typeof window.openMobileChatView === 'function') window.openMobileChatView();
-                syncMobilePillActiveState();
+            pillCanais.addEventListener('click', () => {
+                pillCanais.classList.add('active');
+                pillPerfil.classList.remove('active');
+                document.body.classList.remove('mobile-chat-open');
             });
 
-            pillProfileBtn.addEventListener('click', function() {
-                const perfilTab = document.getElementById('nav-tab-perfil');
-                if (perfilTab) perfilTab.click();
-                if (typeof window.openMobileChatView === 'function') window.openMobileChatView();
-                syncMobilePillActiveState();
+            pillPerfil.addEventListener('click', () => {
+                pillPerfil.classList.add('active');
+                pillCanais.classList.remove('active');
+                const navPerfil = document.getElementById('nav-tab-perfil');
+                if (navPerfil) {
+                    navPerfil.click();
+                } else if (window.innerWidth <= 768) {
+                    document.body.classList.add('mobile-chat-open');
+                }
             });
-
-            document.addEventListener('click', function() {
-                setTimeout(syncMobilePillActiveState, 30);
-            });
-            syncMobilePillActiveState();
         })();
     </script>
 </body>
