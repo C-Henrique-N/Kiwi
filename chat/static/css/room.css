@@ -1,4 +1,4 @@
-/* === KIWI THEME — X/TWITTER + DISCORD DARK PURPLE-VIOLET (DESKTOP + MOBILE) === */
+/* === KIWI THEME — X/TWITTER + DISCORD DARK PURPLE-VIOLET === */
 
 :root {
     --kiwi-bg-canvas: #0b0714;
@@ -76,7 +76,6 @@ svg {
 #chat-log,
 .sidebar-right,
 #kiwi-profile-timeline-view,
-#kiwi-post-detail-view,
 #kiwi-dm-split-view,
 .kiwi-dm-left-pane,
 #kiwi-dm-right-messages,
@@ -89,7 +88,6 @@ svg {
 #chat-log::-webkit-scrollbar,
 .sidebar-right::-webkit-scrollbar,
 #kiwi-profile-timeline-view::-webkit-scrollbar,
-#kiwi-post-detail-view::-webkit-scrollbar,
 #kiwi-dm-split-view::-webkit-scrollbar,
 .kiwi-dm-left-pane::-webkit-scrollbar,
 #kiwi-dm-right-messages::-webkit-scrollbar,
@@ -101,7 +99,6 @@ svg {
 #chat-log::-webkit-scrollbar-thumb,
 .sidebar-right::-webkit-scrollbar-thumb,
 #kiwi-profile-timeline-view::-webkit-scrollbar-thumb,
-#kiwi-post-detail-view::-webkit-scrollbar-thumb,
 #kiwi-dm-split-view::-webkit-scrollbar-thumb,
 .kiwi-dm-left-pane::-webkit-scrollbar-thumb,
 #kiwi-dm-right-messages::-webkit-scrollbar-thumb,
@@ -237,7 +234,7 @@ svg {
     cursor: pointer;
 }
 
-/* Shell principal em 4 colunas no Desktop */
+/* Shell principal em 4 colunas: Server Rail | Nav Esquerda | Coluna Central | Sidebar Direita */
 .kiwi-app-shell {
     display: grid;
     grid-template-columns: 64px 236px minmax(360px, 1fr) 310px;
@@ -320,7 +317,6 @@ svg {
     justify-content: space-between;
     padding: 14px 12px 12px 12px;
     min-width: 0;
-    height: 100vh;
     overflow: hidden;
 }
 
@@ -395,6 +391,35 @@ svg {
     background: var(--kiwi-accent-purple-soft);
     color: #ffffff;
     font-weight: 700;
+}
+
+.dm-channel-avatar {
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background: var(--kiwi-accent-purple);
+    color: #fff;
+    font-size: 11px;
+    font-weight: 700;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.dm-close-tab {
+    margin-left: auto;
+    background: transparent;
+    border: none;
+    color: var(--kiwi-text-secondary);
+    font-size: 15px;
+    line-height: 1;
+    cursor: pointer;
+    padding: 0 3px;
+}
+
+.dm-close-tab:hover {
+    color: #fff;
 }
 
 .unread-badge {
@@ -528,8 +553,6 @@ svg {
     justify-content: center;
     flex-shrink: 0;
     border: 1.5px solid var(--kiwi-border-strong);
-    background-size: cover;
-    background-position: center;
 }
 
 .user-panel-actions {
@@ -577,6 +600,15 @@ svg {
     min-width: 0;
     height: 100vh;
     overflow: hidden;
+}
+
+.chat-area.room-entering {
+    animation: kiwiRoomFade 0.22s var(--kiwi-ease);
+}
+
+@keyframes kiwiRoomFade {
+    from { opacity: 0.65; transform: translateY(3px); }
+    to { opacity: 1; transform: translateY(0); }
 }
 
 .chat-header {
@@ -728,6 +760,17 @@ svg {
     color: #fff;
 }
 
+.call-ctrl-btn.mute-active {
+    background: var(--kiwi-accent-purple);
+    border-color: var(--kiwi-accent-purple-bright);
+    color: #fff;
+}
+
+.watch-loading-note {
+    font-size: 12px;
+    color: var(--kiwi-text-secondary);
+}
+
 /* === TIMELINE DE PERFIL ESTILO X / TWITTER === */
 #kiwi-profile-timeline-view {
     display: none;
@@ -827,6 +870,25 @@ svg {
     padding-top: 58px;
 }
 
+.kiwi-x-circle-btn {
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    border: 1px solid var(--kiwi-border-strong);
+    background: var(--kiwi-bg-card);
+    color: var(--kiwi-text-primary);
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.kiwi-x-circle-btn:hover {
+    background: var(--kiwi-bg-hover);
+}
+
 .kiwi-x-follow-pill {
     padding: 7px 16px;
     border-radius: var(--kiwi-radius-pill);
@@ -894,6 +956,11 @@ svg {
 .kiwi-x-stat-btn strong {
     color: var(--kiwi-text-primary);
     font-weight: 800;
+}
+
+.kiwi-x-stat-btn:hover {
+    text-decoration: underline;
+    color: var(--kiwi-text-primary);
 }
 
 /* Sub-abas do perfil: Posts, Respostas, Mídia, Curtidas */
@@ -990,220 +1057,73 @@ svg {
     cursor: pointer;
 }
 
-/* === POSTAGEM EXPANDIDA & BARRA DE INTERAÇÃO (ESTILO X + KIWI DARK) === */
-.kiwi-post-detail-view {
-    flex: 1;
-    min-height: 0;
-    overflow-y: auto;
-    background: var(--kiwi-bg-canvas);
+.kiwi-x-delete-post-btn:hover {
+    color: #f87171;
+    border-color: rgba(248, 113, 113, 0.35);
+    background: rgba(248, 113, 113, 0.1);
 }
 
-.kiwi-post-detail-card {
-    padding: 14px 16px 8px 16px;
-    border-bottom: 1px solid var(--kiwi-border);
-}
-
-.kiwi-post-detail-author-row {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    margin-bottom: 12px;
-}
-
-.kiwi-post-detail-author-meta {
-    display: flex;
-    flex-direction: column;
-    min-width: 0;
-}
-
-.kiwi-post-detail-text {
-    font-size: 16px;
-    line-height: 1.5;
-    color: var(--kiwi-text-primary);
-    white-space: pre-wrap;
-    word-break: break-word;
-    margin-bottom: 10px;
-}
-
-.kiwi-post-detail-media img {
-    display: block;
-    width: 100%;
-    max-width: 520px;
-    max-height: 360px;
-    object-fit: cover;
-    border-radius: var(--kiwi-radius-lg);
-    border: 1px solid var(--kiwi-border);
-    margin: 8px 0 12px 0;
-    cursor: pointer;
-}
-
-.kiwi-post-detail-meta {
-    display: flex;
-    align-items: center;
-    flex-wrap: wrap;
-    gap: 6px;
-    padding: 12px 0;
-    font-size: 13px;
-    color: var(--kiwi-text-muted);
-    border-bottom: 1px solid var(--kiwi-border);
-}
-
-.kiwi-post-detail-meta strong {
-    color: var(--kiwi-text-primary);
-    font-weight: 700;
-}
-
-.kiwi-post-action-bar {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 8px 4px;
-    gap: 6px;
-}
-
-.kiwi-post-act-btn {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    padding: 6px 10px;
-    border-radius: var(--kiwi-radius-pill);
-    border: none;
-    background: transparent;
-    color: var(--kiwi-text-secondary);
-    font-size: 13px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: background 0.15s ease, color 0.15s ease, transform 0.12s ease;
-}
-
-.kiwi-post-act-btn:active {
-    transform: scale(0.94);
-}
-
-.kiwi-post-act-btn.reply:hover {
-    color: #38bdf8;
-    background: rgba(56, 189, 248, 0.12);
-}
-
-.kiwi-post-act-btn.repost:hover,
-.kiwi-post-act-btn.repost.active {
-    color: var(--kiwi-online-green);
-    background: rgba(34, 197, 94, 0.12);
-}
-
-.kiwi-post-act-btn.like:hover,
-.kiwi-post-act-btn.like.active {
-    color: #f43f5e;
-    background: rgba(244, 63, 94, 0.12);
-}
-
-.kiwi-post-act-btn.bookmark:hover,
-.kiwi-post-act-btn.bookmark.active {
-    color: var(--kiwi-accent-purple-bright);
-    background: var(--kiwi-accent-purple-soft);
-}
-
-.kiwi-post-act-btn.share:hover {
-    color: var(--kiwi-text-primary);
-    background: var(--kiwi-bg-hover);
-}
-
-.kiwi-replies-filter-bar {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 8px 16px;
-    border-bottom: 1px solid var(--kiwi-border);
-}
-
-.kiwi-filter-pill {
-    padding: 5px 12px;
-    border-radius: var(--kiwi-radius-pill);
-    border: 1px solid var(--kiwi-border);
-    background: var(--kiwi-bg-card);
-    color: var(--kiwi-text-secondary);
-    font-size: 12px;
-    font-weight: 700;
-    cursor: pointer;
-}
-
-.kiwi-reply-composer {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    padding: 10px 16px;
+/* Painel de Seguidores / Seguindo */
+.kiwi-x-followers-tabs {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
     border-bottom: 1px solid var(--kiwi-border);
     background: var(--kiwi-bg-panel);
 }
 
-.kiwi-reply-input {
-    flex: 1;
-    min-width: 0;
-    padding: 9px 14px;
-    border-radius: var(--kiwi-radius-pill);
-    border: 1px solid var(--kiwi-border);
-    background: var(--kiwi-bg-card);
-    color: var(--kiwi-text-primary);
-    font-size: 14px;
-    outline: none;
-}
-
-.kiwi-reply-input:focus {
-    border-color: var(--kiwi-accent-purple-bright);
-}
-
-.kiwi-reply-submit-btn {
-    padding: 8px 16px;
-    border-radius: var(--kiwi-radius-pill);
+.kiwi-x-followers-tab {
+    position: relative;
+    padding: 12px 6px;
     border: none;
-    background: var(--kiwi-accent-purple);
-    color: #ffffff;
+    background: transparent;
+    color: var(--kiwi-text-muted);
     font-size: 13px;
     font-weight: 700;
     cursor: pointer;
-    flex-shrink: 0;
 }
 
-.kiwi-reply-submit-btn:hover {
+.kiwi-x-followers-tab.active {
+    color: var(--kiwi-text-primary);
+}
+
+.kiwi-x-followers-tab.active::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 20%;
+    right: 20%;
+    height: 3px;
+    border-radius: var(--kiwi-radius-pill);
     background: var(--kiwi-accent-purple-bright);
 }
 
-.kiwi-post-replies-list {
+.kiwi-x-follower-row {
     display: flex;
-    flex-direction: column;
-}
-
-.kiwi-reply-item {
-    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
     gap: 12px;
     padding: 14px 16px;
     border-bottom: 1px solid var(--kiwi-border);
 }
 
-.kiwi-reply-item:hover {
-    background: rgba(139, 92, 246, 0.04);
+.kiwi-x-follower-pill {
+    padding: 6px 14px;
+    border-radius: var(--kiwi-radius-pill);
+    border: 1px solid var(--kiwi-border-strong);
+    background: var(--kiwi-text-primary);
+    color: var(--kiwi-bg-canvas);
+    font-size: 12px;
+    font-weight: 700;
+    cursor: pointer;
+    flex-shrink: 0;
 }
 
-.kiwi-reply-body {
-    flex: 1;
-    min-width: 0;
-}
-
-.kiwi-reply-header {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    flex-wrap: wrap;
-    margin-bottom: 4px;
+.kiwi-x-follower-pill.following {
+    background: transparent;
+    color: var(--kiwi-text-primary);
 }
 
 /* === BATE-PAPO DIVIDIDO (ESQUERDA LISTA + DIREITA CONVERSA) === */
-#kiwi-dm-split-view {
-    flex: 1;
-    min-height: 0;
-    overflow: hidden;
-}
-
 .kiwi-dm-split-shell {
     display: grid;
     grid-template-columns: 310px 1fr;
@@ -1280,6 +1200,12 @@ svg {
     font-weight: 700;
     cursor: pointer;
     flex-shrink: 0;
+}
+
+.kiwi-dm-chat-btn:hover {
+    background: var(--kiwi-accent-purple);
+    border-color: var(--kiwi-accent-purple-bright);
+    color: #fff;
 }
 
 .kiwi-dm-right-pane {
@@ -1482,6 +1408,75 @@ svg {
     cursor: pointer;
 }
 
+.msg-hover-btn:hover {
+    background: var(--kiwi-bg-hover);
+}
+
+.msg-hover-divider {
+    width: 1px;
+    height: 14px;
+    background: var(--kiwi-border);
+    margin: 0 2px;
+}
+
+.msg-emoji-picker,
+.msg-more-popover {
+    display: none;
+    position: absolute;
+    top: 24px;
+    right: 12px;
+    z-index: 15;
+    background: var(--kiwi-bg-card);
+    border: 1px solid var(--kiwi-border-strong);
+    border-radius: var(--kiwi-radius-md);
+    padding: 6px;
+    box-shadow: 0 10px 28px rgba(0, 0, 0, 0.55);
+}
+
+.msg-emoji-picker.open {
+    display: flex;
+    gap: 4px;
+}
+
+.msg-more-popover.open {
+    display: flex;
+    flex-direction: column;
+    min-width: 140px;
+}
+
+.msg-emoji-choice {
+    background: transparent;
+    border: none;
+    font-size: 16px;
+    cursor: pointer;
+    padding: 4px;
+    border-radius: 6px;
+}
+
+.msg-emoji-choice:hover {
+    background: var(--kiwi-bg-hover);
+}
+
+.msg-more-item {
+    background: transparent;
+    border: none;
+    color: var(--kiwi-text-primary);
+    font-size: 12px;
+    font-weight: 600;
+    text-align: left;
+    padding: 7px 10px;
+    border-radius: 6px;
+    cursor: pointer;
+}
+
+.msg-more-item:hover {
+    background: var(--kiwi-bg-hover);
+}
+
+.msg-more-item.danger {
+    color: #f87171;
+}
+
 .chat-input-area {
     position: relative;
     padding: 10px 16px 14px 16px;
@@ -1577,6 +1572,16 @@ svg {
     justify-content: center;
 }
 
+.media-btn:hover {
+    background: var(--kiwi-bg-hover);
+    color: var(--kiwi-text-primary);
+}
+
+.media-btn.recording {
+    color: #ef4444;
+    background: rgba(239, 68, 68, 0.16);
+}
+
 #chat-message-input {
     flex: 1;
     min-width: 0;
@@ -1596,6 +1601,10 @@ svg {
     font-size: 13px;
     font-weight: 700;
     cursor: pointer;
+}
+
+#chat-message-submit:hover {
+    background: var(--kiwi-accent-purple-bright);
 }
 
 /* 4. Sidebar direita */
@@ -1634,6 +1643,10 @@ svg {
     outline: none;
 }
 
+.kiwi-right-search-input:focus {
+    border-color: var(--kiwi-accent-purple-bright);
+}
+
 .kiwi-right-widget-card {
     background: var(--kiwi-bg-card);
     border: 1px solid var(--kiwi-border);
@@ -1663,6 +1676,29 @@ svg {
     font-size: 12px;
     font-weight: 700;
     cursor: pointer;
+}
+
+.kiwi-follow-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+}
+
+.kiwi-follow-pill-btn {
+    padding: 6px 14px;
+    border-radius: var(--kiwi-radius-pill);
+    border: 1px solid var(--kiwi-border-strong);
+    background: var(--kiwi-text-primary);
+    color: var(--kiwi-bg-canvas);
+    font-size: 12px;
+    font-weight: 800;
+    cursor: pointer;
+}
+
+.kiwi-follow-pill-btn.is-following {
+    background: transparent;
+    color: var(--kiwi-text-primary);
 }
 
 .social-tabs {
@@ -1705,6 +1741,12 @@ svg {
     background: var(--kiwi-bg-card);
     border: 1px solid transparent;
     cursor: pointer;
+    transition: border-color 0.15s ease, background 0.15s ease;
+}
+
+.social-list-item:hover {
+    background: var(--kiwi-bg-elevated);
+    border-color: var(--kiwi-border);
 }
 
 .social-avatar {
@@ -1743,6 +1785,16 @@ svg {
     background: rgba(11, 7, 20, 0.72);
     color: var(--kiwi-text-primary);
     border: 1px solid var(--kiwi-border);
+}
+
+.kiwi-info-panel-card {
+    background: var(--kiwi-bg-card);
+    border: 1px solid var(--kiwi-border);
+    border-radius: var(--kiwi-radius-lg);
+    padding: 18px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
 }
 
 .friend-req-card {
@@ -1887,6 +1939,15 @@ svg {
     cursor: pointer;
 }
 
+.btn-aesthetic-action.call-btn {
+    background: #16a34a;
+}
+
+.btn-aesthetic-action.remove-btn {
+    background: #dc2626;
+}
+
+/* Player de música no card */
 .kiwi-spotify-widget {
     display: flex;
     flex-direction: column;
@@ -1913,6 +1974,8 @@ svg {
     justify-content: center;
     font-size: 18px;
     flex-shrink: 0;
+    background-size: cover;
+    background-position: center;
 }
 
 .ksw-meta {
@@ -1936,6 +1999,135 @@ svg {
     text-overflow: ellipsis;
 }
 
+.ksw-top-actions {
+    display: flex;
+    gap: 4px;
+}
+
+.ksw-icon-btn {
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    border: 1px solid var(--kiwi-border);
+    background: var(--kiwi-bg-card);
+    color: var(--kiwi-text-primary);
+    font-size: 12px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+.ksw-icon-btn.active {
+    background: var(--kiwi-accent-purple);
+    color: #fff;
+}
+
+.ksw-progress-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 10px;
+    color: var(--kiwi-text-muted);
+}
+
+.ksw-seek-wrap {
+    position: relative;
+    flex: 1;
+    height: 14px;
+    display: flex;
+    align-items: center;
+}
+
+.ksw-track-bg {
+    width: 100%;
+    height: 4px;
+    border-radius: 9999px;
+    background: rgba(255, 255, 255, 0.14);
+    overflow: hidden;
+}
+
+.ksw-track-fill {
+    width: 0%;
+    height: 100%;
+    background: var(--kiwi-accent-purple-bright);
+}
+
+.ksw-seek-input {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    opacity: 0;
+    cursor: pointer;
+}
+
+.ksw-controls-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 4px;
+}
+
+.ksw-ctrl-btn {
+    background: transparent;
+    border: none;
+    color: var(--kiwi-text-secondary);
+    font-size: 13px;
+    cursor: pointer;
+    padding: 4px;
+    border-radius: 6px;
+}
+
+.ksw-ctrl-btn.active,
+.ksw-ctrl-btn:hover {
+    color: var(--kiwi-text-primary);
+    background: var(--kiwi-bg-hover);
+}
+
+.ksw-play-circle {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    border: none;
+    background: var(--kiwi-accent-purple);
+    color: #fff;
+    font-size: 12px;
+    cursor: pointer;
+}
+
+.ksw-vol-wrap {
+    position: relative;
+}
+
+.ksw-vol-popover {
+    display: none;
+    position: absolute;
+    bottom: 32px;
+    right: 0;
+    padding: 8px 10px;
+    border-radius: 8px;
+    background: var(--kiwi-bg-card);
+    border: 1px solid var(--kiwi-border-strong);
+    align-items: center;
+    gap: 6px;
+    z-index: 20;
+}
+
+.ksw-vol-popover.open {
+    display: flex;
+}
+
+.ksw-vol-slider {
+    width: 72px;
+}
+
+.ksw-vol-val {
+    font-size: 10px;
+    color: var(--kiwi-text-secondary);
+}
+
+/* Formulários e Editor de Perfil */
 .form-group {
     display: flex;
     flex-direction: column;
@@ -1950,6 +2142,8 @@ svg {
 }
 
 .form-group input[type="text"],
+.form-group input[type="url"],
+.form-group input[type="file"],
 .form-group textarea,
 .form-group select {
     width: 100%;
@@ -1999,6 +2193,9 @@ svg {
 .kiwi-editor-title {
     font-size: 17px;
     font-weight: 800;
+    display: flex;
+    align-items: center;
+    gap: 8px;
 }
 
 .kiwi-editor-grid {
@@ -2016,7 +2213,9 @@ svg {
 }
 
 .kiwi-preview-media-box,
-.kiwi-editor-panel {
+.kiwi-editor-panel,
+.kiwi-nitro-promo-card,
+.kiwi-live-identity-box {
     background: var(--kiwi-bg-elevated);
     border: 1px solid var(--kiwi-border);
     border-radius: 12px;
@@ -2098,10 +2297,166 @@ svg {
     margin-bottom: 6px;
 }
 
+.kiwi-swatch-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 7px 10px;
+    border-radius: 8px;
+    background: var(--kiwi-bg-card);
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.kiwi-effects-pair {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+}
+
+.kiwi-effect-slot {
+    padding: 8px;
+    border-radius: 8px;
+    border: 1px solid var(--kiwi-border);
+    background: var(--kiwi-bg-card);
+    color: var(--kiwi-text-primary);
+    font-size: 11px;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+}
+
+.kiwi-effect-slot.active {
+    border-color: var(--kiwi-accent-purple-bright);
+    background: var(--kiwi-accent-purple-soft);
+}
+
+.kiwi-name-style-card {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 10px;
+    border-radius: 8px;
+    background: var(--kiwi-bg-card);
+    border: 1px solid var(--kiwi-border);
+    cursor: pointer;
+}
+
+.kiwi-name-style-sample {
+    font-size: 14px;
+    font-weight: 800;
+}
+
+.kiwi-nitro-btn {
+    margin-top: 8px;
+    width: 100%;
+    padding: 7px 10px;
+    border-radius: 8px;
+    border: 1px solid var(--kiwi-border-strong);
+    background: var(--kiwi-bg-card);
+    color: var(--kiwi-text-primary);
+    font-size: 12px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    cursor: pointer;
+}
+
+.kiwi-live-banner-mini {
+    height: 76px;
+    border-radius: 10px;
+    background: var(--auth-artwork);
+    background-size: cover;
+    background-position: center;
+    cursor: pointer;
+}
+
+.kiwi-live-identity-box {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+}
+
+.kiwi-privacy-banner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 8px 12px;
+    border-radius: 8px;
+    background: var(--kiwi-accent-purple-soft);
+    border: 1px solid var(--kiwi-border);
+    font-size: 12px;
+}
+
 .kiwi-editor-two-col-fields {
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 10px;
+}
+
+.kiwi-saved-music-pill-btn {
+    padding: 4px 10px;
+    border-radius: var(--kiwi-radius-pill);
+    border: 1px solid var(--kiwi-border-strong);
+    background: var(--kiwi-bg-card);
+    color: var(--kiwi-text-primary);
+    font-size: 11px;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.kiwi-file-picker-wrap {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 8px;
+    border-radius: 8px;
+    background: var(--kiwi-bg-elevated);
+    border: 1px solid var(--kiwi-border);
+    font-size: 11px;
+}
+
+.kiwi-file-picker-btn {
+    padding: 4px 8px;
+    border-radius: 6px;
+    border: 1px solid var(--kiwi-border);
+    background: var(--kiwi-bg-card);
+    color: var(--kiwi-text-primary);
+    font-size: 11px;
+    font-weight: 600;
+    cursor: pointer;
+    flex-shrink: 0;
+}
+
+.kiwi-file-picker-name {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    color: var(--kiwi-text-muted);
+}
+
+.kiwi-file-picker-name.has-file {
+    color: var(--kiwi-text-primary);
+}
+
+.kiwi-file-picker-clear {
+    display: none;
+    background: transparent;
+    border: none;
+    color: var(--kiwi-text-muted);
+    cursor: pointer;
+}
+
+.kiwi-file-picker-clear.visible {
+    display: inline-flex;
 }
 
 .kiwi-editor-footer-actions {
@@ -2133,6 +2488,46 @@ svg {
     cursor: pointer;
 }
 
+/* Badges e efeitos exclusivos do admin */
+.admin-gold-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 2px 8px;
+    border-radius: var(--kiwi-radius-pill);
+    background: linear-gradient(135deg, #b8860b, #ffd700);
+    color: #1a1200;
+    font-size: 10px;
+    font-weight: 900;
+}
+
+.akiira-gold-tab {
+    display: inline-flex;
+    align-items: center;
+    padding: 5px 12px;
+    border-radius: var(--kiwi-radius-pill);
+    border: 1px solid rgba(255, 215, 0, 0.7);
+    background: linear-gradient(135deg, rgba(184, 134, 11, 0.35), rgba(255, 215, 0, 0.25));
+    color: #fff3b0;
+    font-size: 11px;
+    font-weight: 800;
+    cursor: pointer;
+}
+
+.akiira-gold-panel {
+    padding: 10px;
+    border-radius: 10px;
+    border: 1px solid rgba(255, 215, 0, 0.45);
+    background: linear-gradient(145deg, rgba(184, 134, 11, 0.16), rgba(255, 215, 0, 0.06));
+}
+
+.akiira-gold-frame {
+    box-shadow: 0 0 0 2px #ffd700, 0 0 16px rgba(255, 215, 0, 0.55) !important;
+}
+
+.akiira-profile-gold-glow {
+    box-shadow: 0 0 0 1.5px rgba(255, 215, 0, 0.55), 0 20px 50px rgba(255, 215, 0, 0.18) !important;
+}
+
 /* Toast */
 .kiwi-toast {
     position: fixed;
@@ -2158,36 +2553,7 @@ svg {
     transform: translateX(-50%) translateY(0);
 }
 
-/* Popover lateral de resumo do perfil estilo Discord */
-.kiwi-discord-popover {
-    display: none;
-    position: fixed;
-    left: 310px;
-    bottom: 14px;
-    width: 350px;
-    max-width: calc(100vw - 324px);
-    max-height: 86vh;
-    overflow-y: auto;
-    z-index: 3200;
-    border-radius: 18px;
-    background: var(--kiwi-bg-card);
-    border: 1px solid var(--kiwi-border-strong);
-    box-shadow: 0 24px 60px rgba(0, 0, 0, 0.72);
-}
-
-.kiwi-discord-popover.open {
-    display: block;
-}
-
-@media (min-width: 1360px) {
-    .kiwi-app-shell {
-        grid-template-columns: 68px 250px minmax(460px, 1fr) 330px;
-    }
-    .kiwi-dm-split-shell {
-        grid-template-columns: 330px 1fr;
-    }
-}
-
+/* Responsividade */
 @media (max-width: 1180px) {
     .kiwi-app-shell {
         grid-template-columns: 58px 215px minmax(320px, 1fr) 260px;
@@ -2223,17 +2589,77 @@ svg {
         min-height: 100vh;
         overflow: visible;
     }
-    .kiwi-post-detail-view {
-        padding-bottom: 28px;
+    .server-rail {
+        flex-direction: row;
+        width: 100%;
+        height: auto;
+        padding: 8px 10px;
+        border-right: none;
+        border-bottom: 1px solid var(--kiwi-border);
     }
-    .kiwi-post-detail-text {
-        font-size: 15px;
+    .server-rail-divider {
+        width: 1px;
+        height: 26px;
     }
-    .kiwi-post-action-bar {
-        gap: 2px;
+    .sidebar-left {
+        width: 100%;
+        height: auto;
+        border-right: none;
+        border-bottom: 1px solid var(--kiwi-border);
     }
-    .kiwi-post-act-btn {
-        padding: 6px 7px;
-        font-size: 12px;
+    .chat-area {
+        width: 100%;
+        height: auto;
+        min-height: 75vh;
+        overflow: visible;
+    }
+    .kiwi-dm-split-shell {
+        grid-template-columns: 1fr;
+        height: auto;
+    }
+    .kiwi-editor-two-col-fields {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* Popover lateral de resumo do perfil estilo Discord */
+.kiwi-discord-popover {
+    display: none;
+    position: fixed;
+    left: 310px;
+    bottom: 14px;
+    width: 350px;
+    max-width: calc(100vw - 324px);
+    max-height: 86vh;
+    overflow-y: auto;
+    z-index: 3200;
+    border-radius: 18px;
+    background: var(--kiwi-bg-card);
+    border: 1px solid var(--kiwi-border-strong);
+    box-shadow: 0 24px 60px rgba(0, 0, 0, 0.72);
+    scrollbar-width: thin;
+    scrollbar-color: rgba(167, 139, 250, 0.25) transparent;
+}
+
+.kiwi-discord-popover.open {
+    display: block;
+    animation: kiwiRoomFade 0.18s var(--kiwi-ease);
+}
+
+@media (max-width: 900px) {
+    .kiwi-discord-popover {
+        left: 268px;
+        bottom: 14px;
+        max-width: calc(100vw - 282px);
+    }
+}
+
+@media (max-width: 768px) {
+    .kiwi-discord-popover {
+        left: 12px;
+        right: 12px;
+        bottom: 76px;
+        width: auto;
+        max-width: none;
     }
 }
