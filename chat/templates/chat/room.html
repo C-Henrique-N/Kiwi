@@ -4247,12 +4247,47 @@ body {
                 writeStorageJson(USER_POSTS_KEY, userProfilePosts);
             }
 
+            function getUserPostsFor(username) {
+                const target = (username || '').trim();
+                if (!target) return [];
+                const isOwn = target.toLowerCase() === (activeUsername || '').toLowerCase();
+                if (isOwn) {
+                    const p = readStorageJson(USER_POSTS_KEY, []);
+                    return Array.isArray(p) ? p : [];
+                }
+                const byUser = readStorageJson(`kiwi_user_posts_${target.toLowerCase()}`, null);
+                if (Array.isArray(byUser) && byUser.length) return byUser;
+                const allPosts = readStorageJson(USER_POSTS_KEY, []);
+                if (Array.isArray(allPosts)) {
+                    const matched = allPosts.filter(item => (item && (item.author || '')).toLowerCase() === target.toLowerCase());
+                    if (matched.length) return matched;
+                }
+                const profObj = profilesByUsername.get(target.toLowerCase());
+                if (profObj && Array.isArray(profObj.posts)) return profObj.posts;
+                return [];
+            }
+
+            function saveUserPostsFor(username, list) {
+                const target = (username || '').trim();
+                if (!target) return;
+                const arr = Array.isArray(list) ? list : [];
+                const isOwn = target.toLowerCase() === (activeUsername || '').toLowerCase();
+                if (isOwn) {
+                    userProfilePosts = arr;
+                    writeStorageJson(USER_POSTS_KEY, arr);
+                }
+                writeStorageJson(`kiwi_user_posts_${target.toLowerCase()}`, arr);
+                const cachedProf = profilesByUsername.get(target.toLowerCase()) || { username: target };
+                cachedProf.posts = arr;
+                profilesByUsername.set(target.toLowerCase(), cachedProf);
+            }
+
             function syncXProfileHeader() {
                 syncFollowerCountsUi();
                 const prof = getActiveTimelineProfile();
-                const isOwn = prof.username.toLowerCase() === (activeUsername || '').toLowerCase();
-                const uname = prof.username || activeUsername || '';
-                const postsSource = isOwn ? userProfilePosts : (Array.isArray(prof.posts) ? prof.posts : []);
+                const uname = (prof.username || activeUsername || '').trim();
+                const isOwn = Boolean(uname) && uname.toLowerCase() === (activeUsername || '').toLowerCase();
+                const postsSource = getUserPostsFor(uname);
                 const topName = document.getElementById('kiwi-x-top-name');
                 const topCount = document.getElementById('kiwi-x-top-posts-count');
                 const xBanner = document.getElementById('kiwi-x-banner');
@@ -4340,10 +4375,11 @@ body {
                 if (xFollowersPanelEl && xFollowersPanelEl.style.display === 'block') return;
 
                 const prof = getActiveTimelineProfile();
-                const isOwn = prof.username.toLowerCase() === (activeUsername || '').toLowerCase();
+                const uname = (prof.username || activeUsername || '').trim();
+                const isOwn = Boolean(uname) && uname.toLowerCase() === (activeUsername || '').toLowerCase();
                 userProfilePosts = readStorageJson(USER_POSTS_KEY, []);
                 if (!Array.isArray(userProfilePosts)) userProfilePosts = [];
-                const activePostsList = isOwn ? userProfilePosts : (Array.isArray(prof.posts) ? prof.posts : []);
+                const activePostsList = getUserPostsFor(uname);
                 const topCount = document.getElementById('kiwi-x-top-posts-count');
                 if (topCount) topCount.textContent = `${activePostsList.length} posts`;
 
@@ -5044,7 +5080,7 @@ body {
                         hasBannerCard: Boolean(imgVal)
                     };
                     userProfilePosts.unshift(postObj);
-                    writeStorageJson(USER_POSTS_KEY, userProfilePosts);
+                    saveUserPostsFor(uname, userProfilePosts);
 
                     if (newPostTextEl) newPostTextEl.value = '';
                     if (imgInputEl) imgInputEl.value = '';
