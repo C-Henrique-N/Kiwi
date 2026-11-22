@@ -199,3 +199,105 @@
     });
     obs.observe(document.body, { childList: true, subtree: true });
 })();
+
+    // 4) Aba "Início": perfil no topo + postagens logo abaixo
+    function collectInicioFeedPosts() {
+        const collected = [];
+        const seenIds = new Set();
+
+        const pushUniquePost = (post, fallbackAuthor) => {
+            if (!post || isFakePost(post)) return;
+            const author = post.author || post.username || fallbackAuthor || 'AkiiraPW';
+            const postId = post.id || `${author}-${post.text || ''}-${post.time || ''}`;
+            if (seenIds.has(String(postId))) return;
+            seenIds.add(String(postId));
+            collected.push(Object.assign({}, post, {
+                id: post.id || postId,
+                author
+            }));
+        };
+
+        if (typeof userPosts !== 'undefined' && Array.isArray(userPosts)) {
+            userPosts.forEach(p => pushUniquePost(p, 'AkiiraPW'));
+        }
+        if (typeof window.userPosts !== 'undefined' && Array.isArray(window.userPosts)) {
+            window.userPosts.forEach(p => pushUniquePost(p, 'AkiiraPW'));
+        }
+        if (typeof userProfilePosts !== 'undefined' && Array.isArray(userProfilePosts)) {
+            userProfilePosts.forEach(p => pushUniquePost(p, 'AkiiraPW'));
+        }
+        if (typeof exploreAccountsList !== 'undefined' && Array.isArray(exploreAccountsList)) {
+            exploreAccountsList.forEach(acc => {
+                if (!acc || isFakeAccount(acc) || !Array.isArray(acc.posts)) return;
+                acc.posts.forEach(p => pushUniquePost(p, acc.username));
+            });
+        }
+
+        return collected;
+    }
+
+    function renderInicioTabFeed() {
+        const chatLog = document.getElementById('chat-log');
+        if (!chatLog) return;
+
+        const uname = (typeof activeUsername !== 'undefined' && activeUsername)
+            ? String(activeUsername).trim()
+            : 'AkiiraPW';
+        const prof = (typeof myProfileData !== 'undefined' && myProfileData) ? myProfileData : {};
+        const handle = prof.handle || ('@' + uname.toLowerCase().replace(/^@/, ''));
+        const posts = collectInicioFeedPosts();
+
+        chatLog.innerHTML = '';
+
+        // 1. Card do teu perfil no topo
+        const topProfileCard = document.createElement('section');
+        topProfileCard.className = 'social-list-item';
+        topProfileCard.style.margin = '12px 16px';
+        topProfileCard.style.padding = '12px 14px';
+        topProfileCard.innerHTML = `
+            <div class="social-avatar">${String(uname).charAt(0).toUpperCase()}</div>
+            <div style="flex:1;min-width:0;">
+                <div style="font-weight:800;font-size:15px;">${uname} <span style="font-weight:500;font-size:12px;opacity:0.75;">${handle}</span></div>
+                ${prof.bio ? `<div style="font-size:12px;opacity:0.85;margin-top:2px;">${prof.bio}</div>` : ''}
+            </div>
+        `;
+        chatLog.appendChild(topProfileCard);
+
+        // 2. Postagens logo abaixo
+        if (!posts.length) {
+            const emptyEl = document.createElement('div');
+            emptyEl.style.padding = '24px 16px';
+            emptyEl.style.textAlign = 'center';
+            emptyEl.style.opacity = '0.75';
+            emptyEl.textContent = 'Nenhuma postagem no feed ainda.';
+            chatLog.appendChild(emptyEl);
+            return;
+        }
+
+        posts.forEach(post => {
+            const card = document.createElement('article');
+            card.className = 'social-list-item';
+            card.style.margin = '8px 16px';
+            card.style.alignItems = 'flex-start';
+            const author = post.author || uname;
+            card.innerHTML = `
+                <div class="social-avatar">${String(author).charAt(0).toUpperCase()}</div>
+                <div style="flex:1;min-width:0;">
+                    <div style="font-weight:700;font-size:13px;">${author} <span style="font-weight:400;font-size:11px;opacity:0.7;">@${String(author).toLowerCase()} · ${post.time || 'agora'}</span></div>
+                    <div style="font-size:13px;margin-top:4px;white-space:pre-line;word-break:break-word;">${post.text || ''}</div>
+                </div>
+            `;
+            if (typeof window.openPostDetailTab === 'function' && post.id) {
+                card.addEventListener('click', () => window.openPostDetailTab(post.id, 'inicio'));
+            }
+            chatLog.appendChild(card);
+        });
+    }
+
+    document.addEventListener('click', (ev) => {
+        const btn = ev.target && ev.target.closest
+            ? ev.target.closest('[data-nav-tab="inicio"], #nav-tab-inicio')
+            : null;
+        if (!btn) return;
+        setTimeout(renderInicioTabFeed, 30);
+    });
