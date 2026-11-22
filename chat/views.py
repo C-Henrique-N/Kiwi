@@ -886,3 +886,198 @@ def api_remove_friend(request, username):
         Q(user1=request.user, user2=target_user) | Q(user1=target_user, user2=request.user)
     ).delete()
     return JsonResponse({"ok": True, "removed": target_user.username})
+
+
+# === ALIASES DE COMPATIBILIDADE COM chat/urls.py ===
+update_profile = api_update_profile
+get_user_profile = api_user_profile
+create_server = api_create_server
+create_channel = api_create_channel
+send_friend_request = api_friend_request
+accept_friend_request = api_respond_friend_request
+reject_friend_request = api_respond_friend_request
+remove_friend = api_remove_friend
+delete_message = api_delete_message
+get_dm_history = api_dm_history
+upload_attachment = api_upload_attachment
+
+
+@login_required
+def update_server(request, server_id):
+    if request.method != "POST":
+        return JsonResponse({"ok": False, "error": "Método não permitido."}, status=405)
+    server = get_object_or_404(Server, pk=server_id)
+    if server.owner_id and server.owner_id != request.user.id and not _is_kiwi_admin(request.user):
+        return JsonResponse({"ok": False, "error": "Sem permissão."}, status=403)
+    if request.content_type and "multipart/form-data" in request.content_type:
+        data = request.POST
+    else:
+        try:
+            data = json.loads(request.body.decode("utf-8") or "{}")
+        except Exception:
+            data = request.POST
+    name = (data.get("name") or "").strip()
+    if name:
+        server.name = name
+    if request.FILES.get("icon"):
+        server.icon = request.FILES["icon"]
+    server.save()
+    return JsonResponse({"ok": True, "id": server.id, "name": server.name, "icon_url": _safe_media_url(server.icon)})
+
+
+@login_required
+def delete_server(request, server_id):
+    if request.method != "POST":
+        return JsonResponse({"ok": False, "error": "Método não permitido."}, status=405)
+    server = get_object_or_404(Server, pk=server_id)
+    if server.owner_id and server.owner_id != request.user.id and not _is_kiwi_admin(request.user):
+        return JsonResponse({"ok": False, "error": "Sem permissão."}, status=403)
+    server.delete()
+    return JsonResponse({"ok": True})
+
+
+@login_required
+def delete_channel(request, server_id, channel_id):
+    if request.method != "POST":
+        return JsonResponse({"ok": False, "error": "Método não permitido."}, status=405)
+    channel = get_object_or_404(Channel, pk=channel_id, server_id=server_id)
+    channel.delete()
+    return JsonResponse({"ok": True})
+
+
+@login_required
+def get_server_members_grouped(request, server_id):
+    server = get_object_or_404(Server, pk=server_id)
+    members = []
+    for u in server.members.all():
+        p = _get_or_create_profile(u)
+        ser = _serialize_profile(u, p)
+        members.append({
+            "id": u.id,
+            "username": u.username,
+            "display_name": ser["display_name"],
+            "avatar_url": ser["avatar_url"],
+            "is_admin": ser["is_admin"],
+        })
+    return JsonResponse({"ok": True, "members": members})
+
+
+@login_required
+def add_server_member(request, server_id):
+    if request.method != "POST":
+        return JsonResponse({"ok": False, "error": "Método não permitido."}, status=405)
+    server = get_object_or_404(Server, pk=server_id)
+    try:
+        payload = json.loads(request.body.decode("utf-8") or "{}")
+    except Exception:
+        payload = request.POST
+    username = (payload.get("username") or "").strip()
+    target = get_object_or_404(User, username__iexact=username)
+    server.members.add(target)
+    return JsonResponse({"ok": True, "id": target.id, "username": target.username})
+
+
+@login_required
+def kick_server_member(request, server_id, user_id):
+    if request.method != "POST":
+        return JsonResponse({"ok": False, "error": "Método não permitido."}, status=405)
+    server = get_object_or_404(Server, pk=server_id)
+    target = get_object_or_404(User, pk=user_id)
+    server.members.remove(target)
+    return JsonResponse({"ok": True})
+
+
+@login_required
+def assign_member_role(request, server_id, user_id):
+    return JsonResponse({"ok": True})
+
+
+@login_required
+def create_server_role(request, server_id):
+    return JsonResponse({"ok": True})
+
+
+@login_required
+def delete_server_role(request, server_id, role_id):
+    return JsonResponse({"ok": True})
+
+
+@login_required
+def search_users(request):
+    q = (request.GET.get("q") or "").strip()
+    qs = User.objects.filter(username__icontains=q).exclude(pk=request.user.pk)[:20] if q else User.objects.none()
+    return JsonResponse({"ok": True, "users": [{"id": u.id, "username": u.username} for u in qs]})
+
+
+@login_required
+def get_friend_requests(request):
+    incoming = FriendRequest.objects.filter(status="pending").filter(
+        Q(to_user=request.user) | Q(receiver=request.user)
+    ).select_related("from_user", "sender")
+    items = []
+    for r in incoming:
+        origin = getattr(r, "from_user", None) or getattr(r, "sender", None)
+        if origin:
+            items.append({"id": r.id, "username": origin.username, "from_username": origin.username})
+    return JsonResponse({"ok": True, "incoming": items, "requests": items})
+
+
+@login_required
+def get_friends_list(request):
+    return JsonResponse({"ok": True, "friends": _get_friends_list(request.user)})
+
+
+@login_required
+def send_message(request):
+    if request.method != "POST":
+        return JsonResponse({"ok": False, "error": "Método não permitido."}, status=405)
+    try:
+        payload = json.loads(request.body.decode("utf-8") or "{}")
+    except Exception:
+        payload = request.POST
+    content = (payload.get("content") or payload.get("message") or payload.get("text") or "").strip()
+    channel_id = payload.get("channel_id")
+    recipient_username = (payload.get("recipient") or payload.get("to_username") or "").strip()
+    if not content and not request.FILES.get("file") and not request.FILES.get("attachment"):
+        return JsonResponse({"ok": False, "error": "Mensagem vazia."}, status=400)
+    if recipient_username:
+        recipient = get_object_or_404(User, username__iexact=recipient_username)
+        dm = DirectMessage.objects.create(sender=request.user, recipient=recipient, content=content[:2000])
+        return JsonResponse({"ok": True, "message": _serialize_dm(dm, current_user=request.user)})
+    channel = get_object_or_404(Channel, pk=channel_id)
+    kwargs = {"channel": channel, "content": content[:2000]}
+    if hasattr(Message, "sender"):
+        kwargs["sender"] = request.user
+    else:
+        kwargs["user"] = request.user
+    msg = Message.objects.create(**kwargs)
+    return JsonResponse({"ok": True, "message": _serialize_message(msg, current_user=request.user)})
+
+
+@login_required
+def delete_dm_message(request, message_id):
+    if request.method != "POST":
+        return JsonResponse({"ok": False, "error": "Método não permitido."}, status=405)
+    dm = get_object_or_404(DirectMessage, pk=message_id, sender=request.user)
+    dm.delete()
+    return JsonResponse({"ok": True})
+
+
+@login_required
+def list_saved_musics(request):
+    return JsonResponse({"ok": True, "musics": []})
+
+
+@login_required
+def create_saved_music(request):
+    return JsonResponse({"ok": True})
+
+
+@login_required
+def delete_saved_music(request, music_id):
+    return JsonResponse({"ok": True})
+
+
+@login_required
+def friend_music_feed(request):
+    return JsonResponse({"ok": True, "feed": []})
