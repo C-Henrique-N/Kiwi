@@ -1,10 +1,11 @@
-import json
 from channels.db import database_sync_to_async
 from channels.generic.websocket import AsyncWebsocketConsumer
 from django.contrib.auth.models import User
 from django.db.models import Q
 from django.utils import timezone
-from .models import Channel, DirectMessage, Friendship, Message, MessageReaction, Profile
+import json
+
+from .models import Channel, DirectMessage, Message, MessageReaction, Profile
 
 
 def build_user_personal_group_name(username):
@@ -48,54 +49,56 @@ class ChatConsumer(AsyncWebsocketConsumer):
         except Exception:
             return
 
-        msg_type = data.get("type") or "chat_message"
-
-        if msg_type in ("chat_message", "message"):
-            text = (data.get("message") or data.get("text") or "").strip()
-            attachment_url = (data.get("attachment_url") or "").strip()
-            attachment_name = (data.get("attachment_name") or "").strip()
-            attachment_type = (data.get("attachment_type") or "").strip()
-            client_id = data.get("id") or data.get("client_id")
-
+        msg_type = data.get("type") or data.get("action")
+        if msg_type in ("chat_message", "message", "send_message"):
+            text = (data.get("message") or data.get("text") or data.get("content") or "").strip()
+            attachment_url = data.get("attachment_url") or ""
+            attachment_name = data.get("attachment_name") or ""
+            attachment_type = data.get("attachment_type") or ""
             if not text and not attachment_url:
                 return
 
-            saved = await self._save_message(
-                self.channel_id,
-                self.user,
-                text,
+            payload = await self._save_message(
+                channel_id=self.channel_id,
+                user=self.user,
+                text=text,
                 attachment_url=attachment_url,
                 attachment_name=attachment_name,
                 attachment_type=attachment_type,
             )
-            if saved:
-                if client_id:
-                    saved["client_id"] = client_id
+            if payload:
                 await self.channel_layer.group_send(
                     self.room_group_name,
-                    {"type": "broadcast_chat_message", "payload": saved},
+                    {
+                        "type": "broadcast_chat_message",
+                        "payload": payload,
+                    },
                 )
 
-        elif msg_type == "reaction":
+        elif msg_type in ("reaction", "toggle_reaction"):
             message_id = data.get("message_id")
-            emoji = (data.get("emoji") or "👍").strip()[:16]
+            emoji = (data.get("emoji") or "").strip()
             if message_id and emoji:
                 updated = await self._toggle_reaction(message_id, self.user, emoji)
-                if updated:
+                if updated is not None:
                     await self.channel_layer.group_send(
                         self.room_group_name,
-                        {"type": "broadcast_reaction_update", "payload": updated},
+                        {
+                            "type": "broadcast_reaction_update",
+                            "payload": updated,
+                        },
                     )
 
         elif msg_type == "delete_message":
             message_id = data.get("message_id")
-            if message_id:
-                deleted = await self._delete_message(message_id, self.user)
-                if deleted:
-                    await self.channel_layer.group_send(
-                        self.room_group_name,
-                        {"type": "broadcast_delete_message", "message_id": int(message_id)},
-                    )
+            if message_id and await self._delete_message(message_id, self.user):
+                await self.channel_layer.group_send(
+                    self.room_group_name,
+                    {
+                        "type": "broadcast_delete_message",
+                        "message_id": message_id,
+                    },
+                )
 
         elif msg_type in ("webrtc_offer", "webrtc_answer", "webrtc_ice", "call_invite", "call_hangup"):
             await self.channel_layer.group_send(
@@ -137,17 +140,17 @@ class ChatConsumer(AsyncWebsocketConsumer):
             return []
         qs = (
             Message.objects.filter(channel=channel)
-            .select_related("sender", "sender__profile")
+            .select_related("user", "user__profile")
             .prefetch_related("reactions", "reactions__user")
-            .order_by("-timestamp")[:50]
+            .order_by("-timestamp", "-id")[:50]
         )
         result = []
         for msg in reversed(list(qs)):
-            p = getattr(msg.sender, "profile", None)
+            p = getattr(msg.user, "profile", None)
             avatar_url = ""
-            display_name = msg.sender.username
+            display_name = msg.user.username
             if p:
-                display_name = (p.display_name or "").strip() or msg.sender.username
+                display_name = (p.display_name or "").strip() or msg.user.username
                 try:
                     avatar_url = p.avatar.url if p.avatar else ""
                 except Exception:
@@ -163,17 +166,17 @@ class ChatConsumer(AsyncWebsocketConsumer):
                     att_url = ""
 
             reactions = {}
-            for rx in msg.reactions.all():
-                reactions.setdefault(rx.emoji, {"emoji": rx.emoji, "count": 0, "me": False})
-                reactions[rx.emoji]["count"] += 1
-                if rx.user_id == self.user.id:
-                    reactions[rx.emoji]["me"] = True
+            for r in msg.reactions.all():
+                entry = reactions.setdefault(r.emoji, {"emoji": r.emoji, "count": 0, "users": []})
+                entry["count"] += 1
+                entry["users"].append(r.user.username)
 
-            ts = timezone.localtime(msg.created_at).strftime("%H:%M")
+            created_dt = getattr(msg, "timestamp", None) or getattr(msg, "created_at", None)
+            ts = timezone.localtime(created_dt).strftime("%H:%M") if created_dt else ""
             result.append({
                 "id": msg.id,
                 "channel_id": channel.id,
-                "sender": msg.sender.username,
+                "sender": msg.user.username,
                 "display_name": display_name,
                 "avatar_url": avatar_url,
                 "message": msg.content or "",
@@ -191,13 +194,11 @@ class ChatConsumer(AsyncWebsocketConsumer):
     def _save_message(self, channel_id, user, text, attachment_url="", attachment_name="", attachment_type=""):
         channel = Channel.objects.filter(id=channel_id).first()
         if not channel:
-            channel = Channel.objects.order_by("id").first()
-        if not channel:
             return None
 
         msg = Message.objects.create(
             channel=channel,
-            sender=user,
+            user=user,
             content=(text or "")[:2000],
             attachment_type=(attachment_type or "")[:64],
         )
@@ -225,7 +226,8 @@ class ChatConsumer(AsyncWebsocketConsumer):
         else:
             att_final_url = attachment_url
 
-        ts = timezone.localtime(msg.created_at).strftime("%H:%M")
+        created_dt = getattr(msg, "timestamp", None) or getattr(msg, "created_at", None)
+        ts = timezone.localtime(created_dt).strftime("%H:%M") if created_dt else ""
         return {
             "id": msg.id,
             "channel_id": channel.id,
@@ -254,12 +256,14 @@ class ChatConsumer(AsyncWebsocketConsumer):
             MessageReaction.objects.create(message=msg, user=user, emoji=emoji)
 
         reactions = {}
-        for rx in msg.reactions.all():
-            reactions.setdefault(rx.emoji, {"emoji": rx.emoji, "count": 0, "me": False})
-            reactions[rx.emoji]["count"] += 1
-            if rx.user_id == user.id:
-                reactions[rx.emoji]["me"] = True
-        return {"id": msg.id, "channel_id": msg.channel_id, "reactions": list(reactions.values())}
+        for r in msg.reactions.select_related("user").all():
+            entry = reactions.setdefault(r.emoji, {"emoji": r.emoji, "count": 0, "users": []})
+            entry["count"] += 1
+            entry["users"].append(r.user.username)
+        return {
+            "id": msg.id,
+            "reactions": list(reactions.values()),
+        }
 
     @database_sync_to_async
     def _delete_message(self, message_id, user):
@@ -267,7 +271,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
         if not msg:
             return False
         is_admin = user.is_superuser or (user.username or "").strip().lower() == "akiirapw"
-        if msg.sender_id != user.id and not is_admin:
+        if msg.user_id != user.id and not is_admin:
             return False
         msg.delete()
         return True
@@ -293,20 +297,20 @@ class DMConsumer(AsyncWebsocketConsumer):
 
         await self.channel_layer.group_add(self.room_group_name, self.channel_name)
         await self.channel_layer.group_add(self.self_personal_group, self.channel_name)
+        await self.channel_layer.group_add(self.target_personal_group, self.channel_name)
         await self.accept()
 
         history = await self._get_dm_history(self.user, self.target_user)
         await self.send(text_data=json.dumps({
             "type": "dm_history",
-            "peer": self.target_user.username,
+            "with": self.target_user.username,
             "messages": history,
         }))
 
     async def disconnect(self, close_code):
-        if hasattr(self, "room_group_name"):
-            await self.channel_layer.group_discard(self.room_group_name, self.channel_name)
-        if hasattr(self, "self_personal_group"):
-            await self.channel_layer.group_discard(self.self_personal_group, self.channel_name)
+        for grp in ("room_group_name", "self_personal_group", "target_personal_group"):
+            if hasattr(self, grp):
+                await self.channel_layer.group_discard(getattr(self, grp), self.channel_name)
 
     async def receive(self, text_data=None, bytes_data=None):
         if not text_data:
@@ -316,29 +320,28 @@ class DMConsumer(AsyncWebsocketConsumer):
         except Exception:
             return
 
-        msg_type = data.get("type") or "dm_message"
-        if msg_type in ("dm_message", "chat_message", "message"):
-            text = (data.get("message") or data.get("text") or "").strip()
-            attachment_url = (data.get("attachment_url") or "").strip()
-            attachment_name = (data.get("attachment_name") or "").strip()
-            attachment_type = (data.get("attachment_type") or "").strip()
-            client_id = data.get("id") or data.get("client_id")
-
+        msg_type = data.get("type") or data.get("action")
+        if msg_type in ("dm_message", "chat_message", "message", "send_message"):
+            text = (data.get("message") or data.get("text") or data.get("content") or "").strip()
+            attachment_url = data.get("attachment_url") or ""
+            attachment_name = data.get("attachment_name") or ""
+            attachment_type = data.get("attachment_type") or ""
             if not text and not attachment_url:
                 return
 
-            saved = await self._save_dm(
-                self.user,
-                self.target_user,
-                text,
+            payload = await self._save_dm(
+                sender=self.user,
+                recipient=self.target_user,
+                text=text,
                 attachment_url=attachment_url,
                 attachment_name=attachment_name,
                 attachment_type=attachment_type,
             )
-            if saved:
-                if client_id:
-                    saved["client_id"] = client_id
-                event_payload = {"type": "broadcast_dm_message", "payload": saved}
+            if payload:
+                event_payload = {
+                    "type": "broadcast_dm_message",
+                    "payload": payload,
+                }
                 await self.channel_layer.group_send(self.room_group_name, event_payload)
                 await self.channel_layer.group_send(self.target_personal_group, event_payload)
 
@@ -372,7 +375,7 @@ class DMConsumer(AsyncWebsocketConsumer):
                 Q(sender=u1, recipient=u2) | Q(sender=u2, recipient=u1)
             )
             .select_related("sender", "recipient", "sender__profile")
-            .order_by("created_at")[:60]
+            .order_by("timestamp", "id")[:60]
         )
         items = []
         for dm in qs:
@@ -393,7 +396,8 @@ class DMConsumer(AsyncWebsocketConsumer):
                     att_name = dm.attachment.name.split("/")[-1]
                 except Exception:
                     att_url = ""
-            ts = timezone.localtime(dm.created_at).strftime("%H:%M")
+            created_dt = getattr(dm, "timestamp", None) or getattr(dm, "created_at", None)
+            ts = timezone.localtime(created_dt).strftime("%H:%M") if created_dt else ""
             items.append({
                 "id": dm.id,
                 "sender": dm.sender.username,
@@ -433,7 +437,8 @@ class DMConsumer(AsyncWebsocketConsumer):
         except Exception:
             avatar_url = ""
 
-        ts = timezone.localtime(dm.created_at).strftime("%H:%M")
+        created_dt = getattr(dm, "timestamp", None) or getattr(dm, "created_at", None)
+        ts = timezone.localtime(created_dt).strftime("%H:%M") if created_dt else ""
         return {
             "id": dm.id,
             "sender": sender.username,
