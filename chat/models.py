@@ -7,7 +7,6 @@ from django.dispatch import receiver
 
 class UserProfile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='profile')
-    display_name = models.CharField(max_length=60, blank=True, default='')
     avatar = models.ImageField(upload_to='avatars/', blank=True, null=True)
     banner = models.ImageField(upload_to='banners/', blank=True, null=True)
     banner_url = models.TextField(blank=True, default='')

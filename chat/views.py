@@ -55,7 +55,7 @@ def _is_kiwi_admin(user):
 def _format_user_label(user):
     try:
         profile = user.profile
-        display = (getattr(profile, "display_name", "") or "").strip()
+        display = (profile.display_name or "").strip()
         if display:
             return display
     except Exception:
@@ -306,6 +306,8 @@ def _serialize_dm(dm, current_user=None):
 
 
 @ensure_csrf_cookie
+
+
 def _render_first_existing(request, template_names, context):
     from django.template import TemplateDoesNotExist
     from django.template.loader import select_template
@@ -318,7 +320,6 @@ def _render_first_existing(request, template_names, context):
             f"<h1>Kiwi Chat</h1><p>Template nao encontrado ({', '.join(template_names)}).</p>",
             status=200,
         )
-
 
 def login_view(request):
     if request.user.is_authenticated:
@@ -820,7 +821,7 @@ def api_update_profile(request):
         profile.banner = request.FILES["banner"]
         if hasattr(profile, "banner_url"):
             profile.banner_url = ""
-    elif "banner_url" in data and isinstance(data.get("banner_url"), str):
+    elif isinstance(data.get("banner_url"), str):
         raw_banner = data.get("banner_url").strip()
         if raw_banner.startswith("data:"):
             saved = _save_base64_media(raw_banner, prefix="banner")
@@ -829,10 +830,8 @@ def api_update_profile(request):
                 profile.banner.name = saved.replace(media_url, "", 1).lstrip("/")
                 if hasattr(profile, "banner_url"):
                     profile.banner_url = ""
-        elif raw_banner.startswith(("http://", "https://")):
-            profile.banner = None
-            if hasattr(profile, "banner_url"):
-                profile.banner_url = raw_banner
+        elif raw_banner.startswith(("http://", "https://")) and hasattr(profile, "banner_url"):
+            profile.banner_url = raw_banner
 
     uploaded_music = request.FILES.get("music_file") or request.FILES.get("music_audio")
     if uploaded_music:
