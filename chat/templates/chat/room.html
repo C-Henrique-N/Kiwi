@@ -992,6 +992,28 @@ body {
                 <div id="kiwi-x-feed-list"></div>
             </div>
 
+            <div id="kiwi-post-thread-view">
+                <div class="kiwi-thread-topbar">
+                    <div class="kiwi-thread-topbar-left">
+                        <button type="button" class="kiwi-x-back-btn" id="kiwi-thread-back-btn" title="Voltar">←</button>
+                        <div class="kiwi-thread-title">Post</div>
+                    </div>
+                    <button type="button" class="kiwi-x-circle-btn" id="kiwi-thread-more-btn" title="Opções">•••</button>
+                </div>
+
+                <div class="kiwi-thread-scroll" id="kiwi-thread-scroll">
+                    <div id="kiwi-thread-main-post" class="kiwi-thread-main-post"></div>
+                    <div id="kiwi-thread-replies-list"></div>
+                </div>
+
+                <div class="kiwi-thread-reply-bar-wrap">
+                    <form id="kiwi-thread-reply-form" class="kiwi-thread-reply-form">
+                        <input type="text" id="kiwi-thread-reply-input" class="kiwi-thread-reply-input" required placeholder="Escrever resposta...">
+                        <button type="submit" class="kiwi-thread-reply-submit">Responder</button>
+                    </form>
+                </div>
+            </div>
+
             <div id="kiwi-dm-split-view" style="display:none; flex:1; min-height:0; height:100%;">
                 <div class="kiwi-dm-split-shell">
                     <div class="kiwi-dm-left-pane">
@@ -3418,6 +3440,7 @@ body {
 
             function hideAllMainSurfaces() {
                 if (profileTimelineView) profileTimelineView.classList.remove('active');
+                if (window.kiwiPostThreadViewEl) window.kiwiPostThreadViewEl.classList.remove('active');
                 if (dmSplitView) dmSplitView.style.display = 'none';
                 if (chatLog) chatLog.style.display = 'none';
                 if (chatInputAreaEl) chatInputAreaEl.style.display = 'none';
@@ -5117,5 +5140,218 @@ body {
             activateNavTab('perfil');
         });
     </script>
+
+<script id="kiwi-post-thread-tab-script">
+(function() {
+    document.addEventListener('DOMContentLoaded', function() {
+        const threadViewEl = document.getElementById('kiwi-post-thread-view');
+        window.kiwiPostThreadViewEl = threadViewEl;
+        const backBtn = document.getElementById('kiwi-thread-back-btn');
+        const mainPostEl = document.getElementById('kiwi-thread-main-post');
+        const repliesListEl = document.getElementById('kiwi-thread-replies-list');
+        const replyForm = document.getElementById('kiwi-thread-reply-form');
+        const replyInput = document.getElementById('kiwi-thread-reply-input');
+        if (!threadViewEl || !mainPostEl || !repliesListEl) return;
+
+        const POSTS_KEY = 'kiwi_profile_posts_v1';
+        let activePostId = null;
+
+        function esc(s) {
+            return String(s ?? '')
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#39;');
+        }
+
+        function resolveDisplayName(post, fallbackAuthor = 'Usuário') {
+            if (post && typeof post.display_name === 'string' && post.display_name.trim()) {
+                return post.display_name.trim();
+            }
+            if (post && typeof post.displayName === 'string' && post.displayName.trim()) {
+                return post.displayName.trim();
+            }
+            const nameLabel = document.getElementById('my-name-label');
+            const myName = (nameLabel && nameLabel.textContent && nameLabel.textContent.trim()) || fallbackAuthor;
+            if (!post || !post.author) return myName;
+            return String(post.author).trim();
+        }
+
+        function resolveHandle(post, displayName) {
+            const raw = (post && post.handle) ? String(post.handle).trim() : '';
+            if (raw) return raw.startsWith('@') ? raw : '@' + raw;
+            const slug = String(displayName || 'usuario').trim().toLowerCase().replace(/\s+/g, '_');
+            return '@' + slug;
+        }
+
+        function readPosts() {
+            try {
+                const raw = localStorage.getItem(POSTS_KEY);
+                const parsed = raw ? JSON.parse(raw) : [];
+                return Array.isArray(parsed) ? parsed : [];
+            } catch (_) {
+                return [];
+            }
+        }
+
+        function writePosts(list) {
+            try {
+                localStorage.setItem(POSTS_KEY, JSON.stringify(list));
+            } catch (_) {}
+        }
+
+        function renderReplies(post) {
+            const replies = Array.isArray(post.replyItems) ? post.replyItems : [];
+            if (!replies.length) {
+                repliesListEl.innerHTML = '<div style="padding:18px 16px;font-size:13px;color:var(--kiwi-text-muted);">Nenhuma resposta ainda. Escreva a primeira abaixo.</div>';
+                return;
+            }
+            repliesListEl.innerHTML = '';
+            replies.forEach(rep => {
+                const repDisplay = resolveDisplayName(rep, 'Usuário');
+                const repHandle = resolveHandle(rep, repDisplay);
+                const item = document.createElement('div');
+                item.className = 'kiwi-thread-reply-card';
+                item.innerHTML = `
+                    <div class="avatar">${esc(repDisplay.charAt(0).toUpperCase())}</div>
+                    <div style="flex:1;min-width:0;">
+                        <div class="message-header">
+                            <span class="username">${esc(repDisplay)}</span>
+                            <span class="kiwi-thread-handle">${esc(repHandle)}</span>
+                            <span class="timestamp">· ${esc(rep.time || 'agora')}</span>
+                        </div>
+                        <div class="message-text" style="margin-top:4px;white-space:pre-wrap;">${esc(rep.text || '')}</div>
+                    </div>
+                `;
+                repliesListEl.appendChild(item);
+            });
+        }
+
+        function openPostThreadTab(postId) {
+            const posts = readPosts();
+            const post = posts.find(p => String(p.id) === String(postId));
+            if (!post) return;
+
+            activePostId = post.id;
+            if (!Array.isArray(post.replyItems)) post.replyItems = [];
+
+            const profileView = document.getElementById('kiwi-profile-timeline-view');
+            const dmView = document.getElementById('kiwi-dm-split-view');
+            const chatLog = document.getElementById('chat-log');
+            const chatInputArea = document.getElementById('chat-input-area');
+            if (profileView) profileView.classList.remove('active');
+            if (dmView) dmView.style.display = 'none';
+            if (chatLog) chatLog.style.display = 'none';
+            if (chatInputArea) chatInputArea.style.display = 'none';
+
+            threadViewEl.classList.add('active');
+            if (typeof window.openMobileChatView === 'function') {
+                window.openMobileChatView();
+            }
+
+            const displayName = resolveDisplayName(post);
+            const handleStr = resolveHandle(post, displayName);
+            const replyCount = post.replyItems.length > 0 ? post.replyItems.length : Number(post.replies || 0);
+            const likesCount = Number(post.likes || 0) + (post.liked ? 1 : 0);
+            const repostsCount = Number(post.reposts || 0);
+            const safeImg = (post.imageUrl && (/^(https?:\/\/|\/|data:image\/)/i.test(post.imageUrl.trim())))
+                ? `<img class="msg-attachment-img" style="max-width:100%;max-height:360px;" src="${esc(post.imageUrl.trim())}" alt="Imagem da postagem">`
+                : '';
+
+            mainPostEl.innerHTML = `
+                <div class="kiwi-thread-author-row">
+                    <div class="avatar">${esc(displayName.charAt(0).toUpperCase())}</div>
+                    <div style="min-width:0;">
+                        <div class="kiwi-thread-display-name">${esc(displayName)}</div>
+                        <div class="kiwi-thread-handle">${esc(handleStr)}</div>
+                    </div>
+                </div>
+                <div class="kiwi-thread-post-text">${esc(post.text || '')}</div>
+                ${safeImg}
+                <div class="kiwi-thread-meta-line">
+                    <span>${esc(post.time || 'Agora')}</span>
+                    <span>·</span>
+                    <span><strong>${esc(post.views || '1')}</strong> Views</span>
+                </div>
+                <div class="kiwi-x-post-metrics" style="justify-content:space-between;margin-top:10px;">
+                    <span>💬 ${replyCount}</span>
+                    <span>🔁 ${repostsCount}</span>
+                    <span>♥ ${likesCount}</span>
+                    <span>🔖</span>
+                    <span>📤</span>
+                </div>
+            `;
+
+            renderReplies(post);
+            setTimeout(() => { if (replyInput) replyInput.focus(); }, 100);
+        }
+
+        if (backBtn) {
+            backBtn.addEventListener('click', function() {
+                threadViewEl.classList.remove('active');
+                const perfilNav = document.getElementById('nav-tab-perfil');
+                if (perfilNav) perfilNav.click();
+            });
+        }
+
+        if (replyForm) {
+            replyForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                const txt = (replyInput && replyInput.value.trim()) || '';
+                if (!txt || !activePostId) return;
+
+                const posts = readPosts();
+                const target = posts.find(p => String(p.id) === String(activePostId));
+                if (!target) return;
+
+                if (!Array.isArray(target.replyItems)) target.replyItems = [];
+                const nameLabel = document.getElementById('my-name-label');
+                const currentName = (nameLabel && nameLabel.textContent && nameLabel.textContent.trim()) || 'Usuário';
+
+                target.replyItems.push({
+                    author: currentName,
+                    display_name: currentName,
+                    handle: '@' + currentName.toLowerCase().replace(/\s+/g, '_'),
+                    text: txt,
+                    time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+                });
+                target.replies = target.replyItems.length;
+                writePosts(posts);
+
+                if (replyInput) replyInput.value = '';
+                openPostThreadTab(activePostId);
+            });
+        }
+
+        // Intercepta cliques em botão de comentário (💬) ou corpo do card de postagem no perfil
+        document.addEventListener('click', function(e) {
+            const target = e.target;
+            if (!(target instanceof Element)) return;
+            const postCard = target.closest('.kiwi-x-post-card');
+            if (!postCard) return;
+            if (target.closest('.kiwi-x-delete-post-btn, a, img')) return;
+
+            const metricBtn = target.closest('.kiwi-x-metric-btn');
+            const isReplyClick = metricBtn && metricBtn.textContent && metricBtn.textContent.includes('💬');
+            const isCardTextClick = Boolean(target.closest('.message-text'));
+
+            if (!isReplyClick && !isCardTextClick) return;
+
+            const allCards = Array.from(document.querySelectorAll('#kiwi-x-feed-list .kiwi-x-post-card'));
+            const cardIdx = allCards.indexOf(postCard);
+            const posts = readPosts();
+            if (cardIdx >= 0 && posts[cardIdx]) {
+                e.preventDefault();
+                e.stopPropagation();
+                const detailModal = document.getElementById('post-detail-modal');
+                if (detailModal) detailModal.classList.remove('open');
+                openPostThreadTab(posts[cardIdx].id);
+            }
+        }, true);
+    });
+})();
+</script>
+
 </body>
 </html>
