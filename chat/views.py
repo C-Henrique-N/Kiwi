@@ -322,7 +322,10 @@ def _render_first_existing(request, template_names, context):
 
 def login_view(request):
     if request.user.is_authenticated:
-        return redirect("room")
+        try:
+                return redirect("room")
+            except Exception:
+                return redirect("room_home")
 
     error_message = None
     if request.method == "POST":
@@ -333,7 +336,10 @@ def login_view(request):
             login(request, user)
             _get_or_create_profile(user)
             _ensure_default_workspace(user)
-            return redirect("room")
+            try:
+                return redirect("room")
+            except Exception:
+                return redirect("room_home")
         error_message = "Usuário ou senha inválidos."
 
     return _render_first_existing(request, ["chat/login.html", "kiwi_chat/login.html", "registration/login.html", "login.html"], {"error_message": error_message})
@@ -342,7 +348,10 @@ def login_view(request):
 @ensure_csrf_cookie
 def register_view(request):
     if request.user.is_authenticated:
-        return redirect("room")
+        try:
+                return redirect("room")
+            except Exception:
+                return redirect("room_home")
 
     error_message = None
     if request.method == "POST":
@@ -366,7 +375,10 @@ def register_view(request):
                 _get_or_create_profile(user)
                 _ensure_default_workspace(user)
                 login(request, user)
+                try:
                 return redirect("room")
+            except Exception:
+                return redirect("room_home")
             except IntegrityError:
                 error_message = "Não foi possível criar a conta agora."
 
