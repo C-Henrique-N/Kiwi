@@ -295,6 +295,39 @@
   }
 }
 
+  /* Delimitação rigorosa e rolagem segura em telas mobile */
+  .kiwi-app-shell,
+  .sidebar-left,
+  .chat-area,
+  #kiwi-profile-timeline-view,
+  #kiwi-dm-split-view,
+  #chat-log,
+  .modal-overlay {
+    max-width: 100vw;
+    min-width: 0;
+  }
+
+  #kiwi-profile-timeline-view.active,
+  #kiwi-profile-timeline-view {
+    display: block;
+    width: 100%;
+    max-width: 100%;
+    overflow-x: hidden;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .kiwi-discord-popover.open {
+    display: block;
+    z-index: 65;
+  }
+
+  .modal-overlay.open {
+    display: flex;
+    z-index: 75;
+  }
+
+
 /* Esconde a barra inferior do celular em telas grandes */
 @media (min-width: 769px) {
   .kiwi-mobile-bottom-pill {
