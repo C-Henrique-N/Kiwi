@@ -6,26 +6,19 @@ from chat.models import UserProfile, Server, Channel
 
 User = get_user_model()
 
-class Command(BaseCommand):
-    help = "Popula dados iniciais apenas se ainda não existirem no banco."
 
-    def add_arguments(self, parser):
-        parser.add_argument(
-            "--arquivo",
-            default="dados_iniciais_2.json",
-            help="Caminho do arquivo JSON inicial",
-        )
+class Command(BaseCommand):
+    help = "Garante dados iniciais sem sobrescrever contas novas."
 
     def handle(self, *args, **options):
-        caminho = Path(options["arquivo"])
+        caminho = Path(__file__).resolve().parents[2] / "dados_iniciais.json"
         if not caminho.exists():
-            self.stdout.write(self.style.WARNING(f"Arquivo {caminho} não encontrado."))
+            self.stdout.write(self.style.WARNING(f"Arquivo não encontrado: {caminho}"))
             return
 
         itens = json.loads(caminho.read_text(encoding="utf-8"))
-        mapa_usuarios = {}
+        usuarios_por_pk = {}
 
-        # 1. Usuários: cria apenas se o username ainda não existir
         for item in itens:
             if item.get("model") == "auth.user":
                 fields = item["fields"]
@@ -41,17 +34,15 @@ class Command(BaseCommand):
                         "is_active": fields.get("is_active", True),
                     },
                 )
-                # Se for criado pela primeira vez e houver hash de senha no JSON, preserva
                 if created and fields.get("password"):
                     user.password = fields["password"]
                     user.save(update_fields=["password"])
-                mapa_usuarios[item["pk"]] = user
+                usuarios_por_pk[item["pk"]] = user
 
-        # 2. Perfis: cria apenas se ainda não houver perfil para aquele usuário
         for item in itens:
             if item.get("model") == "chat.userprofile":
                 fields = item["fields"]
-                user = mapa_usuarios.get(fields.get("user"))
+                user = usuarios_por_pk.get(fields.get("user"))
                 if user:
                     UserProfile.objects.get_or_create(
                         user=user,
@@ -67,21 +58,23 @@ class Command(BaseCommand):
                         },
                     )
 
-        # 3. Servidor e canal inicial (só se não existirem)
         for item in itens:
             if item.get("model") == "chat.server":
                 fields = item["fields"]
-                owner = mapa_usuarios.get(fields.get("owner"))
+                owner = usuarios_por_pk.get(fields.get("owner"))
                 if owner:
                     server, _ = Server.objects.get_or_create(
                         name=fields["name"],
                         defaults={"owner": owner},
                     )
                     for ch in itens:
-                        if ch.get("model") == "chat.channel" and ch["fields"].get("server") == item["pk"]:
+                        if (
+                            ch.get("model") == "chat.channel"
+                            and ch["fields"].get("server") == item["pk"]
+                        ):
                             Channel.objects.get_or_create(
                                 server=server,
                                 name=ch["fields"]["name"],
                             )
 
-        self.stdout.write(self.style.SUCCESS("Seed inicial concluído sem sobrescrever contas novas."))
+        self.stdout.write(self.style.SUCCESS("Seed inicial aplicado com segurança."))
