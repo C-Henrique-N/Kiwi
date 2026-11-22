@@ -260,6 +260,25 @@ body {
     flex-direction: column;
   }
 
+  #kiwi-post-detail-tab {
+    flex: 1 1 auto;
+    min-height: 0;
+    width: 100%;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+
+  #kiwi-post-detail-scroll {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
+    padding-bottom: 24px;
+  }
+
+
   /* Popover de perfil e modais em telas pequenas */
   .kiwi-discord-popover {
     left: 10px;
@@ -3676,8 +3695,19 @@ body {
 
                 const nowTs = Date.now();
                 const sig = `${String(sender).trim().toLowerCase()}|${String(messageText).trim()}|${String(attachmentName).trim()}`;
-                if (sig && sig === lastRenderedMsgSignature.sig && (nowTs - lastRenderedMsgSignature.at) < 2500) {
+                if (sig && sig === lastRenderedMsgSignature.sig && (nowTs - lastRenderedMsgSignature.at) < 12000) {
                     return;
+                }
+                if (chatLog && sender && (messageText || attachmentName)) {
+                    const recentGroups = Array.from(chatLog.querySelectorAll('.message-group')).slice(-6);
+                    const duplicateRecent = recentGroups.some(g => {
+                        const u = ((g.querySelector('.username') && g.querySelector('.username').textContent) || '').trim().toLowerCase();
+                        const t = ((g.querySelector('.message-text') && g.querySelector('.message-text').textContent) || '').trim();
+                        return u === String(sender).trim().toLowerCase() && messageText && t === String(messageText).trim();
+                    });
+                    if (duplicateRecent && (nowTs - lastRenderedMsgSignature.at) < 12000) {
+                        return;
+                    }
                 }
                 lastRenderedMsgSignature = { sig, at: nowTs };
                 if (msgId) renderedMessageIds.add(msgId);
@@ -3928,7 +3958,23 @@ body {
                 });
 
                 if (chatLog) {
-                    if (ctx && ctx.snapshotHtml) {
+                    const ctxMsgs = (ctx && Array.isArray(ctx.messages)) ? ctx.messages.filter(m => m && (String(m.text || '').trim() || String(m.attachmentUrl || '').trim())) : [];
+                    if (ctxMsgs.length > 0) {
+                        chatLog.innerHTML = '';
+                        ctxMsgs.forEach(m => {
+                            appendMessage({
+                                id: m.id,
+                                sender: m.author,
+                                message: m.text,
+                                timestamp: m.timestamp,
+                                avatarUrl: m.avatarUrl || '',
+                                attachmentUrl: m.attachmentUrl || '',
+                                attachmentName: m.attachmentName || '',
+                                attachmentType: m.attachmentType || '',
+                                canDelete: m.author === activeUsername || m.canDelete
+                            });
+                        });
+                    } else if (ctx && ctx.snapshotHtml && !ctx.snapshotHtml.includes('class="message-group"')) {
                         chatLog.innerHTML = ctx.snapshotHtml;
                     } else {
                         chatLog.innerHTML = `
@@ -5525,8 +5571,107 @@ body {
 
                 if (tabName === 'inicio') {
                     headerMainTitle.textContent = '🏠 Início Kiwi';
-                    headerSubLabel.textContent = '| Resumo da sua rede';
-                    card.innerHTML = `<div style="font-size:16px;font-weight:800;margin-bottom:6px;">🏠 Início</div><div style="font-size:13px;color:var(--kiwi-text-muted);">Você tem <strong>${friendsList.length}</strong> amigos, <strong>${followersList.length}</strong> seguidores e <strong>${followingList.length}</strong> seguindo.</div>`;
+                    headerSubLabel.textContent = '| Feed de publicações';
+                    card.innerHTML = `<div style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;">
+                        <div>
+                            <div style="font-size:16px;font-weight:800;">🏠 Feed Inicial Kiwi</div>
+                            <div style="font-size:12px;color:var(--kiwi-text-muted);">Publicações recentes da comunidade e do seu perfil.</div>
+                        </div>
+                        <button type="button" class="dm-quick-btn" id="home-feed-new-post-btn">✏️ Novo Post</button>
+                    </div>`;
+                    chatLog.appendChild(card);
+                    setTimeout(() => {
+                        const nBtn = document.getElementById('home-feed-new-post-btn');
+                        if (nBtn && createPostModal) nBtn.onclick = () => openModalAnimated(createPostModal);
+                    }, 0);
+
+                    const ownPosts = Array.isArray(userProfilePosts) ? userProfilePosts : [];
+                    const communityPosts = [];
+                    (Array.isArray(exploreAccountsList) ? exploreAccountsList : []).forEach(acc => {
+                        if (acc && Array.isArray(acc.posts)) {
+                            acc.posts.forEach(p => {
+                                communityPosts.push(Object.assign({}, p, {
+                                    author: p.author || acc.username,
+                                    handle: p.handle || acc.handle || `@${String(acc.username || '').toLowerCase()}`,
+                                    _avatarUrl: acc.avatarUrl || ''
+                                }));
+                            });
+                        }
+                    });
+                    const combinedFeed = [...ownPosts.map(p => Object.assign({}, p, { _avatarUrl: myProfileData.avatarUrl || '' })), ...communityPosts];
+                    if (!combinedFeed.length) {
+                        const emptyFeed = document.createElement('div');
+                        emptyFeed.className = 'kiwi-info-panel-card';
+                        emptyFeed.innerHTML = '<div style="font-weight:700;">Nenhuma postagem ainda.</div><div style="font-size:12px;color:var(--kiwi-text-muted);">Clique em Novo Post para publicar a primeira.</div>';
+                        chatLog.appendChild(emptyFeed);
+                    } else {
+                        combinedFeed.forEach(post => {
+                            const pCard = document.createElement('div');
+                            pCard.className = 'kiwi-x-post-card';
+                            const av = document.createElement('div');
+                            av.className = 'avatar';
+                            setAvatarStyle(av, post._avatarUrl || '', post.author || 'Usuário');
+                            av.style.cursor = 'pointer';
+                            av.onclick = () => window.openUserProfile(post.author || 'Usuário');
+
+                            const body = document.createElement('div');
+                            body.style.cssText = 'flex:1;min-width:0;cursor:pointer;';
+                            body.onclick = (ev) => {
+                                if (ev.target instanceof Element && ev.target.closest('button, a, img')) return;
+                                openPostDetailModal(post.id);
+                            };
+
+                            const head = document.createElement('div');
+                            head.className = 'message-header';
+                            head.innerHTML = `<span class="username">${escapeHtmlText(post.author || 'Usuário')}</span><span style="font-size:12px;color:var(--kiwi-text-muted);">${escapeHtmlText(post.handle || '')}</span><span class="timestamp">· ${escapeHtmlText(post.time || 'agora')}</span>`;
+
+                            const txt = document.createElement('div');
+                            txt.className = 'message-text';
+                            txt.textContent = post.text || '';
+
+                            body.appendChild(head);
+                            body.appendChild(txt);
+
+                            if (post.imageUrl && isSafeAssetUrl(post.imageUrl)) {
+                                const img = document.createElement('img');
+                                img.className = 'msg-attachment-img';
+                                img.src = post.imageUrl;
+                                img.alt = 'Imagem da postagem';
+                                img.onclick = (ev) => { ev.stopPropagation(); openImageLightbox(post.imageUrl, 'Postagem'); };
+                                body.appendChild(img);
+                            }
+
+                            const metrics = document.createElement('div');
+                            metrics.className = 'kiwi-x-post-metrics';
+                            const replyCountVal = Array.isArray(post.replyItems) && post.replyItems.length > 0 ? post.replyItems.length : Number(post.replies || 0);
+                            const rBtn = document.createElement('button');
+                            rBtn.type = 'button';
+                            rBtn.className = 'kiwi-x-metric-btn';
+                            rBtn.textContent = `💬 ${replyCountVal}`;
+                            rBtn.onclick = (ev) => { ev.stopPropagation(); openPostDetailModal(post.id); };
+
+                            const lBtn = document.createElement('button');
+                            lBtn.type = 'button';
+                            lBtn.className = 'kiwi-x-metric-btn' + (post.liked ? ' liked' : '');
+                            lBtn.textContent = `♥ ${Number(post.likes || 0) + (post.liked ? 1 : 0)}`;
+                            lBtn.onclick = (ev) => {
+                                ev.stopPropagation();
+                                post.liked = !post.liked;
+                                writeStorageJson(USER_POSTS_KEY, userProfilePosts);
+                                writeStorageJson('kiwi_explore_accounts_v1', exploreAccountsList);
+                                renderSimpleNavFeed('inicio');
+                            };
+
+                            metrics.appendChild(rBtn);
+                            metrics.appendChild(lBtn);
+                            body.appendChild(metrics);
+                            pCard.appendChild(av);
+                            pCard.appendChild(body);
+                            chatLog.appendChild(pCard);
+                        });
+                    }
+                    triggerChatAreaTransition();
+                    return;
                 } else if (tabName === 'notificacoes') {
                     headerMainTitle.textContent = '🔔 Notificações';
                     headerSubLabel.textContent = '| Atividades e pedidos';
@@ -5846,8 +5991,7 @@ body {
             renderChannelsListForServer('home', null);
             fetchOnlineUsers();
             syncXProfileHeader();
-            renderCleanUserPosts();
-            showProfileTimelineSurface();
+            activateNavTab('inicio');
         });
     </script>
 </body>
