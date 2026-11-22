@@ -433,7 +433,7 @@
                 </button>
                 <button type="button" class="kiwi-nav-item" id="nav-tab-notificacoes" data-nav-tab="notificacoes">
                     <span class="kiwi-nav-item-main"><span>🔔</span><span>Notificações</span></span>
-                    <span class="kiwi-nav-badge" id="nav-notif-badge">3</span>
+                    <span class="kiwi-nav-badge" id="nav-notif-badge">0</span>
                 </button>
                 <button type="button" class="kiwi-nav-item" id="nav-tab-mensagens" data-nav-tab="mensagens">
                     <span class="kiwi-nav-item-main"><span>✉️</span><span>Mensagens</span></span>
@@ -474,9 +474,9 @@
         </div>
         <div class="my-user-panel">
             <div class="my-user-info" id="open-profile-trigger">
-                <div id="my-mini-avatar" class="mini-avatar" data-current-user-avatar="true">U</div>
+                <div id="my-mini-avatar" class="mini-avatar" data-current-user-avatar="true">A</div>
                 <div style="min-width: 0;">
-                    <div id="my-name-label" style="font-size: 14px; font-weight: 600; color: var(--text-main); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">Usuário</div>
+                    <div id="my-name-label" style="font-size: 14px; font-weight: 600; color: var(--text-main); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">AkiiraPW</div>
                     <div style="font-size: 11px; color: #22c55e;">● Online</div>
                 </div>
             </div>
@@ -553,7 +553,7 @@
                     <button type="button" class="kiwi-x-back-btn" id="kiwi-x-back-btn" title="Voltar ao chat">←</button>
                     <div>
                         <div id="kiwi-x-top-name" style="font-size:17px;font-weight:900;line-height:1.15;">AkiiraPW</div>
-                        <div id="kiwi-x-top-posts-count" style="font-size:12px;color:var(--kiwi-text-muted);">584 posts</div>
+                        <div id="kiwi-x-top-posts-count" style="font-size:12px;color:var(--kiwi-text-muted);">0 posts</div>
                     </div>
                 </div>
                 <button type="button" class="section-mini-action-btn" id="kiwi-x-edit-profile-btn">✏️ Editar Perfil</button>
@@ -576,7 +576,7 @@
                     <span style="color:#a855f7;font-size:15px;">✔</span>
                     <span id="kiwi-x-admin-badge" class="admin-gold-badge" style="display:none;">👑 ADMIN</span>
                 </div>
-                <div id="kiwi-x-handle" class="kiwi-x-handle">@henriquecaua523</div>
+                <div id="kiwi-x-handle" class="kiwi-x-handle">@akiirapw</div>
 
                 <div id="kiwi-x-bio" class="kiwi-x-bio">
                     人間は鳥のようなものだ。巣を作る鳥もいれば、ただ空を飛ぶ鳥もいる。<br>
@@ -860,7 +860,7 @@
                         <div class="kiwi-preview-media-box">
                             <div class="kiwi-preview-media-row">
                                 <div class="kiwi-editor-avatar-wrap">
-                                    <div id="editor-live-avatar" class="kiwi-editor-avatar-preview" data-avatar-preview="true" data-current-user-avatar="true">U</div>
+                                    <div id="editor-live-avatar" class="kiwi-editor-avatar-preview" data-avatar-preview="true" data-current-user-avatar="true">A</div>
                                     <button type="button" id="editor-avatar-pencil-btn" class="kiwi-editor-avatar-badge-btn" title="Alterar foto de perfil">✏️</button>
                                 </div>
                                 <div id="editor-live-banner-thumb" class="kiwi-editor-banner-preview" title="Clique para alterar o banner"></div>
@@ -929,7 +929,7 @@
                             </div>
                             <div style="font-size:11px; color:var(--text-muted); margin-bottom:8px;">Clique para alternar fonte e estilo do nome</div>
                             <div id="editor-name-style-toggle" class="kiwi-name-style-card" title="Alternar estilo de destaque do nome">
-                                <span id="editor-live-name-sample" class="kiwi-name-style-sample">Usuário</span>
+                                <span id="editor-live-name-sample" class="kiwi-name-style-sample">AkiiraPW</span>
                                 <span style="font-weight:800;">›</span>
                             </div>
                         </div>
@@ -949,10 +949,10 @@
                         <div class="kiwi-live-identity-box">
                             <div>
                                 <div id="editor-live-display-name" style="font-size:18px; font-weight:900; color:var(--text-main); display:flex; align-items:center; gap:6px;">
-                                    <span>Usuário</span>
+                                    <span>AkiiraPW</span>
                                     <span style="color:#a855f7; font-size:14px;">✔</span>
                                 </div>
-                                <div id="editor-live-sub-meta" style="font-size:12px; color:var(--text-muted);">@usuario</div>
+                                <div id="editor-live-sub-meta" style="font-size:12px; color:var(--text-muted);">@akiirapw</div>
                             </div>
                             <span style="background:rgba(139,92,246,0.14); border:1px solid var(--border-subtle); color:var(--text-main); font-size:11px; font-weight:700; padding:5px 10px; border-radius:8px;">
                                 Perfil Estético
@@ -1142,7 +1142,7 @@
         </div>
     </div>
 
-        <!-- Modal Criar Canal -->
+    <!-- Modal Criar Canal -->
     <div id="create-channel-modal" class="modal-overlay">
         <div class="aesthetic-profile-card" style="padding: 20px; width: 400px; max-height: 85vh; overflow-y: auto;">
             <button type="button" class="close-modal-btn" id="close-create-channel-btn">×</button>
@@ -1219,7 +1219,10 @@
 
             function formatSafeBioHtml(rawBio) {
                 const escaped = escapeHtmlText(rawBio || '');
-                return escaped.replace(/(?:\r\n|\r|\n|<br\s*\/?\s*>)/gi, '<br>');
+                return escaped.replace(/(?:
+|
+|
+|<br\s*\/?\s*>)/gi, '<br>');
             }
 
             function isSafeAssetUrl(url) {
@@ -1293,7 +1296,6 @@
             const THEME_STORAGE_KEY = 'kiwi_theme_v2';
             const FRIENDS_STORAGE_KEY = 'kiwi_friends_v2';
             const REQUESTS_STORAGE_KEY = 'kiwi_requests_v2';
-            const DM_HISTORY_STORAGE_KEY = 'kiwi_dm_history_v2';
 
             const injectedUser = readJsonScript('kiwi-username-data', null);
             const injectedIsAdmin = Boolean(readJsonScript('kiwi-is-admin-data', false));
@@ -1363,8 +1365,6 @@
             }
 
             let friendsList = readStorageJson(FRIENDS_STORAGE_KEY, []);
-            let friendRequestsList = readStorageJson(REQUESTS_STORAGE_KEY, []);
-            let dmHistoryStore = readStorageJson(DM_HISTORY_STORAGE_KEY, {});
 
             function isAdminIdentity(username, isAdminFlag) {
                 const clean = (username || '').trim().toLowerCase();
@@ -1404,7 +1404,6 @@
             const switchToEditBtn = document.getElementById('switch-to-edit-btn');
             const cancelEditBtn = document.getElementById('cancel-edit-btn');
             const editProfileForm = document.getElementById('edit-profile-form');
-            const saveProfileBtn = document.getElementById('save-profile-btn');
 
             const upBanner = document.getElementById('up-banner');
             const upAvatar = document.getElementById('up-avatar');
@@ -1429,7 +1428,6 @@
             const editMusicCoverFile = document.getElementById('edit-music-cover-file');
             const editMusicCoverUrl = document.getElementById('edit-music-cover-url');
 
-            const akiiraGoldTab = document.getElementById('akiira-gold-exclusive-tab');
             const akiiraGoldFrameBtn = document.getElementById('akiira-gold-frame-btn');
             const akiiraProfileGlowBtn = document.getElementById('akiira-profile-glow-btn');
 
@@ -1476,19 +1474,6 @@
                     { name: 'música', type: 'audio' }
                 ]
             };
-
-            function getCurrentMeta() {
-                if (currentView === 'dm' && currentDmUser) {
-                    return { type: 'dm', targetUser: currentDmUser };
-                }
-                const chObj = (serverChannelsStore[currentServerId] || []).find((c) => c.name === currentChannelName);
-                return {
-                    type: 'channel',
-                    serverId: currentServerId,
-                    channelName: currentChannelName,
-                    channelType: (chObj && chObj.type) || 'text'
-                };
-            }
 
             function updateWsStatusPill(state) {
                 if (!wsStatusPill) return;
@@ -1622,15 +1607,11 @@
             const recordAudioBtn = document.getElementById('record-audio-btn');
 
             const previewBar = document.getElementById('attachment-preview-bar');
-            const previewImg = document.getElementById('attachment-preview-img');
-            const previewBadge = document.getElementById('attachment-preview-badge');
             const previewName = document.getElementById('attachment-preview-name');
             const clearAttachmentBtn = document.getElementById('clear-attachment-btn');
             let pendingAttachmentFile = null;
-            let pendingAttachmentCategory = 'file';
 
             const dmTabsListEl = document.getElementById('dm-tabs-list');
-            const headerDmAvatar = document.getElementById('header-dm-avatar');
             const headerMainTitle = document.getElementById('header-main-title');
             const headerSubLabel = document.getElementById('header-sub-label');
             const headerCallBtn = document.getElementById('header-call-btn');
@@ -2183,7 +2164,6 @@
             const upToggleSizeBtn = document.getElementById('up-toggle-size-btn');
             const upPlayPauseBtn = document.getElementById('up-play-pause-btn');
 
-            let isMusicPlaying = false;
             let activeProfileMusic = { owner: '', song: '', artist: '', musicUrl: '', audioSrc: '', audioFileName: '', coverUrl: '' };
 
             function isExternalMusicLink(url) {
@@ -2191,7 +2171,6 @@
             }
 
             function stopProfileMusicPlayback() {
-                isMusicPlaying = false;
                 if (upPlayPauseBtn) upPlayPauseBtn.textContent = '▶';
                 if (upLocalAudio) {
                     try { upLocalAudio.pause(); } catch (_) {}
@@ -2313,10 +2292,6 @@
                 });
             }
 
-            function isFriendName(username) {
-                return friendsList.some(f => f.toLowerCase() === (username || '').trim().toLowerCase());
-            }
-
             function closeUnifiedProfileModal() {
                 stopProfileMusicPlayback();
                 closeModalAnimated(unifiedProfileModal);
@@ -2324,7 +2299,6 @@
 
             function renderUnifiedProfileModal(profileObj) {
                 const isOwn = (profileObj.username || '').toLowerCase() === (activeUsername || '').toLowerCase();
-                const isFriend = isFriendName(profileObj.username);
 
                 upUsername.textContent = profileObj.username;
                 applySpecialProfileEffects(unifiedProfileCard, upUsername, upAdminBadge, profileObj.username, profileObj.is_admin, profileObj);
@@ -2461,8 +2435,6 @@
             const editorAvatarPencilBtn = document.getElementById('editor-avatar-pencil-btn');
             const editorTriggerBannerBtn = document.getElementById('editor-trigger-banner-btn');
             const editorBandColorSelect = document.getElementById('editor-band-color-select');
-            const editorBandColorLabel = document.getElementById('editor-band-color-label');
-            const editorBandSwatch = document.getElementById('editor-band-swatch');
             const editorEffectFrameBtn = document.getElementById('editor-effect-frame-btn');
             const editorEffectGoldBtn = document.getElementById('editor-effect-gold-btn');
             const editorFrameLabel = document.getElementById('editor-frame-label');
@@ -2501,7 +2473,7 @@
             });
 
             function refreshEditorLivePreview() {
-                const owner = ((editUsernameInput && editUsernameInput.value.trim()) || activeUsername || 'Usuário').trim();
+                const owner = ((editUsernameInput && editUsernameInput.value.trim()) || activeUsername || 'AkiiraPW').trim();
                 if (editorLiveAvatar) setAvatarStyle(editorLiveAvatar, tempEditorAvatarUrl || myProfileData.avatarUrl, owner);
                 if (editorLiveNameSample) editorLiveNameSample.textContent = owner;
                 if (editorLiveDisplayName) {
@@ -2555,7 +2527,7 @@
 
             editProfileForm.addEventListener('submit', async (e) => {
                 e.preventDefault();
-                const newUsername = ((editUsernameInput && editUsernameInput.value.trim()) || activeUsername || 'Usuário').trim();
+                const newUsername = ((editUsernameInput && editUsernameInput.value.trim()) || activeUsername || 'AkiiraPW').trim();
                 activeUsername = newUsername;
                 try { localStorage.setItem(USERNAME_STORAGE_KEY, activeUsername); } catch (_) {}
                 myProfileData.username = activeUsername;
@@ -2573,9 +2545,8 @@
                 showKiwiToast("Perfil guardado!");
             });
 
-            function setPendingAttachment(file, category) {
+            function setPendingAttachment(file) {
                 pendingAttachmentFile = file;
-                pendingAttachmentCategory = category || 'file';
                 if (!file) {
                     previewBar.style.display = 'none';
                     return;
@@ -2586,7 +2557,7 @@
 
             if (clearAttachmentBtn) {
                 clearAttachmentBtn.addEventListener('click', () => {
-                    setPendingAttachment(null, 'file');
+                    setPendingAttachment(null);
                     allFileInputs.forEach(inp => { if (inp) inp.value = ''; });
                 });
             }
@@ -2601,7 +2572,7 @@
             if (pickAudioBtn && audioFileInput) pickAudioBtn.addEventListener('click', () => { attachMenu.classList.remove('open'); audioFileInput.click(); });
             if (pickDocBtn && docFileInput) pickDocBtn.addEventListener('click', () => { attachMenu.classList.remove('open'); docFileInput.click(); });
 
-            function appendMessage(data, isChannelMsg = true) {
+            function appendMessage(data) {
                 const sender = data.sender || data.username || 'Usuário';
                 const messageText = data.message || data.text || '';
                 const timestamp = data.timestamp || new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
@@ -2672,10 +2643,10 @@
                     timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
                     avatarUrl: myProfileData.avatarUrl || ''
                 };
-                appendMessage(payload, true);
+                appendMessage(payload);
                 saveCurrentChannelSnapshot();
                 messageInput.value = '';
-                setPendingAttachment(null, 'file');
+                setPendingAttachment(null);
             }
 
             submitButton.onclick = sendChatMessage;
@@ -2792,7 +2763,6 @@
                 });
             });
 
-
             // === BOTÕES LATERAIS, MODAIS, AMIGOS, SERVIDORES, CANAIS, MÚSICA E MENSAGENS ===
             const createServerModal = document.getElementById('create-server-modal');
             const openCreateServerBtn = document.getElementById('open-create-server-btn');
@@ -2907,7 +2877,6 @@
 
             const addFriendModal = document.getElementById('add-friend-modal');
             const openAddFriendBtn = document.getElementById('open-add-friend-btn');
-            const sidebarSearchFriendBtn = document.getElementById('sidebar-search-friend-btn');
             const closeAddFriendBtn = document.getElementById('close-add-friend-btn');
             const addFriendDirectForm = document.getElementById('add-friend-direct-form');
             const friendSearchInput = document.getElementById('friend-search-input');
@@ -2921,7 +2890,6 @@
             }
 
             if (openAddFriendBtn) openAddFriendBtn.addEventListener('click', openAddFriendModalWithFocus);
-            if (sidebarSearchFriendBtn) sidebarSearchFriendBtn.addEventListener('click', openAddFriendModalWithFocus);
             if (closeAddFriendBtn && addFriendModal) {
                 closeAddFriendBtn.addEventListener('click', () => closeModalAnimated(addFriendModal));
             }
@@ -3051,7 +3019,7 @@
             renderDmTabs = function() {
                 if (!dmTabsListEl) return;
                 dmTabsListEl.innerHTML = '';
-                openDmTabs.forEach((info, uname) => {
+                openDmTabs.forEach((_, uname) => {
                     const row = document.createElement('div');
                     row.className = 'channel-item' + (currentView === 'dm' && currentDmUser === uname ? ' active' : '');
                     const av = document.createElement('span');
@@ -3155,7 +3123,7 @@
                             recordAudioBtn.classList.remove('recording');
                             const blob = new Blob(audioChunks, { type: 'audio/webm' });
                             const file = new File([blob], `audio-${Date.now()}.webm`, { type: 'audio/webm' });
-                            setPendingAttachment(file, 'audio');
+                            setPendingAttachment(file);
                             showKiwiToast('Áudio anexado! Clique em Enviar.');
                         };
                         mediaRecorder.start();
@@ -3386,7 +3354,6 @@
                 }
             });
 
-
             // === NAVEGAÇÃO PRINCIPAL (INÍCIO, EXPLORAR, NOTIFICAÇÕES, MENSAGENS, LISTAS, PERFIL, MAIS, POSTAR) ===
             const profileTimelineView = document.getElementById('kiwi-profile-timeline-view');
             const chatInputAreaEl = document.getElementById('chat-input-area');
@@ -3394,40 +3361,14 @@
             const xFeedListEl = document.getElementById('kiwi-x-feed-list');
             const xSubtabs = document.querySelectorAll('.kiwi-x-subtab[data-x-subtab]');
 
-            let activeNavTab = 'perfil';
             let activeXSubtab = 'posts';
 
             const USER_POSTS_KEY = 'kiwi_profile_posts_v1';
-            let userProfilePosts = readStorageJson(USER_POSTS_KEY, [
-                {
-                    id: 'p-1',
-                    author: activeUsername || 'AkiiraPW',
-                    handle: `@${(activeUsername || 'AkiiraPW').toLowerCase()}`,
-                    time: '2h',
-                    text: 'Finalmente consegui terminar o evento! 🎮✨',
-                    hasBannerCard: true,
-                    kind: 'posts',
-                    replies: 12,
-                    reposts: 8,
-                    likes: 96,
-                    views: '4,7 mil',
-                    liked: false
-                },
-                {
-                    id: 'p-2',
-                    author: activeUsername || 'AkiiraPW',
-                    handle: `@${(activeUsername || 'AkiiraPW').toLowerCase()}`,
-                    time: '1d',
-                    text: 'Qual seu jogo favorito? 🤔',
-                    hasBannerCard: false,
-                    kind: 'posts',
-                    replies: 87,
-                    reposts: 42,
-                    likes: 231,
-                    views: '12,9 mil',
-                    liked: false
-                }
-            ]);
+            let userProfilePosts = readStorageJson(USER_POSTS_KEY, []);
+            if (!Array.isArray(userProfilePosts)) {
+                userProfilePosts = [];
+                writeStorageJson(USER_POSTS_KEY, userProfilePosts);
+            }
 
             function syncXProfileHeader() {
                 const uname = activeUsername || myProfileData.username || 'AkiiraPW';
@@ -3441,7 +3382,7 @@
                 const xBadge = document.getElementById('kiwi-x-admin-badge');
 
                 if (topName) topName.textContent = uname;
-                if (topCount) topCount.textContent = `${582 + userProfilePosts.length} posts`;
+                if (topCount) topCount.textContent = `${userProfilePosts.length} posts`;
                 if (xBanner) {
                     if (myProfileData.bannerUrl && isSafeAssetUrl(myProfileData.bannerUrl)) {
                         xBanner.style.backgroundImage = `url("${encodeURI(myProfileData.bannerUrl.trim())}")`;
@@ -3513,15 +3454,6 @@
                         img.alt = 'Imagem da postagem';
                         img.onclick = () => openImageLightbox(post.imageUrl, 'Postagem');
                         body.appendChild(img);
-                    } else if (post.hasBannerCard) {
-                        const bannerCard = document.createElement('div');
-                        bannerCard.className = 'kiwi-x-post-media-banner';
-                        if (myProfileData.bannerUrl && isSafeAssetUrl(myProfileData.bannerUrl)) {
-                            bannerCard.style.backgroundImage = `url("${encodeURI(myProfileData.bannerUrl.trim())}")`;
-                        } else {
-                            bannerCard.style.backgroundImage = 'linear-gradient(135deg, #2e1065 0%, #6d28d9 50%, #1e1b4b 100%)';
-                        }
-                        body.appendChild(bannerCard);
                     }
 
                     const metrics = document.createElement('div');
@@ -3539,7 +3471,7 @@
 
                     metrics.innerHTML = `<span>💬 ${post.replies || 0}</span><span>🔁 ${post.reposts || 0}</span>`;
                     metrics.appendChild(likeBtn);
-                    metrics.insertAdjacentHTML('beforeend', `<span>📊 ${post.views || '1,2 mil'}</span><span>📤</span>`);
+                    metrics.insertAdjacentHTML('beforeend', `<span>📊 ${post.views || '0'}</span><span>📤</span>`);
 
                     body.appendChild(metrics);
                     card.appendChild(av);
@@ -3584,7 +3516,6 @@
             }
 
             function activateNavTab(tabKey) {
-                activeNavTab = tabKey;
                 navItems.forEach(btn => {
                     btn.classList.toggle('active', btn.getAttribute('data-nav-tab') === tabKey);
                 });
@@ -3711,7 +3642,7 @@
                 });
             });
 
-            // Botão Postar e modal de nova postagem
+            // Botão Postar e modal de nova postagem (somente ao enviar o formulário preenchido)
             const createPostModal = document.getElementById('create-post-modal');
             const navOpenPostModalBtn = document.getElementById('nav-open-post-modal-btn');
             const closeCreatePostBtn = document.getElementById('close-create-post-btn');
@@ -3749,7 +3680,7 @@
                         replies: 0,
                         reposts: 0,
                         likes: 0,
-                        views: '1',
+                        views: '0',
                         liked: false
                     });
                     writeStorageJson(USER_POSTS_KEY, userProfilePosts);
@@ -3780,7 +3711,7 @@
             if (kiwiXDmBtn) kiwiXDmBtn.addEventListener('click', () => activateNavTab('mensagens'));
             if (kiwiXMoreBtn) kiwiXMoreBtn.addEventListener('click', () => openUserProfile(activeUsername));
 
-            // Sidebar direita estilo imagem 4 ("Quem seguir" e "Assuntos do momento")
+            // Sidebar direita limpa: apenas busca e "Quem seguir" (sem "Assuntos do momento" artificial sem posts)
             const sidebarRightEl = document.querySelector('.sidebar-right');
             if (sidebarRightEl && socialContentContainer) {
                 const extraRightBox = document.createElement('div');
@@ -3809,23 +3740,6 @@
                             </div>
                             <button type="button" class="kiwi-follow-pill-btn" data-follow-user="AkiiraPW">Seguir</button>
                         </div>
-                        <div class="kiwi-follow-row">
-                            <div style="display:flex;align-items:center;gap:8px;min-width:0;">
-                                <div class="social-avatar" style="background:#7c3aed;">L</div>
-                                <div style="min-width:0;"><div style="font-size:13px;font-weight:700;">Lunaria</div><div style="font-size:11px;color:var(--kiwi-text-muted);">@lunari4x</div></div>
-                            </div>
-                            <button type="button" class="kiwi-follow-pill-btn" data-follow-user="Lunaria">Seguir</button>
-                        </div>
-                    </div>
-                    <div class="kiwi-right-widget-card">
-                        <div class="kiwi-right-widget-header">
-                            <span class="kiwi-right-widget-title">Assuntos do momento</span>
-                            <button type="button" class="kiwi-right-widget-link" id="right-ver-mais-trends">Ver mais →</button>
-                        </div>
-                        <div class="kiwi-trend-row"><span class="kiwi-trend-sub">1. Assunto em alta</span><span class="kiwi-trend-tag">#KiwiUpdate</span><span class="kiwi-trend-sub">12,4 mil posts</span></div>
-                        <div class="kiwi-trend-row"><span class="kiwi-trend-sub">2. Assunto em alta</span><span class="kiwi-trend-tag">#Anime</span><span class="kiwi-trend-sub">89,7 mil posts</span></div>
-                        <div class="kiwi-trend-row"><span class="kiwi-trend-sub">3. Assunto em alta</span><span class="kiwi-trend-tag">#Gaming</span><span class="kiwi-trend-sub">57,3 mil posts</span></div>
-                        <div class="kiwi-trend-row"><span class="kiwi-trend-sub">4. Assunto em alta</span><span class="kiwi-trend-tag">#Minecraft</span><span class="kiwi-trend-sub">32,1 mil posts</span></div>
                     </div>
                 `;
                 const artCard = sidebarRightEl.querySelector('.sidebar-artwork-card');
@@ -3843,8 +3757,6 @@
 
                 const verMaisFollow = document.getElementById('right-ver-mais-follow');
                 if (verMaisFollow) verMaisFollow.addEventListener('click', () => activateNavTab('mensagens'));
-                const verMaisTrends = document.getElementById('right-ver-mais-trends');
-                if (verMaisTrends) verMaisTrends.addEventListener('click', () => activateNavTab('explorar'));
             }
 
             // Ao abrir DM ou canal de chat, exibir a área de chat e input
@@ -3899,9 +3811,7 @@
                 let followersList = safeRead(FOLLOWERS_KEY, []);
                 let followingList = safeRead(FOLLOWING_KEY, []);
                 let friendsArr = safeRead(FRIENDS_KEY, []);
-                let reqsArr = safeRead(REQUESTS_KEY, []);
 
-                // Garantir que não existam duplicatas em pedidos e que cada pedido seja aceito apenas uma vez
                 const acceptedRequestIds = new Set();
 
                 function syncFollowerCountsUi() {
@@ -3912,7 +3822,7 @@
                 }
                 syncFollowerCountsUi();
 
-                // Corrigir aplicação de temas na aba Mais / Configurações e editor
+                // Aplicação de temas na aba Mais / Configurações e editor
                 const themeColorMap = {
                     '#7c3aed': { accent: '#7c3aed', main: '#0b0714', sidebar: '#160d29', darkest: '#120b21', input: '#1c1133', card: '#1c1133', soft: '#241642', textMain: '#f5f3ff', textMuted: '#a79bc4', border: 'rgba(167, 139, 250, 0.16)' },
                     '#2b2d31': { accent: '#4e5058', main: '#1e1f22', sidebar: '#2b2d31', darkest: '#141517', input: '#313338', card: '#2b2d31', soft: '#383a40', textMain: '#f2f3f5', textMuted: '#b5bac1', border: 'rgba(255, 255, 255, 0.12)' },
@@ -3983,14 +3893,14 @@
                     }, true);
                 }
 
-                // Permitir excluir postagens e exibir apenas postagens criadas pelo usuário (sem duplicatas automáticas)
+                // Permitir excluir postagens e exibir apenas postagens criadas pelo usuário
                 function renderCleanUserPosts() {
                     const feedList = document.getElementById('kiwi-x-feed-list');
                     const followersPanel = document.getElementById('kiwi-x-followers-panel');
                     if (!feedList) return;
                     if (followersPanel && followersPanel.style.display === 'block') return;
 
-                    let posts = safeRead(POSTS_KEY, null);
+                    let posts = safeRead(POSTS_KEY, []);
                     if (!Array.isArray(posts)) {
                         posts = [];
                         safeWrite(POSTS_KEY, posts);
@@ -4056,7 +3966,7 @@
                     });
                 }
 
-                // Seguidores / Seguindo / Verificados no estilo da penúltima imagem
+                // Seguidores / Seguindo / Verificados na aba dedicada ao clicar nos contadores
                 function renderFollowersTabPanel(initialMode = 'seguidores') {
                     const feedList = document.getElementById('kiwi-x-feed-list');
                     const followersPanel = document.getElementById('kiwi-x-followers-panel');
@@ -4194,7 +4104,7 @@
                     mailboxBtnEl.addEventListener('click', () => setTimeout(bindSingleAcceptFriendRequests, 60));
                 }
 
-                // Bate-papo estilo última imagem ao clicar na aba Mensagens
+                // Bate-papo dividido (estilo Mensagens) ao clicar na aba Mensagens
                 const dmSplitView = document.getElementById('kiwi-dm-split-view');
                 const profileView = document.getElementById('kiwi-profile-timeline-view');
                 const chatLogEl = document.getElementById('chat-log');
@@ -4252,8 +4162,7 @@
                     }
 
                     const suggestedContacts = [
-                        { name: 'Hollow29', sub: 'Contato no Kiwi' },
-                        { name: 'Lunaria', sub: 'Contato no Kiwi' }
+                        { name: 'Hollow29', sub: 'Contato no Kiwi' }
                     ].filter(c => !q || c.name.toLowerCase().includes(q));
 
                     dmSugList.innerHTML = '';
