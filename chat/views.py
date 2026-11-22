@@ -430,10 +430,9 @@ def room_view(request, room_name=None, server_id=None, channel_id=None):
 
     friends_payload = _get_friends_list(user)
     incoming_requests = FriendRequest.objects.filter(
-        status="pending"
-    ).filter(
-        Q(to_user=user) | Q(receiver=user)
-    ).select_related("from_user", "to_user", "sender", "receiver")
+        status="pending",
+        receiver=user,
+    ).select_related("sender", "receiver")
 
     pending_requests_payload = []
     for req in incoming_requests:
@@ -523,9 +522,7 @@ def api_bootstrap(request):
         })
 
     friends = _get_friends_list(user)
-    incoming = FriendRequest.objects.filter(status="pending").filter(
-        Q(to_user=user) | Q(receiver=user)
-    ).select_related("from_user", "sender")
+    incoming = FriendRequest.objects.filter(status="pending", receiver=user).select_related("sender", "receiver")
     requests_data = []
     for r in incoming:
         origin = getattr(r, "from_user", None) or getattr(r, "sender", None)
@@ -858,8 +855,8 @@ def api_friend_request(request):
         return JsonResponse({"ok": True, "already_friends": True, "message": "Vocês já são amigos!"})
 
     req, created = FriendRequest.objects.get_or_create(
-        from_user=request.user,
-        to_user=target_user,
+        sender=request.user,
+        receiver=target_user,
         defaults={"status": "pending"},
     )
     if not created and req.status != "pending":
@@ -1038,9 +1035,7 @@ def search_users(request):
 
 @login_required
 def get_friend_requests(request):
-    incoming = FriendRequest.objects.filter(status="pending").filter(
-        Q(to_user=request.user) | Q(receiver=request.user)
-    ).select_related("from_user", "sender")
+    incoming = FriendRequest.objects.filter(status="pending", receiver=request.user).select_related("sender", "receiver")
     items = []
     for r in incoming:
         origin = getattr(r, "from_user", None) or getattr(r, "sender", None)
