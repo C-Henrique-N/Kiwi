@@ -1,19 +1,41 @@
 /* Adaptação Mobile para o Kiwi Chat (.kiwi-app-shell) */
+:root {
+  --kiwi-accent-purple: #7c3aed;
+  --kiwi-accent-purple-bright: #9333ea;
+  --kiwi-bg-canvas: #0b0714;
+  --kiwi-bg-panel: #160d29;
+  --kiwi-bg-rail: #120b21;
+  --kiwi-bg-card: #1c1133;
+  --kiwi-bg-elevated: #241642;
+  --kiwi-text-primary: #f5f3ff;
+  --kiwi-text-secondary: #a79bc4;
+  --kiwi-text-muted: #a79bc4;
+  --kiwi-border: rgba(167, 139, 250, 0.16);
+}
+
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
 @media (max-width: 768px) {
   :root {
-    --m-rail-w: 64px;
+    --m-rail-w: 62px;
     --m-bottom-h: 56px;
   }
 
-  body {
+  html, body {
+    width: 100%;
+    height: 100dvh;
     overflow: hidden;
     background: #0b0714;
   }
 
   .kiwi-app-shell {
     display: flex;
+    flex-direction: row;
     width: 100%;
     height: 100dvh;
+    min-height: 0;
     overflow: hidden;
     position: relative;
     background:
@@ -24,14 +46,16 @@
   /* Barra lateral esquerda de servidores */
   .server-rail {
     width: var(--m-rail-w);
+    min-width: var(--m-rail-w);
     flex-shrink: 0;
+    height: 100%;
     background: rgba(12, 8, 22, 0.96);
     border-right: 1px solid rgba(167, 139, 250, 0.16);
     display: flex;
     flex-direction: column;
     align-items: center;
     gap: 10px;
-    padding: 12px 0 calc(var(--m-bottom-h) + 24px + env(safe-area-inset-bottom));
+    padding: 12px 0 calc(var(--m-bottom-h) + 20px + env(safe-area-inset-bottom));
     overflow-y: auto;
     overscroll-behavior: contain;
     z-index: 12;
@@ -39,7 +63,7 @@
 
   /* Coluna principal ao lado da rail (menu, canais e painel do utilizador) */
   .sidebar-left {
-    flex: 1;
+    flex: 1 1 auto;
     min-width: 0;
     width: calc(100% - var(--m-rail-w));
     height: 100%;
@@ -47,7 +71,7 @@
     flex-direction: column;
     overflow-y: auto;
     overscroll-behavior: contain;
-    padding-bottom: calc(var(--m-bottom-h) + 84px + env(safe-area-inset-bottom));
+    padding-bottom: calc(var(--m-bottom-h) + 76px + env(safe-area-inset-bottom));
     background: transparent;
   }
 
@@ -71,21 +95,29 @@
     flex-direction: column;
     width: 100%;
     height: 100dvh;
+    min-height: 0;
     min-width: 0;
-    padding-bottom: calc(var(--m-bottom-h) + 16px + env(safe-area-inset-bottom));
+    overflow: hidden;
+    padding-bottom: calc(var(--m-bottom-h) + 12px + env(safe-area-inset-bottom));
   }
 
   /* Cabeçalho do chat / vista ativa no mobile */
   .chat-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
     padding: 10px 12px;
     gap: 8px;
-    flex-wrap: wrap;
-    background: rgba(18, 11, 33, 0.92);
+    flex-wrap: nowrap;
+    flex-shrink: 0;
+    background: rgba(18, 11, 33, 0.94);
     backdrop-filter: blur(10px);
     border-bottom: 1px solid rgba(167, 139, 250, 0.16);
   }
 
   .header-title-group {
+    display: flex;
+    align-items: center;
     min-width: 0;
     flex: 1;
     gap: 8px;
@@ -103,6 +135,8 @@
   }
 
   .header-actions {
+    display: flex;
+    align-items: center;
     gap: 6px;
     flex-shrink: 0;
   }
@@ -111,7 +145,14 @@
     display: none;
   }
 
-  /* Perfil estilo timeline (X/Twitter) no mobile */
+  /* Área de rolagem do perfil / chat no mobile */
+  #kiwi-profile-timeline-view {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
   #kiwi-profile-timeline-view .kiwi-x-topbar {
     padding: 10px 12px;
     gap: 8px;
@@ -119,6 +160,8 @@
 
   #kiwi-profile-timeline-view .kiwi-x-banner {
     height: 145px;
+    background-size: cover;
+    background-position: center;
   }
 
   #kiwi-profile-timeline-view .kiwi-x-avatar {
@@ -149,8 +192,11 @@
 
   /* DM dividida: empilha lista e conversa no mobile para não espremer */
   .kiwi-dm-split-shell {
+    display: flex;
     flex-direction: column;
+    width: 100%;
     height: 100%;
+    min-height: 0;
     overflow-y: auto;
   }
 
@@ -158,13 +204,17 @@
     width: 100%;
     max-width: none;
     max-height: 44%;
+    flex-shrink: 0;
+    overflow-y: auto;
     border-right: none;
     border-bottom: 1px solid var(--kiwi-border);
   }
 
   .kiwi-dm-right-pane {
-    flex: 1;
-    min-height: 260px;
+    flex: 1 1 auto;
+    min-height: 240px;
+    display: flex;
+    flex-direction: column;
   }
 
   /* Popover de perfil e modais em telas pequenas */

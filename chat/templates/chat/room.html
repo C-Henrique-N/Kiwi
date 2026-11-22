@@ -3,30 +3,71 @@
 <html lang="pt">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <meta name="theme-color" content="#0b0714">
     <title>🥝 Kiwi Chat</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700;900&family=Fredoka:wght@600;700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="{% static 'css/room.css' %}">
+    <link rel="stylesheet" href="{% static 'css/mobile_3.css' %}">
 <style id="kiwi-mobile-responsive-style">
+/* Base & Fallback Layout */
+:root {
+    --kiwi-accent-purple: #7c3aed;
+    --kiwi-accent-purple-bright: #9333ea;
+    --kiwi-bg-canvas: #0b0714;
+    --kiwi-bg-panel: #160d29;
+    --kiwi-bg-rail: #120b21;
+    --kiwi-bg-card: #1c1133;
+    --kiwi-bg-elevated: #241642;
+    --kiwi-text-primary: #f5f3ff;
+    --kiwi-text-secondary: #a79bc4;
+    --kiwi-text-muted: #a79bc4;
+    --kiwi-border: rgba(167, 139, 250, 0.16);
+    --bg-main: #0b0714;
+    --bg-sidebar: #160d29;
+    --bg-darkest: #120b21;
+    --bg-input: #1c1133;
+    --bg-card: #1c1133;
+    --bg-soft: #241642;
+    --text-main: #f5f3ff;
+    --text-muted: #a79bc4;
+    --border-subtle: rgba(167, 139, 250, 0.16);
+}
+
+*, *::before, *::after {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    padding: 0;
+    background: var(--kiwi-bg-canvas);
+    color: var(--kiwi-text-primary);
+    font-family: 'Inter', sans-serif;
+}
+
 /* Adaptação Mobile para o Kiwi Chat (.kiwi-app-shell) */
 @media (max-width: 768px) {
   :root {
-    --m-rail-w: 64px;
+    --m-rail-w: 62px;
     --m-bottom-h: 56px;
   }
 
-  body {
+  html, body {
+    width: 100%;
+    height: 100dvh;
     overflow: hidden;
     background: #0b0714;
   }
 
   .kiwi-app-shell {
     display: flex;
+    flex-direction: row;
     width: 100%;
     height: 100dvh;
+    min-height: 0;
     overflow: hidden;
     position: relative;
     background:
@@ -37,14 +78,16 @@
   /* Barra lateral esquerda de servidores */
   .server-rail {
     width: var(--m-rail-w);
+    min-width: var(--m-rail-w);
     flex-shrink: 0;
+    height: 100%;
     background: rgba(12, 8, 22, 0.96);
     border-right: 1px solid rgba(167, 139, 250, 0.16);
     display: flex;
     flex-direction: column;
     align-items: center;
     gap: 10px;
-    padding: 12px 0 calc(var(--m-bottom-h) + 24px + env(safe-area-inset-bottom));
+    padding: 12px 0 calc(var(--m-bottom-h) + 20px + env(safe-area-inset-bottom));
     overflow-y: auto;
     overscroll-behavior: contain;
     z-index: 12;
@@ -52,7 +95,7 @@
 
   /* Coluna principal ao lado da rail (menu, canais e painel do utilizador) */
   .sidebar-left {
-    flex: 1;
+    flex: 1 1 auto;
     min-width: 0;
     width: calc(100% - var(--m-rail-w));
     height: 100%;
@@ -60,7 +103,7 @@
     flex-direction: column;
     overflow-y: auto;
     overscroll-behavior: contain;
-    padding-bottom: calc(var(--m-bottom-h) + 84px + env(safe-area-inset-bottom));
+    padding-bottom: calc(var(--m-bottom-h) + 76px + env(safe-area-inset-bottom));
     background: transparent;
   }
 
@@ -84,21 +127,29 @@
     flex-direction: column;
     width: 100%;
     height: 100dvh;
+    min-height: 0;
     min-width: 0;
-    padding-bottom: calc(var(--m-bottom-h) + 16px + env(safe-area-inset-bottom));
+    overflow: hidden;
+    padding-bottom: calc(var(--m-bottom-h) + 12px + env(safe-area-inset-bottom));
   }
 
   /* Cabeçalho do chat / vista ativa no mobile */
   .chat-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
     padding: 10px 12px;
     gap: 8px;
-    flex-wrap: wrap;
-    background: rgba(18, 11, 33, 0.92);
+    flex-wrap: nowrap;
+    flex-shrink: 0;
+    background: rgba(18, 11, 33, 0.94);
     backdrop-filter: blur(10px);
     border-bottom: 1px solid rgba(167, 139, 250, 0.16);
   }
 
   .header-title-group {
+    display: flex;
+    align-items: center;
     min-width: 0;
     flex: 1;
     gap: 8px;
@@ -116,6 +167,8 @@
   }
 
   .header-actions {
+    display: flex;
+    align-items: center;
     gap: 6px;
     flex-shrink: 0;
   }
@@ -124,7 +177,14 @@
     display: none;
   }
 
-  /* Perfil estilo timeline (X/Twitter) no mobile */
+  /* Área de rolagem do perfil / chat no mobile */
+  #kiwi-profile-timeline-view {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
   #kiwi-profile-timeline-view .kiwi-x-topbar {
     padding: 10px 12px;
     gap: 8px;
@@ -132,6 +192,8 @@
 
   #kiwi-profile-timeline-view .kiwi-x-banner {
     height: 145px;
+    background-size: cover;
+    background-position: center;
   }
 
   #kiwi-profile-timeline-view .kiwi-x-avatar {
@@ -162,8 +224,11 @@
 
   /* DM dividida: empilha lista e conversa no mobile para não espremer */
   .kiwi-dm-split-shell {
+    display: flex;
     flex-direction: column;
+    width: 100%;
     height: 100%;
+    min-height: 0;
     overflow-y: auto;
   }
 
@@ -171,13 +236,17 @@
     width: 100%;
     max-width: none;
     max-height: 44%;
+    flex-shrink: 0;
+    overflow-y: auto;
     border-right: none;
     border-bottom: 1px solid var(--kiwi-border);
   }
 
   .kiwi-dm-right-pane {
-    flex: 1;
-    min-height: 260px;
+    flex: 1 1 auto;
+    min-height: 240px;
+    display: flex;
+    flex-direction: column;
   }
 
   /* Popover de perfil e modais em telas pequenas */
@@ -245,6 +314,62 @@
   .kiwi-mobile-bottom-pill {
     display: none;
   }
+}
+
+/* Utilidades base para modais, popovers e vistas */
+.modal-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(5, 3, 12, 0.72);
+    backdrop-filter: blur(6px);
+    z-index: 60;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+}
+.modal-overlay.open {
+    display: flex;
+}
+.kiwi-discord-popover {
+    display: none;
+    position: fixed;
+    z-index: 55;
+}
+.kiwi-discord-popover.open {
+    display: block;
+}
+#kiwi-profile-timeline-view {
+    display: none;
+}
+#kiwi-profile-timeline-view.active {
+    display: block;
+}
+#kiwi-splash.hide {
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.35s ease;
+}
+.kiwi-toast {
+    position: fixed;
+    bottom: 84px;
+    left: 50%;
+    transform: translateX(-50%) translateY(10px);
+    background: rgba(28, 17, 51, 0.96);
+    color: #f5f3ff;
+    border: 1px solid rgba(167, 139, 250, 0.35);
+    padding: 8px 16px;
+    border-radius: 999px;
+    font-size: 13px;
+    font-weight: 600;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s ease, transform 0.2s ease;
+    z-index: 90;
+}
+.kiwi-toast.show {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
 }
 </style>
 </head>
@@ -1435,7 +1560,7 @@
                 if (splashEl && splashEl.parentNode) {
                     splashEl.remove();
                 }
-            }, 500);
+            }, 400);
         }
 
         setTimeout(() => {
@@ -1444,9 +1569,9 @@
                 sub.textContent = 'kiwi pronto';
                 sub.classList.add('ready');
             }
-        }, 700);
-        setTimeout(dismissKiwiSplash, 1100);
-        window.addEventListener('load', () => setTimeout(dismissKiwiSplash, 800));
+        }, 500);
+        setTimeout(dismissKiwiSplash, 850);
+        window.addEventListener('load', () => setTimeout(dismissKiwiSplash, 600));
 
         document.addEventListener("DOMContentLoaded", function() {
             const lightboxEl = document.getElementById('image-lightbox');
