@@ -1,0 +1,1032 @@
+/* === KIWI PROFILE DESKTOP LAYOUT (X/TWITTER + DISCORD DARK PURPLE-VIOLET) === */
+
+:root {
+    --kiwi-bg-canvas: #0b0714;
+    --kiwi-bg-rail: #120b21;
+    --kiwi-bg-panel: #160d29;
+    --kiwi-bg-card: #1c1133;
+    --kiwi-bg-elevated: #241642;
+    --kiwi-bg-hover: rgba(139, 92, 246, 0.14);
+    --kiwi-text-primary: #f5f3ff;
+    --kiwi-text-secondary: #a79bc4;
+    --kiwi-text-muted: #7b6e99;
+    --kiwi-accent-purple: #7c3aed;
+    --kiwi-accent-purple-bright: #8b5cf6;
+    --kiwi-accent-purple-soft: rgba(124, 58, 237, 0.22);
+    --kiwi-border: rgba(167, 139, 250, 0.16);
+    --kiwi-border-strong: rgba(167, 139, 250, 0.28);
+    --kiwi-online-green: #22c55e;
+    --kiwi-away-amber: #eab308;
+    --kiwi-offline-slate: #64748b;
+    --kiwi-gold: #ffd700;
+    --kiwi-gold-soft: rgba(255, 215, 0, 0.16);
+    --kiwi-radius-sm: 8px;
+    --kiwi-radius-md: 12px;
+    --kiwi-radius-lg: 16px;
+    --kiwi-radius-pill: 9999px;
+    --kiwi-ease: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+*,
+*::before,
+*::after {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+html,
+body {
+    width: 100%;
+    height: 100%;
+    background: var(--kiwi-bg-canvas);
+    color: var(--kiwi-text-primary);
+    font-family: 'Inter', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    overflow: hidden;
+}
+
+/* Shell principal em 4 colunas (Server Rail | Nav Esquerda | Coluna Central | Sidebar Direita) */
+.kiwi-profile-shell {
+    display: grid;
+    grid-template-columns: 64px 236px minmax(520px, 1fr) 310px;
+    width: 100vw;
+    height: 100vh;
+    background: var(--kiwi-bg-canvas);
+    overflow: hidden;
+}
+
+/* 1. Rail lateral esquerdo de servidores */
+.kiwi-server-rail {
+    background: var(--kiwi-bg-rail);
+    border-right: 1px solid var(--kiwi-border);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 12px 0;
+    gap: 10px;
+    overflow-y: auto;
+    scrollbar-width: none;
+}
+
+.kiwi-server-rail::-webkit-scrollbar {
+    display: none;
+}
+
+.kiwi-rail-server-btn {
+    position: relative;
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    border: 1px solid var(--kiwi-border);
+    background: var(--kiwi-bg-card);
+    color: var(--kiwi-text-primary);
+    font-size: 13px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    background-size: cover;
+    background-position: center;
+    transition: border-radius 0.2s var(--kiwi-ease), transform 0.18s var(--kiwi-ease), border-color 0.2s ease, box-shadow 0.2s ease;
+    flex-shrink: 0;
+}
+
+.kiwi-rail-server-btn:hover {
+    border-radius: 14px;
+    border-color: var(--kiwi-accent-purple-bright);
+    transform: translateY(-1px);
+}
+
+.kiwi-rail-server-btn.is-active {
+    border-radius: 14px;
+    border-color: var(--kiwi-accent-purple-bright);
+    box-shadow: 0 0 0 2px rgba(139, 92, 246, 0.35);
+}
+
+.kiwi-rail-server-btn.is-home {
+    background: linear-gradient(135deg, #6d28d9 0%, #8b5cf6 100%);
+    color: #ffffff;
+    border: none;
+}
+
+.kiwi-rail-divider {
+    width: 28px;
+    height: 1px;
+    background: var(--kiwi-border);
+    margin: 2px 0;
+    flex-shrink: 0;
+}
+
+/* 2. Sidebar esquerda de navegação e conta */
+.kiwi-nav-sidebar {
+    background: var(--kiwi-bg-panel);
+    border-right: 1px solid var(--kiwi-border);
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: 14px 12px 12px 12px;
+    min-width: 0;
+    overflow-y: auto;
+}
+
+.kiwi-nav-top {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+
+.kiwi-brand-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 4px 10px;
+}
+
+.kiwi-brand-title {
+    font-size: 18px;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    color: var(--kiwi-text-primary);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.kiwi-nav-list {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.kiwi-nav-item {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 12px;
+    border-radius: var(--kiwi-radius-pill);
+    border: none;
+    background: transparent;
+    color: var(--kiwi-text-secondary);
+    font-size: 14px;
+    font-weight: 500;
+    text-align: left;
+    text-decoration: none;
+    cursor: pointer;
+    transition: background 0.16s ease, color 0.16s ease, transform 0.16s var(--kiwi-ease);
+}
+
+.kiwi-nav-item:hover {
+    background: var(--kiwi-bg-hover);
+    color: var(--kiwi-text-primary);
+}
+
+.kiwi-nav-item.is-active {
+    background: var(--kiwi-accent-purple-soft);
+    color: #ffffff;
+    font-weight: 700;
+}
+
+.kiwi-nav-icon {
+    width: 20px;
+    height: 20px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.kiwi-nav-badge {
+    margin-left: auto;
+    background: var(--kiwi-accent-purple);
+    color: #ffffff;
+    font-size: 11px;
+    font-weight: 700;
+    padding: 1px 7px;
+    border-radius: var(--kiwi-radius-pill);
+    line-height: 1.4;
+}
+
+.kiwi-post-cta-btn {
+    margin-top: 6px;
+    width: 100%;
+    padding: 11px 16px;
+    border-radius: var(--kiwi-radius-pill);
+    border: none;
+    background: linear-gradient(135deg, var(--kiwi-accent-purple) 0%, var(--kiwi-accent-purple-bright) 100%);
+    color: #ffffff;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+    box-shadow: 0 6px 20px rgba(124, 58, 237, 0.35);
+    transition: transform 0.16s var(--kiwi-ease), filter 0.16s ease, box-shadow 0.16s ease;
+}
+
+.kiwi-post-cta-btn:hover {
+    filter: brightness(1.08);
+    transform: translateY(-1px);
+    box-shadow: 0 8px 24px rgba(139, 92, 246, 0.45);
+}
+
+.kiwi-post-cta-btn:active {
+    transform: scale(0.98);
+}
+
+/* Rodapé do usuário logado na sidebar esquerda */
+.kiwi-left-user-footer {
+    margin-top: 16px;
+    padding: 10px;
+    border-radius: var(--kiwi-radius-md);
+    background: var(--kiwi-bg-card);
+    border: 1px solid var(--kiwi-border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+}
+
+.kiwi-left-user-trigger {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-width: 0;
+    flex: 1;
+    background: transparent;
+    border: none;
+    color: inherit;
+    text-align: left;
+    cursor: pointer;
+}
+
+.kiwi-left-avatar {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: var(--kiwi-accent-purple);
+    background-size: cover;
+    background-position: center;
+    color: #ffffff;
+    font-size: 13px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    border: 1.5px solid var(--kiwi-border-strong);
+}
+
+.kiwi-left-user-meta {
+    min-width: 0;
+    flex: 1;
+}
+
+.kiwi-left-user-name {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--kiwi-text-primary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.kiwi-left-user-handle {
+    font-size: 11px;
+    color: var(--kiwi-text-secondary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.kiwi-left-footer-actions {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    flex-shrink: 0;
+}
+
+.kiwi-icon-action-btn {
+    width: 28px;
+    height: 28px;
+    border-radius: var(--kiwi-radius-sm);
+    border: none;
+    background: transparent;
+    color: var(--kiwi-text-secondary);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: background 0.15s ease, color 0.15s ease;
+}
+
+.kiwi-icon-action-btn:hover {
+    background: var(--kiwi-bg-hover);
+    color: var(--kiwi-text-primary);
+}
+
+/* 3. Coluna central do perfil (estilo X / Twitter) */
+.kiwi-profile-main {
+    background: var(--kiwi-bg-canvas);
+    border-right: 1px solid var(--kiwi-border);
+    overflow-y: auto;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+}
+
+.kiwi-profile-topbar {
+    position: sticky;
+    top: 0;
+    z-index: 20;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 10px 16px;
+    background: rgba(11, 7, 20, 0.82);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--kiwi-border);
+}
+
+.kiwi-topbar-left {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    min-width: 0;
+}
+
+.kiwi-back-btn {
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    border: none;
+    background: transparent;
+    color: var(--kiwi-text-primary);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: background 0.15s ease;
+    flex-shrink: 0;
+}
+
+.kiwi-back-btn:hover {
+    background: var(--kiwi-bg-hover);
+}
+
+.kiwi-topbar-titles {
+    min-width: 0;
+}
+
+.kiwi-topbar-name {
+    font-size: 17px;
+    font-weight: 800;
+    line-height: 1.2;
+    color: var(--kiwi-text-primary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.kiwi-topbar-subtitle {
+    font-size: 12px;
+    color: var(--kiwi-text-secondary);
+    line-height: 1.25;
+}
+
+.kiwi-topbar-search-btn {
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    border: none;
+    background: transparent;
+    color: var(--kiwi-text-secondary);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: background 0.15s ease, color 0.15s ease;
+}
+
+.kiwi-topbar-search-btn:hover {
+    background: var(--kiwi-bg-hover);
+    color: var(--kiwi-text-primary);
+}
+
+/* Banner + Avatar sobreposto */
+.kiwi-profile-hero {
+    position: relative;
+    width: 100%;
+}
+
+.kiwi-profile-banner {
+    width: 100%;
+    height: 196px;
+    background: linear-gradient(135deg, #2e1065 0%, #4c1d95 45%, #1e1b4b 100%);
+    background-size: cover;
+    background-position: center;
+    position: relative;
+}
+
+.kiwi-profile-hero-bar {
+    padding: 0 18px;
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 12px;
+    margin-top: -66px;
+    position: relative;
+    z-index: 2;
+}
+
+.kiwi-profile-avatar-ring {
+    width: 132px;
+    height: 132px;
+    border-radius: 50%;
+    padding: 4px;
+    background: var(--kiwi-bg-canvas);
+    flex-shrink: 0;
+    position: relative;
+}
+
+.kiwi-profile-avatar {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    background: var(--kiwi-bg-elevated);
+    background-size: cover;
+    background-position: center;
+    color: var(--kiwi-text-primary);
+    font-size: 40px;
+    font-weight: 800;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 2px solid var(--kiwi-border-strong);
+}
+
+.kiwi-profile-hero-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding-top: 74px;
+    flex-wrap: wrap;
+}
+
+.kiwi-btn-circle-action {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    border: 1px solid var(--kiwi-border-strong);
+    background: rgba(22, 13, 41, 0.85);
+    color: var(--kiwi-text-primary);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+.kiwi-btn-circle-action:hover {
+    background: var(--kiwi-bg-elevated);
+    border-color: var(--kiwi-accent-purple-bright);
+}
+
+.kiwi-btn-follow-primary {
+    padding: 8px 18px;
+    border-radius: var(--kiwi-radius-pill);
+    border: none;
+    background: linear-gradient(135deg, var(--kiwi-accent-purple) 0%, var(--kiwi-accent-purple-bright) 100%);
+    color: #ffffff;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: filter 0.15s ease, transform 0.15s var(--kiwi-ease);
+}
+
+.kiwi-btn-follow-primary:hover {
+    filter: brightness(1.08);
+    transform: translateY(-1px);
+}
+
+.kiwi-btn-follow-primary.is-following {
+    background: transparent;
+    border: 1px solid var(--kiwi-border-strong);
+    color: var(--kiwi-text-primary);
+}
+
+.kiwi-btn-edit-outline {
+    padding: 8px 16px;
+    border-radius: var(--kiwi-radius-pill);
+    border: 1px solid var(--kiwi-border-strong);
+    background: transparent;
+    color: var(--kiwi-text-primary);
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+.kiwi-btn-edit-outline:hover {
+    background: var(--kiwi-bg-hover);
+    border-color: var(--kiwi-accent-purple-bright);
+}
+
+/* Informações de identidade, bio, metadados e métricas */
+.kiwi-profile-identity {
+    padding: 12px 18px 14px 18px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.kiwi-display-name-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.kiwi-profile-display-name {
+    font-size: 20px;
+    font-weight: 800;
+    line-height: 1.25;
+    color: var(--kiwi-text-primary);
+}
+
+.kiwi-profile-handle {
+    font-size: 14px;
+    color: var(--kiwi-text-secondary);
+    line-height: 1.2;
+}
+
+.kiwi-profile-bio {
+    font-size: 14px;
+    line-height: 1.48;
+    color: var(--kiwi-text-primary);
+    white-space: pre-line;
+    word-break: break-word;
+}
+
+.kiwi-profile-meta-row {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 14px;
+    font-size: 13px;
+    color: var(--kiwi-text-secondary);
+}
+
+.kiwi-profile-meta-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.kiwi-profile-stats-row {
+    display: flex;
+    align-items: center;
+    gap: 18px;
+    font-size: 13px;
+}
+
+.kiwi-stat-link {
+    background: transparent;
+    border: none;
+    color: var(--kiwi-text-secondary);
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 13px;
+    padding: 0;
+}
+
+.kiwi-stat-link strong {
+    color: var(--kiwi-text-primary);
+    font-weight: 700;
+}
+
+.kiwi-stat-link:hover {
+    text-decoration: underline;
+    color: var(--kiwi-text-primary);
+}
+
+/* Abas do perfil (Posts, Respostas, Mídia, Curtidas) */
+.kiwi-profile-tabs {
+    display: flex;
+    border-bottom: 1px solid var(--kiwi-border);
+    background: var(--kiwi-bg-canvas);
+    position: sticky;
+    top: 55px;
+    z-index: 15;
+}
+
+.kiwi-profile-tab {
+    flex: 1;
+    padding: 14px 8px;
+    border: none;
+    background: transparent;
+    color: var(--kiwi-text-secondary);
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    position: relative;
+    transition: color 0.15s ease, background 0.15s ease;
+}
+
+.kiwi-profile-tab:hover {
+    background: var(--kiwi-bg-hover);
+    color: var(--kiwi-text-primary);
+}
+
+.kiwi-profile-tab.is-active {
+    color: var(--kiwi-text-primary);
+    font-weight: 700;
+}
+
+.kiwi-profile-tab.is-active::after {
+    content: "";
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 56px;
+    height: 3px;
+    border-radius: var(--kiwi-radius-pill);
+    background: var(--kiwi-accent-purple-bright);
+}
+
+/* Feed de posts / itens do perfil */
+.kiwi-profile-feed {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+}
+
+.kiwi-post-item {
+    display: flex;
+    gap: 12px;
+    padding: 14px 18px;
+    border-bottom: 1px solid var(--kiwi-border);
+    transition: background 0.15s ease;
+}
+
+.kiwi-post-item:hover {
+    background: rgba(139, 92, 246, 0.05);
+}
+
+.kiwi-post-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: var(--kiwi-bg-elevated);
+    background-size: cover;
+    background-position: center;
+    color: var(--kiwi-text-primary);
+    font-size: 14px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.kiwi-post-body {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.kiwi-post-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+}
+
+.kiwi-post-author-group {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    min-width: 0;
+    flex-wrap: wrap;
+}
+
+.kiwi-post-author-name {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--kiwi-text-primary);
+}
+
+.kiwi-post-author-handle,
+.kiwi-post-time {
+    font-size: 13px;
+    color: var(--kiwi-text-secondary);
+}
+
+.kiwi-post-text {
+    font-size: 14px;
+    line-height: 1.48;
+    color: var(--kiwi-text-primary);
+    word-break: break-word;
+}
+
+.kiwi-post-media {
+    margin-top: 4px;
+    width: 100%;
+    max-height: 300px;
+    object-fit: cover;
+    border-radius: var(--kiwi-radius-md);
+    border: 1px solid var(--kiwi-border);
+    display: block;
+}
+
+.kiwi-post-metrics-bar {
+    margin-top: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    max-width: 440px;
+}
+
+.kiwi-post-metric-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: transparent;
+    border: none;
+    color: var(--kiwi-text-secondary);
+    font-size: 12px;
+    cursor: pointer;
+    padding: 4px 8px;
+    border-radius: var(--kiwi-radius-pill);
+    transition: color 0.15s ease, background 0.15s ease;
+}
+
+.kiwi-post-metric-btn:hover {
+    color: var(--kiwi-accent-purple-bright);
+    background: var(--kiwi-bg-hover);
+}
+
+.kiwi-post-metric-btn.is-liked {
+    color: #f43f5e;
+}
+
+.kiwi-empty-tab-state {
+    padding: 40px 20px;
+    text-align: center;
+    color: var(--kiwi-text-secondary);
+    font-size: 14px;
+}
+
+/* 4. Sidebar direita (Busca, Quem seguir, Assuntos do momento) */
+.kiwi-right-sidebar {
+    background: var(--kiwi-bg-panel);
+    padding: 12px 16px 20px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    overflow-y: auto;
+    min-width: 0;
+}
+
+.kiwi-right-top-bar {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 8px;
+    min-height: 34px;
+}
+
+.kiwi-search-box {
+    position: relative;
+    display: flex;
+    align-items: center;
+    background: var(--kiwi-bg-card);
+    border: 1px solid var(--kiwi-border);
+    border-radius: var(--kiwi-radius-pill);
+    padding: 9px 14px;
+    gap: 10px;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.kiwi-search-box:focus-within {
+    border-color: var(--kiwi-accent-purple-bright);
+    box-shadow: 0 0 0 2px rgba(139, 92, 246, 0.2);
+}
+
+.kiwi-search-input {
+    flex: 1;
+    background: transparent;
+    border: none;
+    color: var(--kiwi-text-primary);
+    font-size: 13px;
+    outline: none;
+    min-width: 0;
+}
+
+.kiwi-search-input::placeholder {
+    color: var(--kiwi-text-secondary);
+}
+
+.kiwi-widget-card {
+    background: var(--kiwi-bg-card);
+    border: 1px solid var(--kiwi-border);
+    border-radius: var(--kiwi-radius-lg);
+    padding: 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.kiwi-widget-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+}
+
+.kiwi-widget-title {
+    font-size: 15px;
+    font-weight: 800;
+    color: var(--kiwi-text-primary);
+}
+
+.kiwi-widget-link {
+    background: transparent;
+    border: none;
+    color: var(--kiwi-accent-purple-bright);
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    padding: 0;
+}
+
+.kiwi-widget-link:hover {
+    text-decoration: underline;
+}
+
+.kiwi-suggest-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.kiwi-suggest-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+}
+
+.kiwi-suggest-user {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-width: 0;
+    flex: 1;
+}
+
+.kiwi-suggest-avatar {
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    background: var(--kiwi-bg-elevated);
+    background-size: cover;
+    background-position: center;
+    color: var(--kiwi-text-primary);
+    font-size: 13px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.kiwi-suggest-info {
+    min-width: 0;
+    flex: 1;
+}
+
+.kiwi-suggest-name {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--kiwi-text-primary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.kiwi-suggest-handle {
+    font-size: 12px;
+    color: var(--kiwi-text-secondary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.kiwi-suggest-follow-btn {
+    padding: 6px 14px;
+    border-radius: var(--kiwi-radius-pill);
+    border: none;
+    background: #f5f3ff;
+    color: #140c24;
+    font-size: 12px;
+    font-weight: 700;
+    cursor: pointer;
+    flex-shrink: 0;
+    transition: background 0.15s ease, color 0.15s ease, transform 0.15s var(--kiwi-ease);
+}
+
+.kiwi-suggest-follow-btn:hover {
+    background: #ffffff;
+    transform: translateY(-1px);
+}
+
+.kiwi-suggest-follow-btn.is-following {
+    background: transparent;
+    color: var(--kiwi-text-primary);
+    border: 1px solid var(--kiwi-border-strong);
+}
+
+.kiwi-trending-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.kiwi-trending-item {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding: 4px 6px;
+    border-radius: var(--kiwi-radius-sm);
+    cursor: pointer;
+    transition: background 0.15s ease;
+}
+
+.kiwi-trending-item:hover {
+    background: var(--kiwi-bg-hover);
+}
+
+.kiwi-trending-category {
+    font-size: 11px;
+    color: var(--kiwi-text-secondary);
+}
+
+.kiwi-trending-tag {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--kiwi-text-primary);
+}
+
+.kiwi-trending-count {
+    font-size: 12px;
+    color: var(--kiwi-text-muted);
+}
+
+/* Status dots reutilizáveis */
+.kiwi-status-dot {
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+    display: inline-block;
+    flex-shrink: 0;
+}
+
+.kiwi-status-dot.is-online {
+    background: var(--kiwi-online-green);
+}
+
+.kiwi-status-dot.is-away {
+    background: var(--kiwi-away-amber);
+}
+
+.kiwi-status-dot.is-offline {
+    background: var(--kiwi-offline-slate);
+}
+
+/* Badge e destaque ouro para AkiiraPW / admin */
+.kiwi-gold-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 2px 7px;
+    border-radius: var(--kiwi-radius-pill);
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: #261900;
+    background: linear-gradient(135deg, #fde047 0%, #f59e0b 100%);
+}
+
+/* Responsividade desktop intermediária */
+@media (max-width: 1180px) {
+    .kiwi-profile-shell {
+        grid-template-columns: 60px 210px minmax(420px, 1fr) 265px;
+    }
+}
