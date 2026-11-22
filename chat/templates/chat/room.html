@@ -10,6 +10,243 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700;900&family=Fredoka:wght@600;700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="{% static 'css/room.css' %}">
+<style id="kiwi-mobile-responsive-style">
+/* Adaptação Mobile para o Kiwi Chat (.kiwi-app-shell) */
+@media (max-width: 768px) {
+  :root {
+    --m-rail-w: 64px;
+    --m-bottom-h: 56px;
+  }
+
+  body {
+    overflow: hidden;
+    background: #0b0714;
+  }
+
+  .kiwi-app-shell {
+    display: flex;
+    width: 100%;
+    height: 100dvh;
+    overflow: hidden;
+    position: relative;
+    background:
+      radial-gradient(circle at 82% 76%, rgba(124, 58, 237, 0.28), transparent 55%),
+      #0b0714;
+  }
+
+  /* Barra lateral esquerda de servidores */
+  .server-rail {
+    width: var(--m-rail-w);
+    flex-shrink: 0;
+    background: rgba(12, 8, 22, 0.96);
+    border-right: 1px solid rgba(167, 139, 250, 0.16);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 0 calc(var(--m-bottom-h) + 24px + env(safe-area-inset-bottom));
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    z-index: 12;
+  }
+
+  /* Coluna principal ao lado da rail (menu, canais e painel do utilizador) */
+  .sidebar-left {
+    flex: 1;
+    min-width: 0;
+    width: calc(100% - var(--m-rail-w));
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    padding-bottom: calc(var(--m-bottom-h) + 84px + env(safe-area-inset-bottom));
+    background: transparent;
+  }
+
+  .sidebar-right {
+    display: none;
+  }
+
+  /* Por padrão no mobile, esconde a área de chat/perfil em tela cheia até abrir */
+  body:not(.mobile-chat-open) .chat-area {
+    display: none;
+  }
+
+  /* Quando abrir o chat / perfil / DM no mobile */
+  body.mobile-chat-open .server-rail,
+  body.mobile-chat-open .sidebar-left {
+    display: none;
+  }
+
+  body.mobile-chat-open .chat-area {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    height: 100dvh;
+    min-width: 0;
+    padding-bottom: calc(var(--m-bottom-h) + 16px + env(safe-area-inset-bottom));
+  }
+
+  /* Cabeçalho do chat / vista ativa no mobile */
+  .chat-header {
+    padding: 10px 12px;
+    gap: 8px;
+    flex-wrap: wrap;
+    background: rgba(18, 11, 33, 0.92);
+    backdrop-filter: blur(10px);
+    border-bottom: 1px solid rgba(167, 139, 250, 0.16);
+  }
+
+  .header-title-group {
+    min-width: 0;
+    flex: 1;
+    gap: 8px;
+  }
+
+  #header-main-title {
+    font-size: 15px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  #header-sub-label {
+    display: none;
+  }
+
+  .header-actions {
+    gap: 6px;
+    flex-shrink: 0;
+  }
+
+  #header-loja-link {
+    display: none;
+  }
+
+  /* Perfil estilo timeline (X/Twitter) no mobile */
+  #kiwi-profile-timeline-view .kiwi-x-topbar {
+    padding: 10px 12px;
+    gap: 8px;
+  }
+
+  #kiwi-profile-timeline-view .kiwi-x-banner {
+    height: 145px;
+  }
+
+  #kiwi-profile-timeline-view .kiwi-x-avatar {
+    width: 78px;
+    height: 78px;
+    margin-top: -39px;
+    font-size: 28px;
+  }
+
+  #kiwi-profile-timeline-view .kiwi-x-profile-body {
+    padding: 0 14px 12px;
+  }
+
+  #kiwi-profile-timeline-view .kiwi-x-subtabs {
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+
+  #kiwi-profile-timeline-view .kiwi-x-subtabs::-webkit-scrollbar {
+    display: none;
+  }
+
+  #kiwi-profile-timeline-view .kiwi-x-subtab {
+    flex: 1 0 auto;
+    padding: 11px 12px;
+    font-size: 13px;
+  }
+
+  /* DM dividida: empilha lista e conversa no mobile para não espremer */
+  .kiwi-dm-split-shell {
+    flex-direction: column;
+    height: 100%;
+    overflow-y: auto;
+  }
+
+  .kiwi-dm-left-pane {
+    width: 100%;
+    max-width: none;
+    max-height: 44%;
+    border-right: none;
+    border-bottom: 1px solid var(--kiwi-border);
+  }
+
+  .kiwi-dm-right-pane {
+    flex: 1;
+    min-height: 260px;
+  }
+
+  /* Popover de perfil e modais em telas pequenas */
+  .kiwi-discord-popover {
+    left: 10px;
+    right: 10px;
+    top: 12px;
+    bottom: calc(var(--m-bottom-h) + 18px + env(safe-area-inset-bottom));
+    width: auto;
+    max-width: none;
+  }
+
+  .aesthetic-profile-card {
+    width: min(94vw, 440px) !important;
+    max-height: 86dvh;
+  }
+
+  /* Barra inferior fixa estilo pílula (Mensagens | Perfil) */
+  .kiwi-mobile-bottom-pill {
+    position: fixed;
+    left: 10px;
+    right: 10px;
+    bottom: calc(8px + env(safe-area-inset-bottom));
+    height: var(--m-bottom-h);
+    display: flex;
+    align-items: center;
+    background: rgba(24, 14, 46, 0.94);
+    backdrop-filter: blur(14px);
+    border: 1px solid rgba(168, 85, 247, 0.48);
+    border-radius: 999px;
+    box-shadow:
+      0 10px 28px rgba(0, 0, 0, 0.7),
+      0 0 18px rgba(124, 58, 237, 0.28);
+    z-index: 45;
+    overflow: hidden;
+  }
+
+  .kiwi-mobile-bottom-pill button {
+    flex: 1;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    background: transparent;
+    border: none;
+    color: var(--kiwi-text-primary, #f5f3ff);
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+  }
+
+  .kiwi-mobile-bottom-pill button + button {
+    border-left: 1px solid rgba(255, 255, 255, 0.14);
+  }
+
+  .kiwi-mobile-bottom-pill button.active {
+    background: rgba(124, 58, 237, 0.26);
+    color: #ffffff;
+  }
+}
+
+/* Esconde a barra inferior do celular em telas grandes */
+@media (min-width: 769px) {
+  .kiwi-mobile-bottom-pill {
+    display: none;
+  }
+}
+</style>
 </head>
 <body>
     <script id="kiwi-username-data" type="application/json">null</script>
@@ -4265,6 +4502,35 @@
             renderSidebarSavedFriends();
         });
     </script>
+<nav class="kiwi-mobile-bottom-pill" aria-label="Navegação rápida mobile">
+    <button type="button" id="mobile-pill-mensagens" onclick="document.getElementById('nav-tab-mensagens')?.click()">
+        <span>💬</span>
+        <span>Mensagens</span>
+    </button>
+    <button type="button" id="mobile-pill-perfil" onclick="document.getElementById('nav-tab-perfil')?.click()">
+        <span>👤</span>
+        <span>Perfil</span>
+    </button>
+</nav>
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    const pillMsg = document.getElementById("mobile-pill-mensagens");
+    const pillPerfil = document.getElementById("mobile-pill-perfil");
+    const navMsg = document.getElementById("nav-tab-mensagens");
+    const navPerfil = document.getElementById("nav-tab-perfil");
+
+    function syncBottomPillState() {
+        const isMsgActive = navMsg && navMsg.classList.contains("active");
+        const isPerfilActive = navPerfil && navPerfil.classList.contains("active");
+        if (pillMsg) pillMsg.classList.toggle("active", Boolean(isMsgActive));
+        if (pillPerfil) pillPerfil.classList.toggle("active", Boolean(isPerfilActive));
+    }
+
+    if (navMsg) navMsg.addEventListener("click", () => setTimeout(syncBottomPillState, 0));
+    if (navPerfil) navPerfil.addEventListener("click", () => setTimeout(syncBottomPillState, 0));
+    syncBottomPillState();
+});
+</script>
 </body>
 
 </html>

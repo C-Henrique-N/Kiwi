@@ -1,92 +1,235 @@
-.app-layout {
-  display: flex;
-  height: 100dvh;
-  width: 100%;
-  overflow: hidden;
-  background: #121214;
-  color: #f2f3f5;
-  -webkit-tap-highlight-color: transparent;
-}
-
-.server-rail {
-  width: 72px;
-  flex-shrink: 0;
-  background: #0b0b0d;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 10px;
-  padding: 12px 0;
-  overflow-y: auto;
-  overscroll-behavior: contain;
-}
-
-.sidebar-channels {
-  width: 260px;
-  flex-shrink: 0;
-  background: #18181b;
-  display: flex;
-  flex-direction: column;
-  overflow-y: auto;
-  overscroll-behavior: contain;
-}
-
-.chat-main {
-  flex: 1;
-  min-width: 0;
-  display: flex;
-  flex-direction: column;
-  background: #1e1f22;
-}
-
-.members-panel {
-  width: 240px;
-  flex-shrink: 0;
-  background: #18181b;
-  overflow-y: auto;
-  overscroll-behavior: contain;
-}
-
-/* Em telas de celular */
+/* Adaptação Mobile para o Kiwi Chat (.kiwi-app-shell) */
 @media (max-width: 768px) {
-  /* Por padrão no mobile: mostra barra de servidores + lista de canais */
-  .members-panel {
+  :root {
+    --m-rail-w: 64px;
+    --m-bottom-h: 56px;
+  }
+
+  body {
+    overflow: hidden;
+    background: #0b0714;
+  }
+
+  .kiwi-app-shell {
+    display: flex;
+    width: 100%;
+    height: 100dvh;
+    overflow: hidden;
+    position: relative;
+    background:
+      radial-gradient(circle at 82% 76%, rgba(124, 58, 237, 0.28), transparent 55%),
+      #0b0714;
+  }
+
+  /* Barra lateral esquerda de servidores */
+  .server-rail {
+    width: var(--m-rail-w);
+    flex-shrink: 0;
+    background: rgba(12, 8, 22, 0.96);
+    border-right: 1px solid rgba(167, 139, 250, 0.16);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 0 calc(var(--m-bottom-h) + 24px + env(safe-area-inset-bottom));
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    z-index: 12;
+  }
+
+  /* Coluna principal ao lado da rail (menu, canais e painel do utilizador) */
+  .sidebar-left {
+    flex: 1;
+    min-width: 0;
+    width: calc(100% - var(--m-rail-w));
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    padding-bottom: calc(var(--m-bottom-h) + 84px + env(safe-area-inset-bottom));
+    background: transparent;
+  }
+
+  .sidebar-right {
     display: none;
   }
 
-  .sidebar-channels {
-    width: calc(100% - 72px);
+  /* Por padrão no mobile, esconde a área de chat/perfil em tela cheia até abrir */
+  body:not(.mobile-chat-open) .chat-area {
+    display: none;
+  }
+
+  /* Quando abrir o chat / perfil / DM no mobile */
+  body.mobile-chat-open .server-rail,
+  body.mobile-chat-open .sidebar-left {
+    display: none;
+  }
+
+  body.mobile-chat-open .chat-area {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    height: 100dvh;
+    min-width: 0;
+    padding-bottom: calc(var(--m-bottom-h) + 16px + env(safe-area-inset-bottom));
+  }
+
+  /* Cabeçalho do chat / vista ativa no mobile */
+  .chat-header {
+    padding: 10px 12px;
+    gap: 8px;
+    flex-wrap: wrap;
+    background: rgba(18, 11, 33, 0.92);
+    backdrop-filter: blur(10px);
+    border-bottom: 1px solid rgba(167, 139, 250, 0.16);
+  }
+
+  .header-title-group {
+    min-width: 0;
+    flex: 1;
+    gap: 8px;
+  }
+
+  #header-main-title {
+    font-size: 15px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  #header-sub-label {
+    display: none;
+  }
+
+  .header-actions {
+    gap: 6px;
+    flex-shrink: 0;
+  }
+
+  #header-loja-link {
+    display: none;
+  }
+
+  /* Perfil estilo timeline (X/Twitter) no mobile */
+  #kiwi-profile-timeline-view .kiwi-x-topbar {
+    padding: 10px 12px;
+    gap: 8px;
+  }
+
+  #kiwi-profile-timeline-view .kiwi-x-banner {
+    height: 145px;
+  }
+
+  #kiwi-profile-timeline-view .kiwi-x-avatar {
+    width: 78px;
+    height: 78px;
+    margin-top: -39px;
+    font-size: 28px;
+  }
+
+  #kiwi-profile-timeline-view .kiwi-x-profile-body {
+    padding: 0 14px 12px;
+  }
+
+  #kiwi-profile-timeline-view .kiwi-x-subtabs {
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+
+  #kiwi-profile-timeline-view .kiwi-x-subtabs::-webkit-scrollbar {
+    display: none;
+  }
+
+  #kiwi-profile-timeline-view .kiwi-x-subtab {
+    flex: 1 0 auto;
+    padding: 11px 12px;
+    font-size: 13px;
+  }
+
+  /* DM dividida: empilha lista e conversa no mobile para não espremer */
+  .kiwi-dm-split-shell {
+    flex-direction: column;
+    height: 100%;
+    overflow-y: auto;
+  }
+
+  .kiwi-dm-left-pane {
+    width: 100%;
+    max-width: none;
+    max-height: 44%;
+    border-right: none;
+    border-bottom: 1px solid var(--kiwi-border);
+  }
+
+  .kiwi-dm-right-pane {
+    flex: 1;
+    min-height: 260px;
+  }
+
+  /* Popover de perfil e modais em telas pequenas */
+  .kiwi-discord-popover {
+    left: 10px;
+    right: 10px;
+    top: 12px;
+    bottom: calc(var(--m-bottom-h) + 18px + env(safe-area-inset-bottom));
+    width: auto;
     max-width: none;
   }
 
-  .app-layout:not(.chat-open) .chat-main {
-    display: none;
+  .aesthetic-profile-card {
+    width: min(94vw, 440px) !important;
+    max-height: 86dvh;
   }
 
-  /* Quando o usuário abrir um chat: esconde servidores e canais para dar tela cheia ao chat */
-  .app-layout.chat-open .server-rail,
-  .app-layout.chat-open .sidebar-channels {
-    display: none;
-  }
-
-  .app-layout.chat-open .chat-main {
-    display: flex;
-    width: 100%;
-    padding-bottom: env(safe-area-inset-bottom);
-  }
-
-  /* Painel de membros como gaveta lateral sobreposta ao abrir (adicione .members-open em .app-layout) */
-  .app-layout.members-open .members-panel {
-    display: flex;
-    flex-direction: column;
+  /* Barra inferior fixa estilo pílula (Mensagens | Perfil) */
+  .kiwi-mobile-bottom-pill {
     position: fixed;
-    top: 0;
-    right: 0;
-    bottom: 0;
-    width: min(82vw, 300px);
-    z-index: 40;
-    box-shadow: -8px 0 24px rgba(0, 0, 0, 0.55);
-    padding-top: env(safe-area-inset-top);
-    padding-bottom: env(safe-area-inset-bottom);
+    left: 10px;
+    right: 10px;
+    bottom: calc(8px + env(safe-area-inset-bottom));
+    height: var(--m-bottom-h);
+    display: flex;
+    align-items: center;
+    background: rgba(24, 14, 46, 0.94);
+    backdrop-filter: blur(14px);
+    border: 1px solid rgba(168, 85, 247, 0.48);
+    border-radius: 999px;
+    box-shadow:
+      0 10px 28px rgba(0, 0, 0, 0.7),
+      0 0 18px rgba(124, 58, 237, 0.28);
+    z-index: 45;
+    overflow: hidden;
+  }
+
+  .kiwi-mobile-bottom-pill button {
+    flex: 1;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    background: transparent;
+    border: none;
+    color: var(--kiwi-text-primary, #f5f3ff);
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+  }
+
+  .kiwi-mobile-bottom-pill button + button {
+    border-left: 1px solid rgba(255, 255, 255, 0.14);
+  }
+
+  .kiwi-mobile-bottom-pill button.active {
+    background: rgba(124, 58, 237, 0.26);
+    color: #ffffff;
+  }
+}
+
+/* Esconde a barra inferior do celular em telas grandes */
+@media (min-width: 769px) {
+  .kiwi-mobile-bottom-pill {
+    display: none;
   }
 }
