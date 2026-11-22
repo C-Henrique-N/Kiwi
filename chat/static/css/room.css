@@ -2663,3 +2663,159 @@ svg {
         max-width: none;
     }
 }
+
+/* === ABA / TELA DE POSTAGEM E COMENTÁRIOS (ESTILO X) === */
+#kiwi-post-thread-view {
+    display: none;
+    flex: 1 1 auto;
+    flex-direction: column;
+    min-height: 0;
+    width: 100%;
+    background: var(--kiwi-bg-canvas);
+    color: var(--kiwi-text-primary);
+    overflow: hidden;
+}
+
+#kiwi-post-thread-view.active {
+    display: flex;
+}
+
+.kiwi-thread-topbar {
+    position: sticky;
+    top: 0;
+    z-index: 15;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 10px 16px;
+    background: rgba(11, 7, 20, 0.9);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--kiwi-border);
+    flex-shrink: 0;
+}
+
+.kiwi-thread-topbar-left {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    min-width: 0;
+}
+
+.kiwi-thread-title {
+    font-size: 18px;
+    font-weight: 800;
+    color: var(--kiwi-text-primary);
+}
+
+.kiwi-thread-scroll {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-y: auto;
+    overflow-x: hidden;
+    -webkit-overflow-scrolling: touch;
+}
+
+.kiwi-thread-main-post {
+    padding: 14px 16px;
+    border-bottom: 1px solid var(--kiwi-border);
+}
+
+.kiwi-thread-author-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 12px;
+}
+
+.kiwi-thread-display-name {
+    font-size: 15px;
+    font-weight: 800;
+    color: var(--kiwi-text-primary);
+    line-height: 1.2;
+}
+
+.kiwi-thread-handle {
+    font-size: 13px;
+    color: var(--kiwi-text-muted);
+}
+
+.kiwi-thread-post-text {
+    font-size: 15px;
+    line-height: 1.5;
+    color: var(--kiwi-text-primary);
+    white-space: pre-wrap;
+    word-break: break-word;
+}
+
+.kiwi-thread-meta-line {
+    margin-top: 12px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--kiwi-border);
+    font-size: 13px;
+    color: var(--kiwi-text-muted);
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.kiwi-thread-meta-line strong {
+    color: var(--kiwi-text-primary);
+    font-weight: 700;
+}
+
+.kiwi-thread-reply-card {
+    display: flex;
+    gap: 12px;
+    padding: 14px 16px;
+    border-bottom: 1px solid var(--kiwi-border);
+    transition: background 0.15s ease;
+}
+
+.kiwi-thread-reply-card:hover {
+    background: rgba(139, 92, 246, 0.05);
+}
+
+.kiwi-thread-reply-bar-wrap {
+    padding: 10px 14px;
+    background: rgba(22, 13, 41, 0.96);
+    border-top: 1px solid var(--kiwi-border);
+    flex-shrink: 0;
+}
+
+.kiwi-thread-reply-form {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 6px 10px 6px 14px;
+    border-radius: var(--kiwi-radius-pill);
+    background: var(--kiwi-bg-card);
+    border: 1px solid var(--kiwi-border-strong);
+}
+
+.kiwi-thread-reply-input {
+    flex: 1;
+    min-width: 0;
+    border: none;
+    outline: none;
+    background: transparent;
+    color: var(--kiwi-text-primary);
+    font-size: 14px;
+}
+
+.kiwi-thread-reply-submit {
+    padding: 7px 16px;
+    border-radius: var(--kiwi-radius-pill);
+    border: none;
+    background: var(--kiwi-accent-purple);
+    color: #ffffff;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+    flex-shrink: 0;
+}
+
+.kiwi-thread-reply-submit:hover {
+    background: var(--kiwi-accent-purple-bright);
+}

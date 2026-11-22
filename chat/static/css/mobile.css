@@ -288,6 +288,11 @@
     white-space: nowrap;
   }
 
+  #kiwi-post-thread-view .kiwi-thread-reply-bar-wrap {
+    padding-bottom: calc(var(--m-bottom-h) + 18px + env(safe-area-inset-bottom));
+  }
+
+
   /* DM dividida: empilha lista e conversa no mobile para não espremer */
   .kiwi-dm-split-shell {
     display: flex;
