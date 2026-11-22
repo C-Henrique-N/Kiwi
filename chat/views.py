@@ -1,1358 +1,822 @@
 import json
 import os
-from urllib.parse import urlparse
-
-from asgiref.sync import async_to_sync
-from channels.layers import get_channel_layer
-from django.contrib import messages
+import re
+from django.conf import settings
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
-from django.db import models
-from django.http import Http404, JsonResponse
+from django.core.files.base import ContentFile
+from django.core.files.storage import default_storage
+from django.db import IntegrityError
+from django.db.models import Q
+from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
-from django.utils.http import url_has_allowed_host_and_scheme
-from django.views.decorators.http import require_POST
-
-from .consumers import (
-    build_channel_group_name,
-    build_dm_group_name,
-    build_user_personal_group_name,
-    sanitize_group_token,
-)
+from django.utils import timezone
+from django.views.decorators.csrf import ensure_csrf_cookie
+from django.views.decorators.http import require_GET, require_POST
 from .models import (
     Channel,
+    DirectMessage,
     FriendRequest,
+    Friendship,
     Message,
-    PrivateMessage,
-    SavedMusic,
+    MessageReaction,
+    Profile,
     Server,
-    ServerMember,
-    ServerRole,
-    UserProfile,
 )
 
-IMAGE_EXTS = {'.png', '.jpg', '.jpeg', '.gif', '.webp', '.heic', '.heif', '.avif'}
-AUDIO_EXTS = {'.mp3', '.wav', '.ogg', '.webm', '.m4a'}
-DOC_EXTS = {'.pdf', '.doc', '.docx', '.txt', '.zip', '.rar', '.csv', '.xls', '.xlsx', '.ppt', '.pptx'}
-MAX_FILE_SIZE = 10 * 1024 * 1024  # 10 MB
+ADMIN_USERNAME = "AkiiraPW"
 
 STANDARD_ACCENT_COLORS = {
-    '#ffffff',
-    '#2b2d31',
-    '#ff9de2',
-    '#e74c3c',
-    '#23a55a',
-    '#5865f2',
-    '#95a5a6',
-}
-ADMIN_ACCENT_COLORS = STANDARD_ACCENT_COLORS | {'#d4af37'}
-
-ALLOWED_FRAME_EFFECTS = {
-    'none',
-    'gold_glow_frame',
-    'neon_ring',
-    'galaxy_ring',
-    'fire_ring',
-    'ufo_orbit',
-    'helmet_ring',
-    'sakura_hearts',
-    'cat_ears',
-    'lightning_ring',
-    'rain_drops',
-    'sparks_burst',
-    'bubbles_ring',
-    'thunder_purple',
-    'ghost_pop',
-    'profile_sakura',
-    'profile_aurora',
-    'profile_stars',
-    'profile_cats',
-    'profile_butterflies',
-    'profile_window',
-    'profile_moon',
+    "#7c3aed",
+    "#ffffff",
+    "#2b2d31",
+    "#ff9de2",
+    "#e74c3c",
+    "#23a55a",
+    "#5865f2",
+    "#95a5a6",
 }
 
+ALLOWED_STATUSES = {"online", "idle", "dnd", "offline"}
+ALLOWED_NAME_EFFECTS = {"none", "neon", "gradient", "gold"}
+ALLOWED_AVATAR_FRAMES = {"none", "gold_crown", "neon_ring", "kiwi_leaf"}
 
-def is_admin_user(user):
-    return bool(user and user.is_authenticated and (user.is_staff or user.is_superuser))
 
-
-def is_akiira_admin(user):
-    return bool(
-        user
-        and user.is_authenticated
-        and user.username.lower() == 'akiirapw'
-        and (user.is_staff or user.is_superuser)
+def _is_kiwi_admin(user):
+    if not user or not user.is_authenticated:
+        return False
+    return (
+        user.is_superuser
+        or (user.username or "").strip().lower() == ADMIN_USERNAME.lower()
     )
 
 
-def are_friends(user1, user2):
-    return FriendRequest.are_friends(user1, user2)
+def _format_user_label(user):
+    try:
+        profile = user.profile
+        display = (profile.display_name or "").strip()
+        if display:
+            return display
+    except Exception:
+        pass
+    return user.username
 
 
-def _get_accessible_server_or_404(user, server_id):
-    qs = Server.objects.filter(id=server_id)
-    if not is_admin_user(user):
-        qs = qs.filter(models.Q(members=user) | models.Q(owner=user)).distinct()
-    return get_object_or_404(qs)
+def _sanitize_accent_color(color_value, is_admin=False):
+    raw = (color_value or "").strip()
+    if raw.lower() == "#ffd700" and not is_admin:
+        return "#7c3aed"
+    if re.match(r"^#[0-9a-fA-F]{6}$", raw):
+        lowered = raw.lower()
+        if lowered in STANDARD_ACCENT_COLORS or is_admin:
+            return lowered
+    return "#7c3aed"
 
 
-def _user_can_manage_server(user, server):
-    if not user or not user.is_authenticated or not server:
+def _sanitize_status(status_value):
+    val = (status_value or "").strip().lower()
+    return val if val in ALLOWED_STATUSES else "online"
+
+
+def _sanitize_name_effect(effect_value, is_admin=False):
+    val = (effect_value or "").strip().lower()
+    if val not in ALLOWED_NAME_EFFECTS:
+        return "none"
+    if val == "gold" and not is_admin:
+        return "none"
+    return val
+
+
+def _sanitize_avatar_frame(frame_value, is_admin=False):
+    val = (frame_value or "").strip().lower()
+    if val not in ALLOWED_AVATAR_FRAMES:
+        return "none"
+    if val == "gold_crown" and not is_admin:
+        return "none"
+    return val
+
+
+def _safe_media_url(field_file):
+    if not field_file:
+        return ""
+    try:
+        return field_file.url
+    except Exception:
+        return ""
+
+
+def _save_base64_media(data_url, prefix="upload"):
+    if not data_url or not isinstance(data_url, str):
+        return None
+    if not data_url.startswith("data:"):
+        return None
+    match = re.match(
+        r"^data:([a-zA-Z0-9.+/-]+);base64,([A-Za-z0-9+/=\r\n]+)$",
+        data_url,
+    )
+    if not match:
+        return None
+    mime_type = match.group(1).lower()
+    b64_data = match.group(2)
+
+    ext_map = {
+        "image/png": "png",
+        "image/jpeg": "jpg",
+        "image/jpg": "jpg",
+        "image/webp": "webp",
+        "image/gif": "gif",
+        "audio/mpeg": "mp3",
+        "audio/mp3": "mp3",
+        "audio/ogg": "ogg",
+        "audio/wav": "wav",
+        "audio/webm": "webm",
+    }
+    ext = ext_map.get(mime_type)
+    if not ext:
+        return None
+
+    try:
+        import base64
+
+        raw_bytes = base64.b64decode(b64_data, validate=True)
+    except Exception:
+        return None
+
+    max_bytes = 8 * 1024 * 1024
+    if len(raw_bytes) > max_bytes:
+        return None
+
+    filename = f"{prefix}_{timezone.now().strftime('%Y%m%d_%H%M%S_%f')}.{ext}"
+    rel_path = os.path.join("kiwi_media", filename)
+    saved_path = default_storage.save(rel_path, ContentFile(raw_bytes))
+    return default_storage.url(saved_path)
+
+
+def _get_or_create_profile(user):
+    profile, _ = Profile.objects.get_or_create(user=user)
+    is_admin = _is_kiwi_admin(user)
+    changed = False
+
+    if is_admin and not profile.is_admin_badge:
+        profile.is_admin_badge = True
+        changed = True
+    if not profile.accent_color:
+        profile.accent_color = "#7c3aed"
+        changed = True
+    if changed:
+        profile.save()
+    return profile
+
+
+def _serialize_profile(user, profile):
+    is_admin = _is_kiwi_admin(user) or bool(getattr(profile, "is_admin_badge", False))
+    avatar_url = _safe_media_url(getattr(profile, "avatar", None))
+    banner_url = _safe_media_url(getattr(profile, "banner", None))
+    music_url = _safe_media_url(getattr(profile, "music_file", None))
+    music_cover_url = _safe_media_url(getattr(profile, "music_cover", None))
+
+    accent = _sanitize_accent_color(getattr(profile, "accent_color", "#7c3aed"), is_admin=is_admin)
+    name_effect = _sanitize_name_effect(getattr(profile, "name_effect", "none"), is_admin=is_admin)
+    avatar_frame = _sanitize_avatar_frame(getattr(profile, "avatar_frame", "none"), is_admin=is_admin)
+
+    return {
+        "username": user.username,
+        "display_name": (getattr(profile, "display_name", "") or "").strip() or user.username,
+        "bio": getattr(profile, "bio", "") or "",
+        "pronouns": getattr(profile, "pronouns", "") or "",
+        "status": _sanitize_status(getattr(profile, "status", "online")),
+        "custom_status": getattr(profile, "custom_status", "") or "",
+        "accent_color": accent,
+        "name_effect": name_effect,
+        "avatar_frame": avatar_frame,
+        "avatar_url": avatar_url,
+        "banner_url": banner_url,
+        "music_title": getattr(profile, "music_title", "") or "",
+        "music_artist": getattr(profile, "music_artist", "") or "",
+        "music_url": music_url,
+        "music_cover_url": music_cover_url,
+        "is_admin": is_admin,
+    }
+
+
+def _are_friends(user_a, user_b):
+    if not user_a or not user_b or user_a.id == user_b.id:
         return False
-    if server.owner_id == user.id or is_admin_user(user):
-        return True
-    membership = ServerMember.objects.filter(server=server, user=user).select_related('role').first()
-    return bool(membership and membership.role and membership.role.can_manage_channels)
+    return Friendship.objects.filter(
+        Q(user1=user_a, user2=user_b) | Q(user1=user_b, user2=user_a)
+    ).exists()
 
 
-def _user_can_kick_members(user, server):
-    if not user or not user.is_authenticated or not server:
-        return False
-    if server.owner_id == user.id or is_admin_user(user):
-        return True
-    membership = ServerMember.objects.filter(server=server, user=user).select_related('role').first()
-    return bool(membership and membership.role and membership.role.can_kick_members)
-
-
-def _user_can_manage_roles(user, server):
-    if not user or not user.is_authenticated or not server:
-        return False
-    if server.owner_id == user.id or is_admin_user(user):
-        return True
-    membership = ServerMember.objects.filter(server=server, user=user).select_related('role').first()
-    return bool(membership and membership.role and membership.role.can_manage_roles)
-
-
-def _sanitize_external_url(raw_url):
-    val = (raw_url or '').strip()
-    if not val:
-        return ''
-    if val.startswith('/media/'):
-        return val
-    parsed = urlparse(val)
-    if parsed.scheme in {'http', 'https'} and parsed.netloc:
-        return val
-    return ''
-
-
-def _sanitize_accent_color(color_value, user, fallback='#ff9de2'):
-    raw = (color_value or '').strip().lower()
-    allowed = ADMIN_ACCENT_COLORS if is_admin_user(user) else STANDARD_ACCENT_COLORS
-    return raw if raw in allowed else fallback
-
-
-def _sanitize_frame_effect(frame_value, user):
-    if not is_akiira_admin(user):
-        return 'none'
-    raw = (frame_value or 'none').strip().lower()
-    return raw if raw in ALLOWED_FRAME_EFFECTS else 'none'
-
-
-def _get_accepted_friend_users(user):
-    accepted = FriendRequest.objects.filter(
-        (models.Q(sender=user) | models.Q(receiver=user))
-        & models.Q(status='accepted')
-    ).select_related('sender', 'receiver', 'sender__profile', 'receiver__profile')
-
+def _get_friends_list(user):
+    friendships = Friendship.objects.filter(Q(user1=user) | Q(user2=user)).select_related(
+        "user1", "user2", "user1__profile", "user2__profile"
+    )
     friends = []
     seen_ids = set()
-    for req in accepted:
-        friend = req.receiver if req.sender_id == user.id else req.sender
-        if friend.id not in seen_ids:
-            seen_ids.add(friend.id)
-            UserProfile.objects.get_or_create(user=friend)
-            friends.append(friend)
+    for fs in friendships:
+        other = fs.user2 if fs.user1_id == user.id else fs.user1
+        if other.id in seen_ids:
+            continue
+        seen_ids.add(other.id)
+        p = _get_or_create_profile(other)
+        friends.append(_serialize_profile(other, p))
     return friends
 
 
-def _notify_user_group(user_id, event_type, payload, username=None):
-    channel_layer = get_channel_layer()
-    if not channel_layer:
-        return
-    resolved_username = username
-    if not resolved_username:
-        u = User.objects.filter(pk=int(user_id)).only('username').first()
-        resolved_username = u.username if u else str(user_id)
-    group_name = build_user_personal_group_name(resolved_username)
-    async_to_sync(channel_layer.group_send)(
-        group_name,
-        {
-            'type': 'friend_event',
-            'event': event_type,
-            'payload': payload,
-        },
+def _ensure_default_workspace(user):
+    server, _ = Server.objects.get_or_create(
+        name="Kiwi Lounge",
+        defaults={"owner": user},
     )
+    if not server.owner_id:
+        server.owner = user
+        server.save()
+    server.members.add(user)
+
+    for ch_name in ("geral", "música", "clips"):
+        Channel.objects.get_or_create(server=server, name=ch_name)
+
+    servers_qs = Server.objects.filter(members=user).prefetch_related("channels").order_by("id")
+    if not servers_qs.exists():
+        servers_qs = Server.objects.prefetch_related("channels").order_by("id")
+    return list(servers_qs)
 
 
-def _parse_request_data(request):
-    if request.content_type and 'application/json' in request.content_type:
-        return json.loads(request.body or '{}')
-    return request.POST
+def _serialize_message(msg, current_user=None):
+    sender = msg.sender
+    profile = _get_or_create_profile(sender)
+    sender_data = _serialize_profile(sender, profile)
 
-
-def _build_music_payload(request, profile):
-    audio_src = ''
-    if profile.music_audio_file:
-        audio_src = request.build_absolute_uri(profile.music_audio_file.url)
-    elif profile.music_audio_url:
-        audio_src = profile.music_audio_url
-
-    cover_src = ''
-    if profile.music_cover_file:
-        cover_src = request.build_absolute_uri(profile.music_cover_file.url)
-    elif profile.music_cover_url:
-        cover_src = profile.music_cover_url
+    reactions_summary = {}
+    for rx in msg.reactions.all():
+        emoji = rx.emoji
+        if emoji not in reactions_summary:
+            reactions_summary[emoji] = {"emoji": emoji, "count": 0, "me": False}
+        reactions_summary[emoji]["count"] += 1
+        if current_user and rx.user_id == current_user.id:
+            reactions_summary[emoji]["me"] = True
 
     return {
-        'music_url': profile.music_url or '',
-        'music_audio_url': audio_src,
-        'music_cover_url': cover_src,
+        "id": msg.id,
+        "channel_id": msg.channel_id,
+        "sender": sender.username,
+        "display_name": sender_data["display_name"],
+        "avatar_url": sender_data["avatar_url"],
+        "accent_color": sender_data["accent_color"],
+        "is_admin": sender_data["is_admin"],
+        "message": msg.content or "",
+        "text": msg.content or "",
+        "attachment_url": _safe_media_url(msg.attachment),
+        "attachment_name": os.path.basename(msg.attachment.name) if msg.attachment else "",
+        "attachment_type": msg.attachment_type or "",
+        "timestamp": timezone.localtime(msg.created_at).strftime("%H:%M"),
+        "time": timezone.localtime(msg.created_at).strftime("%H:%M"),
+        "reactions": list(reactions_summary.values()),
     }
 
 
-def _channel_ws_tokens(channel):
-    if not channel:
-        return ('home', 'geral')
-    srv_token = sanitize_group_token(str(channel.server_id), 'home')
-    ch_token = sanitize_group_token(channel.name, 'geral')
-    return (srv_token, ch_token)
-
-
-def _serialize_server_member(request, server, membership):
-    u = membership.user
-    prof, _ = UserProfile.objects.get_or_create(user=u)
-    role = membership.role
-    is_owner = (u.id == server.owner_id)
-    akiira_admin = is_akiira_admin(u)
+def _serialize_dm(dm, current_user=None):
+    sender = dm.sender
+    recipient = dm.recipient
+    p_sender = _get_or_create_profile(sender)
+    d_sender = _serialize_profile(sender, p_sender)
 
     return {
-        'id': u.id,
-        'username': u.username,
-        'is_owner': is_owner,
-        'is_admin': is_admin_user(u),
-        'is_akiira_admin': akiira_admin,
-        'avatarUrl': request.build_absolute_uri(prof.avatar.url) if prof.avatar else '',
-        'bannerUrl': request.build_absolute_uri(prof.banner.url) if prof.banner else '',
-        'bubble': prof.bubble or '',
-        'pronouns': prof.pronouns or '',
-        'bio': prof.bio or '',
-        'location': getattr(prof, 'location', '') or '',
-        'spotify_song': prof.spotify_song or '',
-        'spotify_artist': prof.spotify_artist or '',
-        'accent_color': _sanitize_accent_color(prof.accent_color, u, fallback=prof.accent_color or '#ff9de2'),
-        'frame_effect': _sanitize_frame_effect(getattr(prof, 'frame_effect', 'none'), u),
-        'profile_glow': bool(getattr(prof, 'profile_glow', False)) if akiira_admin else False,
-        'avatar_pulse': bool(getattr(prof, 'avatar_pulse', False)) if akiira_admin else False,
-        'name_style': (getattr(prof, 'name_style', '') or '') if akiira_admin else '',
-        'role': role.to_dict() if role else None,
-        'joined_at': membership.joined_at.isoformat() if membership.joined_at else '',
+        "id": dm.id,
+        "sender": sender.username,
+        "recipient": recipient.username,
+        "display_name": d_sender["display_name"],
+        "avatar_url": d_sender["avatar_url"],
+        "message": dm.content or "",
+        "text": dm.content or "",
+        "attachment_url": _safe_media_url(dm.attachment),
+        "attachment_name": os.path.basename(dm.attachment.name) if dm.attachment else "",
+        "attachment_type": dm.attachment_type or "",
+        "timestamp": timezone.localtime(dm.created_at).strftime("%H:%M"),
+        "time": timezone.localtime(dm.created_at).strftime("%H:%M"),
     }
 
 
-@login_required(login_url='login')
-def room_view(request, server_id=None, channel_id=None):
-    profile, _ = UserProfile.objects.get_or_create(user=request.user)
-    servers = (
-        Server.objects.filter(models.Q(members=request.user) | models.Q(owner=request.user))
-        .distinct()
-        .prefetch_related('channels', 'roles')
-    )
-
-    active_server = None
-    active_channel = None
-    chat_messages = []
-
-    if server_id is not None:
-        server_qs = Server.objects.filter(id=server_id)
-        if not is_admin_user(request.user):
-            server_qs = server_qs.filter(
-                models.Q(members=request.user) | models.Q(owner=request.user)
-            ).distinct()
-        active_server = server_qs.first()
-
-        # Evita 404 seco quando o servidor nao existe ou o usuario nao tem acesso
-        if active_server is None:
-            return redirect('room_home')
-
-        channels = list(active_server.channels.all())
-        if channel_id is not None:
-            active_channel = Channel.objects.filter(id=channel_id, server=active_server).first()
-            if active_channel is None:
-                return redirect('room_server', server_id=active_server.id)
-        elif channels:
-            active_channel = channels[0]
-
-        if active_channel:
-            chat_messages = list(
-                Message.objects.filter(channel=active_channel)
-                .select_related('user', 'user__profile')
-                .order_by('timestamp')[:50]
-            )
-
-    akiira_admin = is_akiira_admin(request.user)
-    frame_effect = _sanitize_frame_effect(getattr(profile, 'frame_effect', 'none'), request.user)
-    profile_glow = bool(getattr(profile, 'profile_glow', False)) if akiira_admin else False
-    avatar_pulse = bool(getattr(profile, 'avatar_pulse', False)) if akiira_admin else False
-    name_style = (getattr(profile, 'name_style', '') or '') if akiira_admin else ''
-
-    music_payload = _build_music_payload(request, profile)
-    sanitized_accent = _sanitize_accent_color(
-        profile.accent_color,
-        request.user,
-        fallback=profile.accent_color or '#ff9de2',
-    )
-
-    profile_data = {
-        'username': request.user.username,
-        'bubble': profile.bubble or '',
-        'pronouns': profile.pronouns or '',
-        'bio': profile.bio or '',
-        'location': getattr(profile, 'location', '') or '',
-        'joinedAt': request.user.date_joined.isoformat() if getattr(request.user, 'date_joined', None) else '',
-        'song': profile.spotify_song or '',
-        'artist': profile.spotify_artist or '',
-        'musicUrl': profile.music_url or '',
-        'audioSrc': music_payload.get('music_audio_url', ''),
-        'coverUrl': music_payload.get('music_cover_url', ''),
-        'accentColor': sanitized_accent,
-        'avatarUrl': request.build_absolute_uri(profile.avatar.url) if profile.avatar else '',
-        'bannerUrl': request.build_absolute_uri(profile.banner.url) if profile.banner else '',
-        'frameEffect': frame_effect != 'none',
-        'goldGlowFrame': frame_effect == 'gold_glow_frame',
-        'profileGlow': profile_glow,
-        'avatarPulse': avatar_pulse,
-        'nameStyle': name_style,
-        'is_admin': is_admin_user(request.user),
-        'is_akiira_admin': akiira_admin,
-    }
-
-    return render(
-        request,
-        'chat/room.html',
-        {
-            'username': request.user.username,
-            'is_admin': is_admin_user(request.user),
-            'is_akiira_admin': akiira_admin,
-            'frame_effect': frame_effect,
-            'profile_glow': profile_glow,
-            'avatar_pulse': avatar_pulse,
-            'name_style': name_style,
-            'profile_json': json.dumps(profile_data),
-            'servers': servers,
-            'active_server': active_server,
-            'active_channel': active_channel,
-            'messages': chat_messages,
-        },
-    )
-
-
-@login_required(login_url='login')
-def profile_page_view(request):
-    profile, _ = UserProfile.objects.get_or_create(user=request.user)
-    return render(request, 'chat/profile.html', {'profile': profile})
-
-
-@login_required(login_url='login')
-def loja_view(request):
-    profile, _ = UserProfile.objects.get_or_create(user=request.user)
-    servers = (
-        Server.objects.filter(models.Q(members=request.user) | models.Q(owner=request.user))
-        .distinct()
-        .prefetch_related('channels', 'roles')
-    )
-    return render(
-        request,
-        'chat/loja.html',
-        {
-            'profile': profile,
-            'servers': servers,
-            'is_akiira_admin': is_akiira_admin(request.user),
-        },
-    )
-
-
-@login_required
-@require_POST
-def create_server(request):
-    name = (request.POST.get('name') or '').strip()
-    icon = request.FILES.get('icon')
-    raw_channels = (request.POST.get('channels') or '').strip()
-
-    if not name:
-        return JsonResponse({'status': 'error', 'message': 'Informe o nome do servidor.'}, status=400)
-
-    server = Server.objects.create(name=name[:120], icon=icon, owner=request.user)
-    server.members.add(request.user)
-    ServerMember.objects.get_or_create(server=server, user=request.user)
-
-    friends = _get_accepted_friend_users(request.user)
-    if friends:
-        server.members.add(*friends)
-        for friend in friends:
-            ServerMember.objects.get_or_create(server=server, user=friend)
-
-    channel_names = [
-        c.strip().lstrip('#').lower().replace(' ', '-')
-        for c in raw_channels.split(',')
-        if c.strip()
-    ]
-    if not channel_names:
-        channel_names = ['chat', 'musica']
-
-    created_channels = []
-    for idx, ch_name in enumerate(channel_names):
-        ch_type = 'audio' if ch_name in {'musica', 'música', 'audio', 'voz', 'call'} else 'text'
-        ch, _ = Channel.objects.get_or_create(
-            server=server,
-            name=ch_name[:100],
-            defaults={'channel_type': ch_type, 'position': idx},
-        )
-        created_channels.append({'id': ch.id, 'name': ch.name, 'channel_type': ch.channel_type})
-
-    icon_url = request.build_absolute_uri(server.icon.url) if server.icon else ''
-    return JsonResponse({
-        'status': 'success',
-        'server': {
-            'id': server.id,
-            'name': server.name,
-            'owner_id': server.owner_id,
-            'icon_url': icon_url,
-            'channels': created_channels,
-        },
-    })
-
-
-@login_required
-@require_POST
-def update_server(request, server_id):
-    server = _get_accessible_server_or_404(request.user, server_id)
-    if not _user_can_manage_server(request.user, server):
-        return JsonResponse({'status': 'error', 'message': 'Sem permissão para editar este servidor.'}, status=403)
-
-    name = (request.POST.get('name') or '').strip()
-    if name:
-        server.name = name[:120]
-
-    if 'icon' in request.FILES:
-        server.icon = request.FILES['icon']
-
-    server.save()
-    return JsonResponse({
-        'status': 'success',
-        'server': {
-            'id': server.id,
-            'name': server.name,
-            'owner_id': server.owner_id,
-            'icon_url': request.build_absolute_uri(server.icon.url) if server.icon else '',
-        },
-    })
-
-
-@login_required
-@require_POST
-def delete_server(request, server_id):
-    server = get_object_or_404(Server, id=server_id)
-    if server.owner_id != request.user.id and not is_admin_user(request.user):
-        return JsonResponse({'status': 'error', 'message': 'Apenas o dono pode excluir o servidor.'}, status=403)
-
-    server.delete()
-    return JsonResponse({'status': 'success'})
-
-
-@login_required
-@require_POST
-def create_channel(request, server_id):
-    server = _get_accessible_server_or_404(request.user, server_id)
-    if not _user_can_manage_server(request.user, server):
-        return JsonResponse({'status': 'error', 'message': 'Sem permissão para criar canais.'}, status=403)
-
-    raw_name = (request.POST.get('name') or '').strip().lstrip('#').lower().replace(' ', '-')
-    channel_type = (request.POST.get('channel_type') or 'text').strip()
-    if channel_type not in {'text', 'audio'}:
-        channel_type = 'text'
-
-    if not raw_name:
-        return JsonResponse({'status': 'error', 'message': 'Informe o nome do canal.'}, status=400)
-
-    if Channel.objects.filter(server=server, name=raw_name).exists():
-        return JsonResponse({'status': 'error', 'message': 'Já existe um canal com esse nome neste servidor.'}, status=400)
-
-    next_pos = server.channels.count()
-    channel = Channel.objects.create(
-        server=server,
-        name=raw_name[:100],
-        channel_type=channel_type,
-        position=next_pos,
-    )
-
-    return JsonResponse({
-        'status': 'success',
-        'channel': {
-            'id': channel.id,
-            'name': channel.name,
-            'channel_type': channel.channel_type,
-        },
-    })
-
-
-@login_required
-@require_POST
-def delete_channel(request, server_id, channel_id):
-    server = _get_accessible_server_or_404(request.user, server_id)
-    if not _user_can_manage_server(request.user, server):
-        return JsonResponse({'status': 'error', 'message': 'Sem permissão para excluir canais.'}, status=403)
-
-    channel = get_object_or_404(Channel, id=channel_id, server=server)
-    channel.delete()
-    return JsonResponse({'status': 'success'})
-
-
-@login_required
-def get_server_members_grouped(request, server_id):
-    server = _get_accessible_server_or_404(request.user, server_id)
-
-    existing_ids = set(
-        ServerMember.objects.filter(server=server).values_list('user_id', flat=True)
-    )
-    missing_member_ids = [
-        uid for uid in server.members.values_list('id', flat=True) if uid not in existing_ids
-    ]
-    if missing_member_ids:
-        ServerMember.objects.bulk_create([
-            ServerMember(server=server, user_id=uid) for uid in missing_member_ids
-        ])
-
-    roles = list(ServerRole.objects.filter(server=server).order_by('position', 'id'))
-    memberships = list(
-        ServerMember.objects.filter(server=server)
-        .select_related('user', 'user__profile', 'role')
-        .order_by('user__username')
-    )
-
-    serialized_members = [_serialize_server_member(request, server, m) for m in memberships]
-    members_by_role_id = {r.id: [] for r in roles}
-    unassigned_members = []
-
-    for m_data in serialized_members:
-        r_obj = m_data.get('role')
-        if r_obj and r_obj['id'] in members_by_role_id:
-            members_by_role_id[r_obj['id']].append(m_data)
-        else:
-            unassigned_members.append(m_data)
-
-    groups = []
-    for r in roles:
-        groups.append({
-            'id': r.id,
-            'name': r.name,
-            'color': r.color,
-            'position': r.position,
-            'members': members_by_role_id[r.id],
-        })
-
-    if unassigned_members or not groups:
-        groups.append({
-            'id': None,
-            'name': 'Membros',
-            'color': '#949ba4',
-            'position': 9999,
-            'members': unassigned_members,
-        })
-
-    return JsonResponse({
-        'status': 'success',
-        'server_id': server.id,
-        'owner_id': server.owner_id,
-        'can_manage_roles': _user_can_manage_roles(request.user, server),
-        'can_kick_members': _user_can_kick_members(request.user, server),
-        'roles': [r.to_dict() for r in roles],
-        'groups': groups,
-        'members': serialized_members,
-    })
-
-
-@login_required
-@require_POST
-def create_server_role(request, server_id):
-    server = _get_accessible_server_or_404(request.user, server_id)
-    if not _user_can_manage_roles(request.user, server):
-        return JsonResponse({'status': 'error', 'message': 'Apenas o dono pode criar cargos.'}, status=403)
-
-    data = _parse_request_data(request)
-    name = (data.get('name') or '').strip()
-    color = (data.get('color') or '#8a63d2').strip()
-    try:
-        position = int(data.get('position', server.roles.count()))
-    except (TypeError, ValueError):
-        position = server.roles.count()
-
-    if not name:
-        return JsonResponse({'status': 'error', 'message': 'Informe o nome do cargo.'}, status=400)
-
-    if ServerRole.objects.filter(server=server, name__iexact=name).exists():
-        return JsonResponse({'status': 'error', 'message': 'Já existe um cargo com esse nome.'}, status=400)
-
-    role = ServerRole.objects.create(
-        server=server,
-        name=name[:50],
-        color=color[:20] or '#8a63d2',
-        position=position,
-        can_manage_channels=bool(data.get('can_manage_channels', False)),
-        can_kick_members=bool(data.get('can_kick_members', False)),
-        can_manage_roles=bool(data.get('can_manage_roles', False)),
-    )
-
-    return JsonResponse({'status': 'success', 'role': role.to_dict()})
-
-
-@login_required
-@require_POST
-def delete_server_role(request, server_id, role_id):
-    server = _get_accessible_server_or_404(request.user, server_id)
-    if not _user_can_manage_roles(request.user, server):
-        return JsonResponse({'status': 'error', 'message': 'Apenas o dono pode excluir cargos.'}, status=403)
-
-    role = get_object_or_404(ServerRole, id=role_id, server=server)
-    role.delete()
-    return JsonResponse({'status': 'success'})
-
-
-@login_required
-@require_POST
-def assign_member_role(request, server_id, user_id):
-    server = _get_accessible_server_or_404(request.user, server_id)
-    if not _user_can_manage_roles(request.user, server):
-        return JsonResponse({'status': 'error', 'message': 'Apenas o dono pode atribuir cargos.'}, status=403)
-
-    target_user = get_object_or_404(User, id=user_id)
-    data = _parse_request_data(request)
-    role_id = data.get('role_id')
-
-    server.members.add(target_user)
-    membership, _ = ServerMember.objects.get_or_create(server=server, user=target_user)
-
-    if role_id in (None, '', 'none', 'null', 0, '0'):
-        membership.role = None
-    else:
-        role = get_object_or_404(ServerRole, id=int(role_id), server=server)
-        membership.role = role
-
-    membership.save(update_fields=['role'])
-    return JsonResponse({
-        'status': 'success',
-        'member': _serialize_server_member(request, server, membership),
-    })
-
-
-@login_required
-@require_POST
-def add_server_member(request, server_id):
-    server = _get_accessible_server_or_404(request.user, server_id)
-    if not _user_can_manage_roles(request.user, server) and not _user_can_kick_members(request.user, server):
-        return JsonResponse({'status': 'error', 'message': 'Sem permissão para adicionar membros.'}, status=403)
-
-    data = _parse_request_data(request)
-    username = (data.get('username') or '').strip()
-    role_id = data.get('role_id')
-
-    if not username:
-        return JsonResponse({'status': 'error', 'message': 'Informe o nome de usuário.'}, status=400)
-
-    target_user = get_object_or_404(User, username__iexact=username)
-    server.members.add(target_user)
-    membership, _ = ServerMember.objects.get_or_create(server=server, user=target_user)
-
-    if role_id not in (None, '', 'none', 'null'):
-        role = get_object_or_404(ServerRole, id=int(role_id), server=server)
-        membership.role = role
-        membership.save(update_fields=['role'])
-
-    return JsonResponse({
-        'status': 'success',
-        'member': _serialize_server_member(request, server, membership),
-    })
-
-
-@login_required
-@require_POST
-def kick_server_member(request, server_id, user_id):
-    server = _get_accessible_server_or_404(request.user, server_id)
-    if not _user_can_kick_members(request.user, server):
-        return JsonResponse({'status': 'error', 'message': 'Sem permissão para expulsar membros.'}, status=403)
-
-    target_user = get_object_or_404(User, id=user_id)
-    if target_user.id == server.owner_id:
-        return JsonResponse({'status': 'error', 'message': 'Não é possível expulsar o dono do servidor.'}, status=400)
-
-    server.members.remove(target_user)
-    ServerMember.objects.filter(server=server, user=target_user).delete()
-
-    _notify_user_group(
-        target_user.id,
-        'server_kicked',
-        {'server_id': server.id, 'server_name': server.name},
-        username=target_user.username,
-    )
-
-    return JsonResponse({'status': 'success', 'kicked_user_id': target_user.id})
-
-
-@login_required
-@require_POST
-def update_profile(request):
-    profile, _ = UserProfile.objects.get_or_create(user=request.user)
-
-    prev_song = (profile.spotify_song or '').strip()
-    prev_artist = (profile.spotify_artist or '').strip()
-    prev_music_url = (profile.music_url or '').strip()
-    prev_audio_url = (profile.music_audio_url or '').strip()
-    prev_cover_url = (profile.music_cover_url or '').strip()
-
-    profile.bubble = (request.POST.get('bubble') if 'bubble' in request.POST else profile.bubble) or ''
-    profile.pronouns = (request.POST.get('pronouns') if 'pronouns' in request.POST else profile.pronouns) or ''
-    profile.bio = (request.POST.get('bio') if 'bio' in request.POST else profile.bio) or ''
-    if hasattr(profile, 'location'):
-        profile.location = ((request.POST.get('location') if 'location' in request.POST else getattr(profile, 'location', '')) or '')[:120]
-    profile.spotify_song = (request.POST.get('spotify_song') if 'spotify_song' in request.POST else profile.spotify_song) or ''
-    profile.spotify_artist = (request.POST.get('spotify_artist') if 'spotify_artist' in request.POST else profile.spotify_artist) or ''
-
-    if 'accent_color' in request.POST:
-        profile.accent_color = _sanitize_accent_color(
-            request.POST.get('accent_color'),
-            request.user,
-            fallback=profile.accent_color or '#ff9de2',
-        )
-    else:
-        profile.accent_color = _sanitize_accent_color(profile.accent_color, request.user)
-
-    akiira_admin = is_akiira_admin(request.user)
-    if akiira_admin:
-        if 'frame_effect' in request.POST and hasattr(profile, 'frame_effect'):
-            profile.frame_effect = _sanitize_frame_effect(request.POST.get('frame_effect'), request.user)
-        elif hasattr(profile, 'frame_effect'):
-            profile.frame_effect = _sanitize_frame_effect(profile.frame_effect, request.user)
-
-        if 'profile_glow' in request.POST and hasattr(profile, 'profile_glow'):
-            profile.profile_glow = request.POST.get('profile_glow') in {'1', 'true', 'True', 'on'}
-
-        if 'avatar_pulse' in request.POST and hasattr(profile, 'avatar_pulse'):
-            profile.avatar_pulse = request.POST.get('avatar_pulse') in {'1', 'true', 'True', 'on'}
-
-        if 'name_style' in request.POST and hasattr(profile, 'name_style'):
-            profile.name_style = (request.POST.get('name_style') or '').strip()[:50]
-    else:
-        if hasattr(profile, 'frame_effect'):
-            profile.frame_effect = 'none'
-        if hasattr(profile, 'profile_glow'):
-            profile.profile_glow = False
-        if hasattr(profile, 'avatar_pulse'):
-            profile.avatar_pulse = False
-        if hasattr(profile, 'name_style'):
-            profile.name_style = ''
-
-    if 'music_url' in request.POST:
-        profile.music_url = _sanitize_external_url(request.POST.get('music_url'))
-
-    audio_uploaded = 'music_audio' in request.FILES
-    cover_uploaded = 'music_cover' in request.FILES
-
-    if audio_uploaded:
-        profile.music_audio_file = request.FILES['music_audio']
-        profile.music_audio_url = ''
-    elif 'music_audio_url' in request.POST:
-        audio_val = (request.POST.get('music_audio_url') or '').strip()
-        if not audio_val or audio_val.startswith('blob:'):
-            profile.music_audio_url = ''
-            profile.music_audio_file = None
-        else:
-            safe_audio = _sanitize_external_url(audio_val)
-            profile.music_audio_url = safe_audio
-            if not safe_audio.startswith('/media/'):
-                profile.music_audio_file = None
-
-    if cover_uploaded:
-        profile.music_cover_file = request.FILES['music_cover']
-        profile.music_cover_url = ''
-    elif 'music_cover_url' in request.POST:
-        cover_val = (request.POST.get('music_cover_url') or '').strip()
-        if not cover_val or cover_val.startswith('blob:'):
-            profile.music_cover_url = ''
-            profile.music_cover_file = None
-        else:
-            safe_cover = _sanitize_external_url(cover_val)
-            profile.music_cover_url = safe_cover
-            if not safe_cover.startswith('/media/'):
-                profile.music_cover_file = None
-
-    if 'avatar' in request.FILES:
-        profile.avatar = request.FILES['avatar']
-    if 'banner' in request.FILES:
-        profile.banner = request.FILES['banner']
-
-    profile.save()
-
-    track_changed = any([
-        profile.spotify_song.strip() != prev_song,
-        profile.spotify_artist.strip() != prev_artist,
-        profile.music_url.strip() != prev_music_url,
-        profile.music_audio_url.strip() != prev_audio_url,
-        profile.music_cover_url.strip() != prev_cover_url,
-        audio_uploaded,
-        cover_uploaded,
-    ])
-    has_track_data = any([
-        profile.spotify_song.strip(),
-        profile.spotify_artist.strip(),
-        profile.music_url.strip(),
-        bool(profile.music_audio_file),
-        bool(profile.music_audio_url.strip()),
-    ])
-
-    raw_save_lib = request.POST.get('save_to_library')
-    should_save_library = (raw_save_lib == '1') or (raw_save_lib is None and track_changed and has_track_data)
-    if should_save_library and track_changed and has_track_data:
-        SavedMusic.objects.create(
-            user=request.user,
-            title=profile.spotify_song.strip(),
-            artist=profile.spotify_artist.strip(),
-            music_url=profile.music_url.strip(),
-            audio_file=profile.music_audio_file,
-            audio_url='' if profile.music_audio_file else profile.music_audio_url.strip(),
-            cover_file=profile.music_cover_file,
-            cover_url='' if profile.music_cover_file else profile.music_cover_url.strip(),
-        )
-
-    music_data = _build_music_payload(request, profile)
-    return JsonResponse({
-        'status': 'success',
-        'message': 'Perfil atualizado com sucesso!',
-        'username': request.user.username,
-        'bubble': profile.bubble or '',
-        'pronouns': profile.pronouns or '',
-        'bio': profile.bio or '',
-        'location': getattr(profile, 'location', '') or '',
-        'spotify_song': profile.spotify_song or '',
-        'spotify_artist': profile.spotify_artist or '',
-        'music_url': profile.music_url or '',
-        'accent_color': profile.accent_color,
-        'avatarUrl': request.build_absolute_uri(profile.avatar.url) if profile.avatar else '',
-        'bannerUrl': request.build_absolute_uri(profile.banner.url) if profile.banner else '',
-        'is_admin': is_admin_user(request.user),
-        'is_akiira_admin': akiira_admin,
-        'frame_effect': _sanitize_frame_effect(getattr(profile, 'frame_effect', 'none'), request.user),
-        'profile_glow': bool(getattr(profile, 'profile_glow', False)) if akiira_admin else False,
-        'avatar_pulse': bool(getattr(profile, 'avatar_pulse', False)) if akiira_admin else False,
-        'name_style': (getattr(profile, 'name_style', '') or '') if akiira_admin else '',
-        **music_data,
-    })
-
-
-@login_required
-def get_user_profile(request, username):
-    target_user = get_object_or_404(User, username=username)
-    profile, _ = UserProfile.objects.get_or_create(user=target_user)
-    music_data = _build_music_payload(request, profile)
-    safe_color = _sanitize_accent_color(profile.accent_color, target_user)
-    akiira_admin = is_akiira_admin(target_user)
-
-    data = {
-        'username': target_user.username,
-        'bubble': profile.bubble,
-        'pronouns': profile.pronouns,
-        'bio': profile.bio,
-        'location': getattr(profile, 'location', '') or '',
-        'joinedAt': target_user.date_joined.isoformat() if getattr(target_user, 'date_joined', None) else '',
-        'spotify_song': profile.spotify_song,
-        'spotify_artist': profile.spotify_artist,
-        'accent_color': safe_color,
-        'is_admin': is_admin_user(target_user),
-        'is_akiira_admin': akiira_admin,
-        'frame_effect': _sanitize_frame_effect(getattr(profile, 'frame_effect', 'none'), target_user),
-        'profile_glow': bool(getattr(profile, 'profile_glow', False)) if akiira_admin else False,
-        'avatar_pulse': bool(getattr(profile, 'avatar_pulse', False)) if akiira_admin else False,
-        'name_style': (getattr(profile, 'name_style', '') or '') if akiira_admin else '',
-        'avatarUrl': request.build_absolute_uri(profile.avatar.url) if profile.avatar else '',
-        'bannerUrl': request.build_absolute_uri(profile.banner.url) if profile.banner else '',
-        'is_friend': are_friends(request.user, target_user) if target_user != request.user else False,
-        **music_data,
-    }
-    return JsonResponse(data)
-
-
-@login_required
-def friend_music_feed(request):
-    friends = _get_accepted_friend_users(request.user)
-    feed = []
-    for friend in friends:
-        profile, _ = UserProfile.objects.get_or_create(user=friend)
-        music_data = _build_music_payload(request, profile)
-        recent_tracks = []
-        for m in SavedMusic.objects.filter(user=friend)[:10]:
-            a_url = request.build_absolute_uri(m.audio_file.url) if m.audio_file else (m.audio_url or '')
-            c_url = request.build_absolute_uri(m.cover_file.url) if m.cover_file else (m.cover_url or '')
-            recent_tracks.append({
-                'id': m.id,
-                'title': m.title or 'Faixa sem título',
-                'artist': m.artist or 'Artista',
-                'music_url': m.music_url or '',
-                'audio_url': a_url,
-                'cover_url': c_url,
-            })
-
-        feed.append({
-            'username': friend.username,
-            'avatarUrl': request.build_absolute_uri(profile.avatar.url) if profile.avatar else '',
-            'spotify_song': profile.spotify_song,
-            'spotify_artist': profile.spotify_artist,
-            **music_data,
-            'saved_musics': recent_tracks,
-        })
-
-    return JsonResponse({'status': 'success', 'friends_music': feed})
-
-
-@login_required
-def list_saved_musics(request):
-    items = SavedMusic.objects.filter(user=request.user)[:30]
-    payload = []
-    for m in items:
-        a_url = request.build_absolute_uri(m.audio_file.url) if m.audio_file else (m.audio_url or '')
-        c_url = request.build_absolute_uri(m.cover_file.url) if m.cover_file else (m.cover_url or '')
-        payload.append({
-            'id': m.id,
-            'title': m.title or 'Faixa sem título',
-            'artist': m.artist or 'Artista',
-            'music_url': m.music_url or '',
-            'audio_url': a_url,
-            'cover_url': c_url,
-        })
-    return JsonResponse({'status': 'success', 'musics': payload})
-
-
-@login_required
-@require_POST
-def create_saved_music(request):
-    title = (request.POST.get('title') or '').strip()
-    artist = (request.POST.get('artist') or '').strip()
-    music_url = _sanitize_external_url(request.POST.get('music_url'))
-    audio_url = _sanitize_external_url(request.POST.get('audio_url'))
-    cover_url = _sanitize_external_url(request.POST.get('cover_url'))
-    audio_file = request.FILES.get('audio_file')
-    cover_file = request.FILES.get('cover_file')
-
-    if not any([title, artist, music_url, audio_url, audio_file]):
-        return JsonResponse({'status': 'error', 'message': 'Informe nome da música, link ou arquivo MP3.'}, status=400)
-
-    m = SavedMusic.objects.create(
-        user=request.user,
-        title=title[:200],
-        artist=artist[:200],
-        music_url=music_url[:500],
-        audio_file=audio_file,
-        audio_url='' if audio_file else audio_url[:500],
-        cover_file=cover_file,
-        cover_url='' if cover_file else cover_url[:500],
-    )
-
-    a_url = request.build_absolute_uri(m.audio_file.url) if m.audio_file else (m.audio_url or '')
-    c_url = request.build_absolute_uri(m.cover_file.url) if m.cover_file else (m.cover_url or '')
-
-    return JsonResponse({
-        'status': 'success',
-        'music': {
-            'id': m.id,
-            'title': m.title or 'Faixa sem título',
-            'artist': m.artist or 'Artista',
-            'music_url': m.music_url or '',
-            'audio_url': a_url,
-            'cover_url': c_url,
-        }
-    })
-
-
-@login_required
-@require_POST
-def delete_saved_music(request, music_id):
-    deleted, _ = SavedMusic.objects.filter(id=music_id, user=request.user).delete()
-    if not deleted:
-        return JsonResponse({'status': 'error', 'message': 'Música não encontrada.'}, status=404)
-    return JsonResponse({'status': 'success'})
-
-
-def register_view(request):
-    if request.user.is_authenticated:
-        return redirect('room_home')
-
-    if request.method == 'POST':
-        username = (request.POST.get('username') or '').strip()
-        password = request.POST.get('password') or ''
-        password_confirm = request.POST.get('password_confirm')
-
-        if not username or not password:
-            messages.error(request, 'Preencha nome de utilizador e senha.')
-        elif len(password) < 6:
-            messages.error(request, 'A senha deve ter pelo menos 6 caracteres.')
-        elif password_confirm is not None and password != password_confirm:
-            messages.error(request, 'As senhas não coincidem.')
-        elif User.objects.filter(username__iexact=username).exists():
-            messages.error(request, 'Este nome de utilizador já está em uso.')
-        else:
-            user = User.objects.create_user(username=username, password=password)
-            UserProfile.objects.get_or_create(user=user)
-            login(request, user)
-            return redirect('room_home')
-
-    return render(request, 'chat/register.html')
-
-
+@ensure_csrf_cookie
 def login_view(request):
     if request.user.is_authenticated:
-        return redirect('room_home')
+        return redirect("room")
 
-    next_url = request.POST.get('next') or request.GET.get('next') or ''
-
-    if request.method == 'POST':
-        username = (request.POST.get('username') or '').strip()
-        password = request.POST.get('password') or ''
+    error_message = None
+    if request.method == "POST":
+        username = (request.POST.get("username") or "").strip()
+        password = request.POST.get("password") or ""
         user = authenticate(request, username=username, password=password)
         if user is not None:
             login(request, user)
-            if next_url and url_has_allowed_host_and_scheme(next_url, allowed_hosts={request.get_host()}):
-                return redirect(next_url)
-            return redirect('room_home')
-        messages.error(request, 'Utilizador ou senha inválidos.')
+            _get_or_create_profile(user)
+            _ensure_default_workspace(user)
+            return redirect("room")
+        error_message = "Usuário ou senha inválidos."
 
-    return render(request, 'chat/login.html', {'next': next_url})
+    return render(request, "kiwi_chat/login.html", {"error_message": error_message})
 
 
+@ensure_csrf_cookie
+def register_view(request):
+    if request.user.is_authenticated:
+        return redirect("room")
+
+    error_message = None
+    if request.method == "POST":
+        username = (request.POST.get("username") or "").strip()
+        password = request.POST.get("password") or ""
+        password_confirm = request.POST.get("password_confirm") or ""
+
+        if not username or len(username) < 2 or len(username) > 32:
+            error_message = "O nome de usuário deve ter entre 2 e 32 caracteres."
+        elif not re.match(r"^[a-zA-Z0-9_.-]+$", username):
+            error_message = "Use apenas letras, números, ponto, traço ou sublinhado."
+        elif len(password) < 4:
+            error_message = "A senha deve ter pelo menos 4 caracteres."
+        elif password_confirm and password != password_confirm:
+            error_message = "As senhas não coincidem."
+        elif User.objects.filter(username__iexact=username).exists():
+            error_message = "Esse nome de usuário já está em uso."
+        else:
+            try:
+                user = User.objects.create_user(username=username, password=password)
+                _get_or_create_profile(user)
+                _ensure_default_workspace(user)
+                login(request, user)
+                return redirect("room")
+            except IntegrityError:
+                error_message = "Não foi possível criar a conta agora."
+
+    return render(request, "kiwi_chat/register.html", {"error_message": error_message})
+
+
+@require_POST
 def logout_view(request):
     logout(request)
-    return redirect('login')
+    return redirect("login")
 
 
 @login_required
-def search_users(request):
-    query = (request.GET.get('q') or '').strip()
-    if not query:
-        return JsonResponse({'status': 'success', 'users': []})
+@ensure_csrf_cookie
+def room_view(request):
+    user = request.user
+    profile = _get_or_create_profile(user)
+    servers = _ensure_default_workspace(user)
+    is_admin = _is_kiwi_admin(user)
 
-    matches = User.objects.filter(username__icontains=query).exclude(id=request.user.id).select_related('profile')[:15]
-    results = []
-    for candidate in matches:
-        profile = getattr(candidate, 'profile', None)
-        already_friends = are_friends(request.user, candidate)
-        pending_sent = FriendRequest.objects.filter(
-            sender=request.user, receiver=candidate, status='pending'
-        ).exists()
-        pending_received = FriendRequest.objects.filter(
-            sender=candidate, receiver=request.user, status='pending'
-        ).exists()
+    first_server = servers[0] if servers else None
+    first_channel = None
+    if first_server:
+        first_channel = first_server.channels.order_by("id").first()
 
-        results.append({
-            'username': candidate.username,
-            'avatarUrl': request.build_absolute_uri(profile.avatar.url) if (profile and profile.avatar) else '',
-            'bubble': (profile.bubble if profile else '') or '',
-            'is_friend': already_friends,
-            'pending_sent': pending_sent,
-            'pending_received': pending_received,
+    servers_payload = []
+    for srv in servers:
+        ch_list = [
+            {"id": ch.id, "name": ch.name, "server_id": srv.id}
+            for ch in srv.channels.order_by("id")
+        ]
+        servers_payload.append({
+            "id": srv.id,
+            "name": srv.name,
+            "icon_url": _safe_media_url(getattr(srv, "icon", None)),
+            "channels": ch_list,
         })
 
-    return JsonResponse({'status': 'success', 'users': results})
+    friends_payload = _get_friends_list(user)
+    incoming_requests = FriendRequest.objects.filter(
+        to_user=user, status="pending"
+    ).select_related("from_user", "from_user__profile")
+
+    pending_requests_payload = []
+    for req in incoming_requests:
+        p_from = _get_or_create_profile(req.from_user)
+        pending_requests_payload.append({
+            "id": req.id,
+            "from_username": req.from_user.username,
+            "display_name": p_from.display_name or req.from_user.username,
+            "avatar_url": _safe_media_url(p_from.avatar),
+        })
+
+    profile_data = _serialize_profile(user, profile)
+
+    context = {
+        "username": user.username,
+        "display_name": profile_data["display_name"],
+        "is_admin": is_admin,
+        "active_server_id": first_server.id if first_server else 1,
+        "active_channel_id": first_channel.id if first_channel else 1,
+        "active_channel_name": first_channel.name if first_channel else "geral",
+        "servers_json": json.dumps(servers_payload),
+        "profile_json": json.dumps(profile_data),
+        "friends_json": json.dumps(friends_payload),
+        "pending_requests_json": json.dumps(pending_requests_payload),
+    }
+    return render(request, "kiwi_chat/room.html", context)
 
 
 @login_required
-@require_POST
-def send_friend_request(request):
-    try:
-        data = _parse_request_data(request)
-        receiver_username = (data.get('username') or '').strip()
+@require_GET
+def api_bootstrap(request):
+    user = request.user
+    profile = _get_or_create_profile(user)
+    servers = _ensure_default_workspace(user)
+    is_admin = _is_kiwi_admin(user)
 
-        if not receiver_username:
-            return JsonResponse({'status': 'error', 'message': 'Digite o nome de usuário.'}, status=400)
+    servers_payload = []
+    for srv in servers:
+        servers_payload.append({
+            "id": srv.id,
+            "name": srv.name,
+            "icon_url": _safe_media_url(getattr(srv, "icon", None)),
+            "channels": [
+                {"id": ch.id, "name": ch.name, "server_id": srv.id}
+                for ch in srv.channels.order_by("id")
+            ],
+        })
 
-        receiver = get_object_or_404(User, username=receiver_username)
+    friends = _get_friends_list(user)
+    incoming = FriendRequest.objects.filter(to_user=user, status="pending").select_related(
+        "from_user", "from_user__profile"
+    )
+    requests_data = [
+        {
+            "id": r.id,
+            "from_username": r.from_user.username,
+            "display_name": _format_user_label(r.from_user),
+        }
+        for r in incoming
+    ]
 
-        if receiver == request.user:
-            return JsonResponse({'status': 'error', 'message': 'Não podes enviar pedido para ti mesmo.'}, status=400)
-
-        if are_friends(request.user, receiver):
-            return JsonResponse({'status': 'error', 'message': f'{receiver.username} já é teu amigo.'}, status=400)
-
-        existing = FriendRequest.objects.filter(sender=request.user, receiver=receiver).first()
-        if existing:
-            if existing.status == 'pending':
-                return JsonResponse({'status': 'success', 'message': f'Pedido de amizade já enviado para {receiver.username}.'})
-            existing.status = 'pending'
-            existing.save(update_fields=['status', 'updated_at'])
-            req_obj = existing
-        else:
-            req_obj = FriendRequest.objects.create(sender=request.user, receiver=receiver, status='pending')
-
-        _notify_user_group(
-            receiver.id,
-            'friend_request_received',
-            {'id': req_obj.id, 'sender': request.user.username},
-            username=receiver.username,
-        )
-
-        return JsonResponse({'status': 'success', 'message': f'Pedido de amizade enviado para {receiver.username}!'})
-    except Http404:
-        return JsonResponse({'status': 'error', 'message': 'Utilizador não encontrado.'}, status=404)
-    except Exception as e:
-        return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
-
-
-@login_required
-def get_friend_requests(request):
-    requests_qs = FriendRequest.objects.filter(receiver=request.user, status='pending').select_related('sender')
-    data = [{'id': req.id, 'sender': req.sender.username} for req in requests_qs]
-    return JsonResponse({'status': 'success', 'requests': data})
+    return JsonResponse({
+        "ok": True,
+        "username": user.username,
+        "is_admin": is_admin,
+        "profile": _serialize_profile(user, profile),
+        "servers": servers_payload,
+        "friends": friends,
+        "pending_requests": requests_data,
+    })
 
 
 @login_required
-@require_POST
-def accept_friend_request(request):
-    try:
-        data = _parse_request_data(request)
-        request_id = data.get('request_id')
-
-        friend_req = get_object_or_404(FriendRequest, id=request_id, receiver=request.user)
-        friend_req.status = 'accepted'
-        friend_req.save(update_fields=['status', 'updated_at'])
-
-        if is_admin_user(request.user):
-            owned = Server.objects.filter(owner=request.user)
-            for srv in owned:
-                srv.members.add(friend_req.sender)
-                ServerMember.objects.get_or_create(server=srv, user=friend_req.sender)
-
-        _notify_user_group(
-            friend_req.sender.id,
-            'friend_request_accepted',
-            {'id': friend_req.id, 'accepter': request.user.username},
-            username=friend_req.sender.username,
-        )
-
-        return JsonResponse({'status': 'success', 'message': 'Amizade aceite com sucesso!'})
-    except Http404:
-        return JsonResponse({'status': 'error', 'message': 'Pedido de amizade não encontrado.'}, status=404)
-    except Exception as e:
-        return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
+@require_GET
+def api_channel_messages(request, channel_id):
+    channel = get_object_or_404(Channel, id=channel_id)
+    channel.server.members.add(request.user)
+    msgs = (
+        Message.objects.filter(channel=channel)
+        .select_related("sender", "sender__profile")
+        .prefetch_related("reactions", "reactions__user")
+        .order_by("-created_at")[:60]
+    )
+    ordered = list(reversed(msgs))
+    return JsonResponse({
+        "ok": True,
+        "channel_id": channel.id,
+        "channel_name": channel.name,
+        "messages": [_serialize_message(m, current_user=request.user) for m in ordered],
+    })
 
 
 @login_required
-@require_POST
-def reject_friend_request(request):
-    try:
-        data = _parse_request_data(request)
-        request_id = data.get('request_id')
-        friend_req = get_object_or_404(FriendRequest, id=request_id, receiver=request.user, status='pending')
-        friend_req.status = 'rejected'
-        friend_req.save(update_fields=['status', 'updated_at'])
-        return JsonResponse({'status': 'success', 'message': 'Pedido recusado.'})
-    except Http404:
-        return JsonResponse({'status': 'error', 'message': 'Pedido de amizade não encontrado.'}, status=404)
-    except Exception as e:
-        return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
-
-
-@login_required
-def get_friends_list(request):
-    try:
-        friend_users = _get_accepted_friend_users(request.user)
-        friends = []
-        for u in friend_users:
-            prof = getattr(u, 'profile', None)
-            avatar_url = ''
-            if prof and prof.avatar:
-                try:
-                    avatar_url = request.build_absolute_uri(prof.avatar.url)
-                except Exception:
-                    avatar_url = ''
-            friends.append({
-                'id': u.id,
-                'username': u.username,
-                'avatarUrl': avatar_url,
-                'bubble': (prof.bubble or '') if prof else '',
-                'pronouns': (prof.pronouns or '') if prof else '',
-                'spotify_song': (prof.spotify_song or '') if prof else '',
-                'spotify_artist': (prof.spotify_artist or '') if prof else '',
-                'accent_color': (prof.accent_color or '#ff9de2') if prof else '#ff9de2',
-            })
-        return JsonResponse({'status': 'success', 'friends': friends})
-    except Exception as e:
-        return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
-
-
-@login_required
-@require_POST
-def remove_friend(request):
-    try:
-        data = _parse_request_data(request)
-        target_username = (data.get('username') or '').strip()
-        target_user = get_object_or_404(User, username=target_username)
-        FriendRequest.objects.filter(
-            models.Q(sender=request.user, receiver=target_user)
-            | models.Q(sender=target_user, receiver=request.user)
-        ).delete()
-        return JsonResponse({'status': 'success', 'message': 'Amizade removida.'})
-    except Exception as e:
-        return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
-
-
-@login_required
-def get_dm_history(request, username):
-    other_user = get_object_or_404(User, username=username)
-    if other_user == request.user:
-        return JsonResponse({'status': 'error', 'message': 'Não é possível abrir DM consigo mesmo.'}, status=400)
+@require_GET
+def api_dm_history(request, username):
+    target_user = get_object_or_404(User, username__iexact=username)
+    if target_user.id == request.user.id:
+        return JsonResponse({"ok": False, "error": "Você não pode abrir DM consigo mesmo."}, status=400)
 
     dms = (
-        PrivateMessage.objects.filter(
-            (models.Q(sender=request.user) & models.Q(receiver=other_user))
-            | (models.Q(sender=other_user) & models.Q(receiver=request.user))
+        DirectMessage.objects.filter(
+            Q(sender=request.user, recipient=target_user)
+            | Q(sender=target_user, recipient=request.user)
         )
-        .select_related('sender', 'receiver')
-        .order_by('timestamp', 'id')[:100]
+        .select_related("sender", "recipient", "sender__profile", "recipient__profile")
+        .order_by("created_at")[:80]
     )
     return JsonResponse({
-        'status': 'success',
-        'messages': [m.to_dict() for m in dms],
+        "ok": True,
+        "peer": target_user.username,
+        "messages": [_serialize_dm(m, current_user=request.user) for m in dms],
     })
 
 
 @login_required
 @require_POST
-def send_message(request):
-    data = _parse_request_data(request)
-    content = (data.get('content') or '').strip()
-    channel_id = data.get('channel_id')
-    client_id = (data.get('client_id') or '').strip()[:100]
-    reply_to_id = data.get('reply_to')
+def api_send_dm(request, username):
+    target_user = get_object_or_404(User, username__iexact=username)
+    if target_user.id == request.user.id:
+        return JsonResponse({"ok": False, "error": "Destinatário inválido."}, status=400)
 
-    if not content:
-        return JsonResponse({'status': 'error', 'message': 'Mensagem vazia.'}, status=400)
+    try:
+        payload = json.loads(request.body.decode("utf-8") or "{}")
+    except Exception:
+        payload = request.POST
 
-    channel = None
-    if channel_id is not None:
-        channel_qs = Channel.objects.filter(id=channel_id)
-        if not is_admin_user(request.user):
-            channel_qs = channel_qs.filter(
-                models.Q(server__members=request.user) | models.Q(server__owner=request.user)
-            ).distinct()
-        channel = get_object_or_404(channel_qs)
+    content = (payload.get("message") or payload.get("text") or "").strip()
+    attachment_data = payload.get("attachment_url") or payload.get("attachment") or ""
 
-    reply_to = Message.objects.filter(id=reply_to_id).first() if reply_to_id else None
+    if not content and not attachment_data:
+        return JsonResponse({"ok": False, "error": "Mensagem vazia."}, status=400)
 
-    msg = Message.objects.create(
-        user=request.user,
-        channel=channel,
-        reply_to=reply_to,
-        content=content,
-        client_id=client_id,
+    dm = DirectMessage.objects.create(
+        sender=request.user,
+        recipient=target_user,
+        content=content[:2000],
     )
 
-    payload = msg.to_dict()
-    channel_layer = get_channel_layer()
-    if channel_layer:
-        srv_token, ch_token = _channel_ws_tokens(channel)
-        group_name = build_channel_group_name(srv_token, ch_token)
-        async_to_sync(channel_layer.group_send)(
-            group_name,
-            {
-                'type': 'chat_message',
-                'message': payload,
-            },
-        )
+    if request.FILES.get("file"):
+        dm.attachment = request.FILES["file"]
+        dm.attachment_type = (request.FILES["file"].content_type or "file")[:64]
+        dm.save()
+    elif isinstance(attachment_data, str) and attachment_data.startswith("data:"):
+        saved_url = _save_base64_media(attachment_data, prefix="dm")
+        if saved_url:
+            rel_name = saved_url.replace(settings.MEDIA_URL, "", 1).lstrip("/")
+            dm.attachment.name = rel_name
+            dm.attachment_type = "image"
+            dm.save()
 
-    return JsonResponse({'status': 'success', 'message': payload})
-
-
-@login_required
-@require_POST
-def delete_message(request, message_id):
-    msg = get_object_or_404(Message, id=message_id)
-    if msg.user_id != request.user.id and not is_admin_user(request.user):
-        return JsonResponse({'status': 'error', 'message': 'Sem permissão para apagar esta mensagem.'}, status=403)
-    msg.delete()
-    return JsonResponse({'status': 'success', 'deleted_id': message_id})
+    return JsonResponse({"ok": True, "message": _serialize_dm(dm, current_user=request.user)})
 
 
 @login_required
 @require_POST
-def delete_dm_message(request, message_id):
-    msg = get_object_or_404(PrivateMessage, id=message_id)
-    if msg.sender_id != request.user.id and not is_admin_user(request.user):
-        return JsonResponse({'status': 'error', 'message': 'Sem permissão para apagar esta DM.'}, status=403)
-    msg.delete()
-    return JsonResponse({'status': 'success', 'deleted_id': message_id})
+def api_upload_attachment(request):
+    channel_id = request.POST.get("channel_id")
+    content = (request.POST.get("content") or request.POST.get("message") or "").strip()
+    uploaded = request.FILES.get("file") or request.FILES.get("attachment")
 
-
-@login_required
-@require_POST
-def upload_attachment(request):
-    uploaded = request.FILES.get('file') or request.FILES.get('attachment')
-    if not uploaded:
-        return JsonResponse({'status': 'error', 'message': 'Nenhum arquivo enviado.'}, status=400)
-
-    if uploaded.size > MAX_FILE_SIZE:
-        return JsonResponse({'status': 'error', 'message': 'Arquivo excede o limite de 10 MB.'}, status=400)
-
-    ext = os.path.splitext(uploaded.name or '')[1].lower()
-    if ext in IMAGE_EXTS:
-        att_type = 'image'
-    elif ext in AUDIO_EXTS:
-        att_type = 'audio'
-    elif ext in DOC_EXTS:
-        att_type = 'document'
-    else:
-        return JsonResponse({'status': 'error', 'message': 'Formato de arquivo não suportado.'}, status=400)
-
-    channel_id = request.POST.get('channel_id')
-    dm_recipient_username = (request.POST.get('recipient') or '').strip()
-    content = (request.POST.get('content') or '').strip()
-    client_id = (request.POST.get('client_id') or '').strip()[:100]
-
-    channel_layer = get_channel_layer()
-
-    if dm_recipient_username:
-        recipient = get_object_or_404(User, username=dm_recipient_username)
-        dm = PrivateMessage.objects.create(
-            sender=request.user,
-            receiver=recipient,
-            content=content,
-            attachment=uploaded,
-            attachment_type=att_type,
-            client_id=client_id,
-        )
-        payload = dm.to_dict()
-        if channel_layer:
-            dm_group = build_dm_group_name(request.user.username, recipient.username)
-            async_to_sync(channel_layer.group_send)(dm_group, {'type': 'dm_message', 'message': payload})
-        return JsonResponse({'status': 'success', 'message': payload})
+    if not uploaded and not content:
+        return JsonResponse({"ok": False, "error": "Nenhum arquivo ou mensagem enviado."}, status=400)
 
     channel = None
     if channel_id:
-        channel_qs = Channel.objects.filter(id=channel_id)
-        if not is_admin_user(request.user):
-            channel_qs = channel_qs.filter(
-                models.Q(server__members=request.user) | models.Q(server__owner=request.user)
-            ).distinct()
-        channel = get_object_or_404(channel_qs)
+        channel = Channel.objects.filter(id=channel_id).first()
+    if not channel:
+        channel = Channel.objects.order_by("id").first()
+    if not channel:
+        servers = _ensure_default_workspace(request.user)
+        channel = servers[0].channels.order_by("id").first()
 
     msg = Message.objects.create(
-        user=request.user,
         channel=channel,
-        content=content,
-        attachment=uploaded,
-        attachment_type=att_type,
-        client_id=client_id,
+        sender=request.user,
+        content=content[:2000],
     )
-    payload = msg.to_dict()
-    if channel_layer:
-        srv_token, ch_token = _channel_ws_tokens(channel)
-        group_name = build_channel_group_name(srv_token, ch_token)
-        async_to_sync(channel_layer.group_send)(group_name, {'type': 'chat_message', 'message': payload})
+    if uploaded:
+        msg.attachment = uploaded
+        msg.attachment_type = (uploaded.content_type or "file")[:64]
+        msg.save()
 
-    return JsonResponse({'status': 'success', 'message': payload})
+    serialized = _serialize_message(msg, current_user=request.user)
+    return JsonResponse({
+        "ok": True,
+        "id": msg.id,
+        "channel_id": channel.id,
+        "message": serialized,
+        "attachment_url": serialized["attachment_url"],
+        "attachment_name": serialized["attachment_name"],
+        "attachment_type": serialized["attachment_type"],
+    })
+
+
+@login_required
+@require_POST
+def api_toggle_reaction(request, message_id):
+    msg = get_object_or_404(Message, id=message_id)
+    try:
+        payload = json.loads(request.body.decode("utf-8") or "{}")
+    except Exception:
+        payload = {}
+    emoji = (payload.get("emoji") or "👍").strip()[:16]
+    if not emoji:
+        return JsonResponse({"ok": False, "error": "Emoji inválido."}, status=400)
+
+    existing = MessageReaction.objects.filter(message=msg, user=request.user, emoji=emoji).first()
+    if existing:
+        existing.delete()
+    else:
+        MessageReaction.objects.create(message=msg, user=request.user, emoji=emoji)
+
+    return JsonResponse({"ok": True, "message": _serialize_message(msg, current_user=request.user)})
+
+
+@login_required
+@require_POST
+def api_delete_message(request, message_id):
+    msg = get_object_or_404(Message, id=message_id)
+    if msg.sender_id != request.user.id and not _is_kiwi_admin(request.user):
+        return JsonResponse({"ok": False, "error": "Sem permissão para excluir esta mensagem."}, status=403)
+    msg.delete()
+    return JsonResponse({"ok": True, "deleted_id": message_id})
+
+
+@login_required
+@require_POST
+def api_create_server(request):
+    try:
+        payload = json.loads(request.body.decode("utf-8") or "{}")
+    except Exception:
+        payload = request.POST
+
+    name = (payload.get("name") or "").strip()
+    if not name or len(name) > 80:
+        return JsonResponse({"ok": False, "error": "Nome de servidor inválido."}, status=400)
+
+    server = Server.objects.create(name=name, owner=request.user)
+    server.members.add(request.user)
+    default_ch = Channel.objects.create(server=server, name="geral")
+
+    return JsonResponse({
+        "ok": True,
+        "server": {
+            "id": server.id,
+            "name": server.name,
+            "icon_url": "",
+            "channels": [{"id": default_ch.id, "name": default_ch.name, "server_id": server.id}],
+        },
+    })
+
+
+@login_required
+@require_POST
+def api_create_channel(request):
+    try:
+        payload = json.loads(request.body.decode("utf-8") or "{}")
+    except Exception:
+        payload = request.POST
+
+    server_id = payload.get("server_id")
+    name = (payload.get("name") or "").strip().lower().replace(" ", "-")
+    if not name or len(name) > 50:
+        return JsonResponse({"ok": False, "error": "Nome de canal inválido."}, status=400)
+
+    server = Server.objects.filter(id=server_id).first() if server_id else Server.objects.filter(members=request.user).first()
+    if not server:
+        servers = _ensure_default_workspace(request.user)
+        server = servers[0]
+
+    channel, _ = Channel.objects.get_or_create(server=server, name=name)
+    return JsonResponse({
+        "ok": True,
+        "channel": {"id": channel.id, "name": channel.name, "server_id": server.id},
+    })
+
+
+@login_required
+@require_GET
+def api_user_profile(request, username):
+    target_user = get_object_or_404(User, username__iexact=username)
+    profile = _get_or_create_profile(target_user)
+    data = _serialize_profile(target_user, profile)
+    data["is_friend"] = _are_friends(request.user, target_user)
+    data["is_self"] = request.user.id == target_user.id
+    return JsonResponse({"ok": True, "profile": data})
+
+
+@login_required
+@require_POST
+def api_update_profile(request):
+    user = request.user
+    profile = _get_or_create_profile(user)
+    is_admin = _is_kiwi_admin(user)
+
+    if request.content_type and "multipart/form-data" in request.content_type:
+        data = request.POST
+    else:
+        try:
+            data = json.loads(request.body.decode("utf-8") or "{}")
+        except Exception:
+            data = request.POST
+
+    if "display_name" in data:
+        profile.display_name = (data.get("display_name") or "").strip()[:60]
+    if "bio" in data:
+        profile.bio = (data.get("bio") or "").strip()[:300]
+    if "pronouns" in data:
+        profile.pronouns = (data.get("pronouns") or "").strip()[:40]
+    if "status" in data:
+        profile.status = _sanitize_status(data.get("status"))
+    if "custom_status" in data:
+        profile.custom_status = (data.get("custom_status") or "").strip()[:120]
+    if "accent_color" in data:
+        profile.accent_color = _sanitize_accent_color(data.get("accent_color"), is_admin=is_admin)
+    if "name_effect" in data:
+        profile.name_effect = _sanitize_name_effect(data.get("name_effect"), is_admin=is_admin)
+    if "avatar_frame" in data:
+        profile.avatar_frame = _sanitize_avatar_frame(data.get("avatar_frame"), is_admin=is_admin)
+    if "music_title" in data:
+        profile.music_title = (data.get("music_title") or "").strip()[:120]
+    if "music_artist" in data:
+        profile.music_artist = (data.get("music_artist") or "").strip()[:120]
+
+    if request.FILES.get("avatar"):
+        profile.avatar = request.FILES["avatar"]
+    elif isinstance(data.get("avatar_url"), str) and data.get("avatar_url").startswith("data:"):
+        saved = _save_base64_media(data.get("avatar_url"), prefix="avatar")
+        if saved:
+            profile.avatar.name = saved.replace(settings.MEDIA_URL, "", 1).lstrip("/")
+
+    if request.FILES.get("banner"):
+        profile.banner = request.FILES["banner"]
+    elif isinstance(data.get("banner_url"), str) and data.get("banner_url").startswith("data:"):
+        saved = _save_base64_media(data.get("banner_url"), prefix="banner")
+        if saved:
+            profile.banner.name = saved.replace(settings.MEDIA_URL, "", 1).lstrip("/")
+
+    if request.FILES.get("music_file"):
+        profile.music_file = request.FILES["music_file"]
+    elif isinstance(data.get("music_url"), str) and data.get("music_url").startswith("data:"):
+        saved = _save_base64_media(data.get("music_url"), prefix="music")
+        if saved:
+            profile.music_file.name = saved.replace(settings.MEDIA_URL, "", 1).lstrip("/")
+
+    if request.FILES.get("music_cover"):
+        profile.music_cover = request.FILES["music_cover"]
+    elif isinstance(data.get("music_cover_url"), str) and data.get("music_cover_url").startswith("data:"):
+        saved = _save_base64_media(data.get("music_cover_url"), prefix="cover")
+        if saved:
+            profile.music_cover.name = saved.replace(settings.MEDIA_URL, "", 1).lstrip("/")
+
+    if is_admin:
+        profile.is_admin_badge = True
+
+    profile.save()
+    return JsonResponse({"ok": True, "profile": _serialize_profile(user, profile)})
+
+
+@login_required
+@require_POST
+def api_friend_request(request):
+    try:
+        payload = json.loads(request.body.decode("utf-8") or "{}")
+    except Exception:
+        payload = request.POST
+
+    target_username = (payload.get("username") or payload.get("to_username") or "").strip()
+    if not target_username:
+        return JsonResponse({"ok": False, "error": "Informe um nome de usuário."}, status=400)
+
+    target_user = User.objects.filter(username__iexact=target_username).first()
+    if not target_user:
+        return JsonResponse({"ok": False, "error": "Usuário não encontrado."}, status=404)
+    if target_user.id == request.user.id:
+        return JsonResponse({"ok": False, "error": "Você não pode adicionar a si mesmo."}, status=400)
+    if _are_friends(request.user, target_user):
+        return JsonResponse({"ok": True, "already_friends": True, "message": "Vocês já são amigos!"})
+
+    req, created = FriendRequest.objects.get_or_create(
+        from_user=request.user,
+        to_user=target_user,
+        defaults={"status": "pending"},
+    )
+    if not created and req.status != "pending":
+        req.status = "pending"
+        req.save()
+
+    return JsonResponse({
+        "ok": True,
+        "request_id": req.id,
+        "to_username": target_user.username,
+        "message": f"Solicitação enviada para {target_user.username}.",
+    })
+
+
+@login_required
+@require_POST
+def api_respond_friend_request(request, request_id):
+    freq = get_object_or_404(FriendRequest, id=request_id, to_user=request.user)
+    try:
+        payload = json.loads(request.body.decode("utf-8") or "{}")
+    except Exception:
+        payload = request.POST
+
+    action = (payload.get("action") or "").strip().lower()
+    if action in ("accept", "aceitar"):
+        freq.status = "accepted"
+        freq.save()
+        u1, u2 = sorted([request.user, freq.from_user], key=lambda u: u.id)
+        Friendship.objects.get_or_create(user1=u1, user2=u2)
+        return JsonResponse({
+            "ok": True,
+            "accepted": True,
+            "friend": _serialize_profile(freq.from_user, _get_or_create_profile(freq.from_user)),
+        })
+    elif action in ("reject", "decline", "recusar"):
+        freq.status = "rejected"
+        freq.save()
+        return JsonResponse({"ok": True, "accepted": False})
+
+    return JsonResponse({"ok": False, "error": "Ação inválida."}, status=400)
+
+
+@login_required
+@require_POST
+def api_remove_friend(request, username):
+    target_user = get_object_or_404(User, username__iexact=username)
+    Friendship.objects.filter(
+        Q(user1=request.user, user2=target_user) | Q(user1=target_user, user2=request.user)
+    ).delete()
+    return JsonResponse({"ok": True, "removed": target_user.username})
