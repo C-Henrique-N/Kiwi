@@ -363,3 +363,54 @@ def sync_server_memberships(sender, instance, action, pk_set, **kwargs):
         if instance.owner_id:
             instance.members.add(instance.owner)
             ServerMember.objects.get_or_create(server=instance, user=instance.owner)
+
+
+# === COMPATIBILIDADE E MODELOS COMPLEMENTARES DO KIWI ===
+
+DirectMessage = PrivateMessage
+
+
+class Friendship(models.Model):
+    user1 = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name="friendships_as_user1",
+    )
+    user2 = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name="friendships_as_user2",
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["-created_at"]
+        unique_together = ("user1", "user2")
+
+    def __str__(self):
+        return f"{self.user1.username} <-> {self.user2.username}"
+
+
+class MessageReaction(models.Model):
+    message = models.ForeignKey(
+        Message,
+        on_delete=models.CASCADE,
+        related_name="reactions",
+    )
+    user = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name="message_reactions",
+    )
+    emoji = models.CharField(max_length=32)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["created_at", "id"]
+        unique_together = ("message", "user", "emoji")
+
+    def __str__(self):
+        return f"{self.user.username} {self.emoji} on msg #{self.message_id}"
+
+
+Profile = UserProfile
