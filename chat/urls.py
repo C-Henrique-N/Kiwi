@@ -16,6 +16,8 @@ urlpatterns = [
     path('api/profile/update/', views.update_profile, name='update_profile'),
     path('api/profile/<str:username>/', views.get_user_profile, name='get_user_profile'),
     path('loja/', views.loja_view, name='loja'),
+    path('api/profile/posts/create/', views.create_profile_post, name='create_profile_post'),
+    path('api/posts/create/', views.create_profile_post, name='create_post_alias'),
 
     path('api/profile/posts/', views.list_profile_posts, name='list_profile_posts'),
     path('api/profile/posts/create/', views.create_profile_post, name='create_profile_post'),
