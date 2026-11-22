@@ -11,7 +11,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700;900&family=Fredoka:wght@600;700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="{% static 'css/room.css' %}">
-    <link rel="stylesheet" href="{% static 'css/mobile_3.css' %}">
+    <link rel="stylesheet" href="{% static 'css/mobile_2.css' %}">
 <style id="kiwi-mobile-responsive-style">
 /* Base & Fallback Layout */
 :root {
@@ -61,6 +61,7 @@ body {
     height: 100dvh;
     overflow: hidden;
     background: #0b0714;
+    -webkit-text-size-adjust: 100%;
   }
 
   .kiwi-app-shell {
@@ -90,6 +91,7 @@ body {
     gap: 10px;
     padding: 12px 0 calc(var(--m-bottom-h) + 20px + env(safe-area-inset-bottom));
     overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
     overscroll-behavior: contain;
     z-index: 12;
   }
@@ -103,6 +105,7 @@ body {
     display: flex;
     flex-direction: column;
     overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
     overscroll-behavior: contain;
     padding-bottom: calc(var(--m-bottom-h) + 76px + env(safe-area-inset-bottom));
     background: transparent;
@@ -144,6 +147,7 @@ body {
     flex-wrap: nowrap;
     flex-shrink: 0;
     background: rgba(18, 11, 33, 0.94);
+    -webkit-backdrop-filter: blur(10px);
     backdrop-filter: blur(10px);
     border-bottom: 1px solid rgba(167, 139, 250, 0.16);
   }
@@ -184,6 +188,7 @@ body {
     min-height: 0;
     overflow-y: auto;
     -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
   }
 
   #kiwi-profile-timeline-view .kiwi-x-topbar {
@@ -209,7 +214,9 @@ body {
   }
 
   #kiwi-profile-timeline-view .kiwi-x-subtabs {
+    display: flex;
     overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
     scrollbar-width: none;
   }
 
@@ -221,6 +228,7 @@ body {
     flex: 1 0 auto;
     padding: 11px 12px;
     font-size: 13px;
+    white-space: nowrap;
   }
 
   /* DM dividida: empilha lista e conversa no mobile para não espremer */
@@ -231,6 +239,7 @@ body {
     height: 100%;
     min-height: 0;
     overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
   }
 
   .kiwi-dm-left-pane {
@@ -239,6 +248,7 @@ body {
     max-height: 44%;
     flex-shrink: 0;
     overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
     border-right: none;
     border-bottom: 1px solid var(--kiwi-border);
   }
@@ -258,11 +268,17 @@ body {
     bottom: calc(var(--m-bottom-h) + 18px + env(safe-area-inset-bottom));
     width: auto;
     max-width: none;
+    max-height: none;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
   }
 
   .aesthetic-profile-card {
     width: min(94vw, 440px) !important;
+    max-width: 94vw !important;
     max-height: 86dvh;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
   }
 
   /* Barra inferior fixa estilo pílula (Mensagens | Perfil) */
@@ -275,6 +291,7 @@ body {
     display: flex;
     align-items: center;
     background: rgba(24, 14, 46, 0.94);
+    -webkit-backdrop-filter: blur(14px);
     backdrop-filter: blur(14px);
     border: 1px solid rgba(168, 85, 247, 0.48);
     border-radius: 999px;
@@ -298,6 +315,7 @@ body {
     font-size: 14px;
     font-weight: 700;
     cursor: pointer;
+    touch-action: manipulation;
   }
 
   .kiwi-mobile-bottom-pill button + button {
@@ -4663,186 +4681,118 @@ body {
                     if (e.target === createPostModal) closeModalAnimated(createPostModal);
                 });
             }
+
             if (createPostForm) {
                 createPostForm.addEventListener('submit', (e) => {
                     e.preventDefault();
-                    const imgInp = document.getElementById('new-post-image-url');
-                    const postContent = (newPostTextEl && newPostTextEl.value.trim()) || '';
-                    if (!postContent) return;
-                    const imgUrl = (imgInp && imgInp.value.trim()) || '';
+                    const textVal = (newPostTextEl && newPostTextEl.value.trim()) || '';
+                    const imgInputEl = document.getElementById('new-post-image-url');
+                    const imgVal = (imgInputEl && imgInputEl.value.trim()) || '';
+                    if (!textVal && !imgVal) return;
 
-                    userProfilePosts.unshift({
-                        id: 'p-' + Date.now().toString(36),
-                        author: activeUsername || 'AkiiraPW',
-                        handle: `@${(activeUsername || 'AkiiraPW').toLowerCase()}`,
+                    const uname = activeUsername || myProfileData.username || 'AkiiraPW';
+                    const postObj = {
+                        id: 'post-' + Date.now(),
+                        author: uname,
+                        handle: `@${uname.toLowerCase()}`,
                         time: 'agora',
-                        text: postContent,
-                        imageUrl: imgUrl,
-                        hasBannerCard: false,
-                        kind: 'posts',
+                        text: textVal,
+                        imageUrl: imgVal,
                         replies: 0,
                         reposts: 0,
                         likes: 0,
-                        views: '0',
-                        liked: false
-                    });
+                        views: '1',
+                        liked: false,
+                        hasBannerCard: Boolean(imgVal)
+                    };
+                    userProfilePosts.unshift(postObj);
                     writeStorageJson(USER_POSTS_KEY, userProfilePosts);
+
                     if (newPostTextEl) newPostTextEl.value = '';
-                    if (imgInp) imgInp.value = '';
+                    if (imgInputEl) imgInputEl.value = '';
                     closeModalAnimated(createPostModal);
+                    activeXSubtab = 'posts';
+                    xSubtabs.forEach(b => b.classList.toggle('active', b.getAttribute('data-x-subtab') === 'posts'));
+                    closeFollowersPanelAndShowFeed();
                     activateNavTab('perfil');
+                    renderCleanUserPosts();
                     showKiwiToast('Postagem publicada no seu perfil!');
                 });
             }
 
-            const kiwiXBackBtn = document.getElementById('kiwi-x-back-btn');
-            const kiwiXOpenCardBtn = document.getElementById('kiwi-x-open-card-btn');
-            const kiwiXAvatarEl = document.getElementById('kiwi-x-avatar');
-            const kiwiXEditBtn = document.getElementById('kiwi-x-edit-profile-btn');
-            const kiwiXFollowBtn = document.getElementById('kiwi-x-follow-btn');
-            const kiwiXDmBtn = document.getElementById('kiwi-x-dm-btn');
-            const kiwiXMoreBtn = document.getElementById('kiwi-x-more-btn');
+            const xEditBtn = document.getElementById('kiwi-x-edit-profile-btn');
+            const xOpenCardBtn = document.getElementById('kiwi-x-open-card-btn');
+            const xAvatarBtn = document.getElementById('kiwi-x-avatar');
+            const xMoreBtn = document.getElementById('kiwi-x-more-btn');
+            const xDmBtn = document.getElementById('kiwi-x-dm-btn');
+            const xBackBtn = document.getElementById('kiwi-x-back-btn');
 
-            if (kiwiXBackBtn) kiwiXBackBtn.addEventListener('click', () => switchToServerChannel('geral', 'text'));
-            if (kiwiXOpenCardBtn) kiwiXOpenCardBtn.addEventListener('click', () => openUserProfile(activeUsername));
-            if (kiwiXAvatarEl) kiwiXAvatarEl.addEventListener('click', () => openUserProfile(activeUsername));
-            if (kiwiXEditBtn) kiwiXEditBtn.addEventListener('click', () => switchToEditBtn.click());
-            if (kiwiXFollowBtn) {
-                kiwiXFollowBtn.addEventListener('click', () => {
-                    const isNowFollowing = kiwiXFollowBtn.classList.toggle('following');
-                    kiwiXFollowBtn.textContent = isNowFollowing ? 'Seguindo' : 'Seguir';
-                    showKiwiToast(isNowFollowing ? 'Agora você está seguindo!' : 'Deixou de seguir.');
-                });
+            if (xEditBtn) xEditBtn.addEventListener('click', () => switchToEditBtn.click());
+            if (xOpenCardBtn) xOpenCardBtn.addEventListener('click', () => openUserProfile(activeUsername));
+            if (xAvatarBtn) xAvatarBtn.addEventListener('click', () => openUserProfile(activeUsername));
+            if (xMoreBtn) xMoreBtn.addEventListener('click', () => openUserProfile(activeUsername));
+            if (xDmBtn) xDmBtn.addEventListener('click', () => activateNavTab('mensagens'));
+            if (xBackBtn) xBackBtn.addEventListener('click', () => switchToGeral());
+
+            const geralStaticTab = document.getElementById('tab-geral');
+            if (geralStaticTab) {
+                geralStaticTab.addEventListener('click', () => switchToServerChannel('geral', 'text'));
             }
-            if (kiwiXDmBtn) kiwiXDmBtn.addEventListener('click', () => activateNavTab('mensagens'));
-            if (kiwiXMoreBtn) kiwiXMoreBtn.addEventListener('click', () => openUserProfile(activeUsername));
-
-            const sidebarRightEl = document.querySelector('.sidebar-right');
-            if (sidebarRightEl && socialContentContainer) {
-                const extraRightBox = document.createElement('div');
-                extraRightBox.style.cssText = 'display:flex;flex-direction:column;gap:12px;margin-top:4px;';
-                extraRightBox.innerHTML = `
-                    <div class="kiwi-right-search-wrap">
-                        <span class="kiwi-right-search-icon">🔍</span>
-                        <input type="text" id="kiwi-right-search-input" class="kiwi-right-search-input" placeholder="Buscar no Kiwi...">
-                    </div>
-                    <div class="kiwi-right-widget-card">
-                        <div class="kiwi-right-widget-header">
-                            <span class="kiwi-right-widget-title">Quem seguir</span>
-                            <button type="button" class="kiwi-right-widget-link" id="right-ver-mais-follow">Ver mais →</button>
-                        </div>
-                        <div class="kiwi-follow-row">
-                            <div style="display:flex;align-items:center;gap:8px;min-width:0;">
-                                <div class="social-avatar" style="background:#5865f2;">H</div>
-                                <div style="min-width:0;"><div style="font-size:13px;font-weight:700;">Hollow29</div><div style="font-size:11px;color:var(--kiwi-text-muted);">@Hollow29</div></div>
-                            </div>
-                            <button type="button" class="kiwi-follow-pill-btn" data-follow-user="Hollow29">Seguir</button>
-                        </div>
-                        <div class="kiwi-follow-row">
-                            <div style="display:flex;align-items:center;gap:8px;min-width:0;">
-                                <div class="social-avatar">A</div>
-                                <div style="min-width:0;"><div style="font-size:13px;font-weight:700;">AkiiraPW</div><div style="font-size:11px;color:var(--kiwi-text-muted);">@AkiiraPW</div></div>
-                            </div>
-                            <button type="button" class="kiwi-follow-pill-btn" data-follow-user="AkiiraPW">Seguir</button>
-                        </div>
-                    </div>
-                `;
-                const artCard = sidebarRightEl.querySelector('.sidebar-artwork-card');
-                if (artCard) sidebarRightEl.insertBefore(extraRightBox, artCard);
-                else sidebarRightEl.appendChild(extraRightBox);
-
-                const rightSearchInput = extraRightBox.querySelector('#kiwi-right-search-input');
-                if (rightSearchInput) {
-                    rightSearchInput.addEventListener('input', () => {
-                        const q = rightSearchInput.value.trim().toLowerCase();
-                        socialContentContainer.querySelectorAll('.social-list-item').forEach(item => {
-                            const txt = (item.textContent || '').toLowerCase();
-                            item.style.display = (!q || txt.includes(q)) ? 'flex' : 'none';
-                        });
-                        extraRightBox.querySelectorAll('.kiwi-follow-row').forEach(row => {
-                            const txt = (row.textContent || '').toLowerCase();
-                            row.style.display = (!q || txt.includes(q)) ? 'flex' : 'none';
-                        });
+            document.querySelectorAll('#server-channels-list .channel-item[data-channel-name]').forEach((item) => {
+                if (!item._boundChannelClick) {
+                    item._boundChannelClick = true;
+                    item.addEventListener('click', () => {
+                        const chName = item.getAttribute('data-channel-name') || 'geral';
+                        const chType = item.getAttribute('data-channel-type') || 'text';
+                        switchToServerChannel(chName, chType);
                     });
                 }
+            });
 
-                extraRightBox.querySelectorAll('[data-follow-user]').forEach(btn => {
-                    const target = (btn.getAttribute('data-follow-user') || '').trim();
-                    const alreadyFollowing = followingList.some(
-                        x => (typeof x === 'string' ? x : (x && x.username) || '').toLowerCase() === target.toLowerCase()
-                    );
-                    btn.classList.toggle('is-following', alreadyFollowing);
-                    btn.textContent = alreadyFollowing ? 'Seguindo' : 'Seguir';
+            const bottomPill = document.createElement('nav');
+            bottomPill.className = 'kiwi-mobile-bottom-pill';
+            bottomPill.setAttribute('aria-label', 'Navegação rápida mobile');
+            bottomPill.innerHTML = `
+                <button type="button" id="pill-mensagens-btn" data-pill-tab="mensagens">
+                    <span>💬</span>
+                    <span>Mensagens</span>
+                </button>
+                <button type="button" id="pill-perfil-btn" data-pill-tab="perfil" class="active">
+                    <span>👤</span>
+                    <span>Perfil</span>
+                </button>
+            `;
+            document.body.appendChild(bottomPill);
 
-                    btn.addEventListener('click', () => {
-                        if (!target) return;
-                        followingList = readStorageJson(FOLLOWING_STORAGE_KEY, []);
-                        if (!Array.isArray(followingList)) followingList = [];
-                        const exists = followingList.some(
-                            x => (typeof x === 'string' ? x : (x && x.username) || '').toLowerCase() === target.toLowerCase()
-                        );
-                        let nowFollowing = false;
-                        if (exists) {
-                            followingList = followingList.filter(
-                                x => (typeof x === 'string' ? x : (x && x.username) || '').toLowerCase() !== target.toLowerCase()
-                            );
-                            nowFollowing = false;
-                        } else {
-                            followingList.push({ username: target, bio: 'Seguido no Kiwi Chat.' });
-                            nowFollowing = true;
-                        }
-                        writeStorageJson(FOLLOWING_STORAGE_KEY, followingList);
-                        syncFollowerCountsUi();
-                        btn.classList.toggle('is-following', nowFollowing);
-                        btn.textContent = nowFollowing ? 'Seguindo' : 'Seguir';
-                        if (nowFollowing) {
-                            addFriendByName(target);
-                            showKiwiToast(`Seguindo ${target}!`);
-                        } else {
-                            showKiwiToast(`Deixou de seguir ${target}.`);
-                        }
-                    });
-                });
+            const pillMensagensBtn = document.getElementById('pill-mensagens-btn');
+            const pillPerfilBtn = document.getElementById('pill-perfil-btn');
 
-                const verMaisFollow = document.getElementById('right-ver-mais-follow');
-                if (verMaisFollow) verMaisFollow.addEventListener('click', () => activateNavTab('mensagens'));
+            function syncBottomPillState(activeKey) {
+                if (pillMensagensBtn) pillMensagensBtn.classList.toggle('active', activeKey === 'mensagens');
+                if (pillPerfilBtn) pillPerfilBtn.classList.toggle('active', activeKey === 'perfil');
             }
 
-            renderChannelsListForServer(currentServerId, currentChannelName);
-            activateNavTab('perfil');
-            fetchOnlineUsers();
+            if (pillMensagensBtn) {
+                pillMensagensBtn.addEventListener('click', () => {
+                    syncBottomPillState('mensagens');
+                    activateNavTab('mensagens');
+                    openMobileChatView();
+                });
+            }
+
+            if (pillPerfilBtn) {
+                pillPerfilBtn.addEventListener('click', () => {
+                    syncBottomPillState('perfil');
+                    activateNavTab('perfil');
+                    openMobileChatView();
+                });
+            }
+
             renderSidebarSavedFriends();
+            fetchOnlineUsers();
+            renderCleanUserPosts();
+            activateNavTab('perfil');
         });
     </script>
-<nav class="kiwi-mobile-bottom-pill" aria-label="Navegação rápida mobile">
-    <button type="button" id="mobile-pill-mensagens" onclick="document.getElementById('nav-tab-mensagens')?.click()">
-        <span>💬</span>
-        <span>Mensagens</span>
-    </button>
-    <button type="button" id="mobile-pill-perfil" onclick="document.getElementById('nav-tab-perfil')?.click()">
-        <span>👤</span>
-        <span>Perfil</span>
-    </button>
-</nav>
-<script>
-document.addEventListener("DOMContentLoaded", function() {
-    const pillMsg = document.getElementById("mobile-pill-mensagens");
-    const pillPerfil = document.getElementById("mobile-pill-perfil");
-    const navMsg = document.getElementById("nav-tab-mensagens");
-    const navPerfil = document.getElementById("nav-tab-perfil");
-
-    function syncBottomPillState() {
-        const isMsgActive = navMsg && navMsg.classList.contains("active");
-        const isPerfilActive = navPerfil && navPerfil.classList.contains("active");
-        if (pillMsg) pillMsg.classList.toggle("active", Boolean(isMsgActive));
-        if (pillPerfil) pillPerfil.classList.toggle("active", Boolean(isPerfilActive));
-    }
-
-    if (navMsg) navMsg.addEventListener("click", () => setTimeout(syncBottomPillState, 0));
-    if (navPerfil) navPerfil.addEventListener("click", () => setTimeout(syncBottomPillState, 0));
-    syncBottomPillState();
-});
-</script>
 </body>
-
 </html>
