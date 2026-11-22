@@ -11,7 +11,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700;900&family=Fredoka:wght@600;700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="{% static 'css/room.css' %}">
-    <link rel="stylesheet" href="{% static 'css/mobile.css' %}">
+    <link rel="stylesheet" href="{% static 'css/mobile_5.css' %}">
 <style id="kiwi-mobile-responsive-style">
 /* Base & Fallback Layout */
 :root {
@@ -1532,6 +1532,25 @@ body {
             </div>
         </div>
 
+
+        <!-- Modal Detalhes e Respostas da Postagem -->
+        <div id="post-detail-modal" class="modal-overlay" role="dialog" aria-modal="true" aria-label="Detalhes da Postagem">
+            <div class="aesthetic-profile-card" style="padding: 20px; width: 460px; max-height: 88vh; overflow-y: auto;">
+                <button type="button" class="close-modal-btn" id="close-post-detail-btn">×</button>
+                <h3 style="color: var(--text-main); margin-bottom: 12px; font-size: 16px;">💬 Postagem &amp; Respostas</h3>
+                <div id="post-detail-body" style="background: var(--bg-soft); border: 1px solid var(--border-subtle); border-radius: 12px; padding: 12px; margin-bottom: 14px;"></div>
+                <div style="margin-bottom: 12px;">
+                    <div style="font-size: 12px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; margin-bottom: 8px;">Respostas</div>
+                    <div id="post-detail-replies-list" style="display: flex; flex-direction: column; gap: 8px;"></div>
+                </div>
+                <form id="post-detail-reply-form" style="display: flex; flex-direction: column; gap: 8px;">
+                    <label for="post-detail-reply-input" style="font-size: 12px; font-weight: 600; color: var(--text-muted);">Escrever resposta</label>
+                    <textarea id="post-detail-reply-input" rows="3" required placeholder="Escreva sua resposta para esta postagem..."></textarea>
+                    <button type="submit" class="btn-aesthetic-edit">Responder Postagem</button>
+                </form>
+            </div>
+        </div>
+
         <!-- Modal Criar Canal -->
         <div id="create-channel-modal" class="modal-overlay">
             <div class="aesthetic-profile-card" style="padding: 20px; width: 400px; max-height: 85vh; overflow-y: auto;">
@@ -1696,12 +1715,14 @@ body {
             try { savedUsername = (localStorage.getItem(USERNAME_STORAGE_KEY) || '').trim(); } catch (_) {}
 
             const injectedProfileUsername = (injectedProfile && typeof injectedProfile.username === 'string') ? injectedProfile.username.trim() : '';
-            let activeUsername = (
+            const explicitUser = (
                 (typeof injectedUser === 'string' && injectedUser.trim()) ||
                 injectedProfileUsername ||
                 savedUsername ||
-                'AkiiraPW'
+                ''
             ).trim();
+            const hasExplicitUser = Boolean(explicitUser);
+            let activeUsername = explicitUser || 'AkiiraPW';
 
             const themesMap = {
                 '#7c3aed': { accent: '#7c3aed', main: '#0b0714', sidebar: '#160d29', darkest: '#120b21', input: '#1c1133', card: '#1c1133', soft: '#241642', textMain: '#f5f3ff', textMuted: '#a79bc4', border: 'rgba(167, 139, 250, 0.16)' },
@@ -1771,12 +1792,17 @@ body {
 
             function isAdminIdentity(username, isAdminFlag) {
                 const clean = (username || '').trim().toLowerCase();
-                return Boolean(isAdminFlag) || clean === 'akiirapw' || clean === 'admin';
+                if (!clean || !hasExplicitUser) return false;
+                if (clean === 'akiirapw') {
+                    return Boolean(isAdminFlag) || injectedIsAdmin || clean === 'akiirapw';
+                }
+                return Boolean(isAdminFlag);
             }
 
             function isAkiiraAdminIdentity(username, isAdminFlag) {
                 const clean = (username || '').trim().toLowerCase();
-                return clean === 'akiirapw' && (Boolean(isAdminFlag) || clean === 'akiirapw');
+                if (!clean || !hasExplicitUser || clean !== 'akiirapw') return false;
+                return Boolean(isAdminFlag) || injectedIsAdmin || clean === 'akiirapw';
             }
 
             function sanitizeThemeForUser(colorKey, username, isAdminFlag) {
@@ -2424,7 +2450,7 @@ body {
             function sanitizeCacheAssetUrl(val) {
                 const str = String(val || '').trim();
                 if (!str || str.startsWith('blob:')) return '';
-                if (str.startsWith('data:') && str.length > 600000) return '';
+                if (str.startsWith('data:') && str.length > 2500000) return '';
                 return str;
             }
 
@@ -3038,8 +3064,14 @@ body {
                 } else if (typedCoverUrl) {
                     myProfileData.coverUrl = typedCoverUrl;
                 }
-                if (tempEditorAvatarUrl) myProfileData.avatarUrl = tempEditorAvatarUrl;
-                if (tempEditorBannerUrl) myProfileData.bannerUrl = tempEditorBannerUrl;
+                if (tempEditorAvatarUrl) {
+                    myProfileData.avatarUrl = tempEditorAvatarUrl;
+                    tempEditorAvatarUrl = '';
+                }
+                if (tempEditorBannerUrl) {
+                    myProfileData.bannerUrl = tempEditorBannerUrl;
+                    tempEditorBannerUrl = '';
+                }
                 saveUserMusicToLocalCache(activeUsername, myProfileData);
                 updateMySidebarUI();
                 syncXProfileHeader();
@@ -3111,7 +3143,12 @@ body {
             if (pickAudioBtn && audioFileInput) pickAudioBtn.addEventListener('click', () => { attachMenu.classList.remove('open'); audioFileInput.click(); });
             if (pickDocBtn && docFileInput) pickDocBtn.addEventListener('click', () => { attachMenu.classList.remove('open'); docFileInput.click(); });
 
+            const renderedMessageIds = new Set();
+            let lastRenderedMsgSignature = { sig: '', at: 0 };
+
             function appendMessage(data) {
+                if (!data || typeof data !== 'object') return;
+                const msgId = String(data.id || data.msgId || data.clientMsgId || '').trim();
                 const sender = data.sender || data.username || 'Usuário';
                 const messageText = data.message || data.text || '';
                 const timestamp = data.timestamp || new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
@@ -3120,9 +3157,22 @@ body {
                 const attachmentName = data.attachmentName || data.attachment_name || '';
                 const attachmentType = data.attachmentType || data.attachment_type || '';
 
+                if (msgId && (renderedMessageIds.has(msgId) || (chatLog && chatLog.querySelector(`[data-msg-id="${CSS.escape(msgId)}"]`)))) {
+                    return;
+                }
+
+                const nowTs = Date.now();
+                const sig = `${String(sender).trim().toLowerCase()}|${String(messageText).trim()}|${String(attachmentName).trim()}`;
+                if (sig && sig === lastRenderedMsgSignature.sig && (nowTs - lastRenderedMsgSignature.at) < 2500) {
+                    return;
+                }
+                lastRenderedMsgSignature = { sig, at: nowTs };
+                if (msgId) renderedMessageIds.add(msgId);
+
                 const group = document.createElement('div');
                 group.className = 'message-group';
                 group.setAttribute('data-can-delete', '1');
+                if (msgId) group.setAttribute('data-msg-id', msgId);
 
                 const avatarDiv = document.createElement('div');
                 avatarDiv.className = 'avatar';
@@ -3211,7 +3261,9 @@ body {
                     }
                 }
 
+                const clientMsgId = `msg-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
                 const payload = {
+                    id: clientMsgId,
                     sender: activeUsername,
                     message: msg,
                     timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
@@ -3220,28 +3272,27 @@ body {
                     attachmentName,
                     attachmentType
                 };
-                appendMessage(payload);
                 const chObj = (serverChannelsStore[currentServerId] || []).find((c) => c.name === currentChannelName);
-                roomCtxManager.appendMessageToContext({
+                const ctxMeta = {
                     type: 'channel',
                     serverId: currentServerId,
                     channelName: currentChannelName,
                     channelType: (chObj && chObj.type) || 'text'
-                }, {
+                };
+                roomCtxManager.appendMessageToContext(ctxMeta, {
+                    id: clientMsgId,
                     author: payload.sender,
                     text: payload.message,
                     timestamp: payload.timestamp,
                     avatarUrl: payload.avatarUrl,
+                    attachmentUrl: payload.attachmentUrl,
                     attachmentName: payload.attachmentName,
                     attachmentType: payload.attachmentType
                 });
-                roomCtxManager.sendToContext({
-                    type: 'channel',
-                    serverId: currentServerId,
-                    channelName: currentChannelName,
-                    channelType: (chObj && chObj.type) || 'text'
-                }, {
+                appendMessage(payload);
+                roomCtxManager.sendToContext(ctxMeta, {
                     type: 'chat_message',
+                    id: clientMsgId,
                     message: msg,
                     username: activeUsername
                 });
@@ -4218,19 +4269,53 @@ body {
                     const metrics = document.createElement('div');
                     metrics.className = 'kiwi-x-post-metrics';
 
+                    if (!Array.isArray(post.replyItems)) {
+                        post.replyItems = [];
+                    }
+
+                    const replyCountVal = post.replyItems.length > 0 ? post.replyItems.length : Number(post.replies || 0);
+                    const replyBtn = document.createElement('button');
+                    replyBtn.type = 'button';
+                    replyBtn.className = 'kiwi-x-metric-btn';
+                    replyBtn.textContent = `💬 ${replyCountVal}`;
+                    replyBtn.onclick = (ev) => {
+                        ev.stopPropagation();
+                        openPostDetailModal(post.id);
+                    };
+
+                    const repostBtn = document.createElement('button');
+                    repostBtn.type = 'button';
+                    repostBtn.className = 'kiwi-x-metric-btn';
+                    repostBtn.textContent = `🔁 ${Number(post.reposts || 0)}`;
+                    repostBtn.onclick = (ev) => {
+                        ev.stopPropagation();
+                        post.reposts = Number(post.reposts || 0) + 1;
+                        writeStorageJson(USER_POSTS_KEY, userProfilePosts);
+                        renderCleanUserPosts();
+                        showKiwiToast('Repostado!');
+                    };
+
                     const likeBtn = document.createElement('button');
                     likeBtn.type = 'button';
                     likeBtn.className = 'kiwi-x-metric-btn' + (post.liked ? ' liked' : '');
                     likeBtn.textContent = `♥ ${Number(post.likes || 0) + (post.liked ? 1 : 0)}`;
-                    likeBtn.onclick = () => {
+                    likeBtn.onclick = (ev) => {
+                        ev.stopPropagation();
                         post.liked = !post.liked;
                         writeStorageJson(USER_POSTS_KEY, userProfilePosts);
                         renderCleanUserPosts();
                     };
 
-                    metrics.innerHTML = `<span>💬 ${post.replies || 0}</span><span>🔁 ${post.reposts || 0}</span>`;
+                    metrics.appendChild(replyBtn);
+                    metrics.appendChild(repostBtn);
                     metrics.appendChild(likeBtn);
                     metrics.insertAdjacentHTML('beforeend', `<span>📊 ${post.views || '0'}</span><span>📤</span>`);
+
+                    body.style.cursor = 'pointer';
+                    body.addEventListener('click', (ev) => {
+                        if (ev.target instanceof Element && ev.target.closest('button, a, img')) return;
+                        openPostDetailModal(post.id);
+                    });
 
                     body.appendChild(metrics);
                     card.appendChild(av);
@@ -4497,7 +4582,86 @@ body {
 
             function activateNavTab(tabKey) {
                 currentView = tabKey;
-                navItems.forEach(btn => {
+    
+            const postDetailModal = document.getElementById('post-detail-modal');
+            const closePostDetailBtn = document.getElementById('close-post-detail-btn');
+            const postDetailBodyEl = document.getElementById('post-detail-body');
+            const postDetailRepliesListEl = document.getElementById('post-detail-replies-list');
+            const postDetailReplyForm = document.getElementById('post-detail-reply-form');
+            const postDetailReplyInput = document.getElementById('post-detail-reply-input');
+            let activeDetailPostId = null;
+
+            function openPostDetailModal(postId) {
+                userProfilePosts = readStorageJson(USER_POSTS_KEY, userProfilePosts);
+                const post = userProfilePosts.find(p => String(p.id) === String(postId));
+                if (!post || !postDetailModal) return;
+                activeDetailPostId = post.id;
+                if (!Array.isArray(post.replyItems)) post.replyItems = [];
+
+                if (postDetailBodyEl) {
+                    const imgHtml = (post.imageUrl && isSafeAssetUrl(post.imageUrl))
+                        ? `<img src="${escapeHtmlText(post.imageUrl)}" alt="Imagem da postagem" style="max-width:100%;max-height:240px;border-radius:10px;margin-top:8px;display:block;">`
+                        : '';
+                    postDetailBodyEl.innerHTML = `
+                        <div style="font-weight:800;font-size:14px;color:var(--text-main);">${escapeHtmlText(post.author || activeUsername)} <span style="font-weight:400;font-size:12px;color:var(--text-muted);">· ${escapeHtmlText(post.time || 'agora')}</span></div>
+                        <div style="margin-top:6px;font-size:14px;line-height:1.5;color:var(--text-main);white-space:pre-wrap;">${escapeHtmlText(post.text || '')}</div>
+                        ${imgHtml}
+                    `;
+                }
+
+                renderPostDetailReplies(post);
+                openModalAnimated(postDetailModal);
+                setTimeout(() => { if (postDetailReplyInput) postDetailReplyInput.focus(); }, 100);
+            }
+
+            function renderPostDetailReplies(post) {
+                if (!postDetailRepliesListEl) return;
+                const replies = Array.isArray(post.replyItems) ? post.replyItems : [];
+                if (!replies.length) {
+                    postDetailRepliesListEl.innerHTML = '<div style="font-size:12px;color:var(--text-muted);">Nenhuma resposta ainda. Escreva a primeira abaixo.</div>';
+                    return;
+                }
+                postDetailRepliesListEl.innerHTML = '';
+                replies.forEach(rep => {
+                    const item = document.createElement('div');
+                    item.style.cssText = 'background:var(--bg-card);border:1px solid var(--border-subtle);border-radius:10px;padding:10px 12px;';
+                    item.innerHTML = `<div style="font-size:12px;font-weight:700;color:var(--text-main);">${escapeHtmlText(rep.author || activeUsername)} <span style="font-weight:400;color:var(--text-muted);">· ${escapeHtmlText(rep.time || 'agora')}</span></div><div style="font-size:13px;color:var(--text-main);margin-top:4px;white-space:pre-wrap;">${escapeHtmlText(rep.text || '')}</div>`;
+                    postDetailRepliesListEl.appendChild(item);
+                });
+            }
+
+            if (closePostDetailBtn && postDetailModal) {
+                closePostDetailBtn.addEventListener('click', () => closeModalAnimated(postDetailModal));
+            }
+            if (postDetailModal) {
+                postDetailModal.addEventListener('click', (e) => {
+                    if (e.target === postDetailModal) closeModalAnimated(postDetailModal);
+                });
+            }
+            if (postDetailReplyForm) {
+                postDetailReplyForm.addEventListener('submit', (e) => {
+                    e.preventDefault();
+                    const replyTxt = (postDetailReplyInput && postDetailReplyInput.value.trim()) || '';
+                    if (!replyTxt || !activeDetailPostId) return;
+                    userProfilePosts = readStorageJson(USER_POSTS_KEY, userProfilePosts);
+                    const targetPost = userProfilePosts.find(p => String(p.id) === String(activeDetailPostId));
+                    if (!targetPost) return;
+                    if (!Array.isArray(targetPost.replyItems)) targetPost.replyItems = [];
+                    targetPost.replyItems.push({
+                        author: activeUsername || 'Usuário',
+                        text: replyTxt,
+                        time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+                    });
+                    targetPost.replies = targetPost.replyItems.length;
+                    writeStorageJson(USER_POSTS_KEY, userProfilePosts);
+                    if (postDetailReplyInput) postDetailReplyInput.value = '';
+                    renderPostDetailReplies(targetPost);
+                    renderCleanUserPosts();
+                    showKiwiToast('Resposta publicada!');
+                });
+            }
+
+            navItems.forEach(btn => {
                     btn.classList.toggle('active', btn.getAttribute('data-nav-tab') === tabKey);
                 });
                 document.querySelectorAll('#server-channels-list .channel-item').forEach(c => c.classList.remove('active'));
@@ -4660,7 +4824,11 @@ body {
             navItems.forEach(btn => {
                 btn.addEventListener('click', () => {
                     const tabKey = btn.getAttribute('data-nav-tab');
-                    if (tabKey) activateNavTab(tabKey);
+                    if (!tabKey) return;
+                    activateNavTab(tabKey);
+                    if (tabKey !== 'mais') {
+                        openMobileChatView();
+                    }
                 });
             });
 
