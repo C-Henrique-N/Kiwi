@@ -5,6 +5,7 @@
   overflow: hidden;
   background: #121214;
   color: #f2f3f5;
+  -webkit-tap-highlight-color: transparent;
 }
 
 .server-rail {
@@ -17,6 +18,7 @@
   gap: 10px;
   padding: 12px 0;
   overflow-y: auto;
+  overscroll-behavior: contain;
 }
 
 .sidebar-channels {
@@ -25,6 +27,8 @@
   background: #18181b;
   display: flex;
   flex-direction: column;
+  overflow-y: auto;
+  overscroll-behavior: contain;
 }
 
 .chat-main {
@@ -39,24 +43,50 @@
   width: 240px;
   flex-shrink: 0;
   background: #18181b;
+  overflow-y: auto;
+  overscroll-behavior: contain;
 }
 
 /* Em telas de celular */
 @media (max-width: 768px) {
+  /* Por padrão no mobile: mostra barra de servidores + lista de canais */
   .members-panel {
-    display: none; /* ou vira gaveta/modal ao tocar */
+    display: none;
   }
 
   .sidebar-channels {
     width: calc(100% - 72px);
-  }
-
-  /* Quando o usuário abrir um chat no celular, esconda a lista lateral */
-  .app-layout.chat-open .sidebar-channels {
-    display: none;
+    max-width: none;
   }
 
   .app-layout:not(.chat-open) .chat-main {
     display: none;
+  }
+
+  /* Quando o usuário abrir um chat: esconde servidores e canais para dar tela cheia ao chat */
+  .app-layout.chat-open .server-rail,
+  .app-layout.chat-open .sidebar-channels {
+    display: none;
+  }
+
+  .app-layout.chat-open .chat-main {
+    display: flex;
+    width: 100%;
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+
+  /* Painel de membros como gaveta lateral sobreposta ao abrir (adicione .members-open em .app-layout) */
+  .app-layout.members-open .members-panel {
+    display: flex;
+    flex-direction: column;
+    position: fixed;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    width: min(82vw, 300px);
+    z-index: 40;
+    box-shadow: -8px 0 24px rgba(0, 0, 0, 0.55);
+    padding-top: env(safe-area-inset-top);
+    padding-bottom: env(safe-area-inset-bottom);
   }
 }

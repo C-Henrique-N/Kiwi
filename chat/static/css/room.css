@@ -771,633 +771,11 @@ svg {
     color: var(--kiwi-text-secondary);
 }
 
-/* Log de mensagens */
-#chat-log {
-    flex: 1;
-    overflow-y: auto;
-    padding: 14px 18px;
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-}
-
-.message-group {
-    position: relative;
-    display: flex;
-    gap: 12px;
-    padding: 10px 12px;
-    border-radius: var(--kiwi-radius-md);
-    border: 1px solid transparent;
-    transition: background 0.15s ease, border-color 0.15s ease;
-}
-
-.message-group:hover,
-.message-group.menu-open {
-    background: rgba(28, 17, 51, 0.72);
-    border-color: var(--kiwi-border);
-}
-
-.message-group.compact {
-    margin-top: -6px;
-    padding-top: 4px;
-    padding-bottom: 6px;
-}
-
-.avatar {
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
-    background: var(--kiwi-bg-elevated);
-    color: var(--kiwi-text-primary);
-    font-size: 14px;
-    font-weight: 700;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex-shrink: 0;
-    cursor: pointer;
-    border: 1.5px solid var(--kiwi-border-strong);
-}
-
-.message-content {
-    flex: 1;
-    min-width: 0;
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-}
-
-.message-header {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-}
-
-.username {
-    font-size: 14px;
-    font-weight: 700;
-    color: var(--kiwi-text-primary);
-    cursor: pointer;
-}
-
-.username:hover {
-    text-decoration: underline;
-}
-
-.timestamp {
-    font-size: 12px;
-    color: var(--kiwi-text-secondary);
-}
-
-.message-text {
-    font-size: 14px;
-    line-height: 1.48;
-    color: var(--kiwi-text-primary);
-    word-break: break-word;
-}
-
-.msg-attachment-img {
-    margin-top: 6px;
-    max-width: 340px;
-    max-height: 260px;
-    border-radius: var(--kiwi-radius-md);
-    border: 1px solid var(--kiwi-border);
-    cursor: pointer;
-    display: block;
-}
-
-.msg-attachment-audio {
-    margin-top: 6px;
-    max-width: 320px;
-}
-
-.msg-attachment-doc {
-    margin-top: 6px;
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    padding: 8px 12px;
-    border-radius: var(--kiwi-radius-md);
-    background: var(--kiwi-bg-card);
-    border: 1px solid var(--kiwi-border-strong);
-    color: var(--kiwi-text-primary);
-    text-decoration: none;
-    font-size: 13px;
-    font-weight: 600;
-}
-
-/* Toolbar e reações de mensagem */
-.msg-hover-toolbar {
-    display: none;
-    position: absolute;
-    top: -14px;
-    right: 12px;
-    z-index: 12;
-    align-items: center;
-    gap: 2px;
-    padding: 3px 6px;
-    border-radius: var(--kiwi-radius-pill);
-    background: var(--kiwi-bg-card);
-    border: 1px solid var(--kiwi-border-strong);
-    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.45);
-}
-
-.message-group:hover .msg-hover-toolbar,
-.message-group.menu-open .msg-hover-toolbar {
-    display: flex;
-}
-
-.msg-hover-btn {
-    background: transparent;
-    border: none;
-    color: var(--kiwi-text-secondary);
-    font-size: 12px;
-    padding: 4px 6px;
-    border-radius: var(--kiwi-radius-pill);
-    cursor: pointer;
-}
-
-.msg-hover-btn:hover {
-    background: var(--kiwi-bg-hover);
-    color: var(--kiwi-text-primary);
-}
-
-.msg-hover-divider {
-    width: 1px;
-    height: 14px;
-    background: var(--kiwi-border);
-    margin: 0 2px;
-}
-
-.msg-reactions-row {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 6px;
-    margin-top: 4px;
-}
-
-.msg-reaction-chip {
-    display: inline-flex;
-    align-items: center;
-    gap: 5px;
-    padding: 2px 8px;
-    border-radius: var(--kiwi-radius-pill);
-    background: var(--kiwi-bg-card);
-    border: 1px solid var(--kiwi-border);
-    color: var(--kiwi-text-secondary);
-    font-size: 12px;
-    font-weight: 600;
-    cursor: pointer;
-}
-
-.msg-reaction-chip.active {
-    background: var(--kiwi-accent-purple-soft);
-    border-color: var(--kiwi-accent-purple-bright);
-    color: var(--kiwi-text-primary);
-}
-
-.msg-emoji-picker,
-.msg-more-popover {
-    display: none;
-    position: absolute;
-    top: 22px;
-    right: 12px;
-    z-index: 25;
-    background: var(--kiwi-bg-card);
-    border: 1px solid var(--kiwi-border-strong);
-    border-radius: var(--kiwi-radius-md);
-    padding: 6px;
-    box-shadow: 0 12px 28px rgba(0, 0, 0, 0.55);
-}
-
-.msg-emoji-picker.open {
-    display: flex;
-    gap: 4px;
-}
-
-.msg-more-popover.open {
-    display: flex;
-    flex-direction: column;
-    min-width: 140px;
-}
-
-.msg-emoji-choice {
-    background: transparent;
-    border: none;
-    font-size: 16px;
-    padding: 4px;
-    border-radius: 6px;
-    cursor: pointer;
-}
-
-.msg-emoji-choice:hover {
-    background: var(--kiwi-bg-hover);
-}
-
-.msg-more-item {
-    background: transparent;
-    border: none;
-    color: var(--kiwi-text-primary);
-    font-size: 12px;
-    text-align: left;
-    padding: 7px 10px;
-    border-radius: 6px;
-    cursor: pointer;
-}
-
-.msg-more-item:hover {
-    background: var(--kiwi-bg-hover);
-}
-
-.msg-more-item.danger {
-    color: #f87171;
-}
-
-/* Área de input na base do chat */
-.chat-input-area {
-    position: relative;
-    padding: 10px 16px 14px 16px;
-    background: var(--kiwi-bg-canvas);
-    border-top: 1px solid var(--kiwi-border);
-}
-
-.input-wrapper {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    background: var(--kiwi-bg-card);
-    border: 1px solid var(--kiwi-border);
-    border-radius: var(--kiwi-radius-pill);
-    padding: 6px 8px 6px 12px;
-    transition: border-color 0.16s ease, box-shadow 0.16s ease;
-}
-
-.input-wrapper:focus-within {
-    border-color: var(--kiwi-accent-purple-bright);
-    box-shadow: 0 0 0 2px rgba(139, 92, 246, 0.2);
-}
-
-#chat-message-input {
-    flex: 1;
-    background: transparent;
-    border: none;
-    color: var(--kiwi-text-primary);
-    font-size: 14px;
-    outline: none;
-    padding: 6px 4px;
-}
-
-#chat-message-submit {
-    padding: 8px 18px;
-    border-radius: var(--kiwi-radius-pill);
-    border: none;
-    background: linear-gradient(135deg, var(--kiwi-accent-purple) 0%, var(--kiwi-accent-purple-bright) 100%);
-    color: #fff;
-    font-size: 13px;
-    font-weight: 700;
-    cursor: pointer;
-}
-
-#chat-message-submit:hover {
-    filter: brightness(1.08);
-}
-
-.media-btn {
-    width: 34px;
-    height: 34px;
-    border-radius: 50%;
-    border: none;
-    background: transparent;
-    color: var(--kiwi-text-secondary);
-    font-size: 16px;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-}
-
-.media-btn:hover {
-    background: var(--kiwi-bg-hover);
-    color: var(--kiwi-text-primary);
-}
-
-.media-btn.recording {
-    color: #ef4444;
-    background: rgba(239, 68, 68, 0.16);
-}
-
-.attach-menu {
-    display: none;
-    position: absolute;
-    bottom: 64px;
-    left: 16px;
-    z-index: 30;
-    background: var(--kiwi-bg-card);
-    border: 1px solid var(--kiwi-border-strong);
-    border-radius: var(--kiwi-radius-md);
-    padding: 6px;
-    box-shadow: 0 12px 28px rgba(0, 0, 0, 0.55);
-    min-width: 190px;
-}
-
-.attach-menu.open {
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-}
-
-.attach-menu-item {
-    background: transparent;
-    border: none;
-    color: var(--kiwi-text-primary);
-    font-size: 13px;
-    text-align: left;
-    padding: 8px 10px;
-    border-radius: var(--kiwi-radius-sm);
-    cursor: pointer;
-}
-
-.attach-menu-item:hover {
-    background: var(--kiwi-bg-hover);
-}
-
-#attachment-preview-bar {
-    display: none;
-    align-items: center;
-    gap: 10px;
-    margin-bottom: 8px;
-    padding: 8px 12px;
-    border-radius: var(--kiwi-radius-md);
-    background: var(--kiwi-bg-card);
-    border: 1px solid var(--kiwi-border);
-}
-
-#attachment-preview-img {
-    display: none;
-    width: 44px;
-    height: 44px;
-    object-fit: cover;
-    border-radius: 8px;
-}
-
-#attachment-preview-badge {
-    display: none;
-    width: 36px;
-    height: 36px;
-    border-radius: 8px;
-    background: var(--kiwi-bg-elevated);
-    align-items: center;
-    justify-content: center;
-    font-size: 16px;
-}
-
-#attachment-preview-name {
-    font-size: 12px;
-    color: var(--kiwi-text-secondary);
-    flex: 1;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-}
-
-#clear-attachment-btn {
-    background: transparent;
-    border: none;
-    color: var(--kiwi-text-secondary);
-    font-size: 16px;
-    cursor: pointer;
-}
-
-/* 4. Sidebar direita */
-.sidebar-right {
-    background: var(--kiwi-bg-canvas);
-    padding: 14px 14px 16px 14px;
-    display: flex;
-    flex-direction: column;
-    gap: 14px;
-    overflow-y: auto;
-    height: 100vh;
-}
-
-.kiwi-right-search-wrap {
-    position: relative;
-    display: flex;
-    align-items: center;
-}
-
-.kiwi-right-search-icon {
-    position: absolute;
-    left: 14px;
-    color: var(--kiwi-text-muted);
-    pointer-events: none;
-    font-size: 14px;
-}
-
-.kiwi-right-search-input {
-    width: 100%;
-    padding: 10px 14px 10px 38px;
-    border-radius: var(--kiwi-radius-pill);
-    border: 1px solid var(--kiwi-border);
-    background: var(--kiwi-bg-card);
-    color: var(--kiwi-text-primary);
-    font-family: inherit;
-    font-size: 13px;
-    outline: none;
-    transition: border-color 0.16s ease, background 0.16s ease;
-}
-
-.kiwi-right-search-input::placeholder {
-    color: var(--kiwi-text-muted);
-}
-
-.kiwi-right-search-input:focus {
-    border-color: var(--kiwi-accent-purple-bright);
-    background: var(--kiwi-bg-elevated);
-}
-
-.kiwi-right-widget-card {
-    background: var(--kiwi-bg-card);
-    border: 1px solid var(--kiwi-border);
-    border-radius: var(--kiwi-radius-lg);
-    padding: 14px;
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-}
-
-.kiwi-right-widget-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-}
-
-.kiwi-right-widget-title {
-    font-size: 15px;
-    font-weight: 800;
-    color: var(--kiwi-text-primary);
-}
-
-.kiwi-right-widget-link {
-    background: transparent;
-    border: none;
-    color: var(--kiwi-accent-purple-bright);
-    font-size: 12px;
-    font-weight: 700;
-    cursor: pointer;
-}
-
-.kiwi-right-widget-link:hover {
-    text-decoration: underline;
-}
-
-.kiwi-follow-row {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 10px;
-}
-
-.kiwi-follow-pill-btn {
-    padding: 6px 14px;
-    border-radius: var(--kiwi-radius-pill);
-    border: 1px solid var(--kiwi-border-strong);
-    background: var(--kiwi-bg-elevated);
-    color: var(--kiwi-text-primary);
-    font-size: 12px;
-    font-weight: 700;
-    cursor: pointer;
-    flex-shrink: 0;
-    transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
-}
-
-.kiwi-follow-pill-btn:hover {
-    background: var(--kiwi-accent-purple);
-    border-color: var(--kiwi-accent-purple-bright);
-    color: #fff;
-}
-
-.kiwi-follow-pill-btn.is-following {
-    background: transparent;
-    color: var(--kiwi-text-secondary);
-}
-
-.social-tabs {
-    display: flex;
-    gap: 4px;
-    background: var(--kiwi-bg-panel);
-    padding: 4px;
-    border-radius: var(--kiwi-radius-pill);
-    border: 1px solid var(--kiwi-border);
-}
-
-.social-tab {
-    flex: 1;
-    text-align: center;
-    padding: 6px 8px;
-    border-radius: var(--kiwi-radius-pill);
-    font-size: 12px;
-    font-weight: 700;
-    color: var(--kiwi-text-secondary);
-    cursor: pointer;
-    transition: background 0.15s ease, color 0.15s ease;
-}
-
-.social-tab.active {
-    background: var(--kiwi-accent-purple);
-    color: #ffffff;
-}
-
-.social-content-area {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-}
-
-.social-list-item {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    padding: 8px 10px;
-    border-radius: var(--kiwi-radius-md);
-    background: var(--kiwi-bg-card);
-    border: 1px solid var(--kiwi-border);
-    cursor: pointer;
-    transition: background 0.15s ease, border-color 0.15s ease;
-}
-
-.social-list-item:hover {
-    background: var(--kiwi-bg-elevated);
-    border-color: var(--kiwi-border-strong);
-}
-
-.social-avatar {
-    width: 34px;
-    height: 34px;
-    border-radius: 50%;
-    background: var(--kiwi-accent-purple);
-    color: #fff;
-    font-size: 13px;
-    font-weight: 700;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex-shrink: 0;
-}
-
-.friend-req-card {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 8px;
-    padding: 8px 10px;
-    border-radius: var(--kiwi-radius-md);
-    background: var(--kiwi-bg-soft);
-    border: 1px solid var(--kiwi-border);
-}
-
-.dm-quick-btn {
-    padding: 5px 11px;
-    border-radius: var(--kiwi-radius-pill);
-    border: 1px solid var(--kiwi-border-strong);
-    background: var(--kiwi-accent-purple);
-    color: #fff;
-    font-size: 11px;
-    font-weight: 700;
-    cursor: pointer;
-}
-
-.sidebar-artwork-card {
-    margin-top: auto;
-    height: 112px;
-    border-radius: var(--kiwi-radius-lg);
-    background: var(--auth-artwork);
-    border: 1px solid var(--kiwi-border);
-    padding: 12px;
-    display: flex;
-    align-items: flex-end;
-    justify-content: flex-start;
-    position: relative;
-    overflow: hidden;
-    flex-shrink: 0;
-}
-
-.sidebar-artwork-badge {
-    position: relative;
-    z-index: 1;
-    background: rgba(11, 7, 20, 0.72);
-    backdrop-filter: blur(6px);
-    color: #fff;
-    font-size: 11px;
-    font-weight: 700;
-    padding: 4px 10px;
-    border-radius: var(--kiwi-radius-pill);
-    border: 1px solid rgba(255, 255, 255, 0.16);
-}
-
-/* === PERFIL ESTILO X / TWITTER NO CENTRO === */
+/* === TIMELINE DE PERFIL ESTILO X / TWITTER === */
 #kiwi-profile-timeline-view {
     display: none;
     flex: 1;
+    min-height: 0;
     overflow-y: auto;
     background: var(--kiwi-bg-canvas);
 }
@@ -1413,6 +791,7 @@ svg {
     display: flex;
     align-items: center;
     justify-content: space-between;
+    gap: 12px;
     padding: 10px 16px;
     background: rgba(11, 7, 20, 0.85);
     backdrop-filter: blur(12px);
@@ -1423,14 +802,15 @@ svg {
     display: flex;
     align-items: center;
     gap: 14px;
+    min-width: 0;
 }
 
 .kiwi-x-back-btn {
     width: 34px;
     height: 34px;
     border-radius: 50%;
-    border: 1px solid var(--kiwi-border);
-    background: var(--kiwi-bg-card);
+    border: 1px solid transparent;
+    background: transparent;
     color: var(--kiwi-text-primary);
     font-size: 16px;
     cursor: pointer;
@@ -1445,20 +825,21 @@ svg {
 
 .kiwi-x-banner {
     width: 100%;
-    height: 176px;
+    height: 170px;
     background: linear-gradient(135deg, #2e1065 0%, #6d28d9 48%, #1e1b4b 100%);
     background-size: cover;
     background-position: center;
 }
 
 .kiwi-x-profile-body {
-    padding: 0 18px 14px 18px;
+    padding: 0 16px 12px 16px;
 }
 
 .kiwi-x-avatar-action-row {
     display: flex;
     align-items: flex-end;
     justify-content: space-between;
+    gap: 12px;
     margin-top: -54px;
     margin-bottom: 10px;
 }
@@ -1468,14 +849,17 @@ svg {
     height: 108px;
     border-radius: 50%;
     border: 4px solid var(--kiwi-bg-canvas);
-    background: var(--kiwi-bg-elevated);
-    color: #fff;
-    font-size: 36px;
+    background: var(--kiwi-accent-purple);
+    color: #ffffff;
+    font-size: 38px;
     font-weight: 800;
     display: flex;
     align-items: center;
     justify-content: center;
     cursor: pointer;
+    flex-shrink: 0;
+    background-size: cover;
+    background-position: center;
     box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
 }
 
@@ -1483,7 +867,7 @@ svg {
     display: flex;
     align-items: center;
     gap: 8px;
-    margin-top: 62px;
+    padding-top: 58px;
 }
 
 .kiwi-x-circle-btn {
@@ -1494,6 +878,7 @@ svg {
     background: var(--kiwi-bg-card);
     color: var(--kiwi-text-primary);
     font-size: 14px;
+    font-weight: 700;
     cursor: pointer;
     display: inline-flex;
     align-items: center;
@@ -1522,7 +907,7 @@ svg {
 
 .kiwi-x-name {
     font-size: 20px;
-    font-weight: 900;
+    font-weight: 800;
     color: var(--kiwi-text-primary);
     display: flex;
     align-items: center;
@@ -1548,56 +933,54 @@ svg {
     flex-wrap: wrap;
     gap: 14px;
     font-size: 13px;
-    color: var(--kiwi-text-secondary);
+    color: var(--kiwi-text-muted);
     margin-bottom: 10px;
 }
 
 .kiwi-x-stats-row {
     display: flex;
-    gap: 16px;
+    align-items: center;
+    gap: 18px;
     font-size: 13px;
-    color: var(--kiwi-text-secondary);
 }
 
 .kiwi-x-stat-btn {
     background: transparent;
     border: none;
-    color: var(--kiwi-text-secondary);
-    font-family: inherit;
+    color: var(--kiwi-text-muted);
     font-size: 13px;
     cursor: pointer;
-    padding: 2px 4px;
-    border-radius: 6px;
+    padding: 2px 0;
 }
 
-.kiwi-x-stat-btn:hover {
-    color: var(--kiwi-text-primary);
-    background: var(--kiwi-bg-hover);
-}
-
-.kiwi-x-stats-row strong {
+.kiwi-x-stat-btn strong {
     color: var(--kiwi-text-primary);
     font-weight: 800;
 }
 
+.kiwi-x-stat-btn:hover {
+    text-decoration: underline;
+    color: var(--kiwi-text-primary);
+}
+
+/* Sub-abas do perfil: Posts, Respostas, Mídia, Curtidas */
 .kiwi-x-subtabs {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
     border-bottom: 1px solid var(--kiwi-border);
-    margin-top: 4px;
+    background: var(--kiwi-bg-canvas);
 }
 
 .kiwi-x-subtab {
     position: relative;
     padding: 13px 8px;
-    background: transparent;
     border: none;
-    color: var(--kiwi-text-secondary);
-    font-family: inherit;
-    font-size: 13px;
+    background: transparent;
+    color: var(--kiwi-text-muted);
+    font-size: 14px;
     font-weight: 700;
     cursor: pointer;
-    transition: color 0.15s ease, background 0.15s ease;
+    transition: background 0.15s ease, color 0.15s ease;
 }
 
 .kiwi-x-subtab:hover {
@@ -1606,10 +989,104 @@ svg {
 }
 
 .kiwi-x-subtab.active {
-    color: #ffffff;
+    color: var(--kiwi-text-primary);
 }
 
 .kiwi-x-subtab.active::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 56px;
+    height: 3.5px;
+    border-radius: var(--kiwi-radius-pill);
+    background: var(--kiwi-accent-purple-bright);
+}
+
+/* Cards de posts na timeline do perfil */
+.kiwi-x-post-card {
+    display: flex;
+    gap: 12px;
+    padding: 14px 16px;
+    border-bottom: 1px solid var(--kiwi-border);
+    background: var(--kiwi-bg-canvas);
+    transition: background 0.15s ease;
+}
+
+.kiwi-x-post-card:hover {
+    background: rgba(139, 92, 246, 0.05);
+}
+
+.kiwi-x-post-metrics {
+    display: flex;
+    align-items: center;
+    gap: 22px;
+    margin-top: 10px;
+    font-size: 12px;
+    color: var(--kiwi-text-muted);
+}
+
+.kiwi-x-metric-btn {
+    background: transparent;
+    border: none;
+    color: var(--kiwi-text-muted);
+    font-size: 12px;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 2px 4px;
+    border-radius: var(--kiwi-radius-pill);
+}
+
+.kiwi-x-metric-btn:hover,
+.kiwi-x-metric-btn.liked {
+    color: #f43f5e;
+}
+
+.kiwi-x-delete-post-btn {
+    margin-left: auto;
+    background: transparent;
+    border: 1px solid transparent;
+    color: var(--kiwi-text-muted);
+    font-size: 11px;
+    font-weight: 600;
+    padding: 3px 8px;
+    border-radius: var(--kiwi-radius-pill);
+    cursor: pointer;
+}
+
+.kiwi-x-delete-post-btn:hover {
+    color: #f87171;
+    border-color: rgba(248, 113, 113, 0.35);
+    background: rgba(248, 113, 113, 0.1);
+}
+
+/* Painel de Seguidores / Seguindo */
+.kiwi-x-followers-tabs {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    border-bottom: 1px solid var(--kiwi-border);
+    background: var(--kiwi-bg-panel);
+}
+
+.kiwi-x-followers-tab {
+    position: relative;
+    padding: 12px 6px;
+    border: none;
+    background: transparent;
+    color: var(--kiwi-text-muted);
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.kiwi-x-followers-tab.active {
+    color: var(--kiwi-text-primary);
+}
+
+.kiwi-x-followers-tab.active::after {
     content: '';
     position: absolute;
     bottom: 0;
@@ -1620,119 +1097,21 @@ svg {
     background: var(--kiwi-accent-purple-bright);
 }
 
-.kiwi-x-post-card {
-    display: flex;
-    gap: 12px;
-    padding: 14px 18px;
-    border-bottom: 1px solid var(--kiwi-border);
-    transition: background 0.15s ease;
-}
-
-.kiwi-x-post-card:hover {
-    background: rgba(28, 17, 51, 0.45);
-}
-
-.kiwi-x-post-metrics {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    max-width: 440px;
-    margin-top: 10px;
-    font-size: 12px;
-    color: var(--kiwi-text-muted);
-}
-
-.kiwi-x-metric-btn {
-    background: transparent;
-    border: none;
-    color: inherit;
-    font-size: 12px;
-    display: inline-flex;
-    align-items: center;
-    gap: 4px;
-    cursor: pointer;
-    padding: 3px 6px;
-    border-radius: var(--kiwi-radius-pill);
-}
-
-.kiwi-x-metric-btn:hover {
-    background: var(--kiwi-bg-hover);
-    color: var(--kiwi-text-primary);
-}
-
-.kiwi-x-metric-btn.liked {
-    color: #f43f5e;
-    font-weight: 700;
-}
-
-.kiwi-x-delete-post-btn {
-    margin-left: auto;
-    padding: 3px 9px;
-    border-radius: var(--kiwi-radius-pill);
-    border: 1px solid rgba(248, 113, 113, 0.35);
-    background: rgba(239, 68, 68, 0.12);
-    color: #fca5a5;
-    font-size: 11px;
-    font-weight: 700;
-    cursor: pointer;
-}
-
-.kiwi-x-delete-post-btn:hover {
-    background: rgba(239, 68, 68, 0.25);
-    color: #fff;
-}
-
-.kiwi-info-panel-card {
-    margin: 16px;
-    padding: 18px;
-    border-radius: var(--kiwi-radius-lg);
-    background: var(--kiwi-bg-card);
-    border: 1px solid var(--kiwi-border);
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-}
-
-/* === ABA DE SEGUIDORES / SEGUINDO (ESTILO IMAGEM 4) === */
-.kiwi-x-followers-tabs {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    border-bottom: 1px solid var(--kiwi-border);
-    background: var(--kiwi-bg-panel);
-}
-
-.kiwi-x-followers-tab {
-    padding: 12px 10px;
-    background: transparent;
-    border: none;
-    border-bottom: 2px solid transparent;
-    color: var(--kiwi-text-secondary);
-    font-family: inherit;
-    font-size: 13px;
-    font-weight: 700;
-    cursor: pointer;
-}
-
-.kiwi-x-followers-tab.active {
-    color: #fff;
-    border-bottom-color: var(--kiwi-accent-purple-bright);
-}
-
 .kiwi-x-follower-row {
     display: flex;
     align-items: flex-start;
     justify-content: space-between;
     gap: 12px;
-    padding: 14px 18px;
+    padding: 14px 16px;
     border-bottom: 1px solid var(--kiwi-border);
 }
 
 .kiwi-x-follower-pill {
-    padding: 6px 16px;
+    padding: 6px 14px;
     border-radius: var(--kiwi-radius-pill);
     border: 1px solid var(--kiwi-border-strong);
-    background: var(--kiwi-bg-elevated);
-    color: #fff;
+    background: var(--kiwi-text-primary);
+    color: var(--kiwi-bg-canvas);
     font-size: 12px;
     font-weight: 700;
     cursor: pointer;
@@ -1741,31 +1120,25 @@ svg {
 
 .kiwi-x-follower-pill.following {
     background: transparent;
-    color: var(--kiwi-text-secondary);
+    color: var(--kiwi-text-primary);
 }
 
-/* === BATE-PAPO DIVIDIDO (ESTILO IMAGEM 5) === */
-#kiwi-dm-split-view {
+/* === BATE-PAPO DIVIDIDO (ESQUERDA LISTA + DIREITA CONVERSA) === */
+.kiwi-dm-split-shell {
+    display: grid;
+    grid-template-columns: 310px 1fr;
     width: 100%;
     height: 100%;
     min-height: 0;
     background: var(--kiwi-bg-canvas);
 }
 
-.kiwi-dm-split-shell {
-    display: grid;
-    grid-template-columns: 330px 1fr;
-    width: 100%;
-    height: 100%;
-    min-height: 0;
-}
-
 .kiwi-dm-left-pane {
-    background: var(--kiwi-bg-panel);
     border-right: 1px solid var(--kiwi-border);
-    padding: 14px 12px;
+    background: var(--kiwi-bg-panel);
     display: flex;
     flex-direction: column;
+    padding: 12px;
     gap: 10px;
     overflow-y: auto;
 }
@@ -1778,37 +1151,27 @@ svg {
 }
 
 .kiwi-dm-pane-title {
-    font-size: 18px;
+    font-size: 16px;
     font-weight: 800;
-    color: var(--kiwi-text-primary);
 }
 
 .kiwi-dm-search {
     width: 100%;
-    padding: 8px 14px;
+    padding: 9px 14px;
     border-radius: var(--kiwi-radius-pill);
     border: 1px solid var(--kiwi-border);
     background: var(--kiwi-bg-card);
     color: var(--kiwi-text-primary);
     font-size: 13px;
-    outline: none;
-}
-
-.kiwi-dm-search:focus {
-    border-color: var(--kiwi-accent-purple-bright);
 }
 
 .kiwi-dm-section-label {
-    font-size: 12px;
+    font-size: 11px;
     font-weight: 700;
-    color: var(--kiwi-text-secondary);
-    padding: 4px 4px 0;
-}
-
-#kiwi-dm-conversations-list {
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--kiwi-text-muted);
+    padding: 4px 4px 0 4px;
 }
 
 .kiwi-dm-conv-item {
@@ -1818,25 +1181,22 @@ svg {
     gap: 8px;
     padding: 8px 10px;
     border-radius: var(--kiwi-radius-md);
-    background: transparent;
-    border: 1px solid transparent;
     cursor: pointer;
-    transition: background 0.15s ease, border-color 0.15s ease;
+    transition: background 0.15s ease;
 }
 
 .kiwi-dm-conv-item:hover,
 .kiwi-dm-conv-item.active {
-    background: var(--kiwi-bg-card);
-    border-color: var(--kiwi-border);
+    background: var(--kiwi-bg-hover);
 }
 
 .kiwi-dm-chat-btn {
-    padding: 5px 12px;
+    padding: 5px 11px;
     border-radius: var(--kiwi-radius-pill);
     border: 1px solid var(--kiwi-border-strong);
-    background: var(--kiwi-bg-elevated);
+    background: var(--kiwi-bg-card);
     color: var(--kiwi-text-primary);
-    font-size: 11.5px;
+    font-size: 11px;
     font-weight: 700;
     cursor: pointer;
     flex-shrink: 0;
@@ -1853,16 +1213,16 @@ svg {
     flex-direction: column;
     min-width: 0;
     min-height: 0;
-    background: radial-gradient(circle at 80% 75%, rgba(124, 58, 237, 0.12), transparent 55%), var(--kiwi-bg-canvas);
+    background: var(--kiwi-bg-canvas);
 }
 
 .kiwi-dm-right-header {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 12px 16px;
+    padding: 10px 16px;
     border-bottom: 1px solid var(--kiwi-border);
-    background: rgba(22, 13, 41, 0.75);
+    background: var(--kiwi-bg-panel);
 }
 
 .kiwi-dm-right-empty {
@@ -1872,25 +1232,15 @@ svg {
     align-items: center;
     justify-content: center;
     text-align: center;
-    gap: 8px;
-    padding: 24px;
+    padding: 28px;
+    gap: 10px;
 }
 
 .kiwi-dm-code-actions {
     display: flex;
+    align-items: center;
     gap: 10px;
     margin-top: 8px;
-}
-
-.kiwi-dm-btn-primary {
-    padding: 8px 16px;
-    border-radius: var(--kiwi-radius-pill);
-    border: none;
-    background: linear-gradient(135deg, var(--kiwi-accent-purple), var(--kiwi-accent-purple-bright));
-    color: #fff;
-    font-size: 12.5px;
-    font-weight: 700;
-    cursor: pointer;
 }
 
 .kiwi-dm-btn-secondary {
@@ -1899,18 +1249,583 @@ svg {
     border: 1px solid var(--kiwi-border-strong);
     background: var(--kiwi-bg-card);
     color: var(--kiwi-text-primary);
-    font-size: 12.5px;
+    font-size: 13px;
     font-weight: 700;
     cursor: pointer;
 }
 
-/* === MODAIS, PERFIL ESTÉTICO & EDITOR EM 2 COLUNAS === */
+.kiwi-dm-btn-primary {
+    padding: 8px 18px;
+    border-radius: var(--kiwi-radius-pill);
+    border: none;
+    background: var(--kiwi-accent-purple);
+    color: #ffffff;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+/* Mensagens e input do chat */
+#chat-log {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    padding: 14px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.message-group {
+    position: relative;
+    display: flex;
+    gap: 12px;
+    padding: 8px 10px;
+    border-radius: var(--kiwi-radius-md);
+    transition: background 0.15s ease;
+}
+
+.message-group:hover,
+.message-group.menu-open {
+    background: rgba(139, 92, 246, 0.06);
+}
+
+.avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: var(--kiwi-accent-purple);
+    color: #ffffff;
+    font-size: 15px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    cursor: pointer;
+    background-size: cover;
+    background-position: center;
+}
+
+.message-content {
+    flex: 1;
+    min-width: 0;
+}
+
+.message-header {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+    margin-bottom: 4px;
+    flex-wrap: wrap;
+}
+
+.username {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--kiwi-text-primary);
+    cursor: pointer;
+}
+
+.username:hover {
+    text-decoration: underline;
+}
+
+.timestamp {
+    font-size: 11px;
+    color: var(--kiwi-text-muted);
+}
+
+.message-text {
+    font-size: 14px;
+    line-height: 1.45;
+    color: var(--kiwi-text-primary);
+    word-break: break-word;
+}
+
+.msg-attachment-img {
+    display: block;
+    max-width: 340px;
+    max-height: 260px;
+    border-radius: 12px;
+    margin-top: 8px;
+    cursor: pointer;
+    border: 1px solid var(--kiwi-border);
+}
+
+.msg-reactions-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 6px;
+}
+
+.msg-reaction-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 2px 8px;
+    border-radius: var(--kiwi-radius-pill);
+    border: 1px solid var(--kiwi-border);
+    background: var(--kiwi-bg-card);
+    color: var(--kiwi-text-primary);
+    font-size: 12px;
+    cursor: pointer;
+}
+
+.msg-reaction-chip.active {
+    border-color: var(--kiwi-accent-purple-bright);
+    background: var(--kiwi-accent-purple-soft);
+}
+
+.msg-hover-toolbar {
+    display: none;
+    position: absolute;
+    top: -12px;
+    right: 12px;
+    z-index: 12;
+    align-items: center;
+    gap: 2px;
+    padding: 3px 6px;
+    border-radius: var(--kiwi-radius-pill);
+    background: var(--kiwi-bg-card);
+    border: 1px solid var(--kiwi-border-strong);
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.45);
+}
+
+.message-group:hover .msg-hover-toolbar,
+.message-group.menu-open .msg-hover-toolbar {
+    display: inline-flex;
+}
+
+.msg-hover-btn {
+    background: transparent;
+    border: none;
+    color: var(--kiwi-text-primary);
+    font-size: 13px;
+    padding: 3px 6px;
+    border-radius: var(--kiwi-radius-pill);
+    cursor: pointer;
+}
+
+.msg-hover-btn:hover {
+    background: var(--kiwi-bg-hover);
+}
+
+.msg-hover-divider {
+    width: 1px;
+    height: 14px;
+    background: var(--kiwi-border);
+    margin: 0 2px;
+}
+
+.msg-emoji-picker,
+.msg-more-popover {
+    display: none;
+    position: absolute;
+    top: 24px;
+    right: 12px;
+    z-index: 15;
+    background: var(--kiwi-bg-card);
+    border: 1px solid var(--kiwi-border-strong);
+    border-radius: var(--kiwi-radius-md);
+    padding: 6px;
+    box-shadow: 0 10px 28px rgba(0, 0, 0, 0.55);
+}
+
+.msg-emoji-picker.open {
+    display: flex;
+    gap: 4px;
+}
+
+.msg-more-popover.open {
+    display: flex;
+    flex-direction: column;
+    min-width: 140px;
+}
+
+.msg-emoji-choice {
+    background: transparent;
+    border: none;
+    font-size: 16px;
+    cursor: pointer;
+    padding: 4px;
+    border-radius: 6px;
+}
+
+.msg-emoji-choice:hover {
+    background: var(--kiwi-bg-hover);
+}
+
+.msg-more-item {
+    background: transparent;
+    border: none;
+    color: var(--kiwi-text-primary);
+    font-size: 12px;
+    font-weight: 600;
+    text-align: left;
+    padding: 7px 10px;
+    border-radius: 6px;
+    cursor: pointer;
+}
+
+.msg-more-item:hover {
+    background: var(--kiwi-bg-hover);
+}
+
+.msg-more-item.danger {
+    color: #f87171;
+}
+
+.chat-input-area {
+    position: relative;
+    padding: 10px 16px 14px 16px;
+    background: var(--kiwi-bg-canvas);
+    border-top: 1px solid var(--kiwi-border);
+}
+
+#attachment-preview-bar {
+    display: none;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 12px;
+    margin-bottom: 8px;
+    border-radius: var(--kiwi-radius-md);
+    background: var(--kiwi-bg-card);
+    border: 1px solid var(--kiwi-border);
+    font-size: 12px;
+}
+
+#attachment-preview-img {
+    display: none;
+    width: 36px;
+    height: 36px;
+    border-radius: 6px;
+    object-fit: cover;
+}
+
+#clear-attachment-btn {
+    margin-left: auto;
+    background: transparent;
+    border: none;
+    color: var(--kiwi-text-secondary);
+    cursor: pointer;
+    font-size: 14px;
+}
+
+.attach-menu {
+    display: none;
+    position: absolute;
+    bottom: 66px;
+    left: 16px;
+    z-index: 25;
+    flex-direction: column;
+    gap: 4px;
+    padding: 6px;
+    border-radius: var(--kiwi-radius-md);
+    background: var(--kiwi-bg-card);
+    border: 1px solid var(--kiwi-border-strong);
+    box-shadow: 0 12px 28px rgba(0, 0, 0, 0.55);
+}
+
+.attach-menu.open {
+    display: flex;
+}
+
+.attach-menu-item {
+    background: transparent;
+    border: none;
+    color: var(--kiwi-text-primary);
+    font-size: 13px;
+    font-weight: 600;
+    text-align: left;
+    padding: 8px 12px;
+    border-radius: 8px;
+    cursor: pointer;
+}
+
+.attach-menu-item:hover {
+    background: var(--kiwi-bg-hover);
+}
+
+.input-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 8px 6px 12px;
+    border-radius: var(--kiwi-radius-pill);
+    background: var(--kiwi-bg-card);
+    border: 1px solid var(--kiwi-border);
+}
+
+.media-btn {
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    border: none;
+    background: transparent;
+    color: var(--kiwi-text-secondary);
+    font-size: 16px;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.media-btn:hover {
+    background: var(--kiwi-bg-hover);
+    color: var(--kiwi-text-primary);
+}
+
+.media-btn.recording {
+    color: #ef4444;
+    background: rgba(239, 68, 68, 0.16);
+}
+
+#chat-message-input {
+    flex: 1;
+    min-width: 0;
+    border: none;
+    background: transparent;
+    color: var(--kiwi-text-primary);
+    font-size: 14px;
+    outline: none;
+}
+
+#chat-message-submit {
+    padding: 8px 18px;
+    border-radius: var(--kiwi-radius-pill);
+    border: none;
+    background: var(--kiwi-accent-purple);
+    color: #ffffff;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+#chat-message-submit:hover {
+    background: var(--kiwi-accent-purple-bright);
+}
+
+/* 4. Sidebar direita */
+.sidebar-right {
+    background: var(--kiwi-bg-panel);
+    padding: 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    overflow-y: auto;
+    height: 100vh;
+}
+
+.kiwi-right-search-wrap {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.kiwi-right-search-icon {
+    position: absolute;
+    left: 14px;
+    font-size: 13px;
+    color: var(--kiwi-text-muted);
+    pointer-events: none;
+}
+
+.kiwi-right-search-input {
+    width: 100%;
+    padding: 10px 14px 10px 38px;
+    border-radius: var(--kiwi-radius-pill);
+    border: 1px solid var(--kiwi-border);
+    background: var(--kiwi-bg-card);
+    color: var(--kiwi-text-primary);
+    font-size: 13px;
+    outline: none;
+}
+
+.kiwi-right-search-input:focus {
+    border-color: var(--kiwi-accent-purple-bright);
+}
+
+.kiwi-right-widget-card {
+    background: var(--kiwi-bg-card);
+    border: 1px solid var(--kiwi-border);
+    border-radius: var(--kiwi-radius-lg);
+    padding: 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.kiwi-right-widget-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.kiwi-right-widget-title {
+    font-size: 15px;
+    font-weight: 800;
+    color: var(--kiwi-text-primary);
+}
+
+.kiwi-right-widget-link {
+    background: transparent;
+    border: none;
+    color: var(--kiwi-accent-purple-bright);
+    font-size: 12px;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.kiwi-follow-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+}
+
+.kiwi-follow-pill-btn {
+    padding: 6px 14px;
+    border-radius: var(--kiwi-radius-pill);
+    border: 1px solid var(--kiwi-border-strong);
+    background: var(--kiwi-text-primary);
+    color: var(--kiwi-bg-canvas);
+    font-size: 12px;
+    font-weight: 800;
+    cursor: pointer;
+}
+
+.kiwi-follow-pill-btn.is-following {
+    background: transparent;
+    color: var(--kiwi-text-primary);
+}
+
+.social-tabs {
+    display: flex;
+    gap: 6px;
+    background: var(--kiwi-bg-card);
+    padding: 4px;
+    border-radius: var(--kiwi-radius-pill);
+    border: 1px solid var(--kiwi-border);
+}
+
+.social-tab {
+    flex: 1;
+    text-align: center;
+    padding: 6px 8px;
+    border-radius: var(--kiwi-radius-pill);
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--kiwi-text-secondary);
+    cursor: pointer;
+}
+
+.social-tab.active {
+    background: var(--kiwi-accent-purple);
+    color: #ffffff;
+}
+
+.social-content-area {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.social-list-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 10px;
+    border-radius: var(--kiwi-radius-md);
+    background: var(--kiwi-bg-card);
+    border: 1px solid transparent;
+    cursor: pointer;
+    transition: border-color 0.15s ease, background 0.15s ease;
+}
+
+.social-list-item:hover {
+    background: var(--kiwi-bg-elevated);
+    border-color: var(--kiwi-border);
+}
+
+.social-avatar {
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    background: var(--kiwi-accent-purple);
+    color: #fff;
+    font-size: 13px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    background-size: cover;
+    background-position: center;
+}
+
+.sidebar-artwork-card {
+    margin-top: auto;
+    height: 118px;
+    border-radius: var(--kiwi-radius-lg);
+    background: var(--auth-artwork);
+    border: 1px solid var(--kiwi-border);
+    padding: 12px;
+    display: flex;
+    align-items: flex-end;
+    flex-shrink: 0;
+}
+
+.sidebar-artwork-badge {
+    font-size: 11px;
+    font-weight: 700;
+    padding: 4px 10px;
+    border-radius: var(--kiwi-radius-pill);
+    background: rgba(11, 7, 20, 0.72);
+    color: var(--kiwi-text-primary);
+    border: 1px solid var(--kiwi-border);
+}
+
+.kiwi-info-panel-card {
+    background: var(--kiwi-bg-card);
+    border: 1px solid var(--kiwi-border);
+    border-radius: var(--kiwi-radius-lg);
+    padding: 18px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.friend-req-card {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    padding: 8px 10px;
+    border-radius: var(--kiwi-radius-md);
+    background: var(--kiwi-bg-soft);
+    border: 1px solid var(--kiwi-border);
+}
+
+.dm-quick-btn {
+    padding: 5px 11px;
+    border-radius: var(--kiwi-radius-pill);
+    border: none;
+    background: var(--kiwi-accent-purple);
+    color: #fff;
+    font-size: 11px;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+/* Modais e Card Estético */
 .modal-overlay {
     display: none;
     position: fixed;
     inset: 0;
     z-index: 3000;
-    background: rgba(5, 3, 12, 0.78);
+    background: rgba(6, 4, 12, 0.76);
     backdrop-filter: blur(6px);
     align-items: center;
     justify-content: center;
@@ -1923,38 +1838,35 @@ svg {
 
 .aesthetic-profile-card {
     position: relative;
-    width: 420px;
-    max-width: 96vw;
+    width: 390px;
+    max-width: 100%;
     max-height: 90vh;
     overflow-y: auto;
     border-radius: 18px;
     background: var(--kiwi-bg-card);
     border: 1px solid var(--kiwi-border-strong);
     box-shadow: 0 24px 60px rgba(0, 0, 0, 0.65);
+    color: var(--kiwi-text-primary);
 }
 
 .close-modal-btn {
-    position: sticky;
+    position: absolute;
     top: 10px;
-    float: right;
-    z-index: 20;
-    margin: 10px 10px -36px auto;
-    width: 32px;
-    height: 32px;
+    right: 10px;
+    z-index: 10;
+    width: 30px;
+    height: 30px;
     border-radius: 50%;
-    border: 1px solid var(--kiwi-border-strong);
-    background: rgba(11, 7, 20, 0.75);
-    color: #fff;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    background: rgba(11, 7, 20, 0.72);
+    color: #ffffff;
     font-size: 18px;
+    line-height: 1;
     cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
 }
 
 .aesthetic-banner {
-    width: 100%;
-    height: 126px;
+    height: 116px;
     background: var(--auth-artwork);
     background-size: cover;
     background-position: center;
@@ -1965,12 +1877,13 @@ svg {
     align-items: flex-end;
     justify-content: space-between;
     padding: 0 18px;
-    margin-top: -42px;
+    margin-top: -38px;
+    gap: 10px;
 }
 
 .aesthetic-avatar {
-    width: 84px;
-    height: 84px;
+    width: 76px;
+    height: 76px;
     border-radius: 50%;
     border: 4px solid var(--kiwi-bg-card);
     background: var(--kiwi-accent-purple);
@@ -1980,16 +1893,19 @@ svg {
     display: flex;
     align-items: center;
     justify-content: center;
+    flex-shrink: 0;
+    background-size: cover;
+    background-position: center;
 }
 
 .aesthetic-status-bubble {
     padding: 5px 12px;
     border-radius: var(--kiwi-radius-pill);
     background: var(--kiwi-bg-elevated);
-    border: 1px solid var(--kiwi-border-strong);
+    border: 1px solid var(--kiwi-border);
     font-size: 12px;
     font-weight: 600;
-    color: var(--kiwi-text-primary);
+    margin-bottom: 6px;
 }
 
 .aesthetic-body {
@@ -2002,7 +1918,6 @@ svg {
 .aesthetic-name {
     font-size: 19px;
     font-weight: 800;
-    color: var(--kiwi-text-primary);
 }
 
 .aesthetic-details {
@@ -2015,10 +1930,10 @@ svg {
 .btn-aesthetic-action {
     width: 100%;
     padding: 9px 14px;
-    border-radius: var(--kiwi-radius-md);
+    border-radius: var(--kiwi-radius-pill);
     border: none;
     background: var(--kiwi-accent-purple);
-    color: #fff;
+    color: #ffffff;
     font-size: 13px;
     font-weight: 700;
     cursor: pointer;
@@ -2032,15 +1947,15 @@ svg {
     background: #dc2626;
 }
 
-/* Widget de música no card */
+/* Player de música no card */
 .kiwi-spotify-widget {
-    background: var(--kiwi-bg-panel);
-    border: 1px solid var(--kiwi-border);
-    border-radius: 14px;
-    padding: 12px;
     display: flex;
     flex-direction: column;
-    gap: 10px;
+    gap: 8px;
+    padding: 10px 12px;
+    border-radius: 12px;
+    background: var(--kiwi-bg-elevated);
+    border: 1px solid var(--kiwi-border);
 }
 
 .ksw-top {
@@ -2050,22 +1965,22 @@ svg {
 }
 
 .ksw-cover {
-    width: 46px;
-    height: 46px;
+    width: 42px;
+    height: 42px;
     border-radius: 8px;
-    background: var(--kiwi-bg-elevated);
-    background-size: cover;
-    background-position: center;
+    background: var(--kiwi-bg-card);
     display: flex;
     align-items: center;
     justify-content: center;
     font-size: 18px;
     flex-shrink: 0;
+    background-size: cover;
+    background-position: center;
 }
 
 .ksw-meta {
-    flex: 1;
     min-width: 0;
+    flex: 1;
 }
 
 .ksw-title {
@@ -2077,7 +1992,7 @@ svg {
 }
 
 .ksw-artist {
-    font-size: 11.5px;
+    font-size: 11px;
     color: var(--kiwi-text-secondary);
     white-space: nowrap;
     overflow: hidden;
@@ -2090,13 +2005,13 @@ svg {
 }
 
 .ksw-icon-btn {
-    width: 28px;
-    height: 28px;
+    width: 26px;
+    height: 26px;
     border-radius: 50%;
     border: 1px solid var(--kiwi-border);
     background: var(--kiwi-bg-card);
     color: var(--kiwi-text-primary);
-    font-size: 13px;
+    font-size: 12px;
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -2105,16 +2020,16 @@ svg {
 }
 
 .ksw-icon-btn.active {
-    color: #f43f5e;
-    border-color: #f43f5e;
+    background: var(--kiwi-accent-purple);
+    color: #fff;
 }
 
 .ksw-progress-row {
     display: flex;
     align-items: center;
     gap: 8px;
-    font-size: 11px;
-    color: var(--kiwi-text-secondary);
+    font-size: 10px;
+    color: var(--kiwi-text-muted);
 }
 
 .ksw-seek-wrap {
@@ -2129,13 +2044,13 @@ svg {
     width: 100%;
     height: 4px;
     border-radius: 9999px;
-    background: var(--kiwi-bg-elevated);
+    background: rgba(255, 255, 255, 0.14);
     overflow: hidden;
 }
 
 .ksw-track-fill {
-    height: 100%;
     width: 0%;
+    height: 100%;
     background: var(--kiwi-accent-purple-bright);
 }
 
@@ -2159,23 +2074,25 @@ svg {
     border: none;
     color: var(--kiwi-text-secondary);
     font-size: 13px;
-    padding: 5px;
-    border-radius: 6px;
     cursor: pointer;
+    padding: 4px;
+    border-radius: 6px;
 }
 
-.ksw-ctrl-btn.active {
-    color: var(--kiwi-accent-purple-bright);
+.ksw-ctrl-btn.active,
+.ksw-ctrl-btn:hover {
+    color: var(--kiwi-text-primary);
+    background: var(--kiwi-bg-hover);
 }
 
 .ksw-play-circle {
-    width: 34px;
-    height: 34px;
+    width: 30px;
+    height: 30px;
     border-radius: 50%;
     border: none;
-    background: var(--kiwi-accent-purple-bright);
+    background: var(--kiwi-accent-purple);
     color: #fff;
-    font-size: 13px;
+    font-size: 12px;
     cursor: pointer;
 }
 
@@ -2186,14 +2103,14 @@ svg {
 .ksw-vol-popover {
     display: none;
     position: absolute;
-    bottom: 34px;
+    bottom: 32px;
     right: 0;
+    padding: 8px 10px;
+    border-radius: 8px;
     background: var(--kiwi-bg-card);
     border: 1px solid var(--kiwi-border-strong);
-    border-radius: 10px;
-    padding: 8px 10px;
-    gap: 6px;
     align-items: center;
+    gap: 6px;
     z-index: 20;
 }
 
@@ -2206,264 +2123,16 @@ svg {
 }
 
 .ksw-vol-val {
-    font-size: 11px;
+    font-size: 10px;
     color: var(--kiwi-text-secondary);
 }
 
-/* Editor em 2 colunas */
-.kiwi-editor-card {
-    width: min(860px, 96vw) !important;
-    padding: 20px !important;
-}
-
-.kiwi-editor-topbar {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 12px;
-    margin-bottom: 14px;
-    padding-right: 36px;
-}
-
-.kiwi-editor-title {
-    font-size: 18px;
-    font-weight: 800;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-}
-
-.kiwi-editor-grid {
-    display: grid;
-    grid-template-columns: 270px 1fr;
-    gap: 18px;
-    align-items: start;
-}
-
-.kiwi-editor-col-left,
-.kiwi-editor-col-right {
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-}
-
-.kiwi-preview-media-box {
-    background: var(--kiwi-bg-panel);
-    border: 1px solid var(--kiwi-border);
-    border-radius: 14px;
-    padding: 12px;
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-}
-
-.kiwi-preview-media-row {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-}
-
-.kiwi-editor-avatar-wrap {
-    position: relative;
-    width: 58px;
-    height: 58px;
-    flex-shrink: 0;
-}
-
-.kiwi-editor-avatar-preview {
-    width: 58px;
-    height: 58px;
-    border-radius: 50%;
-    background: var(--kiwi-accent-purple);
-    color: #fff;
-    font-size: 20px;
-    font-weight: 800;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border: 2px solid var(--kiwi-border-strong);
-}
-
-.kiwi-editor-avatar-badge-btn {
-    position: absolute;
-    right: -2px;
-    bottom: -2px;
-    width: 22px;
-    height: 22px;
-    border-radius: 50%;
-    border: 1px solid var(--kiwi-border-strong);
-    background: var(--kiwi-bg-card);
-    color: #fff;
-    font-size: 11px;
-    cursor: pointer;
-}
-
-.kiwi-editor-banner-preview {
-    flex: 1;
-    height: 50px;
-    border-radius: 10px;
-    background: var(--auth-artwork);
-    background-size: cover;
-    background-position: center;
-    border: 1px solid var(--kiwi-border);
-    cursor: pointer;
-}
-
-.kiwi-editor-action-pill {
-    width: 100%;
-    padding: 8px 12px;
-    border-radius: 10px;
-    border: 1px solid var(--kiwi-border);
-    background: var(--kiwi-bg-elevated);
-    color: var(--kiwi-text-primary);
-    font-size: 12px;
-    font-weight: 700;
-    cursor: pointer;
-}
-
-.kiwi-editor-panel {
-    background: var(--kiwi-bg-panel);
-    border: 1px solid var(--kiwi-border);
-    border-radius: 12px;
-    padding: 11px;
-}
-
-.kiwi-editor-panel-label {
-    display: block;
-    font-size: 11px;
-    font-weight: 700;
-    text-transform: uppercase;
-    color: var(--kiwi-text-secondary);
-    margin-bottom: 6px;
-}
-
-.kiwi-swatch-bar {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 7px 10px;
-    border-radius: 8px;
-    background: var(--kiwi-bg-card);
-    border: 1px solid var(--kiwi-border);
-    font-size: 12px;
-    font-weight: 600;
-}
-
-.kiwi-editor-select {
-    width: 100%;
-    padding: 7px 10px;
-    border-radius: 8px;
-    background: var(--kiwi-bg-card);
-    color: var(--kiwi-text-primary);
-    border: 1px solid var(--kiwi-border);
-    font-size: 12px;
-}
-
-.kiwi-effects-pair {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 8px;
-}
-
-.kiwi-effect-slot {
-    padding: 8px;
-    border-radius: 10px;
-    border: 1px dashed var(--kiwi-border-strong);
-    background: var(--kiwi-bg-card);
-    color: var(--kiwi-text-primary);
-    font-size: 11.5px;
-    font-weight: 600;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 4px;
-    cursor: pointer;
-}
-
-.kiwi-effect-slot.active {
-    border-style: solid;
-    border-color: var(--kiwi-accent-purple-bright);
-    background: var(--kiwi-accent-purple-soft);
-}
-
-.kiwi-name-style-card {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 8px 12px;
-    border-radius: 10px;
-    background: var(--kiwi-bg-card);
-    border: 1px solid var(--kiwi-border);
-    cursor: pointer;
-}
-
-.kiwi-name-style-sample {
-    font-size: 15px;
-    font-weight: 800;
-}
-
-.kiwi-nitro-promo-card {
-    background: var(--kiwi-bg-panel);
-    border: 1px solid var(--kiwi-border);
-    border-radius: 12px;
-    padding: 11px;
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-}
-
-.kiwi-nitro-btn {
-    width: 100%;
-    padding: 8px 12px;
-    border-radius: 9px;
-    border: 1px solid var(--kiwi-border-strong);
-    background: var(--kiwi-bg-elevated);
-    color: var(--kiwi-text-primary);
-    font-size: 12px;
-    font-weight: 700;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    cursor: pointer;
-}
-
-.kiwi-live-banner-mini {
-    height: 76px;
-    border-radius: 12px;
-    background: var(--auth-artwork);
-    background-size: cover;
-    background-position: center;
-    border: 1px solid var(--kiwi-border);
-    cursor: pointer;
-}
-
-.kiwi-live-identity-box {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 10px;
-    padding: 10px 12px;
-    border-radius: 12px;
-    background: var(--kiwi-bg-panel);
-    border: 1px solid var(--kiwi-border);
-}
-
-.kiwi-privacy-banner {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 10px;
-    padding: 9px 12px;
-    border-radius: 10px;
-    background: var(--kiwi-accent-purple-soft);
-    border: 1px solid var(--kiwi-border-strong);
-    font-size: 12px;
-}
-
+/* Formulários e Editor de Perfil */
 .form-group {
     display: flex;
     flex-direction: column;
     gap: 5px;
+    margin-bottom: 10px;
 }
 
 .form-group label {
@@ -2474,109 +2143,17 @@ svg {
 
 .form-group input[type="text"],
 .form-group input[type="url"],
+.form-group input[type="file"],
 .form-group textarea,
 .form-group select {
     width: 100%;
-    padding: 8px 11px;
-    border-radius: 9px;
+    padding: 8px 10px;
+    border-radius: 8px;
     border: 1px solid var(--kiwi-border);
-    background: var(--kiwi-bg-panel);
+    background: var(--kiwi-bg-elevated);
     color: var(--kiwi-text-primary);
+    font-size: 13px;
     font-family: inherit;
-    font-size: 13px;
-}
-
-.kiwi-editor-two-col-fields {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 10px;
-}
-
-.kiwi-saved-music-pill-btn {
-    padding: 4px 10px;
-    border-radius: var(--kiwi-radius-pill);
-    border: 1px solid var(--kiwi-border-strong);
-    background: var(--kiwi-bg-elevated);
-    color: var(--kiwi-text-primary);
-    font-size: 11px;
-    font-weight: 700;
-    cursor: pointer;
-}
-
-.kiwi-file-picker-wrap {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    padding: 6px 8px;
-    border-radius: 9px;
-    background: var(--kiwi-bg-panel);
-    border: 1px solid var(--kiwi-border);
-}
-
-.kiwi-file-picker-btn {
-    padding: 5px 9px;
-    border-radius: 7px;
-    border: 1px solid var(--kiwi-border-strong);
-    background: var(--kiwi-bg-elevated);
-    color: var(--kiwi-text-primary);
-    font-size: 11.5px;
-    font-weight: 600;
-    cursor: pointer;
-    flex-shrink: 0;
-}
-
-.kiwi-file-picker-name {
-    font-size: 11.5px;
-    color: var(--kiwi-text-muted);
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-    flex: 1;
-}
-
-.kiwi-file-picker-name.has-file {
-    color: var(--kiwi-text-primary);
-}
-
-.kiwi-file-picker-clear {
-    display: none;
-    background: transparent;
-    border: none;
-    color: var(--kiwi-text-secondary);
-    cursor: pointer;
-}
-
-.kiwi-file-picker-clear.visible {
-    display: inline-flex;
-}
-
-.kiwi-editor-footer-actions {
-    display: flex;
-    justify-content: flex-end;
-    gap: 10px;
-    margin-top: 6px;
-}
-
-.kiwi-btn-guardar {
-    padding: 9px 18px;
-    border-radius: 10px;
-    border: none;
-    background: linear-gradient(135deg, var(--kiwi-accent-purple), var(--kiwi-accent-purple-bright));
-    color: #fff;
-    font-size: 13px;
-    font-weight: 700;
-    cursor: pointer;
-}
-
-.kiwi-btn-cancelar {
-    padding: 9px 16px;
-    border-radius: 10px;
-    border: 1px solid var(--kiwi-border);
-    background: var(--kiwi-bg-elevated);
-    color: var(--kiwi-text-primary);
-    font-size: 13px;
-    font-weight: 600;
-    cursor: pointer;
 }
 
 .theme-picker-container {
@@ -2595,10 +2172,323 @@ svg {
 
 .theme-ball.active {
     border-color: #ffffff;
-    box-shadow: 0 0 0 2px var(--kiwi-accent-purple-bright);
+    transform: scale(1.1);
 }
 
-/* Badges e destaques dourados */
+.kiwi-editor-card {
+    width: 760px;
+    max-width: 96vw;
+    padding: 20px;
+}
+
+.kiwi-editor-topbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    margin-bottom: 14px;
+    padding-right: 28px;
+}
+
+.kiwi-editor-title {
+    font-size: 17px;
+    font-weight: 800;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.kiwi-editor-grid {
+    display: grid;
+    grid-template-columns: 240px 1fr;
+    gap: 16px;
+}
+
+.kiwi-editor-col-left,
+.kiwi-editor-col-right {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    min-width: 0;
+}
+
+.kiwi-preview-media-box,
+.kiwi-editor-panel,
+.kiwi-nitro-promo-card,
+.kiwi-live-identity-box {
+    background: var(--kiwi-bg-elevated);
+    border: 1px solid var(--kiwi-border);
+    border-radius: 12px;
+    padding: 12px;
+}
+
+.kiwi-preview-media-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 10px;
+}
+
+.kiwi-editor-avatar-wrap {
+    position: relative;
+    width: 54px;
+    height: 54px;
+    flex-shrink: 0;
+}
+
+.kiwi-editor-avatar-preview {
+    width: 54px;
+    height: 54px;
+    border-radius: 50%;
+    background: var(--kiwi-accent-purple);
+    color: #fff;
+    font-size: 20px;
+    font-weight: 800;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-size: cover;
+    background-position: center;
+}
+
+.kiwi-editor-avatar-badge-btn {
+    position: absolute;
+    right: -2px;
+    bottom: -2px;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    border: 1px solid var(--kiwi-border-strong);
+    background: var(--kiwi-bg-card);
+    color: #fff;
+    font-size: 11px;
+    cursor: pointer;
+}
+
+.kiwi-editor-banner-preview {
+    flex: 1;
+    height: 54px;
+    border-radius: 8px;
+    background: var(--auth-artwork);
+    background-size: cover;
+    background-position: center;
+    cursor: pointer;
+}
+
+.kiwi-editor-action-pill {
+    width: 100%;
+    padding: 7px 10px;
+    border-radius: 8px;
+    border: 1px solid var(--kiwi-border);
+    background: var(--kiwi-bg-card);
+    color: var(--kiwi-text-primary);
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    margin-bottom: 6px;
+}
+
+.kiwi-editor-panel-label {
+    display: block;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    color: var(--kiwi-text-secondary);
+    margin-bottom: 6px;
+}
+
+.kiwi-swatch-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 7px 10px;
+    border-radius: 8px;
+    background: var(--kiwi-bg-card);
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.kiwi-effects-pair {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+}
+
+.kiwi-effect-slot {
+    padding: 8px;
+    border-radius: 8px;
+    border: 1px solid var(--kiwi-border);
+    background: var(--kiwi-bg-card);
+    color: var(--kiwi-text-primary);
+    font-size: 11px;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+}
+
+.kiwi-effect-slot.active {
+    border-color: var(--kiwi-accent-purple-bright);
+    background: var(--kiwi-accent-purple-soft);
+}
+
+.kiwi-name-style-card {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 10px;
+    border-radius: 8px;
+    background: var(--kiwi-bg-card);
+    border: 1px solid var(--kiwi-border);
+    cursor: pointer;
+}
+
+.kiwi-name-style-sample {
+    font-size: 14px;
+    font-weight: 800;
+}
+
+.kiwi-nitro-btn {
+    margin-top: 8px;
+    width: 100%;
+    padding: 7px 10px;
+    border-radius: 8px;
+    border: 1px solid var(--kiwi-border-strong);
+    background: var(--kiwi-bg-card);
+    color: var(--kiwi-text-primary);
+    font-size: 12px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    cursor: pointer;
+}
+
+.kiwi-live-banner-mini {
+    height: 76px;
+    border-radius: 10px;
+    background: var(--auth-artwork);
+    background-size: cover;
+    background-position: center;
+    cursor: pointer;
+}
+
+.kiwi-live-identity-box {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+}
+
+.kiwi-privacy-banner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 8px 12px;
+    border-radius: 8px;
+    background: var(--kiwi-accent-purple-soft);
+    border: 1px solid var(--kiwi-border);
+    font-size: 12px;
+}
+
+.kiwi-editor-two-col-fields {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+}
+
+.kiwi-saved-music-pill-btn {
+    padding: 4px 10px;
+    border-radius: var(--kiwi-radius-pill);
+    border: 1px solid var(--kiwi-border-strong);
+    background: var(--kiwi-bg-card);
+    color: var(--kiwi-text-primary);
+    font-size: 11px;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.kiwi-file-picker-wrap {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 8px;
+    border-radius: 8px;
+    background: var(--kiwi-bg-elevated);
+    border: 1px solid var(--kiwi-border);
+    font-size: 11px;
+}
+
+.kiwi-file-picker-btn {
+    padding: 4px 8px;
+    border-radius: 6px;
+    border: 1px solid var(--kiwi-border);
+    background: var(--kiwi-bg-card);
+    color: var(--kiwi-text-primary);
+    font-size: 11px;
+    font-weight: 600;
+    cursor: pointer;
+    flex-shrink: 0;
+}
+
+.kiwi-file-picker-name {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    color: var(--kiwi-text-muted);
+}
+
+.kiwi-file-picker-name.has-file {
+    color: var(--kiwi-text-primary);
+}
+
+.kiwi-file-picker-clear {
+    display: none;
+    background: transparent;
+    border: none;
+    color: var(--kiwi-text-muted);
+    cursor: pointer;
+}
+
+.kiwi-file-picker-clear.visible {
+    display: inline-flex;
+}
+
+.kiwi-editor-footer-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    margin-top: 6px;
+}
+
+.kiwi-btn-guardar {
+    padding: 9px 18px;
+    border-radius: var(--kiwi-radius-pill);
+    border: none;
+    background: var(--kiwi-accent-purple);
+    color: #fff;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.kiwi-btn-cancelar {
+    padding: 9px 16px;
+    border-radius: var(--kiwi-radius-pill);
+    border: 1px solid var(--kiwi-border);
+    background: var(--kiwi-bg-elevated);
+    color: var(--kiwi-text-primary);
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+/* Badges e efeitos exclusivos do admin */
 .admin-gold-badge {
     display: inline-flex;
     align-items: center;
@@ -2608,27 +2498,26 @@ svg {
     color: #1a1200;
     font-size: 10px;
     font-weight: 900;
-    letter-spacing: 0.04em;
 }
 
 .akiira-gold-tab {
     display: inline-flex;
     align-items: center;
-    padding: 5px 11px;
+    padding: 5px 12px;
     border-radius: var(--kiwi-radius-pill);
-    background: linear-gradient(135deg, rgba(255, 215, 0, 0.25), rgba(212, 175, 55, 0.12));
-    border: 1px solid rgba(255, 215, 0, 0.55);
-    color: #ffe885;
+    border: 1px solid rgba(255, 215, 0, 0.7);
+    background: linear-gradient(135deg, rgba(184, 134, 11, 0.35), rgba(255, 215, 0, 0.25));
+    color: #fff3b0;
     font-size: 11px;
     font-weight: 800;
     cursor: pointer;
 }
 
 .akiira-gold-panel {
-    background: linear-gradient(160deg, rgba(255, 215, 0, 0.12), rgba(24, 18, 4, 0.9));
+    padding: 10px;
+    border-radius: 10px;
     border: 1px solid rgba(255, 215, 0, 0.45);
-    border-radius: 12px;
-    padding: 11px;
+    background: linear-gradient(145deg, rgba(184, 134, 11, 0.16), rgba(255, 215, 0, 0.06));
 }
 
 .akiira-gold-frame {
@@ -2636,56 +2525,53 @@ svg {
 }
 
 .akiira-profile-gold-glow {
-    box-shadow: 0 0 0 1px rgba(255, 215, 0, 0.45), 0 20px 50px rgba(212, 175, 55, 0.22) !important;
+    box-shadow: 0 0 0 1.5px rgba(255, 215, 0, 0.55), 0 20px 50px rgba(255, 215, 0, 0.18) !important;
 }
 
 /* Toast */
 .kiwi-toast {
     position: fixed;
     bottom: 22px;
-    right: 22px;
+    left: 50%;
+    transform: translateX(-50%) translateY(12px);
     z-index: 6000;
-    padding: 10px 16px;
-    border-radius: var(--kiwi-radius-md);
+    padding: 9px 18px;
+    border-radius: var(--kiwi-radius-pill);
     background: var(--kiwi-bg-card);
     color: var(--kiwi-text-primary);
-    border: 1px solid var(--kiwi-accent-purple-bright);
-    box-shadow: 0 12px 28px rgba(0, 0, 0, 0.55);
+    border: 1px solid var(--kiwi-border-strong);
+    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.55);
     font-size: 13px;
     font-weight: 600;
     opacity: 0;
-    transform: translateY(8px);
     pointer-events: none;
     transition: opacity 0.2s ease, transform 0.2s ease;
 }
 
 .kiwi-toast.show {
     opacity: 1;
-    transform: translateY(0);
+    transform: translateX(-50%) translateY(0);
 }
 
 /* Responsividade */
 @media (max-width: 1180px) {
     .kiwi-app-shell {
-        grid-template-columns: 60px 215px minmax(340px, 1fr) 260px;
+        grid-template-columns: 58px 215px minmax(320px, 1fr) 260px;
     }
 }
 
 @media (max-width: 900px) {
     .kiwi-app-shell {
-        grid-template-columns: 56px 200px 1fr;
+        grid-template-columns: 54px 200px 1fr;
     }
-
     .sidebar-right {
         display: none;
     }
-
+    .kiwi-dm-split-shell {
+        grid-template-columns: 230px 1fr;
+    }
     .kiwi-editor-grid {
         grid-template-columns: 1fr;
-    }
-
-    .kiwi-dm-split-shell {
-        grid-template-columns: 240px 1fr;
     }
 }
 
@@ -2694,38 +2580,86 @@ svg {
     body {
         overflow: auto;
         height: auto;
-        min-height: 100dvh;
     }
-
     .kiwi-app-shell {
-        display: grid;
-        grid-template-columns: 54px 1fr;
+        display: flex;
+        flex-direction: column;
         width: 100%;
         height: auto;
-        min-height: 100dvh;
+        min-height: 100vh;
         overflow: visible;
     }
-
-    .sidebar-left {
+    .server-rail {
+        flex-direction: row;
+        width: 100%;
         height: auto;
-        min-height: 100dvh;
-        overflow-y: auto;
+        padding: 8px 10px;
+        border-right: none;
+        border-bottom: 1px solid var(--kiwi-border);
     }
-
+    .server-rail-divider {
+        width: 1px;
+        height: 26px;
+    }
+    .sidebar-left {
+        width: 100%;
+        height: auto;
+        border-right: none;
+        border-bottom: 1px solid var(--kiwi-border);
+    }
     .chat-area {
-        display: none;
-        position: fixed;
-        inset: 0;
-        z-index: 1200;
-        width: 100vw;
-        height: 100dvh;
+        width: 100%;
+        height: auto;
+        min-height: 75vh;
+        overflow: visible;
     }
-
-    body.mobile-chat-open .chat-area {
-        display: flex;
-    }
-
     .kiwi-dm-split-shell {
         grid-template-columns: 1fr;
+        height: auto;
+    }
+    .kiwi-editor-two-col-fields {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* Popover lateral de resumo do perfil estilo Discord */
+.kiwi-discord-popover {
+    display: none;
+    position: fixed;
+    left: 310px;
+    bottom: 14px;
+    width: 350px;
+    max-width: calc(100vw - 324px);
+    max-height: 86vh;
+    overflow-y: auto;
+    z-index: 3200;
+    border-radius: 18px;
+    background: var(--kiwi-bg-card);
+    border: 1px solid var(--kiwi-border-strong);
+    box-shadow: 0 24px 60px rgba(0, 0, 0, 0.72);
+    scrollbar-width: thin;
+    scrollbar-color: rgba(167, 139, 250, 0.25) transparent;
+}
+
+.kiwi-discord-popover.open {
+    display: block;
+    animation: kiwiRoomFade 0.18s var(--kiwi-ease);
+}
+
+@media (max-width: 900px) {
+    .kiwi-discord-popover {
+        left: 268px;
+        bottom: 14px;
+        max-width: calc(100vw - 282px);
+    }
+}
+
+@media (max-width: 768px) {
+    .kiwi-discord-popover {
+        left: 12px;
+        right: 12px;
+        bottom: 76px;
+        width: auto;
+        max-width: none;
     }
 }

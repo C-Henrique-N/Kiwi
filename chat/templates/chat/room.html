@@ -742,8 +742,8 @@
             </div>
         </div>
 
-        <!-- Modal de Perfil Estético (Card) -->
-        <div id="unified-profile-modal" class="modal-overlay">
+        <!-- Popover Lateral de Resumo do Perfil (Card) -->
+        <div id="unified-profile-modal" class="kiwi-discord-popover" role="dialog" aria-label="Resumo do Perfil">
             <div class="aesthetic-profile-card" id="unified-profile-card">
                 <button type="button" class="close-modal-btn" id="close-unified-profile-btn">×</button>
                 <div id="up-banner" class="aesthetic-banner"></div>
@@ -2312,10 +2312,30 @@
                 });
             }
 
+            function openProfileSidePopover() {
+                if (!unifiedProfileModal) return;
+                unifiedProfileModal.classList.remove('closing');
+                unifiedProfileModal.classList.add('open');
+            }
+
             function closeUnifiedProfileModal() {
                 stopProfileMusicPlayback();
-                closeModalAnimated(unifiedProfileModal);
+                if (!unifiedProfileModal) return;
+                unifiedProfileModal.classList.remove('open');
+                unifiedProfileModal.classList.remove('closing');
             }
+
+            document.addEventListener('click', (e) => {
+                if (!unifiedProfileModal || !unifiedProfileModal.classList.contains('open')) return;
+                const target = e.target;
+                if (!(target instanceof Element)) return;
+                const insidePopover = unifiedProfileModal.contains(target);
+                const insideTrigger = (openTrigger && openTrigger.contains(target)) ||
+                    Boolean(target.closest('#open-profile-trigger, .my-user-info, #kiwi-x-avatar, #kiwi-x-open-card-btn, #kiwi-x-more-btn, .avatar, .username, .social-list-item'));
+                if (!insidePopover && !insideTrigger) {
+                    closeUnifiedProfileModal();
+                }
+            });
 
             let inspectedProfileUsername = '';
             function renderUnifiedProfileModal(profileObj) {
@@ -2354,7 +2374,7 @@
                     upOtherActions.style.display = 'flex';
                 }
 
-                openModalAnimated(unifiedProfileModal);
+                openProfileSidePopover();
             }
 
             window.openUserProfile = function(username) {
@@ -2434,9 +2454,6 @@
             }
 
             closeUnifiedProfileBtn.addEventListener('click', closeUnifiedProfileModal);
-            unifiedProfileModal.addEventListener('click', (e) => {
-                if (e.target === unifiedProfileModal) closeUnifiedProfileModal();
-            });
             closeEditBtn.addEventListener('click', () => closeModalAnimated(editModal));
             editModal.addEventListener('click', (e) => {
                 if (e.target === editModal) closeModalAnimated(editModal);
@@ -2574,6 +2591,8 @@
                 updateMySidebarUI();
                 syncXProfileHeader();
                 closeModalAnimated(editModal);
+                closeUnifiedProfileModal();
+                activateNavTab('perfil');
                 showKiwiToast("Perfil guardado!");
             });
 
@@ -2706,7 +2725,6 @@
             submitButton.onclick = sendChatMessage;
             messageInput.onkeyup = function(e) { if (e.key === 'Enter') sendChatMessage(); };
 
-            // === ALTERNÂNCIA DE SUPERFÍCIES (PERFIL, BATE-PAPO DIVIDIDO, CANAIS/CHAT) ===
             function hideAllMainSurfaces() {
                 if (profileTimelineView) profileTimelineView.classList.remove('active');
                 if (dmSplitView) dmSplitView.style.display = 'none';
@@ -2738,7 +2756,6 @@
                 renderDmSplitPane(dmSearchInp ? dmSearchInp.value : '');
             }
 
-            // === CANAIS (# geral, 🎵 música e + Canal) ===
             function renderChannelsListForServer(serverId, activeChName) {
                 const listContainer = document.getElementById('server-channels-list');
                 if (!listContainer) return;
@@ -3010,7 +3027,6 @@
                 });
             });
 
-            // === SERVIDORES E CANAIS ===
             const createServerModal = document.getElementById('create-server-modal');
             const openCreateServerBtn = document.getElementById('open-create-server-btn');
             const closeCreateServerBtn = document.getElementById('close-create-server-btn');
@@ -3123,7 +3139,6 @@
                 });
             }
 
-            // === AMIGOS ===
             const addFriendModal = document.getElementById('add-friend-modal');
             const openAddFriendBtn = document.getElementById('open-add-friend-btn');
             const closeAddFriendBtn = document.getElementById('close-add-friend-btn');
@@ -3513,7 +3528,6 @@
                 }
             });
 
-            // === PERFIL ESTILO X, ABA SEGUIDORES DEDICADA E POSTS ===
             const navItems = document.querySelectorAll('.kiwi-nav-item[data-nav-tab]');
             const xFeedListEl = document.getElementById('kiwi-x-feed-list');
             const xFollowersPanelEl = document.getElementById('kiwi-x-followers-panel');
@@ -3687,7 +3701,6 @@
                 });
             }
 
-            // Aba dedicada de Seguidores / Seguindo / Verificados (estilo Imagem 4)
             function renderFollowersTabPanel(initialMode = 'seguidores') {
                 if (!xFollowersPanelEl || !xFeedListEl) return;
                 currentView = 'seguidores';
@@ -3774,7 +3787,6 @@
                 });
             });
 
-            // === BATE-PAPO DIVIDIDO (ESTILO IMAGEM 5) ===
             const dmConvList = document.getElementById('kiwi-dm-conversations-list');
             const dmSugList = document.getElementById('kiwi-dm-suggested-list');
             const dmSearchInp = document.getElementById('kiwi-dm-search-input');
@@ -3973,15 +3985,32 @@
                     headerMainTitle.textContent = '🏠 Início';
                     headerSubLabel.textContent = '| Feed e conversa geral';
                     backToGeralBtn.classList.remove('visible');
-                    const chObj = (serverChannelsStore[currentServerId] || []).find((c) => c.name === currentChannelName);
+                    const chName = currentChannelName || 'geral';
+                    const chObj = (serverChannelsStore[currentServerId] || []).find((c) => c.name === chName);
+                    const chType = (chObj && chObj.type) || 'text';
                     const ctx = roomCtxManager.activateContext({
                         type: 'channel',
                         serverId: currentServerId,
-                        channelName: currentChannelName || 'geral',
-                        channelType: (chObj && chObj.type) || 'text'
+                        channelName: chName,
+                        channelType: chType
                     });
-                    if (chatLog && ctx && ctx.snapshotHtml) {
-                        chatLog.innerHTML = ctx.snapshotHtml;
+                    if (chatLog) {
+                        if (ctx && ctx.snapshotHtml && ctx.snapshotHtml.trim() !== '') {
+                            chatLog.innerHTML = ctx.snapshotHtml;
+                        } else if (!chatLog.innerHTML.trim()) {
+                            chatLog.innerHTML = `
+                                <div class="message-group">
+                                    <div class="avatar" style="background: #241642;">🏠</div>
+                                    <div class="message-content">
+                                        <div class="message-header">
+                                            <span class="username" style="color: #a78bfa;">Sistema Kiwi</span>
+                                            <span class="timestamp">Hoje</span>
+                                        </div>
+                                        <div class="message-text">Bem-vindo ao Início do Kiwi Chat! Mande uma mensagem ou navegue pelos canais.</div>
+                                    </div>
+                                </div>
+                            `;
+                        }
                         enhanceExistingMessagesInLog();
                         chatLog.scrollTop = chatLog.scrollHeight;
                     }
@@ -4083,7 +4112,6 @@
                 });
             });
 
-            // Botão Postar e modal de nova postagem
             const createPostModal = document.getElementById('create-post-modal');
             const navOpenPostModalBtn = document.getElementById('nav-open-post-modal-btn');
             const closeCreatePostBtn = document.getElementById('close-create-post-btn');
@@ -4133,7 +4161,6 @@
                 });
             }
 
-            // Ações do topo do perfil estilo X + acesso rápido ao Card Estético
             const kiwiXBackBtn = document.getElementById('kiwi-x-back-btn');
             const kiwiXOpenCardBtn = document.getElementById('kiwi-x-open-card-btn');
             const kiwiXAvatarEl = document.getElementById('kiwi-x-avatar');
@@ -4156,7 +4183,6 @@
             if (kiwiXDmBtn) kiwiXDmBtn.addEventListener('click', () => activateNavTab('mensagens'));
             if (kiwiXMoreBtn) kiwiXMoreBtn.addEventListener('click', () => openUserProfile(activeUsername));
 
-            // Sidebar direita limpa: busca + Quem seguir
             const sidebarRightEl = document.querySelector('.sidebar-right');
             if (sidebarRightEl && socialContentContainer) {
                 const extraRightBox = document.createElement('div');
@@ -4192,11 +4218,40 @@
                 else sidebarRightEl.appendChild(extraRightBox);
 
                 extraRightBox.querySelectorAll('[data-follow-user]').forEach(btn => {
+                    const target = (btn.getAttribute('data-follow-user') || '').trim();
+                    const alreadyFollowing = followingList.some(
+                        x => (typeof x === 'string' ? x : (x && x.username) || '').toLowerCase() === target.toLowerCase()
+                    );
+                    btn.classList.toggle('is-following', alreadyFollowing);
+                    btn.textContent = alreadyFollowing ? 'Seguindo' : 'Seguir';
+
                     btn.addEventListener('click', () => {
-                        const target = btn.getAttribute('data-follow-user');
-                        const following = btn.classList.toggle('is-following');
-                        btn.textContent = following ? 'Seguindo' : 'Seguir';
-                        if (following && target) addFriendByName(target);
+                        if (!target) return;
+                        followingList = readStorageJson(FOLLOWING_STORAGE_KEY, []);
+                        if (!Array.isArray(followingList)) followingList = [];
+                        const exists = followingList.some(
+                            x => (typeof x === 'string' ? x : (x && x.username) || '').toLowerCase() === target.toLowerCase()
+                        );
+                        let nowFollowing = false;
+                        if (exists) {
+                            followingList = followingList.filter(
+                                x => (typeof x === 'string' ? x : (x && x.username) || '').toLowerCase() !== target.toLowerCase()
+                            );
+                            nowFollowing = false;
+                        } else {
+                            followingList.push({ username: target, bio: 'Seguido no Kiwi Chat.' });
+                            nowFollowing = true;
+                        }
+                        writeStorageJson(FOLLOWING_STORAGE_KEY, followingList);
+                        syncFollowerCountsUi();
+                        btn.classList.toggle('is-following', nowFollowing);
+                        btn.textContent = nowFollowing ? 'Seguindo' : 'Seguir';
+                        if (nowFollowing) {
+                            addFriendByName(target);
+                            showKiwiToast(`Seguindo ${target}!`);
+                        } else {
+                            showKiwiToast(`Deixou de seguir ${target}.`);
+                        }
                     });
                 });
 
