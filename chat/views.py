@@ -1331,3 +1331,23 @@ def friend_music_feed(request):
         for p in qs
     ]
     return JsonResponse({"ok": True, "feed": feed})
+
+    profile_payload = None
+    if request.user.is_authenticated and hasattr(request.user, "profile") and request.user.profile:
+        profile = request.user.profile
+        profile_payload = {
+            "username": request.user.username,
+            "bubble": profile.bubble or "",
+            "pronouns": profile.pronouns or "",
+            "bio": profile.bio or "",
+            "location": profile.location or "",
+            "spotify_song": profile.spotify_song or "",
+            "spotify_artist": profile.spotify_artist or "",
+            "music_url": profile.music_url or "",
+            "music_audio_url": profile.get_music_audio_src() or "",
+            "music_cover_url": profile.get_music_cover_src() or "",
+            "avatar_url": profile.avatar.url if profile.avatar else "",
+            "banner_url": profile.banner.url if profile.banner else "",
+            "accent_color": profile.accent_color or "",
+            "is_admin": bool(request.user.is_staff or request.user.is_superuser),
+        }

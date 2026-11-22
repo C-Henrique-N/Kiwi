@@ -675,7 +675,7 @@ html, body {
 </style>
 </head>
 <body>
-    <script id="kiwi-username-data" type="application/json">{{ request.user.username|default:"AkiiraPW"|json_script:"kiwi-username-data" }}</script>
+    {{ request.user.username|default:"AkiiraPW"|json_script:"kiwi-username-data" }}
     <script id="kiwi-is-admin-data" type="application/json">{% if request.user.is_staff or request.user.is_superuser %}true{% else %}false{% endif %}</script>
     <script id="kiwi-channel-id-data" type="application/json">null</script>
     <script id="kiwi-server-id-data" type="application/json">null</script>
@@ -1954,11 +1954,11 @@ html, body {
             function isSafeAssetUrl(url) {
                 if (!url || typeof url !== 'string') return false;
                 const trimmed = url.trim();
-                if (!trimmed) return false;
+                if (!trimmed || /["'()<>\\]/.test(trimmed)) return false;
                 if (trimmed.startsWith('/') && !trimmed.startsWith('//')) return true;
                 if (/^https?:\/\//i.test(trimmed)) return true;
-                if (/^data:image\/(png|jpe?g|gif|webp|avif);base64,/i.test(trimmed)) return true;
-                if (/^data:audio\/[a-z0-9.+-]+;base64,/i.test(trimmed)) return true;
+                if (/^data:image\/(png|jpe?g|gif|webp|avif);base64,[a-z0-9+/=]+$/i.test(trimmed)) return true;
+                if (/^data:audio\/[a-z0-9.+-]+;base64,[a-z0-9+/=]+$/i.test(trimmed)) return true;
                 if (/^blob:/i.test(trimmed)) return true;
                 return false;
             }
@@ -2408,8 +2408,10 @@ html, body {
                                     time: msgTimeFinal
                                 });
                             }
-                            if (currentView === 'dm' && selectedDmPeer && selectedDmPeer.toLowerCase() === peer.toLowerCase()) {
-                                renderDmMessagesList(selectedDmPeer);
+                            if (currentView === 'dm') {
+                                if (selectedDmPeer && selectedDmPeer.toLowerCase() === peer.toLowerCase()) {
+                                    renderDmMessagesList(selectedDmPeer);
+                                }
                                 renderDmSplitPane(dmSearchInp ? dmSearchInp.value : '');
                             }
                         }
@@ -2595,6 +2597,14 @@ html, body {
                         if (window.__kiwiMicStream) {
                             window.__kiwiMicStream.getTracks().forEach((t) => t.stop());
                             window.__kiwiMicStream = null;
+                        }
+                        if (typeof localStream !== 'undefined' && localStream) {
+                            localStream.getTracks().forEach((t) => t.stop());
+                            localStream = null;
+                        }
+                        if (typeof screenStream !== 'undefined' && screenStream) {
+                            screenStream.getTracks().forEach((t) => t.stop());
+                            screenStream = null;
                         }
                         if (pc) {
                             try { pc.close(); } catch (_) {}
@@ -4341,7 +4351,7 @@ html, body {
                                 canDelete: m.author === activeUsername || m.canDelete
                             });
                         });
-                    } else if (ctx && ctx.snapshotHtml && !ctx.snapshotHtml.includes('class="message-group"')) {
+                    } else if (ctx && ctx.snapshotHtml && ctx.snapshotHtml.trim() !== '') {
                         chatLog.innerHTML = ctx.snapshotHtml;
                     } else {
                         chatLog.innerHTML = `
@@ -5473,6 +5483,14 @@ html, body {
 
             if (pdBackBtn) pdBackBtn.addEventListener('click', showProfileTimelineSurface);
             if (pdReturnFeedBtn) pdReturnFeedBtn.addEventListener('click', showProfileTimelineSurface);
+            const threadBackBtn = document.getElementById('kiwi-thread-back-btn');
+            const threadMoreBtn = document.getElementById('kiwi-thread-more-btn');
+            if (threadBackBtn) threadBackBtn.addEventListener('click', showProfileTimelineSurface);
+            if (threadMoreBtn) {
+                threadMoreBtn.addEventListener('click', () => {
+                    renderUnifiedProfileModal(getActiveTimelineProfile());
+                });
+            }
             if (pdReplyForm && pdReplyInput) {
                 pdReplyForm.addEventListener('submit', (e) => {
                     e.preventDefault();
@@ -5852,10 +5870,17 @@ html, body {
                 });
             }
 
-            function renderExploreView(queryText = '') {
+            function renderExploreResultsOnly(queryText = '') {
                 const q = (queryText || '').trim().toLowerCase();
-                showChatLogSurface(false);
-                if (!chatLog) return;
+                const resultsEl = document.getElementById('kiwi-explore-results');
+                const hintEl = document.getElementById('kiwi-explore-hint');
+                if (!resultsEl) return;
+
+                if (hintEl) {
+                    hintEl.textContent = q
+                        ? `Mostrando resultados para "${queryText}"`
+                        : 'Pesquise por usuários ou tópicos do Kiwi';
+                }
 
                 const accounts = getExploreAccountsWithAdminPriority().filter(acc => {
                     if (!acc || isRemovedFakeAccount(acc.username)) return false;
@@ -5867,7 +5892,7 @@ html, body {
                     );
                 });
 
-                const cardsHtml = accounts.map(acc => {
+                resultsEl.innerHTML = accounts.map(acc => {
                     const safeName = escapeHtmlText(acc.username);
                     const safeHandle = escapeHtmlText(acc.handle || `@${acc.username.toLowerCase()}`);
                     const safeBio = escapeHtmlText(acc.bio || 'Perfil ativo no Kiwi Chat.');
@@ -5885,7 +5910,19 @@ html, body {
                             </div>
                         </div>
                     `;
-                }).join('');
+                }).join('') || '<div class="kiwi-search-dropdown-hint">Nenhum perfil encontrado para essa busca.</div>';
+
+                resultsEl.querySelectorAll('[data-explore-user]').forEach(card => {
+                    card.addEventListener('click', () => {
+                        const uname = card.getAttribute('data-explore-user');
+                        if (uname) window.openFullProfilePage(uname);
+                    });
+                });
+            }
+
+            function renderExploreView(queryText = '') {
+                showChatLogSurface(false);
+                if (!chatLog) return;
 
                 chatLog.innerHTML = `
                     <div class="kiwi-explore-shell">
@@ -5894,35 +5931,18 @@ html, body {
                                 <span>🔍</span>
                                 <input type="text" id="kiwi-explore-search-input" class="kiwi-search-input" value="${escapeHtmlText(queryText)}" placeholder="Buscar no Kiwi...">
                             </div>
-                            <div class="kiwi-search-dropdown-hint">
-                                ${q ? `Mostrando resultados para "${escapeHtmlText(queryText)}"` : 'Pesquise por usuários ou tópicos do Kiwi'}
-                            </div>
+                            <div id="kiwi-explore-hint" class="kiwi-search-dropdown-hint"></div>
                         </div>
-                        <div id="kiwi-explore-results">
-                            ${cardsHtml || '<div class="kiwi-search-dropdown-hint">Nenhum perfil encontrado para essa busca.</div>'}
-                        </div>
+                        <div id="kiwi-explore-results"></div>
                     </div>
                 `;
 
+                renderExploreResultsOnly(queryText);
+
                 const expInput = document.getElementById('kiwi-explore-search-input');
                 if (expInput) {
-                    expInput.addEventListener('input', () => {
-                        const caretPos = expInput.selectionStart;
-                        renderExploreView(expInput.value);
-                        const nextInp = document.getElementById('kiwi-explore-search-input');
-                        if (nextInp) {
-                            nextInp.focus();
-                            if (typeof caretPos === 'number') nextInp.setSelectionRange(caretPos, caretPos);
-                        }
-                    });
+                    expInput.addEventListener('input', () => renderExploreResultsOnly(expInput.value));
                 }
-
-                chatLog.querySelectorAll('[data-explore-user]').forEach(card => {
-                    card.addEventListener('click', () => {
-                        const uname = card.getAttribute('data-explore-user');
-                        if (uname) window.openFullProfilePage(uname);
-                    });
-                });
             }
 
             function renderInicioView() {
