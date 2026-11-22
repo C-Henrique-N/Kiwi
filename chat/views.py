@@ -175,7 +175,7 @@ def _get_or_create_profile(user):
 def _serialize_profile(user, profile):
     is_admin = _is_kiwi_admin(user) or bool(getattr(profile, "is_admin_badge", False))
     avatar_url = _safe_media_url(getattr(profile, "avatar", None))
-    banner_url = _safe_media_url(getattr(profile, "banner", None))
+    banner_url = _safe_media_url(getattr(profile, "banner", None)) or (getattr(profile, "banner_url", "") or "").strip()
     music_url = _safe_media_url(getattr(profile, "music_file", None)) or _safe_media_url(getattr(profile, "music_audio_file", None))
     music_cover_url = _safe_media_url(getattr(profile, "music_cover", None)) or _safe_media_url(getattr(profile, "music_cover_file", None))
 
@@ -188,6 +188,7 @@ def _serialize_profile(user, profile):
         "display_name": (getattr(profile, "display_name", "") or "").strip() or user.username,
         "bio": getattr(profile, "bio", "") or "",
         "pronouns": getattr(profile, "pronouns", "") or "",
+        "location": getattr(profile, "location", "") or "",
         "status": _sanitize_status(getattr(profile, "status", "online")),
         "custom_status": getattr(profile, "custom_status", "") or getattr(profile, "bubble", "") or "",
         "accent_color": accent,
@@ -806,12 +807,24 @@ def api_update_profile(request):
         if saved:
             profile.avatar.name = saved.replace(settings.MEDIA_URL, "", 1).lstrip("/")
 
+    if "location" in data and hasattr(profile, "location"):
+        profile.location = (data.get("location") or "").strip()[:120]
+
     if request.FILES.get("banner"):
         profile.banner = request.FILES["banner"]
-    elif isinstance(data.get("banner_url"), str) and data.get("banner_url").startswith("data:"):
-        saved = _save_base64_media(data.get("banner_url"), prefix="banner")
-        if saved:
-            profile.banner.name = saved.replace(settings.MEDIA_URL, "", 1).lstrip("/")
+        if hasattr(profile, "banner_url"):
+            profile.banner_url = ""
+    elif isinstance(data.get("banner_url"), str):
+        raw_banner = data.get("banner_url").strip()
+        if raw_banner.startswith("data:"):
+            saved = _save_base64_media(raw_banner, prefix="banner")
+            if saved:
+                media_url = getattr(settings, "MEDIA_URL", "/media/")
+                profile.banner.name = saved.replace(media_url, "", 1).lstrip("/")
+                if hasattr(profile, "banner_url"):
+                    profile.banner_url = ""
+        elif raw_banner.startswith(("http://", "https://")) and hasattr(profile, "banner_url"):
+            profile.banner_url = raw_banner
 
     if request.FILES.get("music_file"):
         profile.music_file = request.FILES["music_file"]

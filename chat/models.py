@@ -9,6 +9,8 @@ class UserProfile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='profile')
     avatar = models.ImageField(upload_to='avatars/', blank=True, null=True)
     banner = models.ImageField(upload_to='banners/', blank=True, null=True)
+    banner_url = models.TextField(blank=True, default='')
+    location = models.CharField(max_length=120, blank=True, default='')
     bubble = models.CharField(max_length=255, blank=True, default='🌸 a testar o novo kiwi chat...')
     pronouns = models.CharField(max_length=100, blank=True, default='utilizador • 🥝')
     bio = models.TextField(blank=True, default='Perfil estético ativo.')
