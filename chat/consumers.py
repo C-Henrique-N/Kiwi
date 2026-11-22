@@ -139,7 +139,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
             Message.objects.filter(channel=channel)
             .select_related("sender", "sender__profile")
             .prefetch_related("reactions", "reactions__user")
-            .order_by("-created_at")[:50]
+            .order_by("-timestamp")[:50]
         )
         result = []
         for msg in reversed(list(qs)):
