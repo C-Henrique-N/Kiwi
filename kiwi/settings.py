@@ -188,27 +188,7 @@ else:
 MEDIA_URL = "/media/"
 MEDIA_ROOT = Path(os.environ.get("MEDIA_ROOT", BASE_DIR / "media"))
 
-
 # Proxy & CSRF / HTTPS settings for Railway
-SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
-
-if not DEBUG:
-    SESSION_COOKIE_SECURE = True
-    CSRF_COOKIE_SECURE = True
-    SECURE_SSL_REDIRECT = os.environ.get("SECURE_SSL_REDIRECT", "True").lower() == "true"
-
-CSRF_TRUSTED_ORIGINS = [
-    "https://kiwisss.up.railway.app",
-]
-
-extra_csrf = os.environ.get("CSRF_TRUSTED_ORIGINS", "")
-if extra_csrf:
-    for origin in extra_csrf.split(","):
-        origin = origin.strip()
-        if origin and origin not in CSRF_TRUSTED_ORIGINS:
-            CSRF_TRUSTED_ORIGINS.append(origin)
-
-# Proxy & CSRF / HTTPS settings
 SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 
 _cookie_secure_env = os.environ.get("COOKIE_SECURE")
@@ -220,3 +200,15 @@ else:
 SESSION_COOKIE_SECURE = _use_secure_cookies
 CSRF_COOKIE_SECURE = _use_secure_cookies
 SECURE_SSL_REDIRECT = (not DEBUG) and (os.environ.get("SECURE_SSL_REDIRECT", "True").lower() == "true")
+
+CSRF_TRUSTED_ORIGINS = [
+    "https://kiwisss.up.railway.app",
+]
+
+extra_csrf = os.environ.get("CSRF_TRUSTED_ORIGINS", "")
+if extra_csrf:
+    for origin in extra_csrf.split(","):
+        origin = origin.strip()
+        if origin and origin not in CSRF_TRUSTED_ORIGINS:
+            CSRF_TRUSTED_ORIGINS.append(origin)
+            
