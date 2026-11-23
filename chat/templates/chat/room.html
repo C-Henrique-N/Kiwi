@@ -744,6 +744,53 @@ html, body {
     background: rgba(239, 68, 68, 0.2);
     border-color: rgba(248, 113, 113, 0.4);
 }
+.kiwi-home-block-edit-btn {
+    background: rgba(124, 58, 237, 0.24);
+    color: #f5f3ff;
+    border: 1px solid rgba(192, 132, 252, 0.45);
+    border-radius: 999px;
+    padding: 6px 12px;
+    font-size: 12px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background 0.15s ease, transform 0.12s ease;
+}
+
+.kiwi-home-block-edit-btn:hover {
+    background: rgba(124, 58, 237, 0.42);
+    transform: translateY(-1px);
+}
+
+.kiwi-home-block-editor {
+    margin-top: 12px;
+    padding: 12px;
+    border-radius: 14px;
+    background: rgba(11, 7, 20, 0.72);
+    border: 1px solid var(--kiwi-border);
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.kiwi-home-block-textarea {
+    width: 100%;
+    min-height: 78px;
+    resize: vertical;
+    border-radius: 10px;
+    border: 1px solid var(--kiwi-border);
+    background: var(--kiwi-bg-panel);
+    color: var(--kiwi-text-primary);
+    font-family: inherit;
+    font-size: 13px;
+    padding: 9px 11px;
+    outline: none;
+}
+
+.kiwi-home-block-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+}
 </style>
 </head>
 <body>
@@ -5323,23 +5370,29 @@ html, body {
                 xFeedList.innerHTML = '';
 
                 if (activeNavTab === 'inicio') {
-                    const akiiraSaved = profilesByUsername.get('akiirapw') || loadUserMusicFromLocalCache('AkiiraPW') || {};
-                    const akiiraName = 'AkiiraPW';
-                    const akiiraBio = akiiraSaved.bio || (activeUsername.toLowerCase() === 'akiirapw' ? myProfileData.bio : '') || 'Perfil estético ativo.';
-                    const akiiraAvatar = akiiraSaved.avatarUrl || (activeUsername.toLowerCase() === 'akiirapw' ? myProfileData.avatarUrl : '');
-                    const akiiraBanner = resolveBannerUrlForUser(akiiraName, akiiraSaved.bannerUrl || (activeUsername.toLowerCase() === 'akiirapw' ? myProfileData.bannerUrl : ''));
+                    const targetName = activeUsername || 'AkiiraPW';
+                    const isCurrentUserAkiira = String(activeUsername || '').trim().toLowerCase() === 'akiirapw';
+                    const savedEntry = profilesByUsername.get(targetName.toLowerCase()) || loadUserMusicFromLocalCache(targetName) || {};
+                    const cardName = myProfileData.username || savedEntry.username || targetName;
+                    const cardBio = myProfileData.bio || savedEntry.bio || 'Perfil estético ativo.';
+                    const cardAvatar = myProfileData.avatarUrl || savedEntry.avatarUrl || '';
+                    const cardBanner = resolveBannerUrlForUser(cardName, myProfileData.bannerUrl || savedEntry.bannerUrl || '');
 
                     const wrap = document.createElement('div');
                     wrap.className = 'kiwi-home-profile-wrap';
 
                     const card = document.createElement('div');
                     card.className = 'kiwi-home-profile-card';
-                    card.title = 'Abrir perfil de AkiiraPW';
+                    card.title = isCurrentUserAkiira
+                        ? `Abrir perfil de ${cardName} ou usar "Alterar bloco"`
+                        : `Abrir perfil de ${cardName}`;
 
                     const bannerDiv = document.createElement('div');
                     bannerDiv.className = 'kiwi-home-profile-banner';
-                    if (akiiraBanner) {
-                        bannerDiv.style.backgroundImage = `url("${encodeURI(akiiraBanner)}")`;
+                    if (cardBanner) {
+                        bannerDiv.style.backgroundImage = `url("${encodeURI(cardBanner)}")`;
+                        bannerDiv.style.backgroundSize = 'cover';
+                        bannerDiv.style.backgroundPosition = 'center';
                     }
 
                     const bodyDiv = document.createElement('div');
@@ -5350,24 +5403,105 @@ html, body {
 
                     const avDiv = document.createElement('div');
                     avDiv.className = 'kiwi-home-profile-avatar';
-                    setAvatarStyle(avDiv, akiiraAvatar, akiiraName);
+                    setAvatarStyle(avDiv, cardAvatar, cardName);
+                    topDiv.appendChild(avDiv);
 
                     const nameEl = document.createElement('div');
                     nameEl.style.cssText = 'font-size:17px;font-weight:900;color:var(--kiwi-text-primary);margin-bottom:4px;';
-                    nameEl.textContent = akiiraName;
+                    nameEl.textContent = cardName;
 
                     const bioEl = document.createElement('div');
                     bioEl.style.cssText = 'font-size:13px;color:var(--kiwi-text-secondary);line-height:1.45;';
-                    bioEl.innerHTML = formatSafeBioHtml(akiiraBio);
+                    bioEl.innerHTML = formatSafeBioHtml(cardBio);
 
-                    topDiv.appendChild(avDiv);
                     bodyDiv.appendChild(topDiv);
                     bodyDiv.appendChild(nameEl);
                     bodyDiv.appendChild(bioEl);
 
+                    if (isCurrentUserAkiira) {
+                        const editBlockBtn = document.createElement('button');
+                        editBlockBtn.type = 'button';
+                        editBlockBtn.className = 'kiwi-home-block-edit-btn';
+                        editBlockBtn.textContent = '✏️ Alterar bloco';
+                        topDiv.appendChild(editBlockBtn);
+
+                        const editorBox = document.createElement('div');
+                        editorBox.className = 'kiwi-home-block-editor';
+                        editorBox.style.display = 'none';
+                        editorBox.addEventListener('click', (ev) => ev.stopPropagation());
+
+                        const editorTextarea = document.createElement('textarea');
+                        editorTextarea.className = 'kiwi-home-block-textarea';
+                        editorTextarea.value = (cardBio || '').replace(/<br\s*\/?\s*>/gi, '\n');
+                        editorTextarea.placeholder = 'Escreva o novo texto do seu bloco...';
+
+                        const actionsRow = document.createElement('div');
+                        actionsRow.className = 'kiwi-home-block-actions';
+
+                        const cancelBlockBtn = document.createElement('button');
+                        cancelBlockBtn.type = 'button';
+                        cancelBlockBtn.className = 'kiwi-inventory-mini-btn';
+                        cancelBlockBtn.textContent = 'Cancelar';
+
+                        const saveBlockBtn = document.createElement('button');
+                        saveBlockBtn.type = 'button';
+                        saveBlockBtn.className = 'kiwi-admin-guide-cta';
+                        saveBlockBtn.style.padding = '6px 14px';
+                        saveBlockBtn.style.fontSize = '12px';
+                        saveBlockBtn.textContent = 'Salvar bloco';
+
+                        actionsRow.appendChild(cancelBlockBtn);
+                        actionsRow.appendChild(saveBlockBtn);
+                        editorBox.appendChild(editorTextarea);
+                        editorBox.appendChild(actionsRow);
+                        bodyDiv.appendChild(editorBox);
+
+                        editBlockBtn.addEventListener('click', (ev) => {
+                            ev.stopPropagation();
+                            const isOpen = editorBox.style.display !== 'none';
+                            editorBox.style.display = isOpen ? 'none' : 'flex';
+                            if (!isOpen) editorTextarea.focus();
+                        });
+
+                        cancelBlockBtn.addEventListener('click', (ev) => {
+                            ev.stopPropagation();
+                            editorTextarea.value = (cardBio || '').replace(/<br\s*\/?\s*>/gi, '\n');
+                            editorBox.style.display = 'none';
+                        });
+
+                        saveBlockBtn.addEventListener('click', async (ev) => {
+                            ev.stopPropagation();
+                            const updatedBio = editorTextarea.value.trim();
+                            myProfileData.bio = updatedBio;
+
+                            const mergedProfile = {
+                                ...savedEntry,
+                                ...myProfileData,
+                                username: cardName,
+                                bio: updatedBio
+                            };
+                            profilesByUsername.set(targetName.toLowerCase(), mergedProfile);
+                            saveUserMusicToLocalCache(targetName, mergedProfile);
+
+                            if (window.KiwiClient && typeof window.KiwiClient.submitProfileUpdate === 'function') {
+                                try {
+                                    const fd = new FormData();
+                                    fd.append('username', cardName);
+                                    fd.append('bio', updatedBio);
+                                    await window.KiwiClient.submitProfileUpdate(fd);
+                                } catch (_) {}
+                            }
+
+                            editorBox.style.display = 'none';
+                            syncXProfileHeader();
+                            renderCleanUserPosts();
+                            showKiwiToast('Bloco atualizado na sua conta!');
+                        });
+                    }
+
                     card.appendChild(bannerDiv);
                     card.appendChild(bodyDiv);
-                    card.addEventListener('click', () => window.openUserProfile(akiiraName));
+                    card.addEventListener('click', () => window.openUserProfile(cardName));
 
                     wrap.appendChild(card);
                     xFeedList.appendChild(wrap);
