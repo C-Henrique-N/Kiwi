@@ -555,3 +555,45 @@ class MessageReaction(models.Model):
 
 
 Profile = UserProfile
+
+class Follow(models.Model):
+    follower = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name="following_relations",
+    )
+    following = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name="follower_relations",
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["-created_at", "-id"]
+        unique_together = ("follower", "following")
+        indexes = [
+            models.Index(fields=["follower", "created_at"]),
+            models.Index(fields=["following", "created_at"]),
+        ]
+
+    @staticmethod
+    def is_following(follower_user, target_user):
+        if not follower_user or not target_user or follower_user.pk == target_user.pk:
+            return False
+        return Follow.objects.filter(follower=follower_user, following=target_user).exists()
+
+    @staticmethod
+    def followers_count_for(user):
+        if not user or not user.pk:
+            return 0
+        return Follow.objects.filter(following=user).count()
+
+    @staticmethod
+    def following_count_for(user):
+        if not user or not user.pk:
+            return 0
+        return Follow.objects.filter(follower=user).count()
+
+    def __str__(self):
+        return f"{self.follower.username} segue {self.following.username}"

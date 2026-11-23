@@ -21,6 +21,7 @@ from django.views.decorators.http import require_GET, require_POST
 from .models import (
     Channel,
     DirectMessage,
+    Follow,
     FriendRequest,
     Friendship,
     Message,
@@ -240,6 +241,18 @@ def _get_or_create_profile(user):
         profile.save(update_fields=["accent_color"])
     return profile
 
+def _attach_follow_stats(payload, target_user, viewer_user=None):
+    followers_count = Follow.followers_count_for(target_user)
+    following_count = Follow.following_count_for(target_user)
+    is_following = (
+        Follow.is_following(viewer_user, target_user)
+        if viewer_user and viewer_user.is_authenticated
+        else False
+    )
+    payload["followers_count"] = followers_count
+    payload["following_count"] = following_count
+    payload["is_following"] = is_following
+    return payload
 
 def _serialize_profile(user, profile):
     is_admin = _is_kiwi_admin(user)
@@ -1517,3 +1530,32 @@ def api_shop_unequip(request):
         "slot": slot or "all",
         "profile": _serialize_profile(request.user, profile),
     })
+
+    data = {
+        "username": user.username,
+        "display_name": (getattr(profile, "display_name", "") or "").strip() or user.username,
+        "bio": getattr(profile, "bio", "") or "",
+        "pronouns": getattr(profile, "pronouns", "") or "",
+        "location": getattr(profile, "location", "") or "",
+        "status": _sanitize_status(getattr(profile, "status", "online")),
+        "custom_status": getattr(profile, "custom_status", "") or getattr(profile, "bubble", "") or "",
+        "bubble": getattr(profile, "bubble", "") or "",
+        "accent_color": accent,
+        "name_effect": name_effect,
+        "avatar_frame": avatar_frame,
+        "frame_effect": getattr(profile, "frame_effect", "none") or "none",
+        "card_effect": getattr(profile, "card_effect", "none") or "none",
+        "profile_glow": bool(getattr(profile, "profile_glow", False)),
+        "avatar_pulse": bool(getattr(profile, "avatar_pulse", False)),
+        "name_style": getattr(profile, "name_style", "") or "",
+        "avatar_url": avatar_url,
+        "banner_url": banner_url,
+        "music_title": getattr(profile, "spotify_song", "") or "",
+        "music_artist": getattr(profile, "spotify_artist", "") or "",
+        "spotify_song": getattr(profile, "spotify_song", "") or "",
+        "spotify_artist": getattr(profile, "spotify_artist", "") or "",
+        "music_url": music_url,
+        "music_cover_url": music_cover_url,
+        "is_admin": is_admin,
+    }
+    return _attach_follow_stats(data, user, viewer_user=user)
