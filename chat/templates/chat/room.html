@@ -73,85 +73,6 @@ html, body {
     background: var(--kiwi-bg-canvas);
 }
 
-/* Efeitos Visuais da Loja conectadas ao Perfil, Card e Avatar */
-.kiwi-frame-twilight_beryl {
-    box-shadow: 0 0 0 3px #2dd4bf, 0 0 18px rgba(45, 212, 191, 0.65) !important;
-}
-
-.kiwi-frame-ambient_waves_lavender {
-    box-shadow: 0 0 0 3px #c084fc, 0 0 18px rgba(192, 132, 252, 0.65) !important;
-    outline: 2px dashed rgba(216, 180, 254, 0.75);
-    outline-offset: 2px;
-}
-
-.kiwi-frame-mirage {
-    box-shadow: 0 0 0 3px #f472b6, 0 0 20px rgba(244, 114, 182, 0.72) !important;
-}
-
-.kiwi-card-sakura_blossom {
-    border-color: rgba(249, 168, 212, 0.65) !important;
-    box-shadow: 0 10px 28px rgba(236, 72, 153, 0.22), inset 0 0 24px rgba(244, 114, 182, 0.08) !important;
-}
-
-.kiwi-card-black_flames {
-    border-color: rgba(168, 85, 247, 0.65) !important;
-    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.72), 0 0 22px rgba(124, 58, 237, 0.35) !important;
-}
-
-.kiwi-card-starlight_gleam {
-    border-color: rgba(250, 204, 21, 0.55) !important;
-    box-shadow: 0 10px 28px rgba(234, 179, 8, 0.2), 0 0 22px rgba(167, 139, 250, 0.25) !important;
-}
-
-.kiwi-name-neon_kiwi {
-    color: #a3e635 !important;
-    text-shadow: 0 0 10px rgba(163, 230, 53, 0.45), 0 0 20px rgba(132, 204, 22, 0.25);
-    font-weight: 900 !important;
-    letter-spacing: 0.02em;
-}
-
-.kiwi-equipped-pills-bar {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: 8px;
-    margin-top: 10px;
-}
-
-.kiwi-equipped-pill {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    padding: 5px 11px;
-    border-radius: 999px;
-    font-size: 11px;
-    font-weight: 700;
-    background: rgba(124, 58, 237, 0.16);
-    border: 1px solid rgba(167, 139, 250, 0.35);
-    color: var(--kiwi-text-primary);
-}
-
-.kiwi-shop-connect-btn {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    padding: 6px 12px;
-    border-radius: 999px;
-    font-size: 12px;
-    font-weight: 700;
-    text-decoration: none;
-    color: #fff;
-    background: linear-gradient(135deg, #7c3aed, #9333ea);
-    border: 1px solid rgba(216, 180, 254, 0.38);
-    cursor: pointer;
-    transition: transform 0.15s ease, filter 0.15s ease;
-}
-
-.kiwi-shop-connect-btn:hover {
-    transform: translateY(-1px);
-    filter: brightness(1.08);
-}
-
 /* Barra de Pesquisa estilo Explorar */
 .kiwi-explore-shell {
     width: 100%;
@@ -758,7 +679,7 @@ html, body {
     <script id="kiwi-is-admin-data" type="application/json">{% if request.user.is_staff or request.user.is_superuser %}true{% else %}false{% endif %}</script>
     <script id="kiwi-channel-id-data" type="application/json">null</script>
     <script id="kiwi-server-id-data" type="application/json">null</script>
-    <script id="kiwi-profile-data" type="application/json">{% if profile_json %}{{ profile_json|safe }}{% elif request.user.is_authenticated and request.user.profile %}{"username": "{{ request.user.username|escapejs }}", "bubble": "{{ request.user.profile.bubble|escapejs }}", "pronouns": "{{ request.user.profile.pronouns|escapejs }}", "bio": "{{ request.user.profile.bio|escapejs }}", "location": "{{ request.user.profile.location|escapejs }}", "spotify_song": "{{ request.user.profile.spotify_song|escapejs }}", "spotify_artist": "{{ request.user.profile.spotify_artist|escapejs }}", "music_url": "{{ request.user.profile.music_url|escapejs }}", "music_audio_url": "{{ request.user.profile.get_music_audio_src|escapejs }}", "music_cover_url": "{{ request.user.profile.get_music_cover_src|escapejs }}", "avatar_url": "{% if request.user.profile.avatar %}{{ request.user.profile.avatar.url|escapejs }}{% endif %}", "banner_url": "{% if request.user.profile.banner %}{{ request.user.profile.banner.url|escapejs }}{% endif %}", "accent_color": "{{ request.user.profile.accent_color|escapejs }}", "frame_effect": "{{ request.user.profile.frame_effect|default:''|escapejs }}", "card_effect": "{{ request.user.profile.card_effect|default:''|escapejs }}", "name_style": "{{ request.user.profile.name_style|default:''|escapejs }}", "is_admin": {% if request.user.is_staff or request.user.is_superuser %}true{% else %}false{% endif %}}{% else %}null{% endif %}</script>
+    <script id="kiwi-profile-data" type="application/json">{% if profile_json %}{{ profile_json|safe }}{% elif request.user.is_authenticated and request.user.profile %}{"username": "{{ request.user.username|escapejs }}", "bubble": "{{ request.user.profile.bubble|escapejs }}", "pronouns": "{{ request.user.profile.pronouns|escapejs }}", "bio": "{{ request.user.profile.bio|escapejs }}", "location": "{{ request.user.profile.location|escapejs }}", "spotify_song": "{{ request.user.profile.spotify_song|escapejs }}", "spotify_artist": "{{ request.user.profile.spotify_artist|escapejs }}", "music_url": "{{ request.user.profile.music_url|escapejs }}", "music_audio_url": "{{ request.user.profile.get_music_audio_src|escapejs }}", "music_cover_url": "{{ request.user.profile.get_music_cover_src|escapejs }}", "avatar_url": "{% if request.user.profile.avatar %}{{ request.user.profile.avatar.url|escapejs }}{% endif %}", "banner_url": "{% if request.user.profile.banner %}{{ request.user.profile.banner.url|escapejs }}{% endif %}", "accent_color": "{{ request.user.profile.accent_color|escapejs }}", "is_admin": {% if request.user.is_staff or request.user.is_superuser %}true{% else %}false{% endif %}}{% else %}null{% endif %}</script>
 
     <script>
         (function(global) {
@@ -800,9 +721,6 @@ html, body {
                         avatarUrl: (src.avatarUrl ?? src.avatar_url ?? fallback.avatarUrl ?? '').toString(),
                         bannerUrl: (src.bannerUrl ?? src.banner_url ?? fallback.bannerUrl ?? '').toString(),
                         accentColor: (src.accentColor ?? src.accent_color ?? fallback.accentColor ?? '#7c3aed').toString(),
-                        frameEffect: (src.frameEffect ?? src.frame_effect ?? fallback.frameEffect ?? '').toString(),
-                        cardEffect: (src.cardEffect ?? src.card_effect ?? fallback.cardEffect ?? '').toString(),
-                        nameStyle: (src.nameStyle ?? src.name_style ?? fallback.nameStyle ?? '').toString(),
                         is_admin: Boolean(src.is_admin ?? fallback.is_admin ?? false)
                     };
                 },
@@ -1266,12 +1184,15 @@ html, body {
                             <path d="M19.4 13.5V10.5L17.1 10A5.4 5.4 0 0 0 16.4 8.3L17.8 6.4L15.7 4.3L13.8 5.7A5.4 5.4 0 0 0 12.1 5L11.6 2.7H8.6L8.1 5A5.4 5.4 0 0 0 6.4 5.7L4.5 4.3L2.4 6.4L3.8 8.3A5.4 5.4 0 0 0 3.1 10L0.8 10.5V13.5L3.1 14A5.4 5.4 0 0 0 3.8 15.7L2.4 17.6L4.5 19.7L6.4 18.3A5.4 5.4 0 0 0 8.1 19L8.6 21.3H11.6L12.1 19A5.4 5.4 0 0 0 13.8 18.3L15.7 19.7L17.8 17.6L16.4 15.7A5.4 5.4 0 0 0 17.1 14L19.4 13.5Z"/>
                         </svg>
                     </button>
-                    <button type="button" class="icon-btn kiwi-svg-icon-btn logout-icon-btn" id="logout-btn" title="Sair da conta" aria-label="Sair da conta">
-                        <svg class="kiwi-flat-icon kiwi-icon-door" viewBox="0 0 24 24" aria-hidden="true">
-                            <rect x="6" y="3.5" width="12" height="17" rx="2.2"/>
-                            <path d="M14.8 12.2H15"/>
-                        </svg>
-                    </button>
+                    <form method="post" action="/logout/" id="logout-form" style="display:inline-flex; align-items:center; margin:0; padding:0;">
+                        {% csrf_token %}
+                        <button type="submit" class="icon-btn kiwi-svg-icon-btn logout-icon-btn" id="logout-btn" title="Sair da conta" aria-label="Sair da conta">
+                            <svg class="kiwi-flat-icon kiwi-icon-door" viewBox="0 0 24 24" aria-hidden="true">
+                                <rect x="6" y="3.5" width="12" height="17" rx="2.2"/>
+                                <path d="M14.8 12.2H15"/>
+                            </svg>
+                        </button>
+                    </form>
                 </div>
             </div>
         </div>
@@ -1326,8 +1247,7 @@ html, body {
                             <div id="kiwi-x-top-posts-count" style="font-size:12px;color:var(--kiwi-text-muted);">0 posts</div>
                         </div>
                     </div>
-                    <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
-                        <a href="/loja/" class="kiwi-shop-connect-btn" id="kiwi-x-open-shop-btn" title="Ir para a Loja de Efeitos">🛍️ Loja de Efeitos</a>
+                    <div style="display:flex; align-items:center; gap:8px;">
                         <button type="button" class="section-mini-action-btn" id="kiwi-x-open-card-btn" title="Abrir Card Estético com Música">🪪 Card Estético</button>
                         <button type="button" class="section-mini-action-btn" id="kiwi-x-edit-profile-btn">✏️ Editar Perfil</button>
                     </div>
@@ -1339,7 +1259,6 @@ html, body {
                     <div class="kiwi-x-avatar-action-row">
                         <div id="kiwi-x-avatar" class="kiwi-x-avatar" title="Abrir Card Estético">A</div>
                         <div class="kiwi-x-action-group">
-                            <a href="/loja/" class="kiwi-x-circle-btn" id="kiwi-x-shop-circle-btn" title="Loja de Efeitos" style="text-decoration:none;">🛍️</a>
                             <button type="button" class="kiwi-x-circle-btn" id="kiwi-x-more-btn" title="Abrir Card Estético">•••</button>
                             <button type="button" class="kiwi-x-circle-btn" id="kiwi-x-dm-btn" title="Abrir Bate-papo">✉️</button>
                             <button type="button" class="kiwi-x-follow-pill" id="kiwi-x-follow-btn">Seguir</button>
@@ -1354,8 +1273,6 @@ html, body {
                     <div id="kiwi-x-handle" class="kiwi-x-handle">@akiirapw</div>
 
                     <div id="kiwi-x-bio" class="kiwi-x-bio">Perfil estético ativo.</div>
-
-                    <div id="kiwi-x-equipped-effects-bar" class="kiwi-equipped-pills-bar" aria-label="Efeitos ativos no perfil"></div>
 
                     <div class="kiwi-x-meta-row">
                         <span id="kiwi-x-location-label">📍 Brasil</span>
@@ -1548,9 +1465,6 @@ html, body {
                 </div>
 
                 <div style="display: flex; flex-direction: column; gap: 8px;">
-                    <a href="/loja/" class="btn-aesthetic-edit" style="text-align:center; text-decoration:none; background: linear-gradient(135deg, #7c3aed, #9333ea); color: #fff;">
-                        🛍️ Abrir Loja de Efeitos
-                    </a>
                     <button type="button" id="open-profile-from-settings-btn" class="btn-aesthetic-edit" style="background: var(--bg-soft); color: var(--text-main); border: 1px solid var(--border-subtle);">
                         👤 Abrir Perfil Estético
                     </button>
@@ -1625,8 +1539,7 @@ html, body {
                         <div id="up-music-fallback" style="font-size: 11px; opacity: 0.78; line-height: 1.35;"></div>
                     </div>
 
-                    <div id="up-own-actions" style="display: none; flex-direction: column; gap: 8px;">
-                        <a href="/loja/" class="btn-aesthetic-edit" style="text-align:center; text-decoration:none; background: linear-gradient(135deg, #7c3aed, #9333ea); color: #fff;">🛍️ Loja de Efeitos</a>
+                    <div id="up-own-actions" style="display: none;">
                         <button type="button" class="btn-aesthetic-edit" id="switch-to-edit-btn">✏️ Edit Profile</button>
                     </div>
 
@@ -1674,12 +1587,9 @@ html, body {
                         <span>🖌️</span>
                         <span>Editar <span style="color: #c084fc;">Perfil</span> Estético</span>
                     </div>
-                    <div style="display:flex; align-items:center; gap:8px;">
-                        <a href="/loja/" class="kiwi-shop-connect-btn" style="padding:5px 10px; font-size:11px;">🛍️ Loja</a>
-                        <button type="button" id="akiira-gold-exclusive-tab" class="akiira-gold-tab" data-akiira-exclusive="true" hidden style="display: none;">
-                            👑 AkiiraPW Gold • Exclusivo
-                        </button>
-                    </div>
+                    <button type="button" id="akiira-gold-exclusive-tab" class="akiira-gold-tab" data-akiira-exclusive="true" hidden style="display: none;">
+                        👑 AkiiraPW Gold • Exclusivo
+                    </button>
                 </div>
 
                 <form id="edit-profile-form" enctype="multipart/form-data">
@@ -1737,9 +1647,6 @@ html, body {
                                         <span id="editor-pulse-label">Avatar Pulso</span>
                                     </button>
                                 </div>
-                                <a href="/loja/" class="kiwi-editor-action-pill" style="margin-top:8px; text-decoration:none; justify-content:center; background:rgba(124,58,237,0.22); border-color:rgba(192,132,252,0.45);">
-                                    🛍️ Gerenciar Efeitos na Loja
-                                </a>
                             </div>
 
                             <div id="akiira-gold-exclusive-panel" class="akiira-gold-panel" data-akiira-exclusive="true" hidden style="display: none;">
@@ -2044,22 +1951,6 @@ html, body {
         document.addEventListener("DOMContentLoaded", function() {
             const AKIIRA_EXCLUSIVE_BANNER_GIF = "{% static 'img/banners/akiirapw-banner.gif' %}";
 
-            const SHOP_EFFECT_LABELS = {
-                frame: {
-                    twilight_beryl: 'Crepúsculo (Berilo)',
-                    ambient_waves_lavender: 'Ondas Ambientais (Lavanda)',
-                    mirage: 'Miragem'
-                },
-                card: {
-                    sakura_blossom: 'Sakura Encantada',
-                    black_flames: 'Chamas Negras',
-                    starlight_gleam: 'Brilho Estelar'
-                },
-                name: {
-                    neon_kiwi: 'Neon Kiwi'
-                }
-            };
-
             function isAkiiraAccount(username) {
                 return String(username || '').trim().toLowerCase() === 'akiirapw';
             }
@@ -2224,15 +2115,12 @@ html, body {
                 audioFileName: '',
                 coverUrl: '',
                 accentColor: '#7c3aed',
-                frameEffect: '',
-                cardEffect: '',
-                nameStyle: '',
-                goldProfileBg: true,
-                frameEffectActive: false,
-                goldGlowFrame: true,
-                profileGlow: true,
+                goldProfileBg: false,
+                frameEffect: false,
+                goldGlowFrame: false,
+                profileGlow: false,
                 avatarPulse: false,
-                nameSpecialStyle: true,
+                nameSpecialStyle: false,
                 avatarUrl: '',
                 bannerUrl: '',
                 is_admin: Boolean(injectedIsAdmin || isAkiiraAccount(activeUsername))
@@ -2371,100 +2259,6 @@ html, body {
 
             const akiiraGoldFrameBtn = document.getElementById('akiira-gold-frame-btn');
             const akiiraProfileGlowBtn = document.getElementById('akiira-profile-glow-btn');
-
-            function syncShopEffectsToDOM(profileObj = myProfileData) {
-                const prof = profileObj || myProfileData;
-                const frameId = String(prof.frameEffect || '').trim();
-                const cardId = String(prof.cardEffect || '').trim();
-                const nameId = String(prof.nameStyle || '').trim();
-
-                const allFrameClasses = [
-                    'kiwi-frame-twilight_beryl',
-                    'kiwi-frame-ambient_waves_lavender',
-                    'kiwi-frame-mirage'
-                ];
-                const allCardClasses = [
-                    'kiwi-card-sakura_blossom',
-                    'kiwi-card-black_flames',
-                    'kiwi-card-starlight_gleam'
-                ];
-                const allNameClasses = [
-                    'kiwi-name-neon_kiwi'
-                ];
-
-                const avatarTargets = [
-                    document.getElementById('kiwi-x-avatar'),
-                    document.getElementById('up-avatar'),
-                    document.getElementById('my-mini-avatar'),
-                    document.getElementById('editor-live-avatar'),
-                    document.getElementById('home-card-avatar')
-                ].filter(Boolean);
-
-                avatarTargets.forEach(el => {
-                    allFrameClasses.forEach(cls => el.classList.remove(cls));
-                    if (frameId && SHOP_EFFECT_LABELS.frame[frameId]) {
-                        el.classList.add(`kiwi-frame-${frameId}`);
-                    }
-                });
-
-                const cardTargets = [
-                    document.getElementById('unified-profile-card'),
-                    document.getElementById('kiwi-editor-card')
-                ].filter(Boolean);
-
-                cardTargets.forEach(el => {
-                    allCardClasses.forEach(cls => el.classList.remove(cls));
-                    if (cardId && SHOP_EFFECT_LABELS.card[cardId]) {
-                        el.classList.add(`kiwi-card-${cardId}`);
-                    }
-                });
-
-                const nameTargets = [
-                    document.getElementById('kiwi-x-display-name'),
-                    document.getElementById('kiwi-x-top-name'),
-                    document.getElementById('up-username'),
-                    document.getElementById('my-name-label'),
-                    document.getElementById('editor-live-name-sample')
-                ].filter(Boolean);
-
-                nameTargets.forEach(el => {
-                    allNameClasses.forEach(cls => el.classList.remove(cls));
-                    if (nameId && SHOP_EFFECT_LABELS.name[nameId]) {
-                        el.classList.add(`kiwi-name-${nameId}`);
-                    }
-                });
-
-                const pillsBar = document.getElementById('kiwi-x-equipped-effects-bar');
-                if (pillsBar) {
-                    const activePills = [];
-                    if (frameId && SHOP_EFFECT_LABELS.frame[frameId]) {
-                        activePills.push(`🖼️ Moldura: ${SHOP_EFFECT_LABELS.frame[frameId]}`);
-                    }
-                    if (cardId && SHOP_EFFECT_LABELS.card[cardId]) {
-                        activePills.push(`✨ Cartão: ${SHOP_EFFECT_LABELS.card[cardId]}`);
-                    }
-                    if (nameId && SHOP_EFFECT_LABELS.name[nameId]) {
-                        activePills.push(`🔤 Nome: ${SHOP_EFFECT_LABELS.name[nameId]}`);
-                    }
-                    pillsBar.innerHTML = activePills.length
-                        ? activePills.map(txt => `<span class="kiwi-equipped-pill">${escapeHtmlText(txt)}</span>`).join('')
-                        : `<span class="kiwi-equipped-pill" style="opacity:0.75;">Sem efeitos da loja equipados • <a href="/loja/" style="color:#c084fc;text-decoration:none;font-weight:800;">Abrir Loja</a></span>`;
-                }
-            }
-
-            async function syncShopEffectsFromBackend() {
-                if (window.location.protocol === 'file:') return;
-                try {
-                    const data = await apiRequestJson('/api/shop/state/');
-                    if (data && data.equipped && typeof data.equipped === 'object') {
-                        myProfileData.frameEffect = String(data.equipped.frame_effect || '').trim();
-                        myProfileData.cardEffect = String(data.equipped.card_effect || '').trim();
-                        myProfileData.nameStyle = String(data.equipped.name_style || '').trim();
-                        saveUserMusicToLocalCache(activeUsername, myProfileData);
-                        syncShopEffectsToDOM(myProfileData);
-                    }
-                } catch (_) {}
-            }
 
             function syncAkiiraExclusiveRoomUI(targetUsername = activeUsername, targetAdminFlag = myProfileData.is_admin) {
                 const isAkiira = isAkiiraAdminIdentity(targetUsername, targetAdminFlag);
@@ -3342,11 +3136,8 @@ html, body {
                         coverUrl: sanitizeCacheAssetUrl(musicObj.coverUrl),
                         avatarUrl: sanitizeCacheAssetUrl(musicObj.avatarUrl),
                         bannerUrl: sanitizeCacheAssetUrl(musicObj.bannerUrl),
-                        frameEffect: musicObj.frameEffect || '',
-                        cardEffect: musicObj.cardEffect || '',
-                        nameStyle: musicObj.nameStyle || '',
                         goldProfileBg: Boolean(musicObj.goldProfileBg),
-                        frameEffectActive: Boolean(musicObj.frameEffectActive),
+                        frameEffect: Boolean(musicObj.frameEffect),
                         goldGlowFrame: Boolean(musicObj.goldGlowFrame),
                         profileGlow: Boolean(musicObj.profileGlow),
                         avatarPulse: Boolean(musicObj.avatarPulse),
@@ -3380,18 +3171,27 @@ html, body {
 
             try {
                 const savedTheme = localStorage.getItem(THEME_STORAGE_KEY);
-                if (savedTheme && themesMap[savedTheme]) {
-                    myProfileData.accentColor = savedTheme;
-                }
                 const cachedSelf = loadUserMusicFromLocalCache(activeUsername);
                 if (cachedSelf) {
                     myProfileData = {
                         ...myProfileData,
                         ...cachedSelf,
                         username: activeUsername,
-                        is_admin: isAdminIdentity(activeUsername, cachedSelf.is_admin ?? myProfileData.is_admin),
-                        accentColor: sanitizeThemeForUser(myProfileData.accentColor, activeUsername, true)
+                        is_admin: isAdminIdentity(activeUsername, cachedSelf.is_admin ?? myProfileData.is_admin)
                     };
+                }
+                if (savedTheme && themesMap[savedTheme]) {
+                    myProfileData.accentColor = savedTheme;
+                }
+                myProfileData.accentColor = sanitizeThemeForUser(
+                    myProfileData.accentColor,
+                    activeUsername,
+                    myProfileData.is_admin
+                );
+                if (myProfileData.accentColor !== '#d4af37') {
+                    myProfileData.goldProfileBg = false;
+                    myProfileData.goldGlowFrame = false;
+                    myProfileData.profileGlow = false;
                 }
                 if (injectedProfile && typeof injectedProfile === 'object') {
                     const normalizedInit = window.KiwiClient
@@ -3413,9 +3213,6 @@ html, body {
                         coverUrl: normalizedInit.coverUrl ?? myProfileData.coverUrl,
                         avatarUrl: normalizedInit.avatarUrl || myProfileData.avatarUrl,
                         bannerUrl: normalizedInit.bannerUrl || myProfileData.bannerUrl,
-                        frameEffect: normalizedInit.frameEffect || myProfileData.frameEffect,
-                        cardEffect: normalizedInit.cardEffect || myProfileData.cardEffect,
-                        nameStyle: normalizedInit.nameStyle || myProfileData.nameStyle,
                         is_admin: resolvedAdmin,
                         accentColor: sanitizeThemeForUser(pAccent || myProfileData.accentColor, activeUsername, resolvedAdmin)
                     };
@@ -3425,7 +3222,6 @@ html, body {
             profilesByUsername.set(activeUsername.toLowerCase(), { ...myProfileData });
             syncAdminVisualRestrictions();
             applyTheme(myProfileData.accentColor);
-            syncShopEffectsToDOM(myProfileData);
 
             function updateMySidebarUI() {
                 syncAdminVisualRestrictions();
@@ -3440,18 +3236,34 @@ html, body {
                     myNameLabelEl.textContent = activeUsername;
                 }
                 setAvatarStyle(miniAvatar, myProfileData.avatarUrl, activeUsername);
-                syncShopEffectsToDOM(myProfileData);
                 profilesByUsername.set(activeUsername.toLowerCase(), { ...myProfileData });
             }
 
             updateMySidebarUI();
-            syncShopEffectsFromBackend();
 
+            const logoutForm = document.getElementById('logout-form');
             const logoutBtn = document.getElementById('logout-btn');
-            if (logoutBtn) {
-                logoutBtn.addEventListener('click', () => {
+            if (logoutForm) {
+                logoutForm.addEventListener('submit', () => {
                     try { localStorage.removeItem(USERNAME_STORAGE_KEY); } catch (_) {}
-                    window.location.href = '/logout/';
+                });
+            } else if (logoutBtn) {
+                logoutBtn.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    try { localStorage.removeItem(USERNAME_STORAGE_KEY); } catch (_) {}
+                    const formEl = document.createElement('form');
+                    formEl.method = 'POST';
+                    formEl.action = '/logout/';
+                    const csrfVal = (window.KiwiClient && window.KiwiClient.getCsrfToken()) || '';
+                    if (csrfVal) {
+                        const inp = document.createElement('input');
+                        inp.type = 'hidden';
+                        inp.name = 'csrfmiddlewaretoken';
+                        inp.value = csrfVal;
+                        formEl.appendChild(inp);
+                    }
+                    document.body.appendChild(formEl);
+                    formEl.submit();
                 });
             }
 
@@ -3676,14 +3488,13 @@ html, body {
                 });
 
                 if (isOwn) {
-                    upOwnActions.style.display = 'flex';
+                    upOwnActions.style.display = 'block';
                     upOtherActions.style.display = 'none';
                 } else {
                     upOwnActions.style.display = 'none';
                     upOtherActions.style.display = 'flex';
                 }
 
-                syncShopEffectsToDOM(profileObj);
                 openProfileSidePopover();
             }
 
@@ -3700,9 +3511,6 @@ html, body {
                     joinedAt: myProfileData.joinedAt || '',
                     bannerUrl: myProfileData.bannerUrl || '',
                     avatarUrl: myProfileData.avatarUrl || '',
-                    frameEffect: myProfileData.frameEffect || '',
-                    cardEffect: myProfileData.cardEffect || '',
-                    nameStyle: myProfileData.nameStyle || '',
                     is_admin: true,
                     isAdminFeatured: true,
                     posts: safePosts
@@ -3746,9 +3554,6 @@ html, body {
                         musicUrl: extraSaved.musicUrl || found.musicUrl || '',
                         audioSrc: extraSaved.audioSrc || found.audioSrc || '',
                         coverUrl: extraSaved.coverUrl || found.coverUrl || '',
-                        frameEffect: extraSaved.frameEffect || found.frameEffect || '',
-                        cardEffect: extraSaved.cardEffect || found.cardEffect || '',
-                        nameStyle: extraSaved.nameStyle || found.nameStyle || '',
                         goldGlowFrame: false,
                         profileGlow: false,
                         is_admin: Boolean(extraSaved.is_admin ?? found.is_admin ?? false),
@@ -3810,6 +3615,15 @@ html, body {
                     const lbl = ball.getAttribute('data-label') || rawColor;
                     if (!rawColor || !themesMap[rawColor]) return;
                     myProfileData.accentColor = rawColor;
+                    if (rawColor !== '#d4af37') {
+                        myProfileData.goldProfileBg = false;
+                        myProfileData.goldGlowFrame = false;
+                        myProfileData.profileGlow = false;
+                    } else {
+                        myProfileData.goldProfileBg = true;
+                        myProfileData.goldGlowFrame = true;
+                        myProfileData.profileGlow = true;
+                    }
                     themeBalls.forEach(b => b.classList.toggle('active', b === ball));
                     applyTheme(rawColor, lbl);
                     persistThemePreference(rawColor);
@@ -4026,7 +3840,6 @@ html, body {
                 if (editBannerFileInput) editBannerFileInput.value = '';
                 refreshEditorLivePreview();
                 renderAvatarInventoryList();
-                syncShopEffectsToDOM(myProfileData);
                 openModalAnimated(editModal);
             });
 
@@ -4058,7 +3871,6 @@ html, body {
                     editorLiveDisplayName.innerHTML = `<span>${escapeHtmlText(owner)}</span><span style="color:#a855f7; font-size:14px;">✔</span>`;
                 }
                 if (editorLiveSubMeta) editorLiveSubMeta.textContent = `@${owner.toLowerCase()}`;
-                syncShopEffectsToDOM(myProfileData);
             }
 
             if (editorTriggerAvatarBtn && editAvatarFileInput) editorTriggerAvatarBtn.addEventListener('click', () => editAvatarFileInput.click());
@@ -4106,6 +3918,15 @@ html, body {
             if (editorBandColorSelect) {
                 editorBandColorSelect.addEventListener('change', () => {
                     myProfileData.accentColor = editorBandColorSelect.value;
+                    if (myProfileData.accentColor !== '#d4af37') {
+                        myProfileData.goldProfileBg = false;
+                        myProfileData.goldGlowFrame = false;
+                        myProfileData.profileGlow = false;
+                    } else {
+                        myProfileData.goldProfileBg = true;
+                        myProfileData.goldGlowFrame = true;
+                        myProfileData.profileGlow = true;
+                    }
                     updateMySidebarUI();
                     persistThemePreference(myProfileData.accentColor);
                 });
@@ -4335,9 +4156,6 @@ html, body {
                 const avatarDiv = document.createElement('div');
                 avatarDiv.className = 'avatar';
                 setAvatarStyle(avatarDiv, avatarUrl, sender);
-                if (String(sender).toLowerCase() === String(activeUsername).toLowerCase() && myProfileData.frameEffect && SHOP_EFFECT_LABELS.frame[myProfileData.frameEffect]) {
-                    avatarDiv.classList.add(`kiwi-frame-${myProfileData.frameEffect}`);
-                }
                 avatarDiv.onclick = () => openUserProfile(sender);
 
                 const contentDiv = document.createElement('div');
@@ -4349,9 +4167,6 @@ html, body {
                 const userSpan = document.createElement('span');
                 userSpan.className = 'username';
                 userSpan.textContent = sender;
-                if (String(sender).toLowerCase() === String(activeUsername).toLowerCase() && myProfileData.nameStyle && SHOP_EFFECT_LABELS.name[myProfileData.nameStyle]) {
-                    userSpan.classList.add(`kiwi-name-${myProfileData.nameStyle}`);
-                }
                 userSpan.onclick = () => openUserProfile(sender);
 
                 const timeSpan = document.createElement('span');
@@ -4976,33 +4791,30 @@ html, body {
             if (createChannelForm) {
                 createChannelForm.addEventListener('submit', async (e) => {
                     e.preventDefault();
-                    const nameInput = document.getElementById('new-channel-name');
-                    const typeSelect = document.getElementById('new-channel-type');
-                    const chName = ((nameInput && nameInput.value.trim()) || '').toLowerCase();
-                    const chType = (typeSelect && typeSelect.value) || 'text';
+                    const chNameInput = document.getElementById('new-channel-name');
+                    const chTypeSelect = document.getElementById('new-channel-type');
+                    let chName = ((chNameInput && chNameInput.value.trim()) || '').toLowerCase().replace(/\s+/g, '-');
+                    let chType = (chTypeSelect && chTypeSelect.value) || 'text';
                     if (!chName) return;
 
-                    if (!serverChannelsStore[currentServerId]) {
-                        serverChannelsStore[currentServerId] = [{ name: 'geral', type: 'text' }];
+                    if (/^\d+$/.test(String(currentServerId))) {
+                        try {
+                            const apiRes = await apiRequestJson(`/api/servers/${encodeURIComponent(currentServerId)}/channels/create/`, {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({ name: chName, channel_type: chType })
+                            });
+                            if (apiRes && apiRes.name) chName = String(apiRes.name).toLowerCase();
+                            if (apiRes && (apiRes.channel_type || apiRes.type)) chType = apiRes.channel_type || apiRes.type;
+                        } catch (_) {}
                     }
+
+                    if (!serverChannelsStore[currentServerId]) serverChannelsStore[currentServerId] = [];
                     if (!serverChannelsStore[currentServerId].some(c => c.name === chName)) {
                         serverChannelsStore[currentServerId].push({ name: chName, type: chType });
                     }
-
-                    try {
-                        await apiRequestJson('/api/channels/create/', {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({
-                                server_id: currentServerId,
-                                name: chName,
-                                channel_type: chType
-                            })
-                        });
-                    } catch (_) {}
-
                     closeModalAnimated(createChannelModal);
-                    if (nameInput) nameInput.value = '';
+                    if (chNameInput) chNameInput.value = '';
                     switchToServerChannel(chName, chType);
                     showKiwiToast(`Canal ${chType === 'audio' ? '🎵' : '#'} ${chName} criado!`);
                 });
@@ -5015,16 +4827,14 @@ html, body {
             const friendSearchInput = document.getElementById('friend-search-input');
             const friendSearchResults = document.getElementById('friend-search-results');
 
-            if (openAddFriendBtn && addFriendModal) {
-                openAddFriendBtn.addEventListener('click', () => {
-                    openModalAnimated(addFriendModal);
-                    if (friendSearchInput) {
-                        friendSearchInput.value = '';
-                        friendSearchInput.focus();
-                    }
-                    if (friendSearchResults) friendSearchResults.innerHTML = '';
-                });
+            function openAddFriendModalWithFocus() {
+                if (!addFriendModal) return;
+                openModalAnimated(addFriendModal);
+                if (friendSearchResults) friendSearchResults.innerHTML = '';
+                setTimeout(() => { if (friendSearchInput) friendSearchInput.focus(); }, 120);
             }
+
+            if (openAddFriendBtn) openAddFriendBtn.addEventListener('click', openAddFriendModalWithFocus);
             if (closeAddFriendBtn && addFriendModal) {
                 closeAddFriendBtn.addEventListener('click', () => closeModalAnimated(addFriendModal));
             }
@@ -5034,46 +4844,107 @@ html, body {
                 });
             }
 
-            async function executeAddFriend(targetName) {
-                const clean = (targetName || '').trim();
-                if (!clean || isRemovedFakeAccount(clean)) {
-                    showKiwiToast("Digite um nome de usuário válido.");
+            async function addFriendByName(rawName) {
+                const cleanName = (rawName || '').trim();
+                if (!cleanName || isRemovedFakeAccount(cleanName)) {
+                    showKiwiToast('Usuário indisponível ou removido.');
                     return;
                 }
-                if (clean.toLowerCase() === activeUsername.toLowerCase()) {
-                    showKiwiToast("Você já é você mesmo!");
+                if (cleanName.toLowerCase() === activeUsername.toLowerCase()) {
+                    showKiwiToast('Você não pode adicionar a si mesmo.');
                     return;
+                }
+                if (!friendsList.some(f => f.toLowerCase() === cleanName.toLowerCase())) {
+                    friendsList.push(cleanName);
+                    writeStorageJson(FRIENDS_STORAGE_KEY, friendsList);
+                }
+                if (!profilesByUsername.has(cleanName.toLowerCase())) {
+                    profilesByUsername.set(cleanName.toLowerCase(), {
+                        username: cleanName,
+                        bubble: '✨ Online',
+                        pronouns: `@${cleanName.toLowerCase()}`,
+                        bio: `Amigo conectado no Kiwi Chat.`,
+                        song: '',
+                        artist: '',
+                        musicUrl: '',
+                        audioSrc: '',
+                        coverUrl: '',
+                        accentColor: '#7c3aed',
+                        avatarUrl: '',
+                        bannerUrl: '',
+                        is_admin: false
+                    });
                 }
 
-                let added = false;
                 try {
-                    const data = await apiRequestJson('/api/friends/add/', {
+                    await apiRequestJson('/api/friend-request/send/', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ username: clean })
+                        body: JSON.stringify({ username: cleanName, to: cleanName })
                     });
-                    if (data && (data.ok || data.status === 'ok' || data.status === 'success' || data.added || data.friend)) {
-                        added = true;
-                    }
                 } catch (_) {}
 
-                if (!friendsList.some(f => f.toLowerCase() === clean.toLowerCase())) {
-                    friendsList.push(clean);
-                    writeStorageJson(FRIENDS_STORAGE_KEY, friendsList);
-                    added = true;
-                }
                 renderSidebarSavedFriends();
-                closeModalAnimated(addFriendModal);
-                showKiwiToast(added ? `${clean} adicionado aos amigos!` : `${clean} já está na sua lista de amigos.`);
-
+                renderDmSplitPane(dmSearchInp ? dmSearchInp.value : '');
                 const amigosTab = document.querySelector('.social-tab[data-tab="amigos"]');
                 if (amigosTab && amigosTab.classList.contains('active')) fetchFriendsList();
+                showKiwiToast(`${cleanName} adicionado aos amigos!`);
             }
 
             if (addFriendDirectForm) {
-                addFriendDirectForm.addEventListener('submit', (e) => {
+                addFriendDirectForm.addEventListener('submit', async (e) => {
                     e.preventDefault();
-                    executeAddFriend(friendSearchInput ? friendSearchInput.value : '');
+                    const val = friendSearchInput ? friendSearchInput.value.trim() : '';
+                    if (!val) return;
+                    await addFriendByName(val);
+                    if (friendSearchInput) friendSearchInput.value = '';
+                    closeModalAnimated(addFriendModal);
+                });
+            }
+
+            if (friendSearchInput && friendSearchResults) {
+                let searchDebounce = null;
+                friendSearchInput.addEventListener('input', () => {
+                    const q = friendSearchInput.value.trim();
+                    friendSearchResults.innerHTML = '';
+                    if (!q || isRemovedFakeAccount(q)) return;
+
+                    const renderOptionRow = (uname) => {
+                        if (!uname || isRemovedFakeAccount(uname)) return;
+                        const row = document.createElement('div');
+                        row.className = 'friend-req-card';
+                        row.innerHTML = `<span style="font-size:13px;font-weight:700;">${escapeHtmlText(uname)}</span>`;
+                        const btn = document.createElement('button');
+                        btn.type = 'button';
+                        btn.className = 'dm-quick-btn';
+                        btn.textContent = '+ Adicionar';
+                        btn.onclick = async () => {
+                            await addFriendByName(uname);
+                            friendSearchInput.value = '';
+                            friendSearchResults.innerHTML = '';
+                            closeModalAnimated(addFriendModal);
+                        };
+                        row.appendChild(btn);
+                        friendSearchResults.appendChild(row);
+                    };
+
+                    renderOptionRow(q);
+
+                    clearTimeout(searchDebounce);
+                    searchDebounce = setTimeout(async () => {
+                        try {
+                            const data = await apiRequestJson(`/api/users/search/?q=${encodeURIComponent(q)}`);
+                            const users = (Array.isArray(data.users) ? data.users : (Array.isArray(data) ? data : []))
+                                .filter(u => !isRemovedFakeAccount(typeof u === 'string' ? u : (u && u.username)));
+                            if (users.length) {
+                                friendSearchResults.innerHTML = '';
+                                users.forEach(u => {
+                                    const uname = typeof u === 'string' ? u : (u.username || '');
+                                    if (uname) renderOptionRow(uname);
+                                });
+                            }
+                        } catch (_) {}
+                    }, 220);
                 });
             }
 
@@ -5083,12 +4954,16 @@ html, body {
             const watchFriendBtn = document.getElementById('watch-friend-btn');
             const removeFriendBtn = document.getElementById('remove-friend-btn');
 
-            if (addFriendBtn) addFriendBtn.addEventListener('click', () => executeAddFriend(inspectedProfileUsername));
+            if (addFriendBtn) {
+                addFriendBtn.addEventListener('click', () => {
+                    if (inspectedProfileUsername) addFriendByName(inspectedProfileUsername);
+                });
+            }
             if (dmBtn) {
                 dmBtn.addEventListener('click', () => {
                     const target = inspectedProfileUsername;
                     closeUnifiedProfileModal();
-                    if (target) {
+                    if (target && !isRemovedFakeAccount(target)) {
                         if (!openDmTabs.has(target)) openDmTabs.set(target, { username: target, unread: 0 });
                         renderDmTabs();
                         window.openPrivateChat(target);
@@ -5099,191 +4974,215 @@ html, body {
                 callFriendBtn.addEventListener('click', () => {
                     const target = inspectedProfileUsername;
                     closeUnifiedProfileModal();
-                    if (target) startVoiceCall(target);
+                    if (target && !isRemovedFakeAccount(target)) window.startVoiceCall(target);
                 });
             }
             if (watchFriendBtn) {
                 watchFriendBtn.addEventListener('click', () => {
                     const target = inspectedProfileUsername;
                     closeUnifiedProfileModal();
-                    if (target) watchUserStream(target);
+                    if (target && !isRemovedFakeAccount(target)) window.watchUserStream(target);
                 });
             }
             if (removeFriendBtn) {
                 removeFriendBtn.addEventListener('click', () => {
-                    const target = inspectedProfileUsername;
-                    if (target) window.removeFriend(target);
+                    if (inspectedProfileUsername) window.removeFriend(inspectedProfileUsername);
                 });
             }
-
-            chatLog.addEventListener('click', async function(e) {
-                const target = e.target;
-                if (!(target instanceof Element)) return;
-
-                const attachImg = target.closest('.msg-attachment-img');
-                if (attachImg) {
-                    const src = attachImg.getAttribute('src') || attachImg.src;
-                    if (src) openImageLightbox(src, attachImg.alt || 'Anexo de imagem');
-                    return;
-                }
-
-                const chipBtn = target.closest('.msg-reaction-chip');
-                if (chipBtn) {
-                    e.stopPropagation();
-                    const group = chipBtn.closest('.message-group');
-                    const emoji = chipBtn.getAttribute('data-emoji');
-                    toggleMessageReaction(group, emoji);
-                    return;
-                }
-
-                const reactBtn = target.closest('[data-react-emoji]');
-                if (reactBtn) {
-                    e.stopPropagation();
-                    const group = reactBtn.closest('.message-group');
-                    const emoji = reactBtn.getAttribute('data-react-emoji');
-                    toggleMessageReaction(group, emoji);
-                    closeAllMessagePopovers();
-                    return;
-                }
-
-                const pickerBtn = target.closest('[data-toggle-picker]');
-                if (pickerBtn) {
-                    e.stopPropagation();
-                    const group = pickerBtn.closest('.message-group');
-                    const picker = group ? group.querySelector('.msg-emoji-picker') : null;
-                    const wasOpen = picker && picker.classList.contains('open');
-                    closeAllMessagePopovers();
-                    if (picker && !wasOpen) {
-                        picker.classList.add('open');
-                        if (group) group.classList.add('menu-open');
-                    }
-                    return;
-                }
-
-                const moreBtn = target.closest('[data-toggle-more]');
-                if (moreBtn) {
-                    e.stopPropagation();
-                    const group = moreBtn.closest('.message-group');
-                    const popover = group ? group.querySelector('.msg-more-popover') : null;
-                    const wasOpen = popover && popover.classList.contains('open');
-                    closeAllMessagePopovers();
-                    if (popover && !wasOpen) {
-                        popover.classList.add('open');
-                        if (group) group.classList.add('menu-open');
-                    }
-                    return;
-                }
-
-                const replyBtn = target.closest('[data-reply-msg]');
-                if (replyBtn) {
-                    e.stopPropagation();
-                    const group = replyBtn.closest('.message-group');
-                    const authorName = (group && group.querySelector('.username') && group.querySelector('.username').textContent) || 'usuário';
-                    if (messageInput) {
-                        messageInput.value = `@${authorName} ` + messageInput.value;
-                        messageInput.focus();
-                    }
-                    closeAllMessagePopovers();
-                    return;
-                }
-
-                const copyBtn = target.closest('[data-copy-msg]');
-                if (copyBtn) {
-                    e.stopPropagation();
-                    const group = copyBtn.closest('.message-group');
-                    const textEl = group ? group.querySelector('.message-text') : null;
-                    const txt = textEl ? textEl.textContent : '';
-                    if (txt && navigator.clipboard && navigator.clipboard.writeText) {
-                        navigator.clipboard.writeText(txt).catch(() => {});
-                        showKiwiToast('Mensagem copiada!');
-                    }
-                    closeAllMessagePopovers();
-                    return;
-                }
-
-                const delBtn = target.closest('[data-delete-id], [data-delete-dm-id]');
-                if (delBtn) {
-                    e.stopPropagation();
-                    const group = delBtn.closest('.message-group');
-                    const msgId = delBtn.getAttribute('data-delete-id');
-                    const dmId = delBtn.getAttribute('data-delete-dm-id');
-                    if (msgId) {
-                        roomCtxManager.removeMessageFromContext(getActiveSignalContextMeta(), msgId);
-                        roomCtxManager.sendToContext(getActiveSignalContextMeta(), { type: 'delete_message', message_id: msgId });
-                        if (group) group.remove();
-                        if (currentView === 'geral') saveCurrentChannelSnapshot();
-                    } else if (dmId) {
-                        roomCtxManager.sendToContext(getActiveSignalContextMeta(), { type: 'delete_dm', message_id: dmId });
-                        if (group) group.remove();
-                    }
-                    closeAllMessagePopovers();
-                }
-            });
-
-            document.addEventListener('click', function(e) {
-                if (!(e.target instanceof Element)) return;
-                if (!e.target.closest('.msg-hover-toolbar, .msg-emoji-picker, .msg-more-popover')) {
-                    closeAllMessagePopovers();
-                }
-            });
 
             if (recordAudioBtn) {
                 recordAudioBtn.addEventListener('click', async () => {
-                    if (!mediaRecorder || mediaRecorder.state === 'inactive') {
-                        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-                            showKiwiToast('Gravação de áudio não suportada neste navegador.');
-                            return;
-                        }
-                        try {
-                            const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-                            mediaRecorder = new MediaRecorder(stream);
-                            audioChunks = [];
-                            mediaRecorder.ondataavailable = (ev) => {
-                                if (ev.data && ev.data.size > 0) audioChunks.push(ev.data);
-                            };
-                            mediaRecorder.onstop = () => {
-                                stream.getTracks().forEach(t => t.stop());
-                                const blob = new Blob(audioChunks, { type: 'audio/webm' });
-                                const audioFile = new File([blob], `audio-${Date.now()}.webm`, { type: 'audio/webm' });
-                                setPendingAttachment(audioFile);
-                                showKiwiToast('Áudio gravado! Clique em Enviar.');
-                            };
-                            mediaRecorder.start();
-                            recordAudioBtn.classList.add('recording');
-                            recordAudioBtn.textContent = '⏹️';
-                            showKiwiToast('Gravando áudio... clique novamente para parar.');
-                        } catch (_) {
-                            showKiwiToast('Permissão de microfone negada.');
-                        }
-                    } else {
+                    if (mediaRecorder && mediaRecorder.state === 'recording') {
                         mediaRecorder.stop();
+                        return;
+                    }
+                    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia || typeof MediaRecorder === 'undefined') {
+                        showKiwiToast('Gravação de áudio não suportada neste dispositivo.');
+                        return;
+                    }
+                    try {
+                        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                        audioChunks = [];
+                        mediaRecorder = new MediaRecorder(stream);
+                        recordAudioBtn.classList.add('recording');
+                        showKiwiToast('🎙️ Gravando áudio... clique novamente para parar.');
+                        mediaRecorder.ondataavailable = (ev) => {
+                            if (ev.data && ev.data.size > 0) audioChunks.push(ev.data);
+                        };
+                        mediaRecorder.onstop = () => {
+                            stream.getTracks().forEach(t => t.stop());
+                            recordAudioBtn.classList.remove('recording');
+                            const blob = new Blob(audioChunks, { type: 'audio/webm' });
+                            const file = new File([blob], `audio-${Date.now()}.webm`, { type: 'audio/webm' });
+                            setPendingAttachment(file);
+                            showKiwiToast('Áudio anexado! Clique em Enviar.');
+                        };
+                        mediaRecorder.start();
+                    } catch (_) {
                         recordAudioBtn.classList.remove('recording');
-                        recordAudioBtn.textContent = '🎙️';
+                        showKiwiToast('Permissão de microfone negada.');
                     }
                 });
             }
 
-            const navItems = document.querySelectorAll('.kiwi-nav-item[data-nav-tab]');
-            const navOpenPostModalBtn = document.getElementById('nav-open-post-modal-btn');
-            const createPostModal = document.getElementById('create-post-modal');
-            const closeCreatePostBtn = document.getElementById('close-create-post-btn');
-            const createPostForm = document.getElementById('create-post-form');
-            const newPostTextInput = document.getElementById('new-post-text');
-            const newPostImageUrlInput = document.getElementById('new-post-image-url');
+            if (editorEffectFrameBtn) {
+                editorEffectFrameBtn.addEventListener('click', () => {
+                    myProfileData.goldGlowFrame = !myProfileData.goldGlowFrame;
+                    editorEffectFrameBtn.classList.toggle('active', myProfileData.goldGlowFrame);
+                    if (editorFrameLabel) editorFrameLabel.textContent = myProfileData.goldGlowFrame ? 'Moldura Ativa' : 'Moldura Brilho';
+                    syncAkiiraExclusiveRoomUI(activeUsername, myProfileData.is_admin);
+                    showKiwiToast(myProfileData.goldGlowFrame ? 'Moldura ativada!' : 'Moldura desativada.');
+                });
+            }
+            if (editorEffectGoldBtn) {
+                editorEffectGoldBtn.addEventListener('click', () => {
+                    myProfileData.avatarPulse = !myProfileData.avatarPulse;
+                    editorEffectGoldBtn.classList.toggle('active', myProfileData.avatarPulse);
+                    if (editorPulseLabel) editorPulseLabel.textContent = myProfileData.avatarPulse ? 'Pulso Ativo' : 'Avatar Pulso';
+                    showKiwiToast(myProfileData.avatarPulse ? 'Pulso do avatar ativado!' : 'Pulso do avatar desativado.');
+                });
+            }
+            if (akiiraGoldFrameBtn) {
+                akiiraGoldFrameBtn.addEventListener('click', () => {
+                    myProfileData.goldGlowFrame = !myProfileData.goldGlowFrame;
+                    syncAkiiraExclusiveRoomUI(activeUsername, myProfileData.is_admin);
+                    showKiwiToast('Moldura dourada atualizada!');
+                });
+            }
+            if (akiiraProfileGlowBtn) {
+                akiiraProfileGlowBtn.addEventListener('click', () => {
+                    myProfileData.profileGlow = !myProfileData.profileGlow;
+                    if (kiwiEditorCard) kiwiEditorCard.classList.toggle('akiira-profile-gold-glow', myProfileData.profileGlow);
+                    showKiwiToast('Aura dourada atualizada!');
+                });
+            }
+            if (editorNameStyleToggle && editorLiveNameSample) {
+                const fontStyles = [
+                    "'Inter', sans-serif",
+                    "'Fredoka', sans-serif",
+                    "'Cinzel Decorative', serif"
+                ];
+                let fontIdx = 0;
+                editorNameStyleToggle.addEventListener('click', () => {
+                    fontIdx = (fontIdx + 1) % fontStyles.length;
+                    editorLiveNameSample.style.fontFamily = fontStyles[fontIdx];
+                    if (editorLiveDisplayName) editorLiveDisplayName.style.fontFamily = fontStyles[fontIdx];
+                    showKiwiToast('Estilo do nome alterado!');
+                });
+            }
+
+            const openMusicBoxBtn = document.getElementById('open-music-box-btn');
+            const savedMusicBox = document.getElementById('saved-music-box');
+            const quickAddMusicToggle = document.getElementById('quick-add-music-toggle');
+            const quickAddMusicForm = document.getElementById('quick-add-music-form');
+            const qmSaveBtn = document.getElementById('qm-save-btn');
+            const savedMusicList = document.getElementById('saved-music-list');
+            let savedTracks = readStorageJson(SAVED_TRACKS_KEY, []);
+
+            if (openMusicBoxBtn && savedMusicBox) {
+                openMusicBoxBtn.addEventListener('click', () => {
+                    savedMusicBox.style.display = savedMusicBox.style.display === 'none' ? 'block' : 'none';
+                    renderSavedTracksList();
+                });
+            }
+            if (quickAddMusicToggle && quickAddMusicForm) {
+                quickAddMusicToggle.addEventListener('click', () => {
+                    quickAddMusicForm.style.display = quickAddMusicForm.style.display === 'none' ? 'block' : 'none';
+                });
+            }
+
+            function renderSavedTracksList() {
+                if (!savedMusicList) return;
+                if (!Array.isArray(savedTracks) || !savedTracks.length) {
+                    savedMusicList.innerHTML = '<div style="opacity:0.7;">Nenhuma música salva ainda. Clique em "+ Adicionar".</div>';
+                    return;
+                }
+                savedMusicList.innerHTML = '';
+                savedTracks.forEach((tr) => {
+                    const row = document.createElement('div');
+                    row.style.cssText = 'display:flex;align-items:center;justify-content:space-between;gap:8px;padding:6px 8px;background:#232429;border-radius:7px;';
+                    const meta = document.createElement('div');
+                    meta.style.cssText = 'min-width:0;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;';
+                    meta.textContent = `${tr.title || 'Faixa'} — ${tr.artist || 'Artista'}`;
+                    const pickBtn = document.createElement('button');
+                    pickBtn.type = 'button';
+                    pickBtn.textContent = 'Usar';
+                    pickBtn.style.cssText = 'background:#7c3aed;color:#fff;border:none;border-radius:5px;padding:3px 8px;font-size:11px;cursor:pointer;';
+                    pickBtn.onclick = () => {
+                        if (editSong) editSong.value = tr.title || '';
+                        if (editArtist) editArtist.value = tr.artist || '';
+                        if (editLocalAudioUrl && tr.audioUrl) editLocalAudioUrl.value = tr.audioUrl;
+                        if (editMusicCoverUrl && tr.coverUrl) editMusicCoverUrl.value = tr.coverUrl;
+                        if (tr.audioUrl) tempEditorAudioUrl = tr.audioUrl;
+                        if (tr.coverUrl) tempEditorCoverUrl = tr.coverUrl;
+                        showKiwiToast('Música selecionada!');
+                    };
+                    row.appendChild(meta);
+                    row.appendChild(pickBtn);
+                    savedMusicList.appendChild(row);
+                });
+            }
+
+            if (qmSaveBtn) {
+                qmSaveBtn.addEventListener('click', async () => {
+                    const tInp = document.getElementById('qm-title');
+                    const aInp = document.getElementById('qm-artist');
+                    const auUrlInp = document.getElementById('qm-audio-url');
+                    const cuUrlInp = document.getElementById('qm-cover-url');
+                    const auFileInp = document.getElementById('qm-audio-file');
+                    const cuFileInp = document.getElementById('qm-cover-file');
+
+                    const title = (tInp && tInp.value.trim()) || '';
+                    const artist = (aInp && aInp.value.trim()) || '';
+                    if (!title && !artist) { showKiwiToast('Informe o nome da música ou artista.'); return; }
+
+                    let audioUrl = (auUrlInp && auUrlInp.value.trim()) || '';
+                    let coverUrl = (cuUrlInp && cuUrlInp.value.trim()) || '';
+                    if (auFileInp && auFileInp.files && auFileInp.files[0]) {
+                        try { audioUrl = await readFileAsDataUrl(auFileInp.files[0]); } catch (_) {}
+                    }
+                    if (cuFileInp && cuFileInp.files && cuFileInp.files[0]) {
+                        try { coverUrl = await readFileAsDataUrl(cuFileInp.files[0]); } catch (_) {}
+                    }
+
+                    savedTracks = Array.isArray(savedTracks) ? savedTracks : [];
+                    savedTracks.unshift({ id: 'tr-' + Date.now(), title: title || 'Faixa', artist: artist || 'Artista', audioUrl, coverUrl });
+                    writeStorageJson(SAVED_TRACKS_KEY, savedTracks);
+                    if (tInp) tInp.value = '';
+                    if (aInp) aInp.value = '';
+                    if (auUrlInp) auUrlInp.value = '';
+                    if (cuUrlInp) cuUrlInp.value = '';
+                    if (quickAddMusicForm) quickAddMusicForm.style.display = 'none';
+                    renderSavedTracksList();
+                    showKiwiToast('Música guardada!');
+                });
+            }
+
+            document.querySelectorAll('.kiwi-file-picker-wrap').forEach(wrap => {
+                const inputId = wrap.getAttribute('data-file-picker-for');
+                const emptyText = wrap.getAttribute('data-empty-text') || 'Nenhum ficheiro escolhido';
+                const btn = wrap.querySelector('.kiwi-file-picker-btn');
+                const nameSpan = wrap.querySelector('.kiwi-file-picker-name');
+                const clearBtn = wrap.querySelector('.kiwi-file-picker-clear');
+                const fileInp = document.getElementById(inputId);
+                if (!fileInp) return;
+                if (btn) btn.addEventListener('click', () => fileInp.click());
+                fileInp.addEventListener('change', () => {
+                    const f = fileInp.files && fileInp.files[0];
+                    if (nameSpan) nameSpan.textContent = f ? f.name : emptyText;
+                });
+                if (clearBtn) {
+                    clearBtn.addEventListener('click', () => {
+                        fileInp.value = '';
+                        if (nameSpan) nameSpan.textContent = emptyText;
+                    });
+                }
+            });
 
             const xBackBtn = document.getElementById('kiwi-x-back-btn');
-            const xTopName = document.getElementById('kiwi-x-top-name');
-            const xTopPostsCount = document.getElementById('kiwi-x-top-posts-count');
-            const xBanner = document.getElementById('kiwi-x-banner');
-            const xAvatar = document.getElementById('kiwi-x-avatar');
-            const xDisplayName = document.getElementById('kiwi-x-display-name');
-            const xAdminBadge = document.getElementById('kiwi-x-admin-badge');
-            const xHandle = document.getElementById('kiwi-x-handle');
-            const xBio = document.getElementById('kiwi-x-bio');
-            const xLocationLabel = document.getElementById('kiwi-x-location-label');
-            const xJoinedLabel = document.getElementById('kiwi-x-joined-label');
-            const xEditProfileBtn = document.getElementById('kiwi-x-edit-profile-btn');
             const xOpenCardBtn = document.getElementById('kiwi-x-open-card-btn');
+            const xEditProfileBtn = document.getElementById('kiwi-x-edit-profile-btn');
+            const xAvatarEl = document.getElementById('kiwi-x-avatar');
             const xMoreBtn = document.getElementById('kiwi-x-more-btn');
             const xDmBtn = document.getElementById('kiwi-x-dm-btn');
             const xFollowBtn = document.getElementById('kiwi-x-follow-btn');
@@ -5293,570 +5192,153 @@ html, body {
             const xFeedList = document.getElementById('kiwi-x-feed-list');
             const xSubtabs = document.querySelectorAll('.kiwi-x-subtab');
 
-            const postThreadViewEl = document.getElementById('kiwi-post-thread-view');
-            window.kiwiPostThreadViewEl = postThreadViewEl;
-            const threadBackBtn = document.getElementById('kiwi-thread-back-btn');
-            const threadMainPostEl = document.getElementById('kiwi-thread-main-post');
-            const threadRepliesListEl = document.getElementById('kiwi-thread-replies-list');
-            const threadReplyForm = document.getElementById('kiwi-thread-reply-form');
-            const threadReplyInput = document.getElementById('kiwi-thread-reply-input');
-            let activeThreadPostId = null;
-
-            function readUserPostsFromStorage() {
-                const list = readStorageJson(USER_POSTS_KEY, []);
-                return Array.isArray(list) ? list : [];
-            }
-
-            function writeUserPostsToStorage(list) {
-                writeStorageJson(USER_POSTS_KEY, list);
-            }
-
-            function isFollowingUser(targetUsername) {
-                const clean = (targetUsername || '').trim().toLowerCase();
-                if (!clean) return false;
-                return followingList.some(item => {
-                    const n = typeof item === 'string' ? item : (item && item.username);
-                    return String(n || '').toLowerCase() === clean;
-                });
-            }
-
-            function updateFollowButtonVisual(targetUsername) {
-                if (!xFollowBtn) return;
-                const clean = (targetUsername || '').trim();
-                const isOwn = !clean || clean.toLowerCase() === String(activeUsername || '').toLowerCase();
-                if (isOwn) {
-                    xFollowBtn.textContent = 'Editar perfil';
-                    xFollowBtn.classList.remove('following');
-                    return;
-                }
-                const following = isFollowingUser(clean);
-                xFollowBtn.textContent = following ? 'Seguindo' : 'Seguir';
-                xFollowBtn.classList.toggle('following', following);
-            }
-
-            function toggleFollowUser(targetUsername) {
-                const clean = (targetUsername || '').trim();
-                if (!clean || clean.toLowerCase() === String(activeUsername || '').toLowerCase()) {
-                    switchToEditBtn.click();
-                    return;
-                }
-                const exists = isFollowingUser(clean);
-                if (exists) {
-                    followingList = followingList.filter(item => {
-                        const n = typeof item === 'string' ? item : (item && item.username);
-                        return String(n || '').toLowerCase() !== clean.toLowerCase();
-                    });
-                    showKiwiToast(`Você deixou de seguir @${clean.toLowerCase()}.`);
-                } else {
-                    followingList.push({ username: clean, bio: `Seguindo ${clean} no Kiwi Chat.` });
-                    showKiwiToast(`Agora você segue @${clean.toLowerCase()}!`);
-                }
-                writeStorageJson(FOLLOWING_STORAGE_KEY, followingList);
-                syncFollowerCountsUi();
-                updateFollowButtonVisual(clean);
-                if (xFollowersPanel && xFollowersPanel.style.display !== 'none') {
-                    renderFollowListPanel(xFollowersPanel.getAttribute('data-mode') || 'following');
-                }
-            }
-
             let activeXSubtab = 'posts';
-
-            function renderFollowListPanel(mode = 'following') {
-                if (!xFollowersPanel) return;
-                xFollowersPanel.setAttribute('data-mode', mode);
-                const sourceList = mode === 'followers' ? followersList : followingList;
-                const headingText = mode === 'followers' ? 'Seguidores' : 'Seguindo';
-
-                xFollowersPanel.innerHTML = '';
-                const headerRow = document.createElement('div');
-                headerRow.style.cssText = 'display:flex;align-items:center;justify-content:space-between;padding:12px 18px;border-bottom:1px solid var(--kiwi-border);background:rgba(167,139,250,0.04);';
-
-                const hTitle = document.createElement('strong');
-                hTitle.style.cssText = 'font-size:14px;font-weight:800;';
-                hTitle.textContent = `${headingText} (${sourceList.length})`;
-
-                const closeBtn = document.createElement('button');
-                closeBtn.type = 'button';
-                closeBtn.className = 'section-mini-action-btn';
-                closeBtn.textContent = '← Voltar aos posts';
-                closeBtn.addEventListener('click', closeFollowersPanelAndShowFeed);
-
-                headerRow.appendChild(hTitle);
-                headerRow.appendChild(closeBtn);
-                xFollowersPanel.appendChild(headerRow);
-
-                if (!sourceList.length) {
-                    const empty = document.createElement('div');
-                    empty.style.cssText = 'padding:28px 18px;text-align:center;color:var(--kiwi-text-muted);font-size:13px;';
-                    empty.textContent = mode === 'followers' ? 'Nenhum seguidor ainda.' : 'Você ainda não segue ninguém.';
-                    xFollowersPanel.appendChild(empty);
-                    return;
-                }
-
-                sourceList.forEach(entry => {
-                    const uname = typeof entry === 'string' ? entry : (entry && entry.username ? entry.username : 'Usuário');
-                    if (isRemovedFakeAccount(uname)) return;
-                    const bioTxt = (typeof entry === 'object' && entry && entry.bio) ? entry.bio : `Membro do Kiwi Chat • @${uname.toLowerCase()}`;
-
-                    const row = document.createElement('div');
-                    row.style.cssText = 'display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 18px;border-bottom:1px solid var(--kiwi-border);';
-
-                    const left = document.createElement('div');
-                    left.style.cssText = 'display:flex;align-items:center;gap:10px;min-width:0;cursor:pointer;';
-                    left.addEventListener('click', () => window.openFullProfilePage(uname));
-
-                    const av = document.createElement('div');
-                    av.className = 'social-avatar';
-                    av.textContent = uname.charAt(0).toUpperCase();
-
-                    const txtWrap = document.createElement('div');
-                    txtWrap.style.minWidth = '0';
-                    const nEl = document.createElement('div');
-                    nEl.style.cssText = 'font-size:13px;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;';
-                    nEl.textContent = uname;
-                    const bEl = document.createElement('div');
-                    bEl.style.cssText = 'font-size:12px;color:var(--kiwi-text-muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;';
-                    bEl.textContent = bioTxt;
-                    txtWrap.appendChild(nEl);
-                    txtWrap.appendChild(bEl);
-                    left.appendChild(av);
-                    left.appendChild(txtWrap);
-
-                    const actionBtn = document.createElement('button');
-                    actionBtn.type = 'button';
-                    const followingNow = isFollowingUser(uname);
-                    actionBtn.className = 'kiwi-x-follow-pill' + (followingNow ? ' following' : '');
-                    actionBtn.textContent = followingNow ? 'Seguindo' : 'Seguir';
-                    actionBtn.addEventListener('click', (ev) => {
-                        ev.stopPropagation();
-                        toggleFollowUser(uname);
-                    });
-
-                    row.appendChild(left);
-                    row.appendChild(actionBtn);
-                    xFollowersPanel.appendChild(row);
-                });
-            }
-
-            function openFollowersPanel(mode = 'following') {
-                if (xFollowersPanel) xFollowersPanel.style.display = 'block';
-                if (xFeedList) xFeedList.style.display = 'none';
-                renderFollowListPanel(mode);
-            }
 
             function closeFollowersPanelAndShowFeed() {
                 if (xFollowersPanel) xFollowersPanel.style.display = 'none';
                 if (xFeedList) xFeedList.style.display = 'flex';
-                renderCleanUserPosts();
+            }
+
+            function syncFollowButtonState(targetName) {
+                if (!xFollowBtn) return;
+                const cleanTarget = (targetName || activeUsername || '').trim();
+                const isOwn = cleanTarget.toLowerCase() === (activeUsername || '').toLowerCase();
+                if (isOwn) {
+                    xFollowBtn.style.display = 'none';
+                    return;
+                }
+                xFollowBtn.style.display = 'inline-flex';
+                const isFollowing = followingList.some(item => {
+                    const n = typeof item === 'string' ? item : (item && item.username);
+                    return n && n.toLowerCase() === cleanTarget.toLowerCase();
+                });
+                xFollowBtn.textContent = isFollowing ? 'Seguindo ✓' : 'Seguir';
+                xFollowBtn.classList.toggle('following', isFollowing);
             }
 
             function syncXProfileHeader() {
                 const prof = getActiveTimelineProfile();
                 const displayName = prof.username || activeUsername || 'AkiiraPW';
-                const handle = prof.handle || `@${displayName.toLowerCase()}`;
-                const isOwn = displayName.toLowerCase() === String(activeUsername || '').toLowerCase();
-                const posts = isOwn ? readUserPostsFromStorage() : (Array.isArray(prof.posts) ? prof.posts : []);
+                const handle = `@${displayName.toLowerCase().replace(/[^a-z0-9_]/g, '') || 'usuario'}`;
+                const postsArr = readStorageJson(USER_POSTS_KEY, []);
+                const postsCount = Array.isArray(postsArr) ? postsArr.length : 0;
 
-                if (xTopName) xTopName.textContent = displayName;
-                if (xTopPostsCount) xTopPostsCount.textContent = `${posts.length} ${posts.length === 1 ? 'post' : 'posts'}`;
-                if (xDisplayName) {
-                    xDisplayName.innerHTML = `<span>${escapeHtmlText(displayName)}</span><span style="color:#a855f7;font-size:15px;">✔</span><span id="kiwi-x-admin-badge" class="admin-gold-badge" style="display:${isAdminIdentity(displayName, prof.is_admin) ? 'inline-flex' : 'none'};">👑 ADMIN</span>`;
-                }
-                if (xHandle) xHandle.textContent = handle;
-                if (xBio) {
-                    const cleanBio = (prof.bio || '').replace(/<br\s*\/?\s*>/gi, ' ').trim();
-                    xBio.textContent = cleanBio || 'Perfil estético ativo.';
-                }
-                if (xLocationLabel) xLocationLabel.textContent = `📍 ${prof.location || 'Brasil'}`;
-                if (xJoinedLabel) {
-                    xJoinedLabel.textContent = `📅 ${prof.joinedAt || 'Kiwi Chat'}`;
-                }
+                const topNameEl = document.getElementById('kiwi-x-top-name');
+                const topPostsCountEl = document.getElementById('kiwi-x-top-posts-count');
+                const bannerEl = document.getElementById('kiwi-x-banner');
+                const avatarEl = document.getElementById('kiwi-x-avatar');
+                const displayNameEl = document.getElementById('kiwi-x-display-name');
+                const adminBadgeEl = document.getElementById('kiwi-x-admin-badge');
+                const handleEl = document.getElementById('kiwi-x-handle');
+                const bioEl = document.getElementById('kiwi-x-bio');
+                const locEl = document.getElementById('kiwi-x-location-label');
+                const joinedEl = document.getElementById('kiwi-x-joined-label');
 
-                setAvatarStyle(xAvatar, prof.avatarUrl, displayName);
+                if (topNameEl) topNameEl.textContent = displayName;
+                if (topPostsCountEl) topPostsCountEl.textContent = `${postsCount} ${postsCount === 1 ? 'post' : 'posts'}`;
 
-                const resolvedBanner = resolveBannerUrlForUser(displayName, prof.bannerUrl);
-                if (xBanner) {
-                    if (resolvedBanner && isSafeAssetUrl(resolvedBanner)) {
-                        xBanner.style.backgroundImage = `url("${encodeURI(resolvedBanner.trim())}")`;
-                        xBanner.style.backgroundSize = 'cover';
-                        xBanner.style.backgroundPosition = 'center';
+                if (bannerEl) {
+                    const resolvedBanner = resolveBannerUrlForUser(displayName, prof.bannerUrl);
+                    if (resolvedBanner) {
+                        bannerEl.style.backgroundImage = `url("${encodeURI(resolvedBanner)}")`;
+                        bannerEl.style.backgroundSize = 'cover';
+                        bannerEl.style.backgroundPosition = 'center';
                     } else {
-                        xBanner.style.backgroundImage = 'linear-gradient(135deg, #2e1065 0%, #6d28d9 55%, #7c3aed 100%)';
+                        bannerEl.style.backgroundImage = 'linear-gradient(135deg, #2e1065 0%, #6d28d9 60%, #7c3aed 100%)';
                     }
                 }
 
-                if (xEditProfileBtn) xEditProfileBtn.style.display = isOwn ? 'inline-flex' : 'none';
-                updateFollowButtonVisual(displayName);
+                if (avatarEl) setAvatarStyle(avatarEl, prof.avatarUrl, displayName);
+                if (displayNameEl) {
+                    displayNameEl.innerHTML = `<span>${escapeHtmlText(displayName)}</span><span style="color:#a855f7;font-size:15px;">✔</span>`;
+                    if (adminBadgeEl) displayNameEl.appendChild(adminBadgeEl);
+                }
+                applySpecialProfileEffects(null, displayNameEl, adminBadgeEl, displayName, prof.is_admin, prof);
+                if (handleEl) handleEl.textContent = handle;
+                if (bioEl) bioEl.innerHTML = prof.bio ? formatSafeBioHtml(prof.bio) : 'Perfil estético ativo no Kiwi Chat.';
+                if (locEl) locEl.textContent = `📍 ${prof.location || 'Brasil'}`;
+                if (joinedEl) joinedEl.textContent = `📅 ${prof.joinedAt || 'Kiwi Chat'}`;
+
                 syncFollowerCountsUi();
-                syncShopEffectsToDOM(prof);
+                syncFollowButtonState(displayName);
             }
 
-            function findPostById(postId) {
-                const allPosts = readUserPostsFromStorage();
-                const direct = allPosts.find(p => String(p.id) === String(postId));
-                if (direct) return direct;
-                for (const acc of getExploreAccountsWithAdminPriority()) {
-                    if (Array.isArray(acc.posts)) {
-                        const hit = acc.posts.find(p => String(p.id) === String(postId));
-                        if (hit) return { ...hit, author: hit.author || acc.username, handle: hit.handle || acc.handle || `@${acc.username.toLowerCase()}` };
-                    }
-                }
-                return null;
-            }
-
-            function renderPostThreadView(postId) {
-                const post = findPostById(postId);
-                if (!post || !postThreadViewEl || !threadMainPostEl || !threadRepliesListEl) return;
-                activeThreadPostId = post.id;
-                if (!Array.isArray(post.replies)) post.replies = [];
-
-                const authorName = post.author || activeUsername || 'AkiiraPW';
-                const handle = post.handle || `@${authorName.toLowerCase()}`;
-
-                threadMainPostEl.innerHTML = '';
-                const topRow = document.createElement('div');
-                topRow.style.cssText = 'display:flex;align-items:center;gap:10px;margin-bottom:10px;';
-                const av = document.createElement('div');
-                av.className = 'kiwi-x-post-avatar';
-                setAvatarStyle(av, myProfileData.avatarUrl || '', authorName);
-                const meta = document.createElement('div');
-                meta.innerHTML = `<div style="font-size:14px;font-weight:800;">${escapeHtmlText(authorName)}</div><div style="font-size:12px;color:var(--kiwi-text-muted);">${escapeHtmlText(handle)} • ${escapeHtmlText(post.createdAt || 'Agora')}</div>`;
-                topRow.appendChild(av);
-                topRow.appendChild(meta);
-                threadMainPostEl.appendChild(topRow);
-
-                const bodyEl = document.createElement('div');
-                bodyEl.style.cssText = 'font-size:15px;line-height:1.5;white-space:pre-line;';
-                bodyEl.textContent = post.text || '';
-                threadMainPostEl.appendChild(bodyEl);
-
-                if (post.imageUrl && isSafeAssetUrl(post.imageUrl)) {
-                    const img = document.createElement('img');
-                    img.src = post.imageUrl;
-                    img.alt = 'Mídia do post';
-                    img.style.cssText = 'margin-top:12px;max-width:100%;max-height:360px;border-radius:14px;border:1px solid var(--kiwi-border);cursor:pointer;';
-                    img.addEventListener('click', () => openImageLightbox(post.imageUrl, 'Mídia do post'));
-                    threadMainPostEl.appendChild(img);
-                }
-
-                threadRepliesListEl.innerHTML = '';
-                if (!post.replies.length) {
-                    const empty = document.createElement('div');
-                    empty.style.cssText = 'padding:20px;text-align:center;color:var(--kiwi-text-muted);font-size:13px;';
-                    empty.textContent = 'Nenhuma resposta ainda. Seja o primeiro a responder!';
-                    threadRepliesListEl.appendChild(empty);
-                } else {
-                    post.replies.forEach(rep => {
-                        const rCard = document.createElement('div');
-                        rCard.className = 'kiwi-thread-reply-item';
-                        rCard.innerHTML = `<div style="font-size:13px;font-weight:800;margin-bottom:4px;">${escapeHtmlText(rep.author || activeUsername)} <span style="font-weight:500;font-size:11px;color:var(--kiwi-text-muted);">• ${escapeHtmlText(rep.createdAt || 'Agora')}</span></div><div style="font-size:13.5px;line-height:1.45;">${escapeHtmlText(rep.text || '')}</div>`;
-                        threadRepliesListEl.appendChild(rCard);
-                    });
-                }
-
-                hideAllMainSurfaces();
-                postThreadViewEl.style.display = 'flex';
-                openMobileChatView();
-            }
-
-            if (threadBackBtn) {
-                threadBackBtn.addEventListener('click', () => {
-                    activeThreadPostId = null;
-                    showProfileTimelineSurface();
-                });
-            }
-
-            if (threadReplyForm && threadReplyInput) {
-                threadReplyForm.addEventListener('submit', (e) => {
-                    e.preventDefault();
-                    const txt = threadReplyInput.value.trim();
-                    if (!txt || !activeThreadPostId) return;
-
-                    const allPosts = readUserPostsFromStorage();
-                    const idx = allPosts.findIndex(p => String(p.id) === String(activeThreadPostId));
-                    const replyObj = {
-                        id: 'rep-' + Date.now().toString(36),
-                        author: activeUsername,
-                        text: txt,
-                        createdAt: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-                    };
-
-                    if (idx !== -1) {
-                        if (!Array.isArray(allPosts[idx].replies)) allPosts[idx].replies = [];
-                        allPosts[idx].replies.push(replyObj);
-                        writeUserPostsToStorage(allPosts);
-                    } else {
-                        for (const acc of exploreAccountsList) {
-                            if (Array.isArray(acc.posts)) {
-                                const hit = acc.posts.find(p => String(p.id) === String(activeThreadPostId));
-                                if (hit) {
-                                    if (!Array.isArray(hit.replies)) hit.replies = [];
-                                    hit.replies.push(replyObj);
-                                    writeStorageJson(EXPLORE_ACCOUNTS_KEY, exploreAccountsList);
-                                    break;
-                                }
-                            }
-                        }
-                    }
-
-                    threadReplyInput.value = '';
-                    renderPostThreadView(activeThreadPostId);
-                });
-            }
-
-            const postDetailTabEl = document.getElementById('kiwi-post-detail-tab');
-            const postDetailBackBtn = document.getElementById('kiwi-post-detail-back-btn');
-            const postDetailReturnFeedBtn = document.getElementById('kiwi-post-detail-return-feed-btn');
-            const postDetailBodyEl = document.getElementById('post-detail-body');
-            const postDetailRepliesListEl = document.getElementById('post-detail-replies-list');
-            const postDetailReplyForm = document.getElementById('post-detail-reply-form');
-            const postDetailReplyInput = document.getElementById('post-detail-reply-input');
-            let activeDetailPostId = null;
-
-            function closePostDetailTabAndReturn() {
-                activeDetailPostId = null;
-                if (postDetailTabEl) postDetailTabEl.style.display = 'none';
-                showProfileTimelineSurface();
-            }
-
-            if (postDetailBackBtn) postDetailBackBtn.addEventListener('click', closePostDetailTabAndReturn);
-            if (postDetailReturnFeedBtn) postDetailReturnFeedBtn.addEventListener('click', closePostDetailTabAndReturn);
-
-            window.openPostDetailTab = function(postId) {
-                const post = findPostById(postId);
-                if (!post || !postDetailTabEl || !postDetailBodyEl || !postDetailRepliesListEl) return;
-                activeDetailPostId = post.id;
-                if (!Array.isArray(post.replies)) post.replies = [];
-
-                const authorName = post.author || activeUsername || 'AkiiraPW';
-                const handle = post.handle || `@${authorName.toLowerCase()}`;
-                const likesCount = Number(post.likes || 0);
-                const repliesCount = post.replies.length;
-
-                let mediaHtml = '';
-                if (post.imageUrl && isSafeAssetUrl(post.imageUrl)) {
-                    mediaHtml = `<img src="${escapeHtmlText(post.imageUrl)}" alt="Mídia da postagem" class="kiwi-x-post-media" style="margin-top:12px;max-height:380px;">`;
-                }
-
-                postDetailBodyEl.innerHTML = `
-                    <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
-                        <div class="kiwi-x-post-avatar">${escapeHtmlText(authorName.charAt(0).toUpperCase())}</div>
-                        <div>
-                            <div style="font-size:15px;font-weight:800;">${escapeHtmlText(authorName)}</div>
-                            <div style="font-size:12px;color:var(--kiwi-text-muted);">${escapeHtmlText(handle)} • ${escapeHtmlText(post.createdAt || 'Agora')}</div>
-                        </div>
-                    </div>
-                    <div style="font-size:15px;line-height:1.5;white-space:pre-line;">${escapeHtmlText(post.text || '')}</div>
-                    ${mediaHtml}
-                    <div style="display:flex;gap:18px;margin-top:12px;padding-top:10px;border-top:1px solid var(--kiwi-border);font-size:12px;color:var(--kiwi-text-muted);font-weight:700;">
-                        <span>💬 ${repliesCount} ${repliesCount === 1 ? 'resposta' : 'respostas'}</span>
-                        <span>❤️ ${likesCount} ${likesCount === 1 ? 'curtida' : 'curtidas'}</span>
+            function renderFollowPanel(mode) {
+                if (!xFollowersPanel || !xFeedList) return;
+                xFeedList.style.display = 'none';
+                xFollowersPanel.style.display = 'block';
+                const isFollowingMode = mode === 'following';
+                const list = isFollowingMode ? followingList : followersList;
+                xFollowersPanel.innerHTML = `
+                    <div class="kiwi-x-follow-panel-header">
+                        <strong>${isFollowingMode ? 'Seguindo' : 'Seguidores'} (${list.length})</strong>
+                        <button type="button" class="section-mini-action-btn" id="kiwi-x-close-follow-panel-btn">Voltar aos posts</button>
                     </div>
                 `;
+                const closeBtn = document.getElementById('kiwi-x-close-follow-panel-btn');
+                if (closeBtn) closeBtn.addEventListener('click', closeFollowersPanelAndShowFeed);
 
-                postDetailRepliesListEl.innerHTML = '';
-                if (!post.replies.length) {
-                    postDetailRepliesListEl.innerHTML = `<div style="padding:16px;text-align:center;color:var(--kiwi-text-muted);font-size:13px;background:var(--kiwi-bg-card);border:1px solid var(--kiwi-border);border-radius:12px;">Nenhuma resposta ainda. Escreva a primeira abaixo!</div>`;
-                } else {
-                    post.replies.forEach(rep => {
-                        const rDiv = document.createElement('div');
-                        rDiv.style.cssText = 'background:var(--kiwi-bg-card);border:1px solid var(--kiwi-border);border-radius:12px;padding:11px 14px;';
-                        rDiv.innerHTML = `
-                            <div style="font-size:12.5px;font-weight:800;margin-bottom:4px;">${escapeHtmlText(rep.author || activeUsername)} <span style="font-weight:500;font-size:11px;color:var(--kiwi-text-muted);">• ${escapeHtmlText(rep.createdAt || 'Agora')}</span></div>
-                            <div style="font-size:13.5px;line-height:1.45;white-space:pre-line;">${escapeHtmlText(rep.text || '')}</div>
-                        `;
-                        postDetailRepliesListEl.appendChild(rDiv);
-                    });
-                }
-
-                hideAllMainSurfaces();
-                postDetailTabEl.style.display = 'flex';
-                openMobileChatView();
-            };
-
-            if (postDetailReplyForm && postDetailReplyInput) {
-                postDetailReplyForm.addEventListener('submit', (e) => {
-                    e.preventDefault();
-                    const txt = postDetailReplyInput.value.trim();
-                    if (!txt || !activeDetailPostId) return;
-
-                    const allPosts = readUserPostsFromStorage();
-                    const idx = allPosts.findIndex(p => String(p.id) === String(activeDetailPostId));
-                    const replyObj = {
-                        id: 'rep-' + Date.now().toString(36),
-                        author: activeUsername,
-                        text: txt,
-                        createdAt: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-                    };
-
-                    if (idx !== -1) {
-                        if (!Array.isArray(allPosts[idx].replies)) allPosts[idx].replies = [];
-                        allPosts[idx].replies.push(replyObj);
-                        writeUserPostsToStorage(allPosts);
-                    } else {
-                        for (const acc of exploreAccountsList) {
-                            if (Array.isArray(acc.posts)) {
-                                const hit = acc.posts.find(p => String(p.id) === String(activeDetailPostId));
-                                if (hit) {
-                                    if (!Array.isArray(hit.replies)) hit.replies = [];
-                                    hit.replies.push(replyObj);
-                                    writeStorageJson(EXPLORE_ACCOUNTS_KEY, exploreAccountsList);
-                                    break;
-                                }
-                            }
-                        }
-                    }
-
-                    postDetailReplyInput.value = '';
-                    window.openPostDetailTab(activeDetailPostId);
-                });
-            }
-
-            function createFeedPostCard(post) {
-                const authorName = post.author || activeUsername || 'AkiiraPW';
-                const handle = post.handle || `@${authorName.toLowerCase()}`;
-                const repliesArr = Array.isArray(post.replies) ? post.replies : [];
-                const likesCount = Number(post.likes || 0);
-                const isLiked = Boolean(post.liked);
-
-                const card = document.createElement('article');
-                card.className = 'kiwi-x-post-card';
-                card.addEventListener('click', () => window.openPostDetailTab(post.id));
-
-                const av = document.createElement('div');
-                av.className = 'kiwi-x-post-avatar';
-                const isOwnAuthor = String(authorName).toLowerCase() === String(activeUsername).toLowerCase();
-                setAvatarStyle(av, isOwnAuthor ? myProfileData.avatarUrl : (post.avatarUrl || ''), authorName);
-                if (isOwnAuthor && myProfileData.frameEffect && SHOP_EFFECT_LABELS.frame[myProfileData.frameEffect]) {
-                    av.classList.add(`kiwi-frame-${myProfileData.frameEffect}`);
-                }
-
-                const body = document.createElement('div');
-                body.className = 'kiwi-x-post-body';
-
-                const header = document.createElement('div');
-                header.className = 'kiwi-x-post-header';
-                const authorSpan = document.createElement('span');
-                authorSpan.className = 'kiwi-x-post-author';
-                authorSpan.textContent = authorName;
-                if (isOwnAuthor && myProfileData.nameStyle && SHOP_EFFECT_LABELS.name[myProfileData.nameStyle]) {
-                    authorSpan.classList.add(`kiwi-name-${myProfileData.nameStyle}`);
-                }
-                const handleSpan = document.createElement('span');
-                handleSpan.className = 'kiwi-x-post-handle';
-                handleSpan.textContent = `${handle} • ${post.createdAt || 'Agora'}`;
-                header.appendChild(authorSpan);
-                header.appendChild(handleSpan);
-                body.appendChild(header);
-
-                if (post.text) {
-                    const textDiv = document.createElement('div');
-                    textDiv.className = 'kiwi-x-post-text';
-                    textDiv.textContent = post.text;
-                    body.appendChild(textDiv);
-                }
-
-                if (post.imageUrl && isSafeAssetUrl(post.imageUrl)) {
-                    const img = document.createElement('img');
-                    img.className = 'kiwi-x-post-media';
-                    img.src = post.imageUrl;
-                    img.alt = 'Mídia do post';
-                    img.addEventListener('click', (ev) => {
-                        ev.stopPropagation();
-                        openImageLightbox(post.imageUrl, 'Mídia do post');
-                    });
-                    body.appendChild(img);
-                }
-
-                const actionsRow = document.createElement('div');
-                actionsRow.className = 'kiwi-x-post-actions';
-
-                const replyBtn = document.createElement('button');
-                replyBtn.type = 'button';
-                replyBtn.className = 'kiwi-x-action-btn';
-                replyBtn.innerHTML = `<span>💬</span><span>${repliesArr.length}</span>`;
-                replyBtn.addEventListener('click', (ev) => {
-                    ev.stopPropagation();
-                    window.openPostDetailTab(post.id);
-                });
-
-                const likeBtn = document.createElement('button');
-                likeBtn.type = 'button';
-                likeBtn.className = 'kiwi-x-action-btn' + (isLiked ? ' liked' : '');
-                likeBtn.innerHTML = `<span>${isLiked ? '❤️' : '🤍'}</span><span>${likesCount}</span>`;
-                likeBtn.addEventListener('click', (ev) => {
-                    ev.stopPropagation();
-                    const allPosts = readUserPostsFromStorage();
-                    const target = allPosts.find(p => String(p.id) === String(post.id));
-                    if (target) {
-                        target.liked = !Boolean(target.liked);
-                        target.likes = Math.max(0, Number(target.likes || 0) + (target.liked ? 1 : -1));
-                        writeUserPostsToStorage(allPosts);
-                        renderCleanUserPosts();
-                    }
-                });
-
-                actionsRow.appendChild(replyBtn);
-                actionsRow.appendChild(likeBtn);
-                body.appendChild(actionsRow);
-
-                card.appendChild(av);
-                card.appendChild(body);
-                return card;
-            }
-
-            function renderCleanUserPosts() {
-                if (!xFeedList) return;
-                xFeedList.innerHTML = '';
-
-                const prof = getActiveTimelineProfile();
-                const isOwn = (prof.username || '').toLowerCase() === String(activeUsername || '').toLowerCase();
-                const allPosts = isOwn ? readUserPostsFromStorage() : (Array.isArray(prof.posts) ? prof.posts : []);
-
-                let filtered = allPosts;
-                if (activeXSubtab === 'respostas') {
-                    filtered = allPosts.filter(p => Array.isArray(p.replies) && p.replies.length > 0);
-                } else if (activeXSubtab === 'midia') {
-                    filtered = allPosts.filter(p => Boolean(p.imageUrl && isSafeAssetUrl(p.imageUrl)));
-                } else if (activeXSubtab === 'curtidas') {
-                    filtered = allPosts.filter(p => Boolean(p.liked));
-                }
-
-                if (!filtered.length) {
-                    const emptyDiv = document.createElement('div');
-                    emptyDiv.style.cssText = 'padding:36px 20px;text-align:center;color:var(--kiwi-text-muted);font-size:13.5px;';
-                    emptyDiv.textContent = activeXSubtab === 'posts'
-                        ? (isOwn ? 'Nenhum post ainda. Clique em "Postar" para publicar o primeiro!' : 'Este perfil ainda não possui posts.')
-                        : 'Nada para mostrar nesta aba no momento.';
-                    xFeedList.appendChild(emptyDiv);
+                if (!list.length) {
+                    const empty = document.createElement('div');
+                    empty.style.cssText = 'padding:18px;font-size:13px;color:var(--kiwi-text-muted);';
+                    empty.textContent = isFollowingMode ? 'Você ainda não segue ninguém.' : 'Nenhum seguidor ainda.';
+                    xFollowersPanel.appendChild(empty);
                     return;
                 }
 
-                filtered.forEach(post => {
-                    xFeedList.appendChild(createFeedPostCard(post));
+                list.forEach(item => {
+                    const uname = typeof item === 'string' ? item : (item && item.username);
+                    if (!uname || isRemovedFakeAccount(uname)) return;
+                    const row = document.createElement('div');
+                    row.className = 'kiwi-x-follow-row';
+                    const av = document.createElement('div');
+                    av.className = 'social-avatar';
+                    av.textContent = uname.charAt(0).toUpperCase();
+                    const info = document.createElement('div');
+                    info.style.cssText = 'flex:1;min-width:0;';
+                    info.innerHTML = `<div style="font-weight:700;font-size:13px;">${escapeHtmlText(uname)}</div><div style="font-size:11px;color:var(--kiwi-text-muted);">@${escapeHtmlText(uname.toLowerCase())}</div>`;
+                    row.appendChild(av);
+                    row.appendChild(info);
+                    row.onclick = () => window.openUserProfile(uname);
+                    xFollowersPanel.appendChild(row);
                 });
             }
 
-            xSubtabs.forEach(btn => {
-                btn.addEventListener('click', () => {
-                    xSubtabs.forEach(b => b.classList.remove('active'));
-                    btn.classList.add('active');
-                    activeXSubtab = btn.getAttribute('data-x-subtab') || 'posts';
-                    closeFollowersPanelAndShowFeed();
-                });
-            });
+            if (xOpenFollowingBtn) xOpenFollowingBtn.addEventListener('click', () => renderFollowPanel('following'));
+            if (xOpenFollowersBtn) xOpenFollowersBtn.addEventListener('click', () => renderFollowPanel('followers'));
 
-            if (xOpenFollowingBtn) xOpenFollowingBtn.addEventListener('click', () => openFollowersPanel('following'));
-            if (xOpenFollowersBtn) xOpenFollowersBtn.addEventListener('click', () => openFollowersPanel('followers'));
             if (xFollowBtn) {
                 xFollowBtn.addEventListener('click', () => {
                     const prof = getActiveTimelineProfile();
-                    toggleFollowUser(prof.username || activeUsername);
+                    const targetName = (prof.username || inspectedTimelineUser || '').trim();
+                    if (!targetName || targetName.toLowerCase() === (activeUsername || '').toLowerCase() || isRemovedFakeAccount(targetName)) return;
+                    const idx = followingList.findIndex(item => {
+                        const n = typeof item === 'string' ? item : (item && item.username);
+                        return n && n.toLowerCase() === targetName.toLowerCase();
+                    });
+                    if (idx >= 0) {
+                        followingList.splice(idx, 1);
+                        showKiwiToast(`Deixou de seguir ${targetName}`);
+                    } else {
+                        followingList.push({ username: targetName, bio: prof.bio || '' });
+                        showKiwiToast(`Seguindo ${targetName}`);
+                    }
+                    writeStorageJson(FOLLOWING_STORAGE_KEY, followingList);
+                    syncFollowerCountsUi();
+                    syncFollowButtonState(targetName);
+                });
+            }
+
+            if (xBackBtn) xBackBtn.addEventListener('click', () => switchToGeral());
+            if (xOpenCardBtn) {
+                xOpenCardBtn.addEventListener('click', () => {
+                    const prof = getActiveTimelineProfile();
+                    renderUnifiedProfileModal(prof);
                 });
             }
             if (xEditProfileBtn) xEditProfileBtn.addEventListener('click', () => switchToEditBtn.click());
-            if (xOpenCardBtn) {
-                xOpenCardBtn.addEventListener('click', () => {
+            if (xAvatarEl) {
+                xAvatarEl.addEventListener('click', () => {
                     const prof = getActiveTimelineProfile();
                     renderUnifiedProfileModal(prof);
                 });
@@ -5867,39 +5349,39 @@ html, body {
                     renderUnifiedProfileModal(prof);
                 });
             }
-            if (xAvatar) {
-                xAvatar.addEventListener('click', () => {
-                    const prof = getActiveTimelineProfile();
-                    renderUnifiedProfileModal(prof);
-                });
-            }
             if (xDmBtn) {
                 xDmBtn.addEventListener('click', () => {
                     const prof = getActiveTimelineProfile();
-                    const target = prof.username || activeUsername;
-                    if (target && target.toLowerCase() !== String(activeUsername || '').toLowerCase()) {
-                        if (!openDmTabs.has(target)) openDmTabs.set(target, { username: target, unread: 0 });
-                        renderDmTabs();
-                        window.openPrivateChat(target);
+                    const target = prof.username;
+                    if (target && target.toLowerCase() !== (activeUsername || '').toLowerCase() && !isRemovedFakeAccount(target)) {
+                        window.openPrivateChat(target, prof.avatarUrl);
                     } else {
                         activateNavTab('mensagens');
                     }
                 });
             }
-            if (xBackBtn) {
-                xBackBtn.addEventListener('click', () => {
-                    if (inspectedTimelineUser) {
-                        inspectedTimelineUser = null;
-                        syncXProfileHeader();
-                        closeFollowersPanelAndShowFeed();
-                    } else {
-                        switchToGeral();
-                    }
+
+            xSubtabs.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    activeXSubtab = btn.getAttribute('data-x-subtab') || 'posts';
+                    xSubtabs.forEach(b => b.classList.toggle('active', b === btn));
+                    closeFollowersPanelAndShowFeed();
+                    renderCleanUserPosts();
                 });
-            }
+            });
+
+            const createPostModal = document.getElementById('create-post-modal');
+            const navOpenPostModalBtn = document.getElementById('nav-open-post-modal-btn');
+            const closeCreatePostBtn = document.getElementById('close-create-post-btn');
+            const createPostForm = document.getElementById('create-post-form');
+            const newPostTextInput = document.getElementById('new-post-text');
+            const newPostImageUrlInput = document.getElementById('new-post-image-url');
 
             if (navOpenPostModalBtn && createPostModal) {
-                navOpenPostModalBtn.addEventListener('click', () => openModalAnimated(createPostModal));
+                navOpenPostModalBtn.addEventListener('click', () => {
+                    openModalAnimated(createPostModal);
+                    setTimeout(() => { if (newPostTextInput) newPostTextInput.focus(); }, 100);
+                });
             }
             if (closeCreatePostBtn && createPostModal) {
                 closeCreatePostBtn.addEventListener('click', () => closeModalAnimated(createPostModal));
@@ -5910,45 +5392,241 @@ html, body {
                 });
             }
 
+            let activeDetailPost = null;
+
+            function openPostDetailTab(postObj) {
+                if (!postObj) return;
+                activeDetailPost = postObj;
+                const pdTab = document.getElementById('kiwi-post-detail-tab');
+                const pdBody = document.getElementById('post-detail-body');
+                if (!pdTab || !pdBody) return;
+
+                hideAllMainSurfaces();
+                pdTab.style.display = 'flex';
+                if (headerMainTitle) headerMainTitle.textContent = '💬 Postagem';
+                if (headerSubLabel) headerSubLabel.textContent = `| Por ${postObj.author || activeUsername}`;
+                if (backToGeralBtn) backToGeralBtn.classList.add('visible');
+
+                const safeMediaHtml = (postObj.imageUrl && isSafeAssetUrl(postObj.imageUrl))
+                    ? `<img src="${encodeURI(postObj.imageUrl)}" alt="Mídia da postagem" class="kiwi-x-post-media">`
+                    : '';
+
+                pdBody.innerHTML = `
+                    <div class="kiwi-x-post-header">
+                        <span class="kiwi-x-post-author">${escapeHtmlText(postObj.author || activeUsername)}</span>
+                        <span class="kiwi-x-post-handle">${escapeHtmlText(postObj.handle || '@' + String(postObj.author || activeUsername).toLowerCase())} • ${escapeHtmlText(postObj.time || 'Agora')}</span>
+                    </div>
+                    <div class="kiwi-x-post-text" style="margin-top:8px;">${escapeHtmlText(postObj.text || '')}</div>
+                    ${safeMediaHtml}
+                `;
+
+                renderPostDetailRepliesList(postObj);
+                openMobileChatView();
+                triggerChatAreaTransition();
+            }
+
+            function renderPostDetailRepliesList(postObj) {
+                const repliesEl = document.getElementById('post-detail-replies-list');
+                if (!repliesEl) return;
+                const replies = Array.isArray(postObj.replies) ? postObj.replies : [];
+                if (!replies.length) {
+                    repliesEl.innerHTML = '<div style="font-size:12px;color:var(--kiwi-text-muted);">Nenhuma resposta ainda. Seja o primeiro a responder!</div>';
+                    return;
+                }
+                repliesEl.innerHTML = '';
+                replies.forEach(rep => {
+                    const card = document.createElement('div');
+                    card.style.cssText = 'background:var(--kiwi-bg-card);border:1px solid var(--kiwi-border);border-radius:12px;padding:10px 14px;';
+                    card.innerHTML = `
+                        <div style="display:flex;align-items:center;gap:6px;margin-bottom:4px;">
+                            <strong style="font-size:13px;">${escapeHtmlText(rep.author || activeUsername)}</strong>
+                            <span style="font-size:11px;color:var(--kiwi-text-muted);">${escapeHtmlText(rep.time || 'Agora')}</span>
+                        </div>
+                        <div style="font-size:13px;color:var(--kiwi-text-primary);">${escapeHtmlText(rep.text || '')}</div>
+                    `;
+                    repliesEl.appendChild(card);
+                });
+            }
+
+            const pdBackBtn = document.getElementById('kiwi-post-detail-back-btn');
+            const pdReturnFeedBtn = document.getElementById('kiwi-post-detail-return-feed-btn');
+            const pdReplyForm = document.getElementById('post-detail-reply-form');
+            const pdReplyInput = document.getElementById('post-detail-reply-input');
+
+            if (pdBackBtn) pdBackBtn.addEventListener('click', () => activateNavTab('perfil'));
+            if (pdReturnFeedBtn) pdReturnFeedBtn.addEventListener('click', () => activateNavTab('inicio'));
+            if (pdReplyForm && pdReplyInput) {
+                pdReplyForm.addEventListener('submit', (e) => {
+                    e.preventDefault();
+                    const txt = pdReplyInput.value.trim();
+                    if (!txt || !activeDetailPost) return;
+                    activeDetailPost.replies = Array.isArray(activeDetailPost.replies) ? activeDetailPost.replies : [];
+                    activeDetailPost.replies.push({
+                        id: 'rep-' + Date.now(),
+                        author: activeUsername,
+                        text: txt,
+                        time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+                    });
+                    const allPosts = readStorageJson(USER_POSTS_KEY, []);
+                    const idx = allPosts.findIndex(p => p.id === activeDetailPost.id);
+                    if (idx >= 0) {
+                        allPosts[idx] = activeDetailPost;
+                        writeStorageJson(USER_POSTS_KEY, allPosts);
+                    }
+                    pdReplyInput.value = '';
+                    renderPostDetailRepliesList(activeDetailPost);
+                    showKiwiToast('Resposta publicada!');
+                });
+            }
+
+            function renderCleanUserPosts() {
+                if (!xFeedList) return;
+                const prof = getActiveTimelineProfile();
+                const isOwn = !inspectedTimelineUser || inspectedTimelineUser.toLowerCase() === (activeUsername || '').toLowerCase();
+                let posts = isOwn
+                    ? (readStorageJson(USER_POSTS_KEY, []) || [])
+                    : (Array.isArray(prof.posts) ? prof.posts : []);
+
+                if (activeXSubtab === 'midia') {
+                    posts = posts.filter(p => p && p.imageUrl);
+                } else if (activeXSubtab === 'curtidas') {
+                    posts = posts.filter(p => p && p.liked);
+                } else if (activeXSubtab === 'respostas') {
+                    posts = posts.filter(p => p && Array.isArray(p.replies) && p.replies.length > 0);
+                }
+
+                xFeedList.innerHTML = '';
+                if (!posts.length) {
+                    const emptyDiv = document.createElement('div');
+                    emptyDiv.style.cssText = 'padding:24px 18px;font-size:13px;color:var(--kiwi-text-muted);text-align:center;';
+                    emptyDiv.textContent = 'Nenhuma postagem para exibir nesta aba.';
+                    xFeedList.appendChild(emptyDiv);
+                    return;
+                }
+
+                posts.forEach(post => {
+                    const card = document.createElement('div');
+                    card.className = 'kiwi-x-post-card';
+
+                    const av = document.createElement('div');
+                    av.className = 'kiwi-x-post-avatar';
+                    setAvatarStyle(av, prof.avatarUrl, post.author || prof.username);
+
+                    const body = document.createElement('div');
+                    body.className = 'kiwi-x-post-body';
+
+                    const header = document.createElement('div');
+                    header.className = 'kiwi-x-post-header';
+                    header.innerHTML = `
+                        <span class="kiwi-x-post-author">${escapeHtmlText(post.author || prof.username)}</span>
+                        <span class="kiwi-x-post-handle">${escapeHtmlText(post.handle || '@' + String(post.author || prof.username).toLowerCase())} • ${escapeHtmlText(post.time || 'Agora')}</span>
+                    `;
+
+                    const textDiv = document.createElement('div');
+                    textDiv.className = 'kiwi-x-post-text';
+                    textDiv.textContent = post.text || '';
+
+                    body.appendChild(header);
+                    body.appendChild(textDiv);
+
+                    if (post.imageUrl && isSafeAssetUrl(post.imageUrl)) {
+                        const img = document.createElement('img');
+                        img.className = 'kiwi-x-post-media';
+                        img.src = post.imageUrl;
+                        img.alt = 'Mídia do post';
+                        img.onclick = (ev) => {
+                            ev.stopPropagation();
+                            openImageLightbox(post.imageUrl, 'Mídia do post');
+                        };
+                        body.appendChild(img);
+                    }
+
+                    const actions = document.createElement('div');
+                    actions.className = 'kiwi-x-post-actions';
+
+                    const replyBtn = document.createElement('button');
+                    replyBtn.type = 'button';
+                    replyBtn.className = 'kiwi-x-action-btn';
+                    const repCount = Array.isArray(post.replies) ? post.replies.length : 0;
+                    replyBtn.textContent = `💬 ${repCount}`;
+                    replyBtn.onclick = (ev) => {
+                        ev.stopPropagation();
+                        openPostDetailTab(post);
+                    };
+
+                    const likeBtn = document.createElement('button');
+                    likeBtn.type = 'button';
+                    likeBtn.className = 'kiwi-x-action-btn' + (post.liked ? ' liked' : '');
+                    const likesNum = Number(post.likesCount || (post.liked ? 1 : 0));
+                    likeBtn.textContent = `${post.liked ? '❤️' : '🤍'} ${likesNum}`;
+                    likeBtn.onclick = (ev) => {
+                        ev.stopPropagation();
+                        post.liked = !post.liked;
+                        post.likesCount = Math.max(0, likesNum + (post.liked ? 1 : -1));
+                        if (isOwn) {
+                            const stored = readStorageJson(USER_POSTS_KEY, []);
+                            const idx = stored.findIndex(item => item.id === post.id);
+                            if (idx >= 0) {
+                                stored[idx] = post;
+                                writeStorageJson(USER_POSTS_KEY, stored);
+                            }
+                        }
+                        renderCleanUserPosts();
+                    };
+
+                    actions.appendChild(replyBtn);
+                    actions.appendChild(likeBtn);
+                    body.appendChild(actions);
+
+                    card.appendChild(av);
+                    card.appendChild(body);
+                    card.onclick = () => openPostDetailTab(post);
+                    xFeedList.appendChild(card);
+                });
+            }
+
             if (createPostForm) {
                 createPostForm.addEventListener('submit', (e) => {
                     e.preventDefault();
                     const textVal = (newPostTextInput && newPostTextInput.value.trim()) || '';
                     const imgVal = (newPostImageUrlInput && newPostImageUrlInput.value.trim()) || '';
-                    if (!textVal && !imgVal) return;
+                    if (!textVal) return;
 
-                    const posts = readUserPostsFromStorage();
-                    posts.unshift({
-                        id: 'post-' + Date.now().toString(36),
+                    const posts = readStorageJson(USER_POSTS_KEY, []);
+                    const newPost = {
+                        id: 'post-' + Date.now(),
                         author: activeUsername,
                         handle: `@${activeUsername.toLowerCase()}`,
                         text: textVal,
-                        imageUrl: imgVal,
-                        createdAt: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-                        likes: 0,
+                        imageUrl: isSafeAssetUrl(imgVal) ? imgVal : '',
+                        time: 'Agora',
+                        likesCount: 0,
                         liked: false,
                         replies: []
-                    });
-                    writeUserPostsToStorage(posts);
+                    };
+                    posts.unshift(newPost);
+                    writeStorageJson(USER_POSTS_KEY, posts);
+
                     if (newPostTextInput) newPostTextInput.value = '';
                     if (newPostImageUrlInput) newPostImageUrlInput.value = '';
                     closeModalAnimated(createPostModal);
                     inspectedTimelineUser = null;
-                    activateNavTab('perfil');
-                    showKiwiToast("Post publicado no seu perfil!");
+                    syncXProfileHeader();
+                    showProfileTimelineSurface();
+                    showKiwiToast('Post publicado no seu perfil!');
                 });
             }
 
             const dmSearchInp = document.getElementById('kiwi-dm-search-input');
-            const dmConversationsListEl = document.getElementById('kiwi-dm-conversations-list');
-            const dmSuggestedListEl = document.getElementById('kiwi-dm-suggested-list');
-            const dmActiveAvatarEl = document.getElementById('kiwi-dm-active-avatar');
-            const dmActiveTitleEl = document.getElementById('kiwi-dm-active-title');
-            const dmActiveSubEl = document.getElementById('kiwi-dm-active-sub');
-            const dmRightMessagesEl = document.getElementById('kiwi-dm-right-messages');
-            const dmRightEmptyEl = document.getElementById('kiwi-dm-right-empty');
-            const dmRightInputBarEl = document.getElementById('kiwi-dm-right-input-bar');
-            const dmRightInputEl = document.getElementById('kiwi-dm-right-input');
+            const dmConvsList = document.getElementById('kiwi-dm-conversations-list');
+            const dmSuggestedList = document.getElementById('kiwi-dm-suggested-list');
+            const dmActiveAvatar = document.getElementById('kiwi-dm-active-avatar');
+            const dmActiveTitle = document.getElementById('kiwi-dm-active-title');
+            const dmActiveSub = document.getElementById('kiwi-dm-active-sub');
+            const dmRightMessages = document.getElementById('kiwi-dm-right-messages');
+            const dmRightEmpty = document.getElementById('kiwi-dm-right-empty');
+            const dmRightInputBar = document.getElementById('kiwi-dm-right-input-bar');
+            const dmRightInput = document.getElementById('kiwi-dm-right-input');
             const dmRightSendBtn = document.getElementById('kiwi-dm-right-send-btn');
             const dmRightCallBtn = document.getElementById('kiwi-dm-right-call-btn');
             const dmRightInfoBtn = document.getElementById('kiwi-dm-right-info-btn');
@@ -5956,550 +5634,598 @@ html, body {
             const dmEmptyCodeBtn = document.getElementById('kiwi-dm-empty-code-btn');
 
             function renderDmMessagesList(peerName) {
-                if (!dmRightMessagesEl) return;
-                const list = dmThreads[peerName] || [];
-                dmRightMessagesEl.innerHTML = '';
-                if (!list.length) {
-                    const empty = document.createElement('div');
-                    empty.style.cssText = 'margin:auto;text-align:center;color:var(--kiwi-text-muted);font-size:13px;';
-                    empty.textContent = `Nenhuma mensagem ainda com ${peerName}. Envie a primeira abaixo!`;
-                    dmRightMessagesEl.appendChild(empty);
+                if (!dmRightMessages || !dmRightEmpty || !dmRightInputBar) return;
+                if (!peerName || isRemovedFakeAccount(peerName)) {
+                    dmRightMessages.style.display = 'none';
+                    dmRightInputBar.style.display = 'none';
+                    dmRightEmpty.style.display = 'flex';
                     return;
                 }
-                list.forEach(m => {
+                dmRightEmpty.style.display = 'none';
+                dmRightMessages.style.display = 'flex';
+                dmRightInputBar.style.display = 'flex';
+
+                const msgs = (dmThreads[peerName] || []).filter(m => m && !isRemovedFakeAccount(m.sender));
+                dmRightMessages.innerHTML = '';
+                if (!msgs.length) {
+                    const emptyHint = document.createElement('div');
+                    emptyHint.style.cssText = 'text-align:center;color:var(--kiwi-text-muted);font-size:12px;margin:auto;';
+                    emptyHint.textContent = `Nenhuma mensagem ainda com ${peerName}. Envie a primeira mensagem abaixo!`;
+                    dmRightMessages.appendChild(emptyHint);
+                    return;
+                }
+
+                msgs.forEach(m => {
+                    const isMine = String(m.sender || '').toLowerCase() === String(activeUsername || '').toLowerCase();
                     const bubble = document.createElement('div');
-                    const isMine = (m.sender || '').toLowerCase() === String(activeUsername || '').toLowerCase();
-                    bubble.style.cssText = `max-width:75%;align-self:${isMine ? 'flex-end' : 'flex-start'};background:${isMine ? 'var(--kiwi-accent-purple)' : 'var(--kiwi-bg-card)'};color:var(--kiwi-text-primary);padding:10px 14px;border-radius:14px;border:1px solid var(--kiwi-border);`;
-                    bubble.innerHTML = `<div style="font-size:11px;opacity:0.78;margin-bottom:3px;font-weight:700;">${escapeHtmlText(m.sender || peerName)} • ${escapeHtmlText(m.time || '')}</div><div style="font-size:13.5px;line-height:1.45;white-space:pre-line;">${escapeHtmlText(m.text || '')}</div>`;
-                    dmRightMessagesEl.appendChild(bubble);
+                    bubble.style.cssText = `max-width:78%;padding:9px 13px;border-radius:14px;font-size:13px;line-height:1.42;align-self:${isMine ? 'flex-end' : 'flex-start'};background:${isMine ? 'var(--kiwi-accent-purple)' : 'var(--kiwi-bg-card)'};color:var(--kiwi-text-primary);border:1px solid var(--kiwi-border);`;
+                    bubble.innerHTML = `
+                        <div style="font-size:10px;opacity:0.75;margin-bottom:2px;">${escapeHtmlText(m.sender || 'Usuário')} • ${escapeHtmlText(m.time || '')}</div>
+                        <div>${escapeHtmlText(m.text || '')}</div>
+                    `;
+                    dmRightMessages.appendChild(bubble);
                 });
-                dmRightMessagesEl.scrollTop = dmRightMessagesEl.scrollHeight;
+                dmRightMessages.scrollTop = dmRightMessages.scrollHeight;
             }
 
             function openDmPeerThread(peerName) {
                 if (!peerName || isRemovedFakeAccount(peerName)) return;
                 selectedDmPeer = peerName;
                 currentDmUser = peerName;
-                if (!dmThreads[peerName]) dmThreads[peerName] = [];
+                if (dmActiveTitle) dmActiveTitle.textContent = peerName;
+                if (dmActiveSub) dmActiveSub.textContent = `@${peerName.toLowerCase()} • Bate-papo direto`;
+                if (dmActiveAvatar) {
+                    const prof = profilesByUsername.get(peerName.toLowerCase());
+                    setAvatarStyle(dmActiveAvatar, prof ? prof.avatarUrl : '', peerName);
+                }
+                if (dmRightCallBtn) dmRightCallBtn.onclick = () => window.startVoiceCall(peerName);
+                if (dmRightInfoBtn) dmRightInfoBtn.onclick = () => window.openUserProfile(peerName);
+
                 const ctx = roomCtxManager.activateContext({ type: 'dm', targetUser: peerName });
                 if (ctx && Array.isArray(ctx.messages) && ctx.messages.length > 0) {
-                    ctx.messages.forEach(m => {
-                        if (!m || isRemovedFakeAccount(m.author)) return;
-                        const mText = String(m.text || '').trim() || (m.attachmentName ? `📎 ${m.attachmentName}` : '');
-                        if (!mText) return;
-                        const exists = dmThreads[peerName].some(item =>
-                            (m.id && item.id && String(item.id) === String(m.id)) ||
-                            (String(item.sender || '').toLowerCase() === String(m.author || '').toLowerCase() &&
-                             String(item.text || '').trim() === mText &&
-                             String(item.time || '').trim() === String(m.timestamp || '').trim())
+                    if (!dmThreads[peerName]) dmThreads[peerName] = [];
+                    ctx.messages.forEach(cm => {
+                        if (!cm || isRemovedFakeAccount(cm.author)) return;
+                        const cleanTxt = String(cm.text || '').trim() || (cm.attachmentName ? `📎 ${cm.attachmentName}` : '');
+                        if (!cleanTxt) return;
+                        const exists = dmThreads[peerName].some(x =>
+                            (x.id && cm.id && String(x.id) === String(cm.id)) ||
+                            (String(x.sender || '').toLowerCase() === String(cm.author || '').toLowerCase() && String(x.text || '').trim() === cleanTxt)
                         );
                         if (!exists) {
                             dmThreads[peerName].push({
-                                id: m.id || `dm-hist-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
-                                sender: m.author,
-                                text: mText,
-                                time: m.timestamp || ''
+                                id: cm.id,
+                                sender: cm.author,
+                                text: cleanTxt,
+                                time: cm.timestamp || ''
                             });
                         }
                     });
                 }
-                if (dmActiveAvatarEl) dmActiveAvatarEl.textContent = peerName.charAt(0).toUpperCase();
-                if (dmActiveTitleEl) dmActiveTitleEl.textContent = peerName;
-                if (dmActiveSubEl) dmActiveSubEl.textContent = `@${peerName.toLowerCase()} • Bate-papo direto`;
-                if (dmRightEmptyEl) dmRightEmptyEl.style.display = 'none';
-                if (dmRightMessagesEl) dmRightMessagesEl.style.display = 'flex';
-                if (dmRightInputBarEl) dmRightInputBarEl.style.display = 'flex';
+
                 renderDmMessagesList(peerName);
                 renderDmSplitPane(dmSearchInp ? dmSearchInp.value : '');
             }
 
-            function sendDmSplitMessage() {
-                if (!selectedDmPeer || !dmRightInputEl) return;
-                const txt = dmRightInputEl.value.trim();
+            function sendDmFromSplitBar() {
+                if (!selectedDmPeer || !dmRightInput) return;
+                const txt = dmRightInput.value.trim();
                 if (!txt) return;
+                const nowTime = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                const msgId = `dm-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
                 if (!dmThreads[selectedDmPeer]) dmThreads[selectedDmPeer] = [];
-                const timeStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-                const dmMsgId = `dm-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
                 dmThreads[selectedDmPeer].push({
-                    id: dmMsgId,
+                    id: msgId,
                     sender: activeUsername,
                     text: txt,
-                    time: timeStr
+                    time: nowTime
                 });
                 roomCtxManager.appendMessageToContext({ type: 'dm', targetUser: selectedDmPeer }, {
-                    id: dmMsgId,
+                    id: msgId,
                     author: activeUsername,
                     text: txt,
-                    timestamp: timeStr
+                    timestamp: nowTime
                 });
-                const sentViaWs = roomCtxManager.sendToContext({ type: 'dm', targetUser: selectedDmPeer }, {
+                roomCtxManager.sendToContext({ type: 'dm', targetUser: selectedDmPeer }, {
                     type: 'dm_message',
-                    id: dmMsgId,
+                    id: msgId,
                     recipient: selectedDmPeer,
                     message: txt,
                     username: activeUsername
                 });
-                if (!sentViaWs) {
-                    apiRequestJson('/api/dm/send/', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ recipient: selectedDmPeer, message: txt })
-                    }).catch(() => {});
-                }
-                dmRightInputEl.value = '';
+                dmRightInput.value = '';
                 renderDmMessagesList(selectedDmPeer);
                 renderDmSplitPane(dmSearchInp ? dmSearchInp.value : '');
             }
 
-            if (dmRightSendBtn) dmRightSendBtn.addEventListener('click', sendDmSplitMessage);
-            if (dmRightInputEl) {
-                dmRightInputEl.addEventListener('keydown', (e) => {
-                    if (e.key === 'Enter') {
-                        e.preventDefault();
-                        sendDmSplitMessage();
-                    }
-                });
-            }
-            if (dmRightCallBtn) {
-                dmRightCallBtn.addEventListener('click', () => {
-                    if (selectedDmPeer) startVoiceCall(selectedDmPeer);
-                    else showKiwiToast('Selecione um contato para iniciar uma chamada.');
-                });
-            }
-            if (dmRightInfoBtn) {
-                dmRightInfoBtn.addEventListener('click', () => {
-                    if (selectedDmPeer) window.openFullProfilePage(selectedDmPeer);
-                });
-            }
+            if (dmRightSendBtn) dmRightSendBtn.addEventListener('click', sendDmFromSplitBar);
+            if (dmRightInput) dmRightInput.addEventListener('keyup', (e) => { if (e.key === 'Enter') sendDmFromSplitBar(); });
             if (dmEmptyLaterBtn) {
-                dmEmptyLaterBtn.addEventListener('click', () => switchToGeral());
+                dmEmptyLaterBtn.addEventListener('click', () => {
+                    selectedDmPeer = null;
+                    renderDmMessagesList(null);
+                });
             }
             if (dmEmptyCodeBtn) {
                 dmEmptyCodeBtn.addEventListener('click', () => {
-                    const firstContact = (friendsList && friendsList[0]) || (exploreAccountsList[0] && exploreAccountsList[0].username);
+                    const firstContact = friendsList.find(f => !isRemovedFakeAccount(f));
                     if (firstContact) openDmPeerThread(firstContact);
-                    else showKiwiToast('Adicione um amigo para iniciar uma conversa.');
+                    else openAddFriendModalWithFocus();
                 });
             }
 
-            function renderDmSplitPane(filterQuery = '') {
-                const q = (filterQuery || '').trim().toLowerCase();
-                if (dmConversationsListEl) {
-                    dmConversationsListEl.innerHTML = '';
-                    const convUsers = Array.from(new Set([
-                        ...friendsList.filter(f => !isRemovedFakeAccount(f)),
-                        ...Object.keys(dmThreads).filter(u => !isRemovedFakeAccount(u))
-                    ])).filter(u => !q || u.toLowerCase().includes(q));
+            function renderDmSplitPane(filterText = '') {
+                if (!dmConvsList || !dmSuggestedList) return;
+                const q = (filterText || '').trim().toLowerCase();
+                const allContacts = Array.from(new Set(
+                    [...friendsList, ...Object.keys(dmThreads)]
+                        .filter(n => n && n.toLowerCase() !== activeUsername.toLowerCase() && !isRemovedFakeAccount(n))
+                ));
+                const filtered = q ? allContacts.filter(n => n.toLowerCase().includes(q)) : allContacts;
 
-                    if (!convUsers.length) {
-                        dmConversationsListEl.innerHTML = '<div style="padding:10px 14px;font-size:12px;color:var(--kiwi-text-muted);">Nenhuma conversa ativa ainda.</div>';
-                    } else {
-                        convUsers.forEach(uname => {
-                            const row = document.createElement('div');
-                            const isSel = selectedDmPeer && selectedDmPeer.toLowerCase() === uname.toLowerCase();
-                            row.className = 'kiwi-dm-conv-row' + (isSel ? ' active' : '');
-                            const lastMsg = (dmThreads[uname] && dmThreads[uname].length) ? dmThreads[uname][dmThreads[uname].length - 1].text : 'Iniciar conversa';
-                            row.innerHTML = `<div class="social-avatar">${escapeHtmlText(uname.charAt(0).toUpperCase())}</div><div style="min-width:0;flex:1;"><div style="font-size:13px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escapeHtmlText(uname)}</div><div style="font-size:11px;color:var(--kiwi-text-muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escapeHtmlText(lastMsg)}</div></div>`;
-                            row.addEventListener('click', () => openDmPeerThread(uname));
-                            dmConversationsListEl.appendChild(row);
-                        });
-                    }
+                dmConvsList.innerHTML = '';
+                dmSuggestedList.innerHTML = '';
+
+                if (!filtered.length) {
+                    dmConvsList.innerHTML = '<div style="padding:10px 14px;font-size:12px;color:var(--kiwi-text-muted);">Nenhuma conversa encontrada.</div>';
+                    return;
                 }
 
-                if (dmSuggestedListEl) {
-                    dmSuggestedListEl.innerHTML = '';
-                    const suggestions = getExploreAccountsWithAdminPriority()
-                        .map(a => a.username)
-                        .filter(u => u && !isRemovedFakeAccount(u) && u.toLowerCase() !== String(activeUsername || '').toLowerCase() && (!q || u.toLowerCase().includes(q)));
-
-                    if (!suggestions.length) {
-                        dmSuggestedListEl.innerHTML = '<div style="padding:8px 14px;font-size:12px;color:var(--kiwi-text-muted);">Nenhuma sugestão disponível.</div>';
-                    } else {
-                        suggestions.forEach(uname => {
-                            const row = document.createElement('div');
-                            row.className = 'kiwi-dm-conv-row';
-                            row.innerHTML = `<div class="social-avatar">${escapeHtmlText(uname.charAt(0).toUpperCase())}</div><div style="min-width:0;flex:1;"><div style="font-size:13px;font-weight:700;">${escapeHtmlText(uname)}</div><div style="font-size:11px;color:var(--kiwi-text-muted);">@${escapeHtmlText(uname.toLowerCase())}</div></div>`;
-                            row.addEventListener('click', () => openDmPeerThread(uname));
-                            dmSuggestedListEl.appendChild(row);
-                        });
-                    }
-                }
+                filtered.forEach(uname => {
+                    const isSel = selectedDmPeer && selectedDmPeer.toLowerCase() === uname.toLowerCase();
+                    const row = document.createElement('div');
+                    row.className = 'kiwi-dm-contact-row' + (isSel ? ' active' : '');
+                    const av = document.createElement('div');
+                    av.className = 'social-avatar';
+                    av.textContent = uname.charAt(0).toUpperCase();
+                    const msgs = dmThreads[uname] || [];
+                    const lastMsg = msgs.length ? msgs[msgs.length - 1].text : 'Iniciar conversa';
+                    const info = document.createElement('div');
+                    info.style.cssText = 'min-width:0;flex:1;';
+                    info.innerHTML = `<div style="font-size:13px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escapeHtmlText(uname)}</div><div style="font-size:11px;color:var(--kiwi-text-muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escapeHtmlText(lastMsg)}</div>`;
+                    row.appendChild(av);
+                    row.appendChild(info);
+                    row.onclick = () => openDmPeerThread(uname);
+                    dmConvsList.appendChild(row);
+                });
             }
 
             if (dmSearchInp) {
                 dmSearchInp.addEventListener('input', () => renderDmSplitPane(dmSearchInp.value));
             }
 
-            function renderInicioHomeSurface() {
-                saveCurrentChannelSnapshot();
-                currentView = 'inicio';
-                if (headerMainTitle) headerMainTitle.textContent = '🏠 Início';
-                if (headerSubLabel) headerSubLabel.textContent = '| Seu hub e atalhos rápidos';
-                if (backToGeralBtn) backToGeralBtn.classList.add('visible');
-                if (headerCallBtn) headerCallBtn.classList.remove('visible');
-
-                showChatLogSurface(false);
+            function renderInicioHomeFeed() {
                 if (!chatLog) return;
+                const prof = myProfileData;
+                const bannerUrl = resolveBannerUrlForUser(prof.username, prof.bannerUrl);
+                const posts = readStorageJson(USER_POSTS_KEY, []) || [];
+                const validPosts = posts.filter(p => p && !isRemovedFakeAccount(p.author));
 
-                const postsCount = readUserPostsFromStorage().length;
-                const resolvedBanner = resolveBannerUrlForUser(activeUsername, myProfileData.bannerUrl);
-                const bannerStyle = (resolvedBanner && isSafeAssetUrl(resolvedBanner))
-                    ? `background-image:url("${encodeURI(resolvedBanner.trim())}");`
-                    : '';
-
-                const activeEffects = [];
-                if (myProfileData.frameEffect && SHOP_EFFECT_LABELS.frame[myProfileData.frameEffect]) {
-                    activeEffects.push(`Moldura: ${SHOP_EFFECT_LABELS.frame[myProfileData.frameEffect]}`);
-                }
-                if (myProfileData.cardEffect && SHOP_EFFECT_LABELS.card[myProfileData.cardEffect]) {
-                    activeEffects.push(`Cartão: ${SHOP_EFFECT_LABELS.card[myProfileData.cardEffect]}`);
-                }
-                if (myProfileData.nameStyle && SHOP_EFFECT_LABELS.name[myProfileData.nameStyle]) {
-                    activeEffects.push(`Nome: ${SHOP_EFFECT_LABELS.name[myProfileData.nameStyle]}`);
+                let postsHtml = '';
+                if (!validPosts.length) {
+                    postsHtml = `<div style="padding:20px;text-align:center;color:var(--kiwi-text-muted);font-size:13px;">Nenhuma postagem ainda. Clique em <strong>Postar</strong> no menu para publicar a primeira!</div>`;
+                } else {
+                    postsHtml = validPosts.map(p => {
+                        const mediaTag = (p.imageUrl && isSafeAssetUrl(p.imageUrl))
+                            ? `<img src="${encodeURI(p.imageUrl)}" alt="Mídia" class="kiwi-x-post-media">`
+                            : '';
+                        return `
+                            <div class="kiwi-x-post-card" data-post-id="${escapeHtmlText(p.id || '')}">
+                                <div class="kiwi-x-post-avatar">${escapeHtmlText((p.author || activeUsername).charAt(0).toUpperCase())}</div>
+                                <div class="kiwi-x-post-body">
+                                    <div class="kiwi-x-post-header">
+                                        <span class="kiwi-x-post-author">${escapeHtmlText(p.author || activeUsername)}</span>
+                                        <span class="kiwi-x-post-handle">${escapeHtmlText(p.handle || '@' + String(p.author || activeUsername).toLowerCase())} • ${escapeHtmlText(p.time || 'Agora')}</span>
+                                    </div>
+                                    <div class="kiwi-x-post-text">${escapeHtmlText(p.text || '')}</div>
+                                    ${mediaTag}
+                                </div>
+                            </div>
+                        `;
+                    }).join('');
                 }
 
                 chatLog.innerHTML = `
                     <div class="kiwi-home-profile-wrap">
                         <div class="kiwi-home-profile-card" id="home-open-profile-card">
-                            <div class="kiwi-home-profile-banner" style="${bannerStyle}"></div>
+                            <div class="kiwi-home-profile-banner" style="${bannerUrl ? `background-image:url('${encodeURI(bannerUrl)}');` : ''}"></div>
                             <div class="kiwi-home-profile-body">
                                 <div class="kiwi-home-profile-top">
-                                    <div class="kiwi-home-profile-avatar" id="home-card-avatar">${escapeHtmlText((activeUsername || 'A').charAt(0).toUpperCase())}</div>
-                                    <div style="display:flex;gap:8px;flex-wrap:wrap;">
-                                        <a href="/loja/" class="kiwi-shop-connect-btn" onclick="event.stopPropagation();">🛍️ Loja de Efeitos</a>
-                                        <button type="button" class="section-mini-action-btn" id="home-edit-profile-btn">✏️ Editar Perfil</button>
-                                    </div>
+                                    <div class="kiwi-home-profile-avatar" id="home-card-avatar">${escapeHtmlText((prof.username || activeUsername).charAt(0).toUpperCase())}</div>
+                                    <button type="button" class="section-mini-action-btn" id="home-edit-btn">✏️ Editar Perfil</button>
                                 </div>
-                                <div style="font-size:17px;font-weight:900;">${escapeHtmlText(activeUsername)} <span style="font-size:12px;font-weight:600;color:var(--kiwi-text-muted);">@${escapeHtmlText(String(activeUsername || '').toLowerCase())}</span></div>
-                                <div style="font-size:13px;color:var(--kiwi-text-muted);margin-top:4px;">${escapeHtmlText(myProfileData.bio || 'Perfil estético ativo no Kiwi Chat.')}</div>
-                                <div style="display:flex;gap:14px;margin-top:10px;font-size:12px;color:var(--kiwi-text-muted);font-weight:700;">
-                                    <span><strong>${postsCount}</strong> Posts</span>
-                                    <span><strong>${followingList.length}</strong> Seguindo</span>
-                                    <span><strong>${followersList.length}</strong> Seguidores</span>
-                                </div>
-                                <div style="margin-top:10px;font-size:11.5px;color:#c084fc;font-weight:700;">
-                                    ${activeEffects.length ? '✨ Ativos: ' + escapeHtmlText(activeEffects.join(' • ')) : '✨ Nenhum efeito da loja equipado ainda'}
-                                </div>
+                                <div style="font-size:16px;font-weight:800;">${escapeHtmlText(prof.username || activeUsername)}</div>
+                                <div style="font-size:12px;color:var(--kiwi-text-muted);margin-top:2px;">${escapeHtmlText(prof.bubble || 'Online')} • ${escapeHtmlText(prof.pronouns || '')}</div>
                             </div>
                         </div>
-                        <div style="display:flex;gap:10px;flex-wrap:wrap;">
-                            <button type="button" class="kiwi-x-follow-pill" id="home-go-geral-btn">💬 Ir para # geral</button>
-                            <button type="button" class="kiwi-x-follow-pill" id="home-go-dm-btn">✉️ Abrir Bate-papo</button>
-                            <button type="button" class="kiwi-x-follow-pill" id="home-go-post-btn">✏️ Nova Postagem</button>
-                            <a href="/loja/" class="kiwi-shop-connect-btn">🛍️ Ir para Loja</a>
-                        </div>
+                        <div id="home-posts-container">${postsHtml}</div>
                     </div>
                 `;
 
-                const homeAvEl = document.getElementById('home-card-avatar');
-                if (homeAvEl) {
-                    setAvatarStyle(homeAvEl, myProfileData.avatarUrl, activeUsername);
-                    if (myProfileData.frameEffect && SHOP_EFFECT_LABELS.frame[myProfileData.frameEffect]) {
-                        homeAvEl.classList.add(`kiwi-frame-${myProfileData.frameEffect}`);
-                    }
-                }
+                const homeCardAv = document.getElementById('home-card-avatar');
+                if (homeCardAv) setAvatarStyle(homeCardAv, prof.avatarUrl, prof.username || activeUsername);
+
                 const homeCard = document.getElementById('home-open-profile-card');
-                if (homeCard) homeCard.addEventListener('click', () => activateNavTab('perfil'));
-                const homeEditBtn = document.getElementById('home-edit-profile-btn');
+                if (homeCard) homeCard.onclick = () => activateNavTab('perfil');
+
+                const homeEditBtn = document.getElementById('home-edit-btn');
                 if (homeEditBtn) {
-                    homeEditBtn.addEventListener('click', (ev) => {
+                    homeEditBtn.onclick = (ev) => {
                         ev.stopPropagation();
                         switchToEditBtn.click();
-                    });
+                    };
                 }
-                const gBtn = document.getElementById('home-go-geral-btn');
-                if (gBtn) gBtn.addEventListener('click', () => switchToGeral());
-                const dBtn = document.getElementById('home-go-dm-btn');
-                if (dBtn) dBtn.addEventListener('click', () => activateNavTab('mensagens'));
-                const pBtn = document.getElementById('home-go-post-btn');
-                if (pBtn && createPostModal) pBtn.addEventListener('click', () => openModalAnimated(createPostModal));
-                openMobileChatView();
-            }
 
-            function renderExplorarSurface() {
-                saveCurrentChannelSnapshot();
-                currentView = 'explorar';
-                if (headerMainTitle) headerMainTitle.textContent = '🔍 Explorar';
-                if (headerSubLabel) headerSubLabel.textContent = '| Buscar pessoas e perfis';
-                if (backToGeralBtn) backToGeralBtn.classList.add('visible');
-                if (headerCallBtn) headerCallBtn.classList.remove('visible');
+                chatLog.querySelectorAll('.kiwi-x-post-card[data-post-id]').forEach(cardEl => {
+                    const pid = cardEl.getAttribute('data-post-id');
+                    const foundPost = validPosts.find(item => String(item.id) === String(pid));
+                    if (foundPost) {
+                        cardEl.onclick = () => openPostDetailTab(foundPost);
+                    }
+                });
 
                 showChatLogSurface(false);
+            }
+
+            function renderExplorarAccounts(query = '') {
                 if (!chatLog) return;
+                const q = (query || '').trim().toLowerCase();
+                const allAccs = getExploreAccountsWithAdminPriority();
+                const filtered = q
+                    ? allAccs.filter(a =>
+                        String(a.username || '').toLowerCase().includes(q) ||
+                        String(a.handle || '').toLowerCase().includes(q) ||
+                        String(a.bio || '').toLowerCase().includes(q)
+                    )
+                    : allAccs;
+
+                const listHtml = filtered.length
+                    ? filtered.map(acc => `
+                        <div class="kiwi-x-post-card" data-explore-user="${escapeHtmlText(acc.username)}">
+                            <div class="kiwi-x-post-avatar">${escapeHtmlText((acc.username || 'U').charAt(0).toUpperCase())}</div>
+                            <div class="kiwi-x-post-body">
+                                <div class="kiwi-x-post-header">
+                                    <span class="kiwi-x-post-author">${escapeHtmlText(acc.username)}</span>
+                                    <span class="kiwi-x-post-handle">${escapeHtmlText(acc.handle || '@' + String(acc.username).toLowerCase())}</span>
+                                </div>
+                                <div class="kiwi-x-post-text">${escapeHtmlText(acc.bio || 'Perfil no Kiwi Chat.')}</div>
+                            </div>
+                        </div>
+                    `).join('')
+                    : `<div class="kiwi-search-dropdown-hint">Nenhum perfil encontrado para "${escapeHtmlText(query)}".</div>`;
 
                 chatLog.innerHTML = `
                     <div class="kiwi-explore-shell">
                         <div class="kiwi-search-box-wrap">
                             <div class="kiwi-search-input-row">
                                 <span>🔍</span>
-                                <input type="text" id="kiwi-explore-search-input" class="kiwi-search-input" placeholder="Buscar pessoas, perfis ou @usuário..." autocomplete="off">
-                            </div>
-                            <div id="kiwi-explore-search-hint" class="kiwi-search-dropdown-hint">
-                                Digite para buscar uma pessoa ou perfil no Kiwi Chat.
+                                <input type="text" id="kiwi-explore-search-input" class="kiwi-search-input" value="${escapeHtmlText(query)}" placeholder="Buscar perfis ou posts no Kiwi...">
                             </div>
                         </div>
+                        <div id="kiwi-explore-results-wrap">${listHtml}</div>
                     </div>
                 `;
 
-                const exploreInp = document.getElementById('kiwi-explore-search-input');
-                const exploreHint = document.getElementById('kiwi-explore-search-hint');
-
-                function renderExploreMatches(queryStr) {
-                    const q = (queryStr || '').trim().toLowerCase().replace(/^@+/, '');
-                    if (!exploreHint) return;
-                    if (!q) {
-                        exploreHint.textContent = 'Digite para buscar uma pessoa ou perfil no Kiwi Chat.';
-                        return;
-                    }
-                    const matches = getExploreAccountsWithAdminPriority().filter(acc => {
-                        const uname = String(acc.username || '').toLowerCase();
-                        const bio = String(acc.bio || '').toLowerCase();
-                        return uname.includes(q) || bio.includes(q);
-                    });
-                    if (!matches.length) {
-                        exploreHint.textContent = `Nenhum perfil encontrado para "${queryStr}".`;
-                        return;
-                    }
-                    exploreHint.innerHTML = '';
-                    matches.forEach(acc => {
-                        const row = document.createElement('div');
-                        row.className = 'kiwi-dm-conv-row';
-                        row.style.textAlign = 'left';
-                        row.innerHTML = `
-                            <div class="social-avatar">${escapeHtmlText((acc.username || 'U').charAt(0).toUpperCase())}</div>
-                            <div style="min-width:0;flex:1;">
-                                <div style="font-size:13px;font-weight:800;color:var(--kiwi-text-primary);">${escapeHtmlText(acc.username)}</div>
-                                <div style="font-size:11.5px;color:var(--kiwi-text-muted);">@${escapeHtmlText(String(acc.username || '').toLowerCase())}</div>
-                            </div>
-                            <span class="section-mini-action-btn">Ver perfil</span>
-                        `;
-                        row.addEventListener('click', () => window.openFullProfilePage(acc.username));
-                        exploreHint.appendChild(row);
-                    });
+                const searchInp = document.getElementById('kiwi-explore-search-input');
+                if (searchInp) {
+                    searchInp.addEventListener('input', () => renderExplorarAccounts(searchInp.value));
                 }
 
-                if (exploreInp) {
-                    exploreInp.addEventListener('input', () => renderExploreMatches(exploreInp.value));
-                    setTimeout(() => exploreInp.focus(), 50);
-                }
-                openMobileChatView();
-            }
-
-            function renderNotificacoesSurface() {
-                saveCurrentChannelSnapshot();
-                currentView = 'notificacoes';
-                if (headerMainTitle) headerMainTitle.textContent = '🔔 Notificações';
-                if (headerSubLabel) headerSubLabel.textContent = '| Atividade e pedidos';
-                if (backToGeralBtn) backToGeralBtn.classList.add('visible');
-                if (headerCallBtn) headerCallBtn.classList.remove('visible');
-
-                showChatLogSurface(false);
-                if (!chatLog) return;
-
-                const reqs = (readStorageJson(REQUESTS_STORAGE_KEY, []) || []).filter(
-                    item => !isRemovedFakeAccount(typeof item === 'string' ? item : (item && (item.from || item.username)))
-                );
-                const badgeEl = document.getElementById('nav-notif-badge');
-                if (badgeEl) badgeEl.textContent = String(reqs.length);
-
-                chatLog.innerHTML = '<div class="kiwi-home-profile-wrap" id="kiwi-notif-feed-box"></div>';
-                const box = document.getElementById('kiwi-notif-feed-box');
-                if (!box) return;
-
-                if (!reqs.length) {
-                    box.innerHTML = '<div style="padding:28px;text-align:center;color:var(--kiwi-text-muted);font-size:13px;">Nenhuma notificação nova no momento.</div>';
-                    openMobileChatView();
-                    return;
-                }
-
-                reqs.forEach((rItem) => {
-                    const sender = typeof rItem === 'string' ? rItem : (rItem && (rItem.from || rItem.username));
-                    if (!sender) return;
-                    const card = document.createElement('div');
-                    card.className = 'friend-req-card';
-                    card.innerHTML = `<span style="font-size:13px;font-weight:700;">🔔 ${escapeHtmlText(sender)} enviou um pedido de amizade</span>`;
-                    const openBtn = document.createElement('button');
-                    openBtn.type = 'button';
-                    openBtn.className = 'dm-quick-btn';
-                    openBtn.textContent = 'Abrir Caixa';
-                    openBtn.addEventListener('click', () => {
-                        openModalAnimated(mailboxModal);
-                        fetchFriendRequests();
-                    });
-                    card.appendChild(openBtn);
-                    box.appendChild(card);
+                chatLog.querySelectorAll('.kiwi-x-post-card[data-explore-user]').forEach(rowEl => {
+                    const uname = rowEl.getAttribute('data-explore-user');
+                    if (uname) rowEl.onclick = () => window.openUserProfile(uname);
                 });
-                openMobileChatView();
-            }
-
-            function renderListasSurface() {
-                saveCurrentChannelSnapshot();
-                currentView = 'listas';
-                if (headerMainTitle) headerMainTitle.textContent = '📋 Listas';
-                if (headerSubLabel) headerSubLabel.textContent = '| Amigos e conexões';
-                if (backToGeralBtn) backToGeralBtn.classList.add('visible');
-                if (headerCallBtn) headerCallBtn.classList.remove('visible');
 
                 showChatLogSurface(false);
-                if (!chatLog) return;
-
-                chatLog.innerHTML = '<div class="kiwi-home-profile-wrap" id="kiwi-listas-box"></div>';
-                const box = document.getElementById('kiwi-listas-box');
-                if (!box) return;
-
-                const title = document.createElement('div');
-                title.style.cssText = 'font-size:14px;font-weight:800;';
-                title.textContent = `Meus Amigos (${friendsList.length})`;
-                box.appendChild(title);
-
-                if (!friendsList.length) {
-                    const empty = document.createElement('div');
-                    empty.style.cssText = 'padding:20px;color:var(--kiwi-text-muted);font-size:13px;';
-                    empty.textContent = 'Você ainda não adicionou amigos na sua lista.';
-                    box.appendChild(empty);
-                } else {
-                    friendsList.forEach(fname => {
-                        const row = document.createElement('div');
-                        row.className = 'friend-req-card';
-                        row.innerHTML = `<span style="font-size:13px;font-weight:700;">👤 ${escapeHtmlText(fname)}</span>`;
-                        const dmAction = document.createElement('button');
-                        dmAction.type = 'button';
-                        dmAction.className = 'dm-quick-btn';
-                        dmAction.textContent = 'Conversar';
-                        dmAction.addEventListener('click', () => window.openPrivateChat(fname));
-                        row.appendChild(dmAction);
-                        box.appendChild(row);
-                    });
-                }
-                openMobileChatView();
             }
 
-            function renderMaisSurface() {
-                saveCurrentChannelSnapshot();
-                currentView = 'mais';
-                if (headerMainTitle) headerMainTitle.textContent = '••• Mais';
-                if (headerSubLabel) headerSubLabel.textContent = '| Opções rápidas do Kiwi';
-                if (backToGeralBtn) backToGeralBtn.classList.add('visible');
-                if (headerCallBtn) headerCallBtn.classList.remove('visible');
-
-                showChatLogSurface(false);
+            function renderNotificacoesTab() {
                 if (!chatLog) return;
+                const reqs = (readStorageJson(REQUESTS_STORAGE_KEY, []) || []).filter(
+                    r => !isRemovedFakeAccount(typeof r === 'string' ? r : (r && (r.from || r.username)))
+                );
+                const badge = document.getElementById('nav-notif-badge');
+                if (badge) badge.textContent = String(reqs.length);
 
                 chatLog.innerHTML = `
-                    <div class="kiwi-home-profile-wrap">
-                        <div class="kiwi-home-profile-card" style="padding:18px;cursor:default;">
-                            <div style="font-size:15px;font-weight:900;margin-bottom:10px;">Ações e Personalização</div>
-                            <div style="display:flex;flex-direction:column;gap:10px;">
-                                <a href="/loja/" class="kiwi-shop-connect-btn" style="justify-content:center;padding:10px 14px;">🛍️ Abrir Loja de Efeitos (Molduras, Cartões e Nomes)</a>
-                                <button type="button" class="btn-aesthetic-edit" id="mais-open-edit-btn">✏️ Editar Perfil Estético</button>
-                                <button type="button" class="btn-aesthetic-edit" style="background:var(--kiwi-bg-elevated);color:var(--kiwi-text-primary);border:1px solid var(--kiwi-border);" id="mais-open-theme-btn">🎨 Temas e Cores</button>
-                                <button type="button" class="btn-aesthetic-edit" style="background:var(--kiwi-bg-elevated);color:var(--kiwi-text-primary);border:1px solid var(--kiwi-border);" id="mais-open-server-btn">+ Criar Novo Servidor</button>
-                            </div>
+                    <div style="padding:18px 20px;display:flex;flex-direction:column;gap:12px;">
+                        <h3 style="margin:0;font-size:16px;">🔔 Notificações</h3>
+                        ${reqs.length ? reqs.map(r => {
+                            const sender = typeof r === 'string' ? r : (r.from || r.username || 'Usuário');
+                            return `<div class="friend-req-card"><span><strong>${escapeHtmlText(sender)}</strong> enviou um pedido de amizade.</span><button type="button" class="dm-quick-btn" onclick="document.getElementById('mailbox-btn').click()">Ver na Caixa</button></div>`;
+                        }).join('') : '<div style="font-size:13px;color:var(--kiwi-text-muted);">Nenhuma notificação nova no momento.</div>'}
+                    </div>
+                `;
+                showChatLogSurface(false);
+            }
+
+            function renderListasTab() {
+                if (!chatLog) return;
+                chatLog.innerHTML = `
+                    <div style="padding:18px 20px;display:flex;flex-direction:column;gap:12px;">
+                        <h3 style="margin:0;font-size:16px;">📋 Suas Listas</h3>
+                        <div style="background:var(--kiwi-bg-card);border:1px solid var(--kiwi-border);border-radius:14px;padding:14px;font-size:13px;">
+                            <div><strong>Amigos:</strong> ${friendsList.length}</div>
+                            <div style="margin-top:6px;"><strong>Seguindo:</strong> ${followingList.length}</div>
+                            <div style="margin-top:6px;"><strong>Seguidores:</strong> ${followersList.length}</div>
                         </div>
                     </div>
                 `;
-
-                const eBtn = document.getElementById('mais-open-edit-btn');
-                if (eBtn) eBtn.addEventListener('click', () => switchToEditBtn.click());
-                const tBtn = document.getElementById('mais-open-theme-btn');
-                if (tBtn && settingsColorsModal) tBtn.addEventListener('click', () => openModalAnimated(settingsColorsModal));
-                const sBtn = document.getElementById('mais-open-server-btn');
-                if (sBtn && createServerModal) sBtn.addEventListener('click', () => openModalAnimated(createServerModal));
-                openMobileChatView();
+                showChatLogSurface(false);
             }
+
+            function renderMaisTab() {
+                if (!chatLog) return;
+                chatLog.innerHTML = `
+                    <div style="padding:18px 20px;display:flex;flex-direction:column;gap:12px;">
+                        <h3 style="margin:0;font-size:16px;">••• Mais Opções</h3>
+                        <div style="display:flex;flex-wrap:wrap;gap:10px;">
+                            <button type="button" class="section-mini-action-btn" id="mais-abrir-loja-btn" style="padding:8px 14px;font-size:13px;">🛍️ Abrir Loja Kiwi</button>
+                            <button type="button" class="section-mini-action-btn" id="mais-abrir-cores-btn" style="padding:8px 14px;font-size:13px;">⚙️ Definições &amp; Cores</button>
+                            <button type="button" class="section-mini-action-btn" id="mais-novo-amigo-btn" style="padding:8px 14px;font-size:13px;">+ Adicionar Amigo</button>
+                        </div>
+                    </div>
+                `;
+                const lojaBtn = document.getElementById('mais-abrir-loja-btn');
+                const coresBtn = document.getElementById('mais-abrir-cores-btn');
+                const amigoBtn = document.getElementById('mais-novo-amigo-btn');
+                if (lojaBtn) lojaBtn.onclick = () => { window.location.href = '/loja/'; };
+                if (coresBtn && settingsColorsModal) coresBtn.onclick = () => openModalAnimated(settingsColorsModal);
+                if (amigoBtn) amigoBtn.onclick = openAddFriendModalWithFocus;
+                showChatLogSurface(false);
+            }
+
+            const mainNavItems = document.querySelectorAll('#kiwi-main-nav-list .kiwi-nav-item[data-nav-tab]');
 
             function activateNavTab(tabName) {
-                const targetTab = tabName || 'perfil';
-                navItems.forEach(item => {
-                    item.classList.toggle('active', item.getAttribute('data-nav-tab') === targetTab);
+                if (!tabName) return;
+                saveCurrentChannelSnapshot();
+                mainNavItems.forEach(item => {
+                    item.classList.toggle('active', item.getAttribute('data-nav-tab') === tabName);
                 });
-                document.querySelectorAll('.kiwi-mobile-bottom-pill button').forEach(btn => {
-                    const mTab = btn.getAttribute('data-mobile-nav');
-                    if (mTab) btn.classList.toggle('active', mTab === targetTab);
-                });
+                backToGeralBtn.classList.add('visible');
+                headerCallBtn.classList.remove('visible');
 
-                if (targetTab === 'perfil') {
+                if (tabName === 'perfil') {
                     inspectedTimelineUser = null;
                     currentView = 'perfil';
-                    if (headerMainTitle) headerMainTitle.textContent = `👤 ${activeUsername}`;
-                    if (headerSubLabel) headerSubLabel.textContent = '| Perfil';
-                    if (backToGeralBtn) backToGeralBtn.classList.add('visible');
-                    if (headerCallBtn) headerCallBtn.classList.remove('visible');
+                    headerMainTitle.textContent = `👤 ${activeUsername}`;
+                    headerSubLabel.textContent = '| Perfil';
                     syncXProfileHeader();
                     showProfileTimelineSurface();
-                    openMobileChatView();
-                    triggerChatAreaTransition();
-                } else if (targetTab === 'mensagens') {
+                } else if (tabName === 'inicio') {
+                    currentView = 'inicio';
+                    headerMainTitle.textContent = '🏠 Início';
+                    headerSubLabel.textContent = '| Feed e Perfil';
+                    renderInicioHomeFeed();
+                } else if (tabName === 'explorar') {
+                    currentView = 'explorar';
+                    headerMainTitle.textContent = '🔍 Explorar';
+                    headerSubLabel.textContent = '| Descobrir perfis';
+                    renderExplorarAccounts();
+                } else if (tabName === 'notificacoes') {
+                    currentView = 'notificacoes';
+                    headerMainTitle.textContent = '🔔 Notificações';
+                    headerSubLabel.textContent = '| Atividades';
+                    renderNotificacoesTab();
+                } else if (tabName === 'mensagens') {
                     currentView = 'dm';
-                    if (headerMainTitle) headerMainTitle.textContent = '✉️ Bate-papo';
-                    if (headerSubLabel) headerSubLabel.textContent = '| Mensagens privadas';
-                    if (backToGeralBtn) backToGeralBtn.classList.add('visible');
-                    if (headerCallBtn) headerCallBtn.classList.remove('visible');
+                    headerMainTitle.textContent = '✉️ Mensagens';
+                    headerSubLabel.textContent = '| Bate-papo direto';
                     showDmSplitSurface();
-                    openMobileChatView();
-                    triggerChatAreaTransition();
-                } else if (targetTab === 'inicio') {
-                    renderInicioHomeSurface();
-                } else if (targetTab === 'explorar') {
-                    renderExplorarSurface();
-                } else if (targetTab === 'notificacoes') {
-                    renderNotificacoesSurface();
-                } else if (targetTab === 'listas') {
-                    renderListasSurface();
-                } else if (targetTab === 'mais') {
-                    renderMaisSurface();
+                } else if (tabName === 'listas') {
+                    currentView = 'listas';
+                    headerMainTitle.textContent = '📋 Listas';
+                    headerSubLabel.textContent = '| Conexões';
+                    renderListasTab();
+                } else if (tabName === 'mais') {
+                    currentView = 'mais';
+                    headerMainTitle.textContent = '••• Mais';
+                    headerSubLabel.textContent = '| Opções';
+                    renderMaisTab();
                 }
+
+                openMobileChatView();
+                triggerChatAreaTransition();
             }
 
-            navItems.forEach(item => {
+            mainNavItems.forEach(item => {
                 item.addEventListener('click', () => {
                     const tabName = item.getAttribute('data-nav-tab');
                     activateNavTab(tabName);
                 });
             });
 
-            const mobileBottomBar = document.createElement('nav');
-            mobileBottomBar.className = 'kiwi-mobile-bottom-pill';
-            mobileBottomBar.setAttribute('aria-label', 'Navegação inferior');
-            mobileBottomBar.innerHTML = `
-                <button type="button" data-mobile-nav="inicio" title="Início">
-                    <span>🏠</span>
-                    <span>Início</span>
-                </button>
-                <button type="button" data-mobile-nav="explorar" title="Explorar">
-                    <span>🔍</span>
-                    <span>Explorar</span>
-                </button>
-                <button type="button" data-mobile-nav="mensagens" title="Mensagens">
-                    <span>✉️</span>
-                    <span>Mensagens</span>
-                </button>
-                <button type="button" data-mobile-nav="perfil" title="Perfil">
-                    <span>👤</span>
-                    <span>Perfil</span>
-                </button>
-            `;
-            document.body.appendChild(mobileBottomBar);
-
-            mobileBottomBar.querySelectorAll('button[data-mobile-nav]').forEach(btn => {
-                btn.addEventListener('click', () => {
-                    const dest = btn.getAttribute('data-mobile-nav');
-                    if (dest) activateNavTab(dest);
-                });
-            });
-
             renderChannelsListForServer('home', 'geral');
-            renderSidebarSavedFriends();
-            fetchOnlineUsers();
-            syncFollowerCountsUi();
-            activateNavTab('perfil');
+            syncXProfileHeader();
+            showProfileTimelineSurface();
+            if (headerMainTitle) headerMainTitle.textContent = `👤 ${activeUsername}`;
+            if (headerSubLabel) headerSubLabel.textContent = '| Perfil';
+            if (backToGeralBtn) backToGeralBtn.classList.add('visible');
 
-            window.addEventListener('resize', () => {
-                if (window.innerWidth > 768) {
-                    document.body.classList.remove('mobile-chat-open');
+            chatLog.addEventListener('click', (e) => {
+                const target = e.target;
+                if (!(target instanceof Element)) return;
+
+                const reactionChip = target.closest('.msg-reaction-chip');
+                if (reactionChip) {
+                    const group = reactionChip.closest('.message-group');
+                    const emoji = reactionChip.getAttribute('data-emoji');
+                    if (group && emoji) toggleMessageReaction(group, emoji);
+                    return;
+                }
+
+                const reactBtn = target.closest('[data-react-emoji]');
+                if (reactBtn) {
+                    const group = reactBtn.closest('.message-group');
+                    const emoji = reactBtn.getAttribute('data-react-emoji');
+                    if (group && emoji) {
+                        toggleMessageReaction(group, emoji);
+                        closeAllMessagePopovers();
+                    }
+                    return;
+                }
+
+                const pickerToggle = target.closest('[data-toggle-picker]');
+                if (pickerToggle) {
+                    const group = pickerToggle.closest('.message-group');
+                    const picker = group && group.querySelector('.msg-emoji-picker');
+                    if (picker) {
+                        const wasOpen = picker.classList.contains('open');
+                        closeAllMessagePopovers();
+                        if (!wasOpen) {
+                            picker.classList.add('open');
+                            if (group) group.classList.add('menu-open');
+                        }
+                    }
+                    return;
+                }
+
+                const moreToggle = target.closest('[data-toggle-more]');
+                if (moreToggle) {
+                    const group = moreToggle.closest('.message-group');
+                    const popover = group && group.querySelector('.msg-more-popover');
+                    if (popover) {
+                        const wasOpen = popover.classList.contains('open');
+                        closeAllMessagePopovers();
+                        if (!wasOpen) {
+                            popover.classList.add('open');
+                            if (group) group.classList.add('menu-open');
+                        }
+                    }
+                    return;
+                }
+
+                const replyBtn = target.closest('[data-reply-msg]');
+                if (replyBtn) {
+                    const group = replyBtn.closest('.message-group');
+                    const author = (group && group.querySelector('.username') && group.querySelector('.username').textContent) || 'Usuário';
+                    if (messageInput) {
+                        messageInput.value = `@${author} ${messageInput.value}`.trimStart();
+                        messageInput.focus();
+                    }
+                    closeAllMessagePopovers();
+                    return;
+                }
+
+                const copyBtn = target.closest('[data-copy-msg]');
+                if (copyBtn) {
+                    const group = copyBtn.closest('.message-group');
+                    const txt = (group && group.querySelector('.message-text') && group.querySelector('.message-text').textContent) || '';
+                    if (txt && navigator.clipboard) {
+                        navigator.clipboard.writeText(txt).catch(() => {});
+                        showKiwiToast('Texto copiado!');
+                    }
+                    closeAllMessagePopovers();
+                    return;
+                }
+
+                const delBtn = target.closest('[data-delete-id], [data-delete-dm-id]');
+                if (delBtn) {
+                    const group = delBtn.closest('.message-group');
+                    const msgId = delBtn.getAttribute('data-delete-id');
+                    const dmId = delBtn.getAttribute('data-delete-dm-id');
+                    if (group) group.remove();
+                    if (msgId && roomCtxManager) {
+                        roomCtxManager.removeMessageFromContext(getActiveSignalContextMeta(), msgId);
+                        roomCtxManager.sendToContext(getActiveSignalContextMeta(), {
+                            type: 'delete_message',
+                            message_id: msgId
+                        });
+                    }
+                    if (dmId && selectedDmPeer && dmThreads[selectedDmPeer]) {
+                        dmThreads[selectedDmPeer] = dmThreads[selectedDmPeer].filter(m => String(m.id) !== String(dmId));
+                    }
+                    if (currentView === 'geral') saveCurrentChannelSnapshot();
+                    closeAllMessagePopovers();
+                    showKiwiToast('Mensagem excluída.');
+                    return;
+                }
+
+                const avatarOrUser = target.closest('.avatar, .username');
+                if (avatarOrUser) {
+                    const group = avatarOrUser.closest('.message-group');
+                    const uText = (group && group.querySelector('.username') && group.querySelector('.username').textContent) || '';
+                    if (uText && uText !== 'Sistema Kiwi') openUserProfile(uText);
                 }
             });
+
+            document.addEventListener('click', (e) => {
+                if (!(e.target instanceof Element)) return;
+                if (!e.target.closest('.msg-hover-toolbar, .msg-emoji-picker, .msg-more-popover')) {
+                    closeAllMessagePopovers();
+                }
+            });
+
+            fetchOnlineUsers();
+            renderDmTabs();
         });
+    </script>
+
+    <script>
+        (function() {
+            const mobileNavPill = document.getElementById('kiwi-mobile-bottom-pill');
+            const mBtnListas = document.getElementById('m-pill-listas');
+            const mBtnMensagens = document.getElementById('m-pill-mensagens');
+            const mBtnPerfil = document.getElementById('m-pill-perfil');
+
+            function syncMobilePillActiveState() {
+                if (!mobileNavPill) return;
+                const isChatOpen = document.body.classList.contains('mobile-chat-open');
+                const activeLeftTab = document.querySelector('#kiwi-main-nav-list .kiwi-nav-item.active');
+                const tabName = activeLeftTab ? activeLeftTab.getAttribute('data-nav-tab') : '';
+
+                if (mBtnListas) mBtnListas.classList.toggle('active', !isChatOpen);
+                if (mBtnMensagens) mBtnMensagens.classList.toggle('active', isChatOpen && tabName === 'mensagens');
+                if (mBtnPerfil) mBtnPerfil.classList.toggle('active', isChatOpen && (!tabName || tabName === 'perfil'));
+            }
+
+            if (mBtnListas) {
+                mBtnListas.addEventListener('click', function() {
+                    if (typeof window.closeMobileChatView === 'function') {
+                        window.closeMobileChatView();
+                    } else {
+                        document.body.classList.remove('mobile-chat-open');
+                    }
+                    syncMobilePillActiveState();
+                });
+            }
+
+            if (mBtnMensagens) {
+                mBtnMensagens.addEventListener('click', function() {
+                    const navMsg = document.getElementById('nav-tab-mensagens');
+                    if (navMsg) {
+                        navMsg.click();
+                    } else if (typeof window.openMobileChatView === 'function') {
+                        window.openMobileChatView();
+                    }
+                    syncMobilePillActiveState();
+                });
+            }
+
+            if (mBtnPerfil) {
+                mBtnPerfil.addEventListener('click', function() {
+                    const navProf = document.getElementById('nav-tab-perfil');
+                    if (navProf) {
+                        navProf.click();
+                    } else if (typeof window.openMobileChatView === 'function') {
+                        window.openMobileChatView();
+                    }
+                    syncMobilePillActiveState();
+                });
+            }
+
+            const bodyObserver = new MutationObserver(syncMobilePillActiveState);
+            bodyObserver.observe(document.body, { attributes: true, attributeFilter: ['class'] });
+
+            const navContainer = document.getElementById('kiwi-main-nav-list');
+            if (navContainer) {
+                const navObserver = new MutationObserver(syncMobilePillActiveState);
+                navObserver.observe(navContainer, { subtree: true, attributes: true, attributeFilter: ['class'] });
+            }
+
+            syncMobilePillActiveState();
+        })();
     </script>
 </body>
 </html>
