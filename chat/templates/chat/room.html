@@ -5322,10 +5322,54 @@ html, body {
                 xFeedList.innerHTML = '';
 
                 if (activeNavTab === 'inicio') {
-                    const box = document.createElement('div');
-                    box.style.cssText = 'padding:18px 20px;display:flex;flex-direction:column;gap:10px;';
-                    box.innerHTML = `<div style="font-size:15px;font-weight:800;">🏠 Início</div><div style="font-size:13px;color:var(--kiwi-text-muted);background:var(--kiwi-bg-card);border:1px solid var(--kiwi-border);border-radius:14px;padding:14px;">Bem-vindo ao Kiwi Chat, <strong>${escapeHtmlText(activeUsername)}</strong>.</div>`;
-                    xFeedList.appendChild(box);
+                    const akiiraSaved = profilesByUsername.get('akiirapw') || loadUserMusicFromLocalCache('AkiiraPW') || {};
+                    const akiiraName = 'AkiiraPW';
+                    const akiiraBio = akiiraSaved.bio || (activeUsername.toLowerCase() === 'akiirapw' ? myProfileData.bio : '') || 'Perfil estético ativo.';
+                    const akiiraAvatar = akiiraSaved.avatarUrl || (activeUsername.toLowerCase() === 'akiirapw' ? myProfileData.avatarUrl : '');
+                    const akiiraBanner = resolveBannerUrlForUser(akiiraName, akiiraSaved.bannerUrl || (activeUsername.toLowerCase() === 'akiirapw' ? myProfileData.bannerUrl : ''));
+
+                    const wrap = document.createElement('div');
+                    wrap.className = 'kiwi-home-profile-wrap';
+
+                    const card = document.createElement('div');
+                    card.className = 'kiwi-home-profile-card';
+                    card.title = 'Abrir perfil de AkiiraPW';
+
+                    const bannerDiv = document.createElement('div');
+                    bannerDiv.className = 'kiwi-home-profile-banner';
+                    if (akiiraBanner) {
+                        bannerDiv.style.backgroundImage = `url("${encodeURI(akiiraBanner)}")`;
+                    }
+
+                    const bodyDiv = document.createElement('div');
+                    bodyDiv.className = 'kiwi-home-profile-body';
+
+                    const topDiv = document.createElement('div');
+                    topDiv.className = 'kiwi-home-profile-top';
+
+                    const avDiv = document.createElement('div');
+                    avDiv.className = 'kiwi-home-profile-avatar';
+                    setAvatarStyle(avDiv, akiiraAvatar, akiiraName);
+
+                    const nameEl = document.createElement('div');
+                    nameEl.style.cssText = 'font-size:17px;font-weight:900;color:var(--kiwi-text-primary);margin-bottom:4px;';
+                    nameEl.textContent = akiiraName;
+
+                    const bioEl = document.createElement('div');
+                    bioEl.style.cssText = 'font-size:13px;color:var(--kiwi-text-secondary);line-height:1.45;';
+                    bioEl.innerHTML = formatSafeBioHtml(akiiraBio);
+
+                    topDiv.appendChild(avDiv);
+                    bodyDiv.appendChild(topDiv);
+                    bodyDiv.appendChild(nameEl);
+                    bodyDiv.appendChild(bioEl);
+
+                    card.appendChild(bannerDiv);
+                    card.appendChild(bodyDiv);
+                    card.addEventListener('click', () => window.openUserProfile(akiiraName));
+
+                    wrap.appendChild(card);
+                    xFeedList.appendChild(wrap);
                     return;
                 }
 
