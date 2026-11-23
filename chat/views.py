@@ -1356,4 +1356,162 @@ def friend_music_feed(request):
         }
         for p in qs
     ]
-    return JsonResponse({"ok": True, "feed": feed})
+
+    EXCLUSIVE_TESTER_USERNAME = "AkiiraPW"
+
+# Catálogo inicial de teste (fácil de trocar ou expandir com URLs de arte depois)
+SHOP_CATALOG = {
+    "crepusculo_berilo": {
+        "id": "crepusculo_berilo",
+        "name": "Crepúsculo (Berilo)",
+        "category": "frame",
+        "slot": "frame_effect",
+        "value": "crepusculo_berilo",
+        "art_url": "",  # Ex.: "/static/img/frames/crepusculo-berilo.png" quando tiver a arte
+        "exclusive_to": EXCLUSIVE_TESTER_USERNAME,
+    },
+    "ondas_lavanda": {
+        "id": "ondas_lavanda",
+        "name": "Ondas Ambientais (Lavanda)",
+        "category": "frame",
+        "slot": "frame_effect",
+        "value": "ondas_lavanda",
+        "art_url": "",
+        "exclusive_to": EXCLUSIVE_TESTER_USERNAME,
+    },
+    "miragem_rosa": {
+        "id": "miragem_rosa",
+        "name": "Miragem",
+        "category": "frame",
+        "slot": "frame_effect",
+        "value": "miragem_rosa",
+        "art_url": "",
+        "exclusive_to": EXCLUSIVE_TESTER_USERNAME,
+    },
+    "sakura_encantada": {
+        "id": "sakura_encantada",
+        "name": "Sakura Encantada",
+        "category": "card_effect",
+        "slot": "card_effect",
+        "value": "sakura_encantada",
+        "art_url": "",
+        "exclusive_to": EXCLUSIVE_TESTER_USERNAME,
+    },
+    "chamas_negras": {
+        "id": "chamas_negras",
+        "name": "Chamas Negras",
+        "category": "card_effect",
+        "slot": "card_effect",
+        "value": "chamas_negras",
+        "art_url": "",
+        "exclusive_to": EXCLUSIVE_TESTER_USERNAME,
+    },
+    "brilho_estelar": {
+        "id": "brilho_estelar",
+        "name": "Brilho Estelar",
+        "category": "card_effect",
+        "slot": "card_effect",
+        "value": "brilho_estelar",
+        "art_url": "",
+        "exclusive_to": EXCLUSIVE_TESTER_USERNAME,
+    },
+    "aura_neon": {
+        "id": "aura_neon",
+        "name": "Neon Kiwi",
+        "category": "name_style",
+        "slot": "name_style",
+        "value": "neon",
+        "art_url": "",
+        "exclusive_to": EXCLUSIVE_TESTER_USERNAME,
+    },
+}
+
+
+def _can_use_exclusive_shop_item(user, item):
+    exclusive_to = (item.get("exclusive_to") or "").strip().lower()
+    if not exclusive_to:
+        return True
+    return bool(user and user.is_authenticated and (user.username or "").strip().lower() == exclusive_to)
+
+
+@login_required
+@require_POST
+def api_shop_equip(request):
+    try:
+        payload = json.loads(request.body.decode("utf-8") or "{}")
+    except Exception:
+        payload = request.POST
+
+    item_id = (payload.get("item_id") or "").strip()
+    item = SHOP_CATALOG.get(item_id)
+    if not item:
+        return JsonResponse({"ok": False, "error": "Item não encontrado."}, status=404)
+
+    if not _can_use_exclusive_shop_item(request.user, item):
+        return JsonResponse(
+            {"ok": False, "error": "Catálogo em preparação para esta conta."},
+            status=403,
+        )
+
+    profile = _get_or_create_profile(request.user)
+    slot = item["slot"]
+    value = item["value"]
+
+    if slot == "frame_effect":
+        profile.frame_effect = value
+        profile.avatar_pulse = True
+    elif slot == "card_effect":
+        # Reaproveita profile_glow e salva o identificador em frame_effect/name_style se não houver coluna card_effect no model
+        profile.profile_glow = True
+        if hasattr(profile, "card_effect"):
+            profile.card_effect = value
+    elif slot == "name_style":
+        profile.name_style = value
+
+    profile.save()
+    return JsonResponse({
+        "ok": True,
+        "equipped": {
+            "item_id": item["id"],
+            "slot": slot,
+            "value": value,
+            "name": item["name"],
+        },
+        "profile": _serialize_profile(request.user, profile),
+    })
+
+
+@login_required
+@require_POST
+def api_shop_unequip(request):
+    try:
+        payload = json.loads(request.body.decode("utf-8") or "{}")
+    except Exception:
+        payload = request.POST
+
+    slot = (payload.get("slot") or "").strip()
+    profile = _get_or_create_profile(request.user)
+
+    if slot == "frame_effect":
+        profile.frame_effect = "none"
+        profile.avatar_pulse = False
+    elif slot == "card_effect":
+        profile.profile_glow = False
+        if hasattr(profile, "card_effect"):
+            profile.card_effect = "none"
+    elif slot == "name_style":
+        profile.name_style = "none"
+    else:
+        profile.frame_effect = "none"
+        profile.profile_glow = False
+        profile.name_style = "none"
+        profile.avatar_pulse = False
+        if hasattr(profile, "card_effect"):
+            profile.card_effect = "none"
+
+    profile.save()
+    return JsonResponse({
+        "ok": True,
+        "slot": slot or "all",
+        "profile": _serialize_profile(request.user, profile),
+    })
