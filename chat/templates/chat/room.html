@@ -3679,21 +3679,10 @@ html, body {
             };
 
             function openAdminProfileGuideDestination() {
-                inspectedTimelineUser = null;
-                currentView = 'perfil';
-                activeXSubtab = 'posts';
                 mainNavItems.forEach(item => {
                     item.classList.toggle('active', item.getAttribute('data-nav-tab') === 'perfil');
                 });
-                xSubtabs.forEach(b => b.classList.toggle('active', b.getAttribute('data-x-subtab') === 'posts'));
-                if (headerMainTitle) headerMainTitle.textContent = `👤 ${ADMIN_GUIDE_USERNAME}`;
-                if (headerSubLabel) headerSubLabel.textContent = '| Perfil do Admin';
-                if (backToGeralBtn) backToGeralBtn.classList.add('visible');
-                syncXProfileHeader();
-                closeFollowersPanelAndShowFeed();
-                showProfileTimelineSurface();
-                openMobileChatView();
-                triggerChatAreaTransition();
+                window.openFullProfilePage(ADMIN_GUIDE_USERNAME);
             }
 
             const settingsColorsModal = document.getElementById('settings-colors-modal');
@@ -4525,6 +4514,7 @@ html, body {
                 }
 
                 showChatLogSurface(true);
+                syncChannelMessagesFromBackend(currentChannelName, currentServerId);
                 openMobileChatView();
                 triggerChatAreaTransition();
             }
@@ -5623,7 +5613,120 @@ html, body {
                 if (dmInputBarEl) dmInputBarEl.style.display = 'flex';
                 renderDmMessagesList(peerName);
                 renderDmSplitPane(dmSearchInp ? dmSearchInp.value : '');
+                syncDmMessagesFromBackend(peerName);
             }
+
+            async function syncChannelMessagesFromBackend(channelName, serverId) {
+             if (window.location.protocol === 'file:') return;
+             const cleanCh = String(channelName || 'geral').trim().toLowerCase();
+             const cleanSrv = String(serverId || 'home').trim();
+             try {
+                 const bootData = await apiRequestJson('/api/bootstrap/');
+                 const servers = Array.isArray(bootData && bootData.servers) ? bootData.servers : [];
+                 let targetChannel = null;
+
+                 for (const srv of servers) {
+                     const chList = Array.isArray(srv.channels) ? srv.channels : [];
+                     const match = chList.find(c => String(c.name || '').trim().toLowerCase() === cleanCh);
+                     if (match && (String(srv.id) === cleanSrv || cleanSrv === 'home' || !/^\d+$/.test(cleanSrv))) {
+                         targetChannel = match;
+                         break;
+                     }
+                     if (match && !targetChannel) {
+                         targetChannel = match;
+                     }
+                 }
+
+                 if (!targetChannel || !targetChannel.id) return;
+                 const msgRes = await apiRequestJson(`/api/channels/${encodeURIComponent(targetChannel.id)}/messages/`);
+                 const remoteMsgs = Array.isArray(msgRes && msgRes.messages) ? msgRes.messages : [];
+                 const ctxMeta = { type: 'channel', serverId: cleanSrv, channelName: cleanCh, channelType: targetChannel.channel_type || 'text' };
+
+                 remoteMsgs.forEach((raw) => {
+                     const author = raw.sender || raw.author || raw.username || 'Usuário';
+                     const text = raw.message || raw.content || raw.text || '';
+                     const attachUrl = raw.attachment_url || raw.attachmentUrl || '';
+                     if (isRemovedFakeAccount(author) || (!text.trim() && !attachUrl.trim())) return;
+
+                     roomCtxManager.appendMessageToContext(ctxMeta, {
+                         id: raw.id,
+                         author,
+                         text,
+                         timestamp: raw.timestamp || raw.time || '',
+                         avatarUrl: raw.avatar_url || raw.avatarUrl || '',
+                         attachmentUrl: attachUrl,
+                         attachmentName: raw.attachment_name || raw.attachmentName || '',
+                         attachmentType: raw.attachment_type || raw.attachmentType || ''
+                     });
+
+                     if (currentView === 'geral' && currentChannelName === cleanCh && String(currentServerId) === cleanSrv) {
+                         appendMessage({
+                             id: raw.id,
+                             sender: author,
+                             message: text,
+                             timestamp: raw.timestamp || raw.time || '',
+                             avatarUrl: raw.avatar_url || raw.avatarUrl || '',
+                             attachmentUrl: attachUrl,
+                             attachmentName: raw.attachment_name || raw.attachmentName || '',
+                             attachmentType: raw.attachment_type || raw.attachmentType || ''
+                         });
+                     }
+                 });
+
+                 if (currentView === 'geral' && currentChannelName === cleanCh && String(currentServerId) === cleanSrv) {
+                     saveCurrentChannelSnapshot();
+                 }
+             } catch (_) {}
+         }
+
+         async function syncDmMessagesFromBackend(peerName) {
+             if (!peerName || window.location.protocol === 'file:') return;
+             try {
+                 const res = await apiRequestJson(`/api/dm/${encodeURIComponent(peerName)}/history/`);
+                 const list = Array.isArray(res && res.messages) ? res.messages : [];
+                 if (!dmThreads[peerName]) dmThreads[peerName] = [];
+                 list.forEach((raw) => {
+                     const sender = raw.sender || raw.author || '';
+                     const text = raw.message || raw.content || raw.text || '';
+                     const time = raw.timestamp || raw.time || '';
+                     if (!sender || (!text.trim() && !(raw.attachment_url || '').trim())) return;
+                     const exists = dmThreads[peerName].some(m =>
+                         (raw.id && m.id && String(m.id) === String(raw.id)) ||
+                         (String(m.sender || '').toLowerCase() === sender.toLowerCase() &&
+                          String(m.text || '').trim() === text.trim() &&
+                          String(m.time || '').trim() === time.trim())
+                     );
+                     if (!exists) {
+                         dmThreads[peerName].push({
+                             id: raw.id || `dm-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+                             sender,
+                             text,
+                             attachmentUrl: raw.attachment_url || '',
+                             attachmentName: raw.attachment_name || '',
+                             attachmentType: raw.attachment_type || '',
+                             time
+                         });
+                     }
+                 });
+                 if (currentView === 'dm' && selectedDmPeer && selectedDmPeer.toLowerCase() === peerName.toLowerCase()) {
+                     renderDmMessagesList(peerName);
+                     renderDmSplitPane(dmSearchInp ? dmSearchInp.value : '');
+                 }
+             } catch (_) {}
+         }
+
+         function triggerActiveViewSync() {
+             if (currentView === 'geral') {
+                 syncChannelMessagesFromBackend(currentChannelName, currentServerId);
+             } else if (currentView === 'dm' && (selectedDmPeer || currentDmUser)) {
+                 syncDmMessagesFromBackend(selectedDmPeer || currentDmUser);
+             }
+         }
+
+         document.addEventListener('visibilitychange', () => {
+             if (!document.hidden) triggerActiveViewSync();
+         });
+         window.addEventListener('online', triggerActiveViewSync);
 
             async function sendCurrentDmMessage() {
                 if (!selectedDmPeer || !dmInputEl) return;
