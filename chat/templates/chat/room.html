@@ -5429,11 +5429,7 @@ html, body {
                             const adminTag = acc.isAdminFeatured || isAdminIdentity(acc.username, acc.is_admin) ? ' <span class="admin-gold-badge">👑 ADMIN</span>' : '';
                             row.innerHTML = `<div><div style="font-weight:800;font-size:13px;color:var(--kiwi-text-primary);">${escapeHtmlText(acc.username)}${adminTag}</div><div style="font-size:11px;color:var(--kiwi-text-muted);">${escapeHtmlText(acc.handle || '@' + acc.username.toLowerCase())}</div></div><span style="font-size:11px;color:#c084fc;font-weight:700;">Ver perfil →</span>`;
                             row.onclick = () => {
-                                if (acc.isAdminFeatured) {
-                                    openAdminProfileGuideDestination();
-                                } else {
-                                    window.openUserProfile(acc.username);
-                                }
+                                window.openUserProfile(acc.username);
                             };
                             dropdown.appendChild(row);
                         });
@@ -5469,34 +5465,54 @@ html, body {
                 }
 
                 if (activeNavTab === 'mais') {
-                    const box = document.createElement('div');
-                    box.style.cssText = 'padding:18px 20px;display:flex;flex-direction:column;gap:12px;';
+                    const akiiraSaved = profilesByUsername.get('akiirapw') || loadUserMusicFromLocalCache('AkiiraPW') || {};
+                    const akiiraName = 'AkiiraPW';
+                    const akiiraBio = akiiraSaved.bio || (activeUsername.toLowerCase() === 'akiirapw' ? myProfileData.bio : '') || 'Perfil estético ativo.';
+                    const akiiraAvatar = akiiraSaved.avatarUrl || (activeUsername.toLowerCase() === 'akiirapw' ? myProfileData.avatarUrl : '');
+                    const akiiraBanner = resolveBannerUrlForUser(akiiraName, akiiraSaved.bannerUrl || (activeUsername.toLowerCase() === 'akiirapw' ? myProfileData.bannerUrl : ''));
 
-                    const adminShortcutCard = document.createElement('div');
-                    adminShortcutCard.className = 'kiwi-admin-guide-card';
-                    adminShortcutCard.innerHTML = `
-                        <div class="kiwi-admin-guide-header">
-                            <span class="kiwi-admin-guide-badge">👑 Perfil Admin • ${escapeHtmlText(ADMIN_GUIDE_USERNAME)}</span>
-                            <span style="font-size:11px;color:var(--kiwi-text-muted);">Atalho rápido</span>
-                        </div>
-                        <div style="font-size:12px;color:var(--kiwi-text-secondary);line-height:1.45;">
-                            Acesse diretamente o perfil completo do administrador <strong>${escapeHtmlText(ADMIN_GUIDE_USERNAME)}</strong> (${escapeHtmlText(ADMIN_GUIDE_HANDLE)}) para visualizar ou editar informações.
-                        </div>
-                    `;
-                    const adminShortcutBtn = document.createElement('button');
-                    adminShortcutBtn.type = 'button';
-                    adminShortcutBtn.className = 'kiwi-admin-guide-cta';
-                    adminShortcutBtn.textContent = `Ir para o perfil do admin (${ADMIN_GUIDE_USERNAME}) →`;
-                    adminShortcutBtn.addEventListener('click', openAdminProfileGuideDestination);
-                    adminShortcutCard.appendChild(adminShortcutBtn);
-                    box.appendChild(adminShortcutCard);
+                    const wrap = document.createElement('div');
+                    wrap.className = 'kiwi-home-profile-wrap';
 
-                    const infoCard = document.createElement('div');
-                    infoCard.style.cssText = 'font-size:13px;color:var(--kiwi-text-muted);background:var(--kiwi-bg-card);border:1px solid var(--kiwi-border);border-radius:14px;padding:14px;line-height:1.5;';
-                    infoCard.innerHTML = `<strong style="color:var(--kiwi-text-primary);">🥝 Kiwi Chat</strong><br>Use o menu à esquerda para alternar entre Início, Explorar, Bate-papo, Perfil e Canais.`;
-                    box.appendChild(infoCard);
+                    const card = document.createElement('div');
+                    card.className = 'kiwi-home-profile-card';
+                    card.title = 'Abrir perfil de AkiiraPW';
 
-                    xFeedList.appendChild(box);
+                    const bannerDiv = document.createElement('div');
+                    bannerDiv.className = 'kiwi-home-profile-banner';
+                    if (akiiraBanner) {
+                        bannerDiv.style.backgroundImage = `url("${encodeURI(akiiraBanner)}")`;
+                    }
+
+                    const bodyDiv = document.createElement('div');
+                    bodyDiv.className = 'kiwi-home-profile-body';
+
+                    const topDiv = document.createElement('div');
+                    topDiv.className = 'kiwi-home-profile-top';
+
+                    const avDiv = document.createElement('div');
+                    avDiv.className = 'kiwi-home-profile-avatar';
+                    setAvatarStyle(avDiv, akiiraAvatar, akiiraName);
+
+                    const nameEl = document.createElement('div');
+                    nameEl.style.cssText = 'font-size:17px;font-weight:900;color:var(--kiwi-text-primary);margin-bottom:4px;';
+                    nameEl.textContent = akiiraName;
+
+                    const bioEl = document.createElement('div');
+                    bioEl.style.cssText = 'font-size:13px;color:var(--kiwi-text-secondary);line-height:1.45;';
+                    bioEl.innerHTML = formatSafeBioHtml(akiiraBio);
+
+                    topDiv.appendChild(avDiv);
+                    bodyDiv.appendChild(topDiv);
+                    bodyDiv.appendChild(nameEl);
+                    bodyDiv.appendChild(bioEl);
+
+                    card.appendChild(bannerDiv);
+                    card.appendChild(bodyDiv);
+                    card.addEventListener('click', () => window.openUserProfile(akiiraName));
+
+                    wrap.appendChild(card);
+                    xFeedList.appendChild(wrap);
                     return;
                 }
 
@@ -5822,15 +5838,15 @@ html, body {
 
                 const timelineViewEl = document.getElementById('kiwi-profile-timeline-view');
                 if (timelineViewEl) {
-                    const isInicioTab = (activeNavTab === 'inicio');
+                    const isCompactCardTab = (activeNavTab === 'inicio' || activeNavTab === 'mais');
                     const topbarEl = timelineViewEl.querySelector('.kiwi-x-topbar');
                     const bannerEl = timelineViewEl.querySelector('.kiwi-x-banner');
                     const bodyEl = timelineViewEl.querySelector('.kiwi-x-profile-body');
                     const subtabsEl = timelineViewEl.querySelector('.kiwi-x-subtabs');
-                    if (topbarEl) topbarEl.style.display = isInicioTab ? 'none' : '';
-                    if (bannerEl) bannerEl.style.display = isInicioTab ? 'none' : '';
-                    if (bodyEl) bodyEl.style.display = isInicioTab ? 'none' : '';
-                    if (subtabsEl) subtabsEl.style.display = isInicioTab ? 'none' : '';
+                    if (topbarEl) topbarEl.style.display = isCompactCardTab ? 'none' : '';
+                    if (bannerEl) bannerEl.style.display = isCompactCardTab ? 'none' : '';
+                    if (bodyEl) bodyEl.style.display = isCompactCardTab ? 'none' : '';
+                    if (subtabsEl) subtabsEl.style.display = isCompactCardTab ? 'none' : '';
                 }
 
                 if (activeNavTab === 'mensagens') {
