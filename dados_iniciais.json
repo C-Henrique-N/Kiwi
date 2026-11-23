@@ -1,0 +1,78 @@
+[
+  {
+    "model": "auth.user",
+    "pk": 1,
+    "fields": {
+      "password": "pbkdf2_sha256$1500000$qKBqqoxsLgNky2TLhcFKeZ$Rg3IRhF+vwfVDWr5j66Sbbxy7O6W2BKdpzcJBGxSRb8=",
+      "last_login": "2026-11-19T19:43:44.643Z",
+      "is_superuser": false,
+      "username": "AkiiraPW",
+      "first_name": "",
+      "last_name": "",
+      "email": "",
+      "is_staff": false,
+      "is_active": true,
+      "date_joined": "2026-11-19T16:33:03.861Z",
+      "groups": [],
+      "user_permissions": []
+    }
+  },
+  {
+    "model": "chat.userprofile",
+    "pk": 1,
+    "fields": {
+      "user": 1,
+      "avatar": "avatars/1000192324.jpg",
+      "banner": "banners/download_2.jpeg",
+      "bubble": "私は今、深い闇の中にいる。",
+      "pronouns": "ele/he",
+      "bio": "人間は鳥のようなものだ。巣を作る鳥もいれば、ただ空を飛ぶ鳥もいる。好きなゲーム：フォートナイト、マインクラフト、トゥームレイダー、香港。好きなアニメ：Re:ゼロとチェンソーマン。",
+      "spotify_song": "rap/trap",
+      "spotify_artist": "Ado",
+      "accent_color": "#d4af37"
+    }
+  },
+  {
+    "model": "chat.server",
+    "pk": 1,
+    "fields": {
+      "name": "Servidor Principal",
+      "owner": 1,
+      "created_at": "2026-11-19T16:40:00Z"
+    }
+  },
+  {
+    "model": "chat.channel",
+    "pk": 1,
+    "fields": {
+      "server": 1,
+      "name": "geral",
+      "created_at": "2026-11-19T16:30:00Z"
+    }
+  },
+  {
+    "model": "chat.message",
+    "pk": 18,
+    "fields": {
+      "user": 1,
+      "channel": 1,
+      "content": "",
+      "attachment": "chat_attachments/kris_deltarune.jpeg",
+      "attachment_type": "image",
+      "timestamp": "2026-11-19T19:44:22.845Z"
+    }
+  },
+  {
+    "model": "chat.message",
+    "pk": 19,
+    "fields": {
+      "user": 1,
+      "channel": 1,
+      "content": "",
+      "attachment": "chat_attachments/s21_IA.docx",
+      "attachment_type": "document",
+      "timestamp": "2026-11-19T19:47:58.622Z"
+    }
+  }
+]
+Analisando

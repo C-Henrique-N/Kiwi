@@ -1,0 +1,82 @@
+<!--
+  Inclua este trecho dentro do layout do servidor no seu room.html:
+  - No desktop: aparece como coluna lateral direita (240px) ao lado do chat.
+  - No mobile: abre como gaveta/tela cheia estilo Discord com cabeçalho do canal, abas e botão "Convidar membros".
+-->
+
+<!-- Botão para colocar no cabeçalho superior do canal (ao lado do nome #canal) -->
+<button
+  type="button"
+  id="toggleMembersDrawerBtn"
+  class="kiwi-header-members-btn"
+  title="Mostrar/Ocultar Membros"
+  aria-label="Membros do servidor"
+>
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+    <path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/>
+  </svg>
+</button>
+
+<!-- Painel/Gaveta de Membros (PC + Mobile) -->
+<aside id="kiwiMembersPanel" class="kiwi-members-panel" aria-label="Lista de membros do servidor">
+  <!-- Cabeçalho exclusivo Mobile estilo Discord -->
+  <div class="kiwi-members-mobile-header">
+    <div class="kiwi-members-mobile-top">
+      <button type="button" id="closeMembersMobileBtn" class="kiwi-icon-btn" aria-label="Voltar">
+        ←
+      </button>
+      <div class="kiwi-members-channel-meta">
+        <div class="kiwi-members-channel-title">
+          <span class="kiwi-hash">#</span>
+          <span id="membersMobileChannelName">{{ active_channel.name|default:"geral" }}</span>
+        </div>
+        <small>Canal de texto</small>
+      </div>
+    </div>
+
+    <div class="kiwi-members-tabs">
+      <span class="kiwi-members-tab active">Membros</span>
+      <span class="kiwi-members-tab disabled">Mídia</span>
+      <span class="kiwi-members-tab disabled">Fixadas</span>
+    </div>
+  </div>
+
+  <!-- Botão Convidar / Adicionar Membros -->
+  <div class="kiwi-invite-box-wrap" id="kiwiInviteBoxWrap">
+    <button type="button" id="openAddMemberModalBtn" class="kiwi-invite-card-btn">
+      <span class="kiwi-invite-icon">👤+</span>
+      <span class="kiwi-invite-text">Convidar / Adicionar membros</span>
+      <span class="kiwi-invite-arrow">›</span>
+    </button>
+  </div>
+
+  <!-- Lista agrupada por cargo (Owner, Moderador, Membro) -->
+  <div id="kiwiMembersGroupsContainer" class="kiwi-members-scroll">
+    <div class="kiwi-members-loading">Carregando membros...</div>
+  </div>
+</aside>
+
+<!-- Modal para Adicionar Membro por @username -->
+<div id="kiwiAddMemberModal" class="kiwi-modal-backdrop" hidden>
+  <div class="kiwi-modal-card" role="dialog" aria-modal="true" aria-labelledby="addMemberModalTitle">
+    <div class="kiwi-modal-header">
+      <h3 id="addMemberModalTitle">Adicionar pessoa ao servidor</h3>
+      <button type="button" id="closeAddMemberModalBtn" class="kiwi-icon-btn">✕</button>
+    </div>
+    <form id="kiwiAddMemberForm" class="kiwi-modal-body">
+      <label for="addMemberUsernameInput">Nome de usuário</label>
+      <input
+        type="text"
+        id="addMemberUsernameInput"
+        placeholder="ex: akiirapw"
+        autocomplete="off"
+        required
+      />
+      <p id="addMemberFeedback" class="kiwi-feedback-msg"></p>
+      <div class="kiwi-modal-actions">
+        <button type="button" id="cancelAddMemberBtn" class="kiwi-btn-secondary">Cancelar</button>
+        <button type="submit" class="kiwi-btn-primary">Adicionar</button>
+      </div>
+    </form>
+  </div>
+</div>

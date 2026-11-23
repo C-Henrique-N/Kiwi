@@ -1,0 +1,638 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🛍️ Loja • Kiwi Chat</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700;900&family=Fredoka:wght@600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-darkest: #0b0c0e;
+            --bg-sidebar: #121316;
+            --bg-main: #18191d;
+            --bg-card: #202227;
+            --bg-soft: #282b31;
+            --accent: #8a63d2;
+            --accent-hover: #7650bd;
+            --text-main: #f2f3f5;
+            --text-muted: #949ba4;
+            --border-subtle: rgba(255, 255, 255, 0.08);
+            --gold: #ffd700;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+            background: var(--bg-main);
+            color: var(--text-main);
+            display: flex;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        .server-rail {
+            width: 68px;
+            background: var(--bg-darkest);
+            border-right: 1px solid var(--border-subtle);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 12px 0;
+            gap: 10px;
+            flex-shrink: 0;
+        }
+        .rail-btn {
+            width: 46px;
+            height: 46px;
+            border-radius: 50%;
+            background: var(--bg-card);
+            color: var(--text-main);
+            border: 1px solid var(--border-subtle);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 800;
+            font-size: 16px;
+            text-decoration: none;
+            transition: border-radius 0.2s ease, background 0.2s ease;
+            background-size: cover;
+            background-position: center;
+        }
+        .rail-btn:hover, .rail-btn.active {
+            border-radius: 16px;
+            background: var(--accent);
+            color: #fff;
+        }
+        .rail-divider {
+            width: 32px;
+            height: 2px;
+            background: var(--border-subtle);
+            border-radius: 2px;
+        }
+
+        .sidebar-left {
+            width: 240px;
+            background: var(--bg-sidebar);
+            border-right: 1px solid var(--border-subtle);
+            display: flex;
+            flex-direction: column;
+            flex-shrink: 0;
+        }
+        .sidebar-header {
+            padding: 16px 18px;
+            font-size: 15px;
+            font-weight: 800;
+            border-bottom: 1px solid var(--border-subtle);
+        }
+        .sidebar-nav {
+            padding: 12px 10px;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+        .nav-link {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 10px 12px;
+            border-radius: 8px;
+            color: var(--text-muted);
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 600;
+        }
+        .nav-link:hover { background: rgba(255, 255, 255, 0.06); color: var(--text-main); }
+        .nav-link.active {
+            background: rgba(138, 99, 210, 0.22);
+            color: #ffffff;
+            border-left: 3px solid var(--accent);
+        }
+
+        .user-footer {
+            padding: 10px 12px;
+            background: var(--bg-darkest);
+            border-top: 1px solid var(--border-subtle);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .user-avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: var(--accent);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 800;
+            background-size: cover;
+            background-position: center;
+            flex-shrink: 0;
+        }
+
+        .shop-main {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+            min-width: 0;
+        }
+        .shop-topbar {
+            padding: 14px 24px;
+            background: var(--bg-sidebar);
+            border-bottom: 1px solid var(--border-subtle);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            flex-wrap: wrap;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+        .shop-tabs { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+        .shop-tab-btn {
+            background: transparent;
+            border: 1px solid transparent;
+            color: var(--text-muted);
+            padding: 7px 14px;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 700;
+            cursor: pointer;
+        }
+        .shop-tab-btn:hover { background: var(--bg-soft); color: var(--text-main); }
+        .shop-tab-btn.active { background: var(--accent); color: #fff; }
+
+        .shop-hero {
+            margin: 22px 24px 0 24px;
+            padding: 24px 28px;
+            border-radius: 16px;
+            background: linear-gradient(135deg, #24163d 0%, #151722 55%, #1d263b 100%);
+            border: 1px solid rgba(138, 99, 210, 0.35);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            flex-wrap: wrap;
+        }
+        .shop-hero h1 { font-size: 23px; font-weight: 900; margin-bottom: 6px; }
+        .shop-hero p { font-size: 13px; color: var(--text-muted); max-width: 560px; line-height: 1.5; }
+        .test-pill {
+            background: rgba(138, 99, 210, 0.25);
+            border: 1px solid rgba(192, 132, 252, 0.5);
+            color: #e9d5ff;
+            font-size: 12px;
+            font-weight: 700;
+            padding: 6px 12px;
+            border-radius: 999px;
+        }
+
+        .shop-workspace {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) 320px;
+            gap: 22px;
+            padding: 22px 24px 32px 24px;
+            align-items: start;
+        }
+        .shop-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+            gap: 16px;
+        }
+
+        /* === CARD DO ITEM NA LOJA === */
+        .item-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-subtle);
+            border-radius: 14px;
+            padding: 14px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        .item-stage {
+            height: 124px;
+            border-radius: 10px;
+            background: #12141a;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            overflow: hidden;
+        }
+        .item-title { font-size: 14px; font-weight: 800; }
+        .item-meta { font-size: 11px; color: var(--text-muted); }
+        .item-actions { display: flex; gap: 8px; margin-top: auto; }
+        .btn-shop {
+            flex: 1;
+            border: none;
+            border-radius: 8px;
+            padding: 8px 10px;
+            font-size: 12px;
+            font-weight: 700;
+            cursor: pointer;
+            background: var(--accent);
+            color: #fff;
+        }
+        .btn-shop:hover { background: var(--accent-hover); }
+        .btn-shop.equipped { background: #1f7a4c; }
+        .btn-unequip {
+            border: 1px solid var(--border-subtle);
+            border-radius: 8px;
+            padding: 8px 10px;
+            font-size: 12px;
+            font-weight: 700;
+            cursor: pointer;
+            background: var(--bg-soft);
+            color: var(--text-main);
+        }
+
+        /* === EFEITOS VISUAIS INICIAIS (CSS / PLACEHOLDERS) === */
+        /* Ponto de extensão: quando tiver a arte oficial, basta usar background-image: var(--frame-art-url) */
+        .avatar-frame-wrap {
+            position: relative;
+            width: 74px;
+            height: 74px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .avatar-frame-wrap::after {
+            content: "";
+            position: absolute;
+            inset: -5px;
+            border-radius: 50%;
+            pointer-events: none;
+            box-sizing: border-box;
+        }
+        .frame-crepusculo_berilo::after {
+            border: 3px solid #2dd4bf;
+            box-shadow: 0 0 14px rgba(45, 212, 191, 0.85), inset 0 0 8px rgba(59, 130, 246, 0.6);
+        }
+        .frame-ondas_lavanda::after {
+            border: 3px dashed #c084fc;
+            box-shadow: 0 0 14px rgba(192, 132, 252, 0.8);
+        }
+        .frame-miragem_rosa::after {
+            border: 3px solid #f472b6;
+            box-shadow: 0 0 15px rgba(244, 114, 182, 0.85);
+        }
+
+        /* Efeitos de Cartão (CSS inicial; trocável por camada/imagem quando tiver arte oficial) */
+        .card-effect-sakura_encantada {
+            box-shadow: 0 0 22px rgba(244, 114, 182, 0.35);
+            border-color: rgba(244, 114, 182, 0.55) !important;
+        }
+        .card-effect-chamas_negras {
+            box-shadow: 0 0 24px rgba(139, 92, 246, 0.45);
+            border-color: rgba(168, 85, 247, 0.65) !important;
+        }
+        .card-effect-brilho_estelar {
+            box-shadow: 0 0 22px rgba(129, 140, 248, 0.4);
+            border-color: rgba(165, 180, 252, 0.55) !important;
+        }
+
+        /* Estilo do Nome */
+        .name-style-neon {
+            color: #e879f9;
+            text-shadow: 0 0 10px rgba(232, 121, 249, 0.75);
+        }
+
+        .empty-shop-card {
+            grid-column: 1 / -1;
+            background: var(--bg-card);
+            border: 1px dashed var(--border-subtle);
+            border-radius: 14px;
+            padding: 44px 24px;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .preview-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-subtle);
+            border-radius: 16px;
+            overflow: hidden;
+            position: sticky;
+            top: 76px;
+        }
+        .preview-banner {
+            height: 92px;
+            background: linear-gradient(135deg, #5865f2, #8a63d2);
+            background-size: cover;
+            background-position: center;
+        }
+        .preview-body {
+            padding: 0 16px 18px 16px;
+            margin-top: -36px;
+        }
+        .preview-avatar {
+            width: 68px;
+            height: 68px;
+            border-radius: 50%;
+            border: 3px solid var(--bg-card);
+            background: var(--accent);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            font-weight: 800;
+            background-size: cover;
+            background-position: center;
+        }
+        .preview-slot-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            margin-top: 14px;
+        }
+        .preview-slot {
+            background: var(--bg-soft);
+            border: 1px solid var(--border-subtle);
+            border-radius: 10px;
+            padding: 9px 12px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-size: 12px;
+        }
+        .btn-back-chat {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: var(--bg-soft);
+            color: var(--text-main);
+            border: 1px solid var(--border-subtle);
+            padding: 7px 12px;
+            border-radius: 8px;
+            font-size: 12px;
+            font-weight: 700;
+            text-decoration: none;
+        }
+
+        @media (max-width: 900px) {
+            .shop-workspace { grid-template-columns: 1fr; }
+            .preview-card { position: static; }
+        }
+        @media (max-width: 768px) {
+            .sidebar-left { display: none; }
+            .server-rail { width: 54px; }
+        }
+    </style>
+</head>
+<body>
+    <nav class="server-rail">
+        <a href="{% url 'room_home' %}" class="rail-btn" title="Início / Chat">🥝</a>
+        <div class="rail-divider"></div>
+        {% for srv in servers %}
+            <a href="{% url 'room_server' srv.id %}" class="rail-btn" title="{{ srv.name }}"
+               {% if srv.icon %}style="background-image: url('{{ srv.icon.url }}'); font-size: 0;"{% endif %}>
+                {{ srv.name|slice:":2"|upper }}
+            </a>
+        {% endfor %}
+    </nav>
+
+    <aside class="sidebar-left">
+        <div class="sidebar-header"><span>🥝 Kiwi Chat</span></div>
+        <nav class="sidebar-nav">
+            <a href="{% url 'room_home' %}" class="nav-link">💬 Mensagens &amp; Amigos</a>
+            <a href="{% url 'loja' %}" class="nav-link active">🛍️ Loja de Efeitos</a>
+        </nav>
+        <div class="user-footer">
+            <div class="user-avatar" {% if profile.avatar %}style="background-image: url('{{ profile.avatar.url }}'); font-size: 0;"{% endif %}>
+                {{ request.user.username|slice:":1"|upper }}
+            </div>
+            <div style="min-width: 0; flex: 1;">
+                <div style="font-size: 13px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                    {{ request.user.username }}
+                </div>
+                <div style="font-size: 11px; color: #23a55a;">● Online</div>
+            </div>
+        </div>
+    </aside>
+
+    <main class="shop-main">
+        <header class="shop-topbar">
+            <div class="shop-tabs">
+                <button type="button" class="shop-tab-btn active" data-filter="all">✨ Destaques</button>
+                <button type="button" class="shop-tab-btn" data-filter="frame">🖼️ Molduras de Avatar</button>
+                <button type="button" class="shop-tab-btn" data-filter="card_effect">🃏 Efeitos de Cartão</button>
+                <button type="button" class="shop-tab-btn" data-filter="name_style">🔤 Estilos de Nome</button>
+            </div>
+            <a href="{% url 'room_home' %}" class="btn-back-chat">← Voltar ao Chat</a>
+        </header>
+
+        <section class="shop-hero">
+            <div>
+                <h1>🛍️ Loja de Efeitos Kiwi</h1>
+                <p>Teste de efeitos visuais iniciais (CSS/placeholders) prontos para receber as artes oficiais depois.</p>
+            </div>
+            {% if is_exclusive_tester %}
+                <span class="test-pill">🧪 Modo Teste • Exclusivo AkiiraPW</span>
+            {% endif %}
+        </section>
+
+        <div class="shop-workspace">
+            <div class="shop-grid" id="shop-items-grid"></div>
+
+            <aside class="preview-card" id="live-preview-card">
+                <div class="preview-banner" {% if profile.banner %}style="background-image: url('{{ profile.banner.url }}');"{% endif %}></div>
+                <div class="preview-body">
+                    <div class="avatar-frame-wrap" id="preview-frame-wrap">
+                        <div class="preview-avatar" {% if profile.avatar %}style="background-image: url('{{ profile.avatar.url }}'); font-size: 0;"{% endif %}>
+                            {{ request.user.username|slice:":1"|upper }}
+                        </div>
+                    </div>
+                    <div id="preview-username" style="font-size: 17px; font-weight: 800; margin-top: 8px;">{{ request.user.username }}</div>
+                    <div style="font-size: 12px; color: var(--text-muted); margin-top: 2px;">{{ profile.bubble|default:"Online" }}</div>
+
+                    <div class="preview-slot-list">
+                        <div class="preview-slot">
+                            <span style="color: var(--text-muted);">Moldura</span>
+                            <strong id="slot-frame-label">Nenhuma</strong>
+                        </div>
+                        <div class="preview-slot">
+                            <span style="color: var(--text-muted);">Efeito do Cartão</span>
+                            <strong id="slot-card-label">Padrão</strong>
+                        </div>
+                        <div class="preview-slot">
+                            <span style="color: var(--text-muted);">Estilo do Nome</span>
+                            <strong id="slot-name-label">Padrão</strong>
+                        </div>
+                    </div>
+
+                    <button type="button" id="btn-unequip-all" class="btn-unequip" style="width: 100%; margin-top: 12px;">
+                        Remover Efeitos Ativos
+                    </button>
+                </div>
+            </aside>
+        </div>
+    </main>
+
+    {{ profile_json|json_script:"kiwi-profile-json" }}
+    <script>
+        const IS_EXCLUSIVE_TESTER = {{ is_exclusive_tester|yesno:"true,false" }};
+        const initialProfile = JSON.parse(document.getElementById("kiwi-profile-json").textContent || "{}");
+
+        const ITEMS = [
+            { id: "crepusculo_berilo", name: "Crepúsculo (Berilo)", category: "frame", slot: "frame_effect", value: "crepusculo_berilo", badge: "Moldura" },
+            { id: "ondas_lavanda", name: "Ondas Ambientais (Lavanda)", category: "frame", slot: "frame_effect", value: "ondas_lavanda", badge: "Moldura" },
+            { id: "miragem_rosa", name: "Miragem", category: "frame", slot: "frame_effect", value: "miragem_rosa", badge: "Moldura" },
+            { id: "sakura_encantada", name: "Sakura Encantada", category: "card_effect", slot: "card_effect", value: "sakura_encantada", badge: "Cartão" },
+            { id: "chamas_negras", name: "Chamas Negras", category: "card_effect", slot: "card_effect", value: "chamas_negras", badge: "Cartão" },
+            { id: "brilho_estelar", name: "Brilho Estelar", category: "card_effect", slot: "card_effect", value: "brilho_estelar", badge: "Cartão" },
+            { id: "aura_neon", name: "Neon Kiwi", category: "name_style", slot: "name_style", value: "neon", badge: "Nome" },
+        ];
+
+        let activeFilter = "all";
+        let state = {
+            frame_effect: initialProfile.frame_effect || "none",
+            card_effect: initialProfile.card_effect || (initialProfile.profile_glow ? "brilho_estelar" : "none"),
+            name_style: initialProfile.name_style || "none",
+        };
+
+        function getCsrfToken() {
+            const match = document.cookie.match(/(?:^|; )csrftoken=([^;]*)/);
+            return match ? decodeURIComponent(match[1]) : "";
+        }
+
+        function renderPreview() {
+            const frameWrap = document.getElementById("preview-frame-wrap");
+            const cardEl = document.getElementById("live-preview-card");
+            const nameEl = document.getElementById("preview-username");
+
+            frameWrap.className = "avatar-frame-wrap";
+            if (state.frame_effect && state.frame_effect !== "none") {
+                frameWrap.classList.add(`frame-${state.frame_effect}`);
+            }
+
+            cardEl.className = "preview-card";
+            if (state.card_effect && state.card_effect !== "none") {
+                cardEl.classList.add(`card-effect-${state.card_effect}`);
+            }
+
+            nameEl.className = "";
+            if (state.name_style && state.name_style !== "none") {
+                nameEl.classList.add(`name-style-${state.name_style}`);
+            }
+
+            const frameItem = ITEMS.find(i => i.slot === "frame_effect" && i.value === state.frame_effect);
+            const cardItem = ITEMS.find(i => i.slot === "card_effect" && i.value === state.card_effect);
+            const nameItem = ITEMS.find(i => i.slot === "name_style" && i.value === state.name_style);
+
+            document.getElementById("slot-frame-label").textContent = frameItem ? frameItem.name : "Nenhuma";
+            document.getElementById("slot-card-label").textContent = cardItem ? cardItem.name : "Padrão";
+            document.getElementById("slot-name-label").textContent = nameItem ? nameItem.name : "Padrão";
+        }
+
+        function renderGrid() {
+            const grid = document.getElementById("shop-items-grid");
+            if (!IS_EXCLUSIVE_TESTER) {
+                grid.innerHTML = `
+                    <div class="empty-shop-card">
+                        <div style="font-size:38px;">🎁</div>
+                        <h3 style="font-size:16px;">Catálogo em preparação</h3>
+                        <p style="font-size:13px;color:var(--text-muted);max-width:380px;">
+                            A estrutura da Loja já está ativa! Assim que os pacotes de molduras, efeitos de cartão e estilos de nome forem adicionados, eles aparecerão aqui.
+                        </p>
+                    </div>`;
+                return;
+            }
+
+            const filtered = activeFilter === "all" ? ITEMS : ITEMS.filter(i => i.category === activeFilter);
+            grid.innerHTML = filtered.map(item => {
+                const isEquipped = state[item.slot] === item.value;
+                const miniFrameClass = item.slot === "frame_effect" ? `frame-${item.value}` : "";
+                return `
+                    <div class="item-card">
+                        <div class="item-stage">
+                            <div class="avatar-frame-wrap ${miniFrameClass}" style="width:56px;height:56px;">
+                                <div class="preview-avatar" style="width:52px;height:52px;font-size:18px;${initialProfile.avatar_url ? `background-image:url('${initialProfile.avatar_url}');font-size:0;` : ""}">
+                                    ${(initialProfile.username || "A").slice(0, 1).toUpperCase()}
+                                </div>
+                            </div>
+                        </div>
+                        <div>
+                            <div class="item-title">${item.name}</div>
+                            <div class="item-meta">${item.badge} • Teste exclusivo</div>
+                        </div>
+                        <div class="item-actions">
+                            <button type="button" class="btn-shop ${isEquipped ? "equipped" : ""}" data-equip-id="${item.id}">
+                                ${isEquipped ? "Equipado ✓" : "Equipar"}
+                            </button>
+                            ${isEquipped ? `<button type="button" class="btn-unequip" data-unequip-slot="${item.slot}">Tirar</button>` : ""}
+                        </div>
+                    </div>`;
+            }).join("");
+
+            grid.querySelectorAll("[data-equip-id]").forEach(btn => {
+                btn.addEventListener("click", async () => {
+                    const res = await fetch("/api/shop/equip/", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json", "X-CSRFToken": getCsrfToken() },
+                        body: JSON.stringify({ item_id: btn.dataset.equipId }),
+                    });
+                    const data = await res.json();
+                    if (data.ok) {
+                        const item = ITEMS.find(i => i.id === btn.dataset.equipId);
+                        if (item) state[item.slot] = item.value;
+                        renderPreview();
+                        renderGrid();
+                    }
+                });
+            });
+
+            grid.querySelectorAll("[data-unequip-slot]").forEach(btn => {
+                btn.addEventListener("click", async () => {
+                    const slot = btn.dataset.unequipSlot;
+                    const res = await fetch("/api/shop/unequip/", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json", "X-CSRFToken": getCsrfToken() },
+                        body: JSON.stringify({ slot }),
+                    });
+                    const data = await res.json();
+                    if (data.ok) {
+                        state[slot] = "none";
+                        renderPreview();
+                        renderGrid();
+                    }
+                });
+            });
+        }
+
+        document.getElementById("btn-unequip-all").addEventListener("click", async () => {
+            const res = await fetch("/api/shop/unequip/", {
+                method: "POST",
+                headers: { "Content-Type": "application/json", "X-CSRFToken": getCsrfToken() },
+                body: JSON.stringify({ slot: "all" }),
+            });
+            const data = await res.json();
+            if (data.ok) {
+                state = { frame_effect: "none", card_effect: "none", name_style: "none" };
+                renderPreview();
+                renderGrid();
+            }
+        });
+
+        document.querySelectorAll(".shop-tab-btn").forEach(btn => {
+            btn.addEventListener("click", () => {
+                document.querySelectorAll(".shop-tab-btn").forEach(b => b.classList.remove("active"));
+                btn.classList.add("active");
+                activeFilter = btn.dataset.filter;
+                renderGrid();
+            });
+        });
+
+        renderPreview();
+        renderGrid();
+    </script>
+</body>
+</html>
