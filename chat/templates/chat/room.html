@@ -1,4 +1,3 @@
-{% load static %}
 <!DOCTYPE html>
 <html lang="pt">
 <head>
@@ -5838,7 +5837,7 @@ html, body {
 
                 const timelineViewEl = document.getElementById('kiwi-profile-timeline-view');
                 if (timelineViewEl) {
-                    const isCompactCardTab = (activeNavTab === 'inicio' || activeNavTab === 'mais');
+                    const isCompactCardTab = (activeNavTab === 'inicio' || activeNavTab === 'explorar' || activeNavTab === 'notificacoes' || activeNavTab === 'listas' || activeNavTab === 'mais');
                     const topbarEl = timelineViewEl.querySelector('.kiwi-x-topbar');
                     const bannerEl = timelineViewEl.querySelector('.kiwi-x-banner');
                     const bodyEl = timelineViewEl.querySelector('.kiwi-x-profile-body');
