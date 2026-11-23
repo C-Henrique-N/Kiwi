@@ -5820,6 +5820,19 @@ html, body {
                 inspectedTimelineUser = null;
                 mainNavItems.forEach(item => item.classList.toggle('active', item.getAttribute('data-nav-tab') === activeNavTab));
 
+                const timelineViewEl = document.getElementById('kiwi-profile-timeline-view');
+                if (timelineViewEl) {
+                    const isInicioTab = (activeNavTab === 'inicio');
+                    const topbarEl = timelineViewEl.querySelector('.kiwi-x-topbar');
+                    const bannerEl = timelineViewEl.querySelector('.kiwi-x-banner');
+                    const bodyEl = timelineViewEl.querySelector('.kiwi-x-profile-body');
+                    const subtabsEl = timelineViewEl.querySelector('.kiwi-x-subtabs');
+                    if (topbarEl) topbarEl.style.display = isInicioTab ? 'none' : '';
+                    if (bannerEl) bannerEl.style.display = isInicioTab ? 'none' : '';
+                    if (bodyEl) bodyEl.style.display = isInicioTab ? 'none' : '';
+                    if (subtabsEl) subtabsEl.style.display = isInicioTab ? 'none' : '';
+                }
+
                 if (activeNavTab === 'mensagens') {
                     currentView = 'dm';
                     if (headerMainTitle) headerMainTitle.textContent = '✉️ Bate-papo';
