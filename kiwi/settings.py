@@ -207,3 +207,16 @@ if extra_csrf:
         origin = origin.strip()
         if origin and origin not in CSRF_TRUSTED_ORIGINS:
             CSRF_TRUSTED_ORIGINS.append(origin)
+
+# Proxy & CSRF / HTTPS settings
+SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+
+_cookie_secure_env = os.environ.get("COOKIE_SECURE")
+if _cookie_secure_env is not None:
+    _use_secure_cookies = _cookie_secure_env.lower() == "true"
+else:
+    _use_secure_cookies = not DEBUG
+
+SESSION_COOKIE_SECURE = _use_secure_cookies
+CSRF_COOKIE_SECURE = _use_secure_cookies
+SECURE_SSL_REDIRECT = (not DEBUG) and (os.environ.get("SECURE_SSL_REDIRECT", "True").lower() == "true")
