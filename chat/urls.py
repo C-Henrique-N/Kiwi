@@ -57,4 +57,7 @@ urlpatterns = [
     path('api/musics/save/', views.create_saved_music, name='create_saved_music'),
     path('api/musics/delete/<int:music_id>/', views.delete_saved_music, name='delete_saved_music'),
     path('api/musics/friends-feed/', views.friend_music_feed, name='friend_music_feed'),
+
+    path("api/shop/equip/", views.api_shop_equip, name="api_shop_equip"),
+    path("api/shop/unequip/", views.api_shop_unequip, name="api_shop_unequip"),
 ]
