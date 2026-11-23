@@ -2034,6 +2034,7 @@ html, body {
                 const trimmed = url.trim();
                 if (!trimmed || /["'()<>\\[\]]/.test(trimmed)) return false;
                 if (trimmed.startsWith('/') && !trimmed.startsWith('//')) return true;
+                if (/^(static|media)\//i.test(trimmed)) return true;
                 if (/^https?:\/\//i.test(trimmed)) return true;
                 if (/^data:image\/(png|jpe?g|gif|webp|avif);base64,[a-z0-9+/=]+$/i.test(trimmed)) return true;
                 if (/^data:audio\/[a-z0-9.+-]+;base64,[a-z0-9+/=]+$/i.test(trimmed)) return true;
@@ -5373,88 +5374,7 @@ html, body {
                     return;
                 }
 
-                if (activeNavTab === 'explorar') {
 
-                    const guideCard = document.createElement('div');
-                    guideCard.className = 'kiwi-admin-guide-card';
-                    guideCard.innerHTML = `
-                        <div class="kiwi-admin-guide-header">
-                            <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
-                                <span class="kiwi-admin-guide-badge">👑 Guia do Perfil Admin • ${escapeHtmlText(ADMIN_GUIDE_USERNAME)}</span>
-                                <span style="font-size:12px;color:var(--kiwi-text-muted);">${escapeHtmlText(ADMIN_GUIDE_HANDLE)}</span>
-                            </div>
-                            <span style="font-size:11px;font-weight:700;color:#c084fc;">Acesso direto</span>
-                        </div>
-                        <div class="kiwi-admin-guide-steps">
-                            <div class="kiwi-admin-guide-step">
-                                <strong>1. Perfil completo</strong>
-                                Veja banner, bio, seguidores e posts do admin ${escapeHtmlText(ADMIN_GUIDE_USERNAME)}.
-                            </div>
-                            <div class="kiwi-admin-guide-step">
-                                <strong>2. Card &amp; música</strong>
-                                Abra o card estético lateral com player de música e efeitos.
-                            </div>
-                            <div class="kiwi-admin-guide-step">
-                                <strong>3. Edição rápida</strong>
-                                Personalize avatar, banner, cor do tema e status quando quiser.
-                            </div>
-                        </div>
-                    `;
-                    const guideCtaBtn = document.createElement('button');
-                    guideCtaBtn.type = 'button';
-                    guideCtaBtn.className = 'kiwi-admin-guide-cta';
-                    guideCtaBtn.textContent = `Abrir perfil do admin (${ADMIN_GUIDE_USERNAME}) →`;
-                    guideCtaBtn.addEventListener('click', (ev) => {
-                        ev.stopPropagation();
-                        openAdminProfileGuideDestination();
-                    });
-                    guideCard.appendChild(guideCtaBtn);
-                    wrap.appendChild(guideCard);
-
-                    const card = document.createElement('div');
-                    card.className = 'kiwi-home-profile-card';
-                    const bannerDiv = document.createElement('div');
-                    bannerDiv.className = 'kiwi-home-profile-banner';
-                    const resolvedBanner = resolveBannerUrlForUser(activeUsername, myProfileData.bannerUrl);
-                    if (resolvedBanner) {
-                        bannerDiv.style.backgroundImage = `url("${encodeURI(resolvedBanner)}")`;
-                    }
-                    const bodyDiv = document.createElement('div');
-                    bodyDiv.className = 'kiwi-home-profile-body';
-                    const topDiv = document.createElement('div');
-                    topDiv.className = 'kiwi-home-profile-top';
-                    const avDiv = document.createElement('div');
-                    avDiv.className = 'kiwi-home-profile-avatar';
-                    setAvatarStyle(avDiv, myProfileData.avatarUrl, activeUsername);
-                    const editShortcut = document.createElement('button');
-                    editShortcut.type = 'button';
-                    editShortcut.className = 'section-mini-action-btn';
-                    editShortcut.textContent = '✏️ Editar Perfil';
-                    editShortcut.onclick = (ev) => { ev.stopPropagation(); switchToEditBtn.click(); };
-                    topDiv.appendChild(avDiv);
-                    topDiv.appendChild(editShortcut);
-
-                    const nameEl = document.createElement('div');
-                    nameEl.style.cssText = 'font-size:17px;font-weight:900;color:var(--kiwi-text-primary);';
-                    nameEl.textContent = activeUsername;
-                    const handleEl = document.createElement('div');
-                    handleEl.style.cssText = 'font-size:12px;color:var(--kiwi-text-muted);margin-bottom:8px;';
-                    handleEl.textContent = `@${activeUsername.toLowerCase()} • ${myProfileData.bubble || 'Online'}`;
-                    const bioEl = document.createElement('div');
-                    bioEl.style.cssText = 'font-size:13px;color:var(--kiwi-text-primary);line-height:1.45;';
-                    bioEl.innerHTML = myProfileData.bio ? formatSafeBioHtml(myProfileData.bio) : 'Perfil estético ativo.';
-
-                    bodyDiv.appendChild(topDiv);
-                    bodyDiv.appendChild(nameEl);
-                    bodyDiv.appendChild(handleEl);
-                    bodyDiv.appendChild(bioEl);
-                    card.appendChild(bannerDiv);
-                    card.appendChild(bodyDiv);
-                    card.onclick = () => activateNavTab('perfil');
-                    wrap.appendChild(card);
-                    xFeedList.appendChild(wrap);
-                    return;
-                }
 
                 if (activeNavTab === 'explorar') {
                     const shell = document.createElement('div');
