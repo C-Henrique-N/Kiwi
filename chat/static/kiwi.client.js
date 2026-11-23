@@ -111,7 +111,7 @@
       data = { status: "error", message: `Resposta inválida (${res.status})` };
     }
 
-    if (!res.ok || data.status !== "success") {
+    if (!res.ok || (!data.ok && data.status !== "success")) {
       const err = new Error(data.message || `Erro HTTP ${res.status}`);
       err.status = res.status;
       err.data = data;

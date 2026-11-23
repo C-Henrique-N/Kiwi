@@ -837,8 +837,16 @@ def api_update_profile(request):
     if "spotify_artist" in data or "music_artist" in data:
         val = data.get("spotify_artist") if "spotify_artist" in data else data.get("music_artist")
         profile.spotify_artist = (val or "").strip()[:150]
+    if "username" in data and hasattr(profile, "display_name"):
+        new_disp = (data.get("username") or "").strip()[:50]
+        if new_disp:
+            profile.display_name = new_disp
     if "music_url" in data:
         profile.music_url = (data.get("music_url") or "").strip()[:200]
+    if "music_audio_url" in data and hasattr(profile, "music_audio_url"):
+        profile.music_audio_url = (data.get("music_audio_url") or "").strip()[:300]
+    if "music_cover_url" in data and hasattr(profile, "music_cover_url"):
+        profile.music_cover_url = (data.get("music_cover_url") or "").strip()[:300]
 
     if request.FILES.get("avatar"):
         profile.avatar = request.FILES["avatar"]
@@ -854,16 +862,23 @@ def api_update_profile(request):
         if saved:
             profile.banner.name = saved.replace(settings.MEDIA_URL, "", 1).lstrip("/")
 
-    if request.FILES.get("music_audio_file") or request.FILES.get("music_file"):
-        f_audio = request.FILES.get("music_audio_file") or request.FILES.get("music_file")
+    f_audio = (
+        request.FILES.get("music_audio_file")
+        or request.FILES.get("music_file")
+        or request.FILES.get("music_audio")
+    )
+    if f_audio:
         profile.music_audio_file = f_audio
     elif isinstance(data.get("music_url"), str) and data.get("music_url").startswith("data:"):
         saved = _save_base64_media(data.get("music_url"), prefix="music")
         if saved:
             profile.music_audio_file.name = saved.replace(settings.MEDIA_URL, "", 1).lstrip("/")
 
-    if request.FILES.get("music_cover_file") or request.FILES.get("music_cover"):
-        f_cover = request.FILES.get("music_cover_file") or request.FILES.get("music_cover")
+    f_cover = (
+        request.FILES.get("music_cover_file")
+        or request.FILES.get("music_cover")
+    )
+    if f_cover:
         profile.music_cover_file = f_cover
     elif isinstance(data.get("music_cover_url"), str) and data.get("music_cover_url").startswith("data:"):
         saved = _save_base64_media(data.get("music_cover_url"), prefix="cover")
@@ -871,7 +886,7 @@ def api_update_profile(request):
             profile.music_cover_file.name = saved.replace(settings.MEDIA_URL, "", 1).lstrip("/")
 
     profile.save()
-    return JsonResponse({"ok": True, "profile": _serialize_profile(user, profile)})
+    return JsonResponse({"ok": True, "status": "success", "profile": _serialize_profile(user, profile)})
 
 
 @login_required
@@ -913,15 +928,26 @@ def api_friend_request(request):
 
 @login_required
 @require_POST
-def api_respond_friend_request(request, request_id):
-    freq = get_object_or_404(FriendRequest, id=request_id)
+def api_respond_friend_request(request, request_id=None):
     try:
         payload = json.loads(request.body.decode("utf-8") or "{}")
     except Exception:
         payload = request.POST
 
+    if request_id:
+        freq = get_object_or_404(FriendRequest, id=request_id)
+    else:
+        sender_name = (payload.get("username") or payload.get("from") or "").strip()
+        freq = get_object_or_404(
+            FriendRequest,
+            sender__username__iexact=sender_name,
+            receiver=request.user,
+            status="pending",
+        )
+
     origin = freq.sender
-    action = (payload.get("action") or "").strip().lower()
+    default_action = "reject" if "reject" in request.path else "accept"
+    action = (payload.get("action") or default_action).strip().lower()
     if action in ("accept", "aceitar"):
         freq.status = "accepted"
         freq.save(update_fields=["status", "updated_at"])
@@ -1331,23 +1357,3 @@ def friend_music_feed(request):
         for p in qs
     ]
     return JsonResponse({"ok": True, "feed": feed})
-
-    profile_payload = None
-    if request.user.is_authenticated and hasattr(request.user, "profile") and request.user.profile:
-        profile = request.user.profile
-        profile_payload = {
-            "username": request.user.username,
-            "bubble": profile.bubble or "",
-            "pronouns": profile.pronouns or "",
-            "bio": profile.bio or "",
-            "location": profile.location or "",
-            "spotify_song": profile.spotify_song or "",
-            "spotify_artist": profile.spotify_artist or "",
-            "music_url": profile.music_url or "",
-            "music_audio_url": profile.get_music_audio_src() or "",
-            "music_cover_url": profile.get_music_cover_src() or "",
-            "avatar_url": profile.avatar.url if profile.avatar else "",
-            "banner_url": profile.banner.url if profile.banner else "",
-            "accent_color": profile.accent_color or "",
-            "is_admin": bool(request.user.is_staff or request.user.is_superuser),
-        }

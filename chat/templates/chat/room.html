@@ -679,7 +679,7 @@ html, body {
     <script id="kiwi-is-admin-data" type="application/json">{% if request.user.is_staff or request.user.is_superuser %}true{% else %}false{% endif %}</script>
     <script id="kiwi-channel-id-data" type="application/json">null</script>
     <script id="kiwi-server-id-data" type="application/json">null</script>
-    <script id="kiwi-profile-data" type="application/json">{% if request.user.is_authenticated and request.user.profile %}{"username": "{{ request.user.username|escapejs }}", "bubble": "{{ request.user.profile.bubble|escapejs }}", "pronouns": "{{ request.user.profile.pronouns|escapejs }}", "bio": "{{ request.user.profile.bio|escapejs }}", "location": "{{ request.user.profile.location|escapejs }}", "spotify_song": "{{ request.user.profile.spotify_song|escapejs }}", "spotify_artist": "{{ request.user.profile.spotify_artist|escapejs }}", "music_url": "{{ request.user.profile.music_url|escapejs }}", "music_audio_url": "{{ request.user.profile.get_music_audio_src|escapejs }}", "music_cover_url": "{{ request.user.profile.get_music_cover_src|escapejs }}", "avatar_url": "{% if request.user.profile.avatar %}{{ request.user.profile.avatar.url|escapejs }}{% endif %}", "banner_url": "{% if request.user.profile.banner %}{{ request.user.profile.banner.url|escapejs }}{% endif %}", "accent_color": "{{ request.user.profile.accent_color|escapejs }}", "is_admin": {% if request.user.is_staff or request.user.is_superuser %}true{% else %}false{% endif %}}{% else %}null{% endif %}</script>
+    <script id="kiwi-profile-data" type="application/json">{% if profile_json %}{{ profile_json|safe }}{% elif request.user.is_authenticated and request.user.profile %}{"username": "{{ request.user.username|escapejs }}", "bubble": "{{ request.user.profile.bubble|escapejs }}", "pronouns": "{{ request.user.profile.pronouns|escapejs }}", "bio": "{{ request.user.profile.bio|escapejs }}", "location": "{{ request.user.profile.location|escapejs }}", "spotify_song": "{{ request.user.profile.spotify_song|escapejs }}", "spotify_artist": "{{ request.user.profile.spotify_artist|escapejs }}", "music_url": "{{ request.user.profile.music_url|escapejs }}", "music_audio_url": "{{ request.user.profile.get_music_audio_src|escapejs }}", "music_cover_url": "{{ request.user.profile.get_music_cover_src|escapejs }}", "avatar_url": "{% if request.user.profile.avatar %}{{ request.user.profile.avatar.url|escapejs }}{% endif %}", "banner_url": "{% if request.user.profile.banner %}{{ request.user.profile.banner.url|escapejs }}{% endif %}", "accent_color": "{{ request.user.profile.accent_color|escapejs }}", "is_admin": {% if request.user.is_staff or request.user.is_superuser %}true{% else %}false{% endif %}}{% else %}null{% endif %}</script>
 
     <script>
         (function(global) {
@@ -732,10 +732,11 @@ html, body {
                         body: formData,
                         credentials: 'same-origin'
                     });
-                    if (!res.ok) {
-                        throw new Error(`HTTP ${res.status}`);
+                    const data = await res.json().catch(() => ({}));
+                    if (!res.ok || (!data.ok && data.status !== 'success')) {
+                        throw new Error(data.error || data.message || `HTTP ${res.status}`);
                     }
-                    return res.json().catch(() => ({ ok: true }));
+                    return data;
                 },
                 buildWsUrl(path) {
                     const proto = global.location.protocol === 'https:' ? 'wss:' : 'ws:';
@@ -3920,10 +3921,22 @@ html, body {
                         fd.set('location', myProfileData.location);
                         const serverResp = await window.KiwiClient.submitProfileUpdate(fd);
                         const normResp = window.KiwiClient.normalizeProfilePayload(serverResp, myProfileData);
-                        if (normResp.avatarUrl) myProfileData.avatarUrl = normResp.avatarUrl;
-                        if (normResp.bannerUrl) myProfileData.bannerUrl = normResp.bannerUrl;
-                        if (normResp.audioSrc) myProfileData.audioSrc = normResp.audioSrc;
-                        if (normResp.coverUrl) myProfileData.coverUrl = normResp.coverUrl;
+                        if (normResp.avatarUrl) {
+                            myProfileData.avatarUrl = normResp.avatarUrl;
+                            tempEditorAvatarUrl = '';
+                        }
+                        if (normResp.bannerUrl) {
+                            myProfileData.bannerUrl = normResp.bannerUrl;
+                            tempEditorBannerUrl = '';
+                        }
+                        if (normResp.audioSrc) {
+                            myProfileData.audioSrc = normResp.audioSrc;
+                            tempEditorAudioUrl = '';
+                        }
+                        if (normResp.coverUrl) {
+                            myProfileData.coverUrl = normResp.coverUrl;
+                            tempEditorCoverUrl = '';
+                        }
                     }
                 } catch (_) {}
 
