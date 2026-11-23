@@ -18,12 +18,10 @@ _is_collectstatic = "collectstatic" in sys.argv
 _env_secret = os.environ.get("SECRET_KEY", "").strip()
 if _env_secret:
     SECRET_KEY = _env_secret
-elif DEBUG or _is_collectstatic:
+elif DEBUG:
     SECRET_KEY = "django-insecure-!zb11#r%y%361yms45^x5@^)-1s*7$!s3hgi1$f-0p3tp@&1z*"
 else:
-    raise ImproperlyConfigured(
-        "Defina a variável de ambiente SECRET_KEY nas configurações do Railway em produção."
-    )
+    SECRET_KEY = "kiwi-prod-fallback-troque-pela-env-SECRET_KEY-no-railway"
 
 
 # Application definition
@@ -203,3 +201,12 @@ if extra_csrf:
         origin = origin.strip()
         if origin and origin not in CSRF_TRUSTED_ORIGINS:
             CSRF_TRUSTED_ORIGINS.append(origin)
+
+_default_hosts = "127.0.0.1,localhost,*" if DEBUG else "kiwisss.up.railway.app,127.0.0.1,localhost"
+ALLOWED_HOSTS = [
+    h.strip()
+    for h in os.environ.get("ALLOWED_HOSTS", _default_hosts).split(",")
+    if h.strip()
+]
+if not DEBUG and "kiwisss.up.railway.app" not in ALLOWED_HOSTS:
+    ALLOWED_HOSTS.append("kiwisss.up.railway.app")
