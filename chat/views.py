@@ -17,6 +17,8 @@ from django.template.loader import select_template
 from django.utils import timezone
 from django.views.decorators.csrf import ensure_csrf_cookie
 from django.views.decorators.http import require_GET, require_POST
+from asgiref.sync import async_to_sync
+from channels.layers import get_channel_layer
 
 from .models import (
     Channel,
@@ -276,6 +278,8 @@ def _serialize_profile(user, profile):
     avatar_frame = _sanitize_avatar_frame(getattr(profile, "avatar_frame", "none"), is_admin=is_admin)
 
     data = {
+        "account_id": user.id,
+        "user_id": user.id,
         "username": user.username,
         "display_name": (getattr(profile, "display_name", "") or "").strip() or user.username,
         "bio": getattr(profile, "bio", "") or "",
@@ -979,8 +983,40 @@ def api_update_profile(request):
         if saved:
             profile.music_cover_file.name = saved.replace(settings.MEDIA_URL, "", 1).lstrip("/")
 
+            # Dentro de api_update_profile, logo após obter `data` e antes de `profile.save()`:
+    raw_target_id = data.get("account_id") or data.get("user_id")
+    if raw_target_id not in (None, ""):
+        try:
+            target_id = int(raw_target_id)
+        except (TypeError, ValueError):
+            return JsonResponse({"ok": False, "error": "ID de conta inválido."}, status=400)
+        if target_id != user.id and not user.is_superuser:
+            return JsonResponse(
+                {"ok": False, "error": "Você só pode alterar o perfil da sua própria conta."},
+                status=403,
+            )
+
+
+    # No nível raiz do views.py (sem indentação):
+    def _broadcast_feed_event(event_type, payload):
+        channel_layer = get_channel_layer()
+        if not channel_layer:
+            return
+        try:
+            async_to_sync(channel_layer.group_send)(
+                "kiwi_feed",
+                {
+                    "type": event_type,
+                    "payload": payload,
+                },
+            )
+        except Exception:
+            pass
+
     profile.save()
     return JsonResponse({"ok": True, "status": "success", "profile": _serialize_profile(user, profile)})
+
+    
 
 
 @login_required

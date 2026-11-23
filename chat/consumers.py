@@ -136,6 +136,9 @@ class ChatConsumer(AsyncWebsocketConsumer):
         self.room_group_name = f"kiwi_chat_{self.channel_id}"
         self.personal_group_name = build_user_personal_group_name(self.user.username)
 
+        self.feed_group_name = "kiwi_feed"
+        await self.channel_layer.group_add(self.feed_group_name, self.channel_name)
+
         await self.channel_layer.group_add(self.room_group_name, self.channel_name)
         await self.channel_layer.group_add(self.personal_group_name, self.channel_name)
         await self.accept()
@@ -151,6 +154,25 @@ class ChatConsumer(AsyncWebsocketConsumer):
         for grp in ("room_group_name", "personal_group_name"):
             if hasattr(self, grp):
                 await self.channel_layer.group_discard(getattr(self, grp), self.channel_name)
+
+    async def broadcast_profile_post(self, event):
+        await self.send(text_data=json.dumps({
+            "type": "profile_post_created",
+            "post": event["payload"],
+        }))
+
+    async def broadcast_profile_post_update(self, event):
+        await self.send(text_data=json.dumps({
+            "type": "profile_post_updated",
+            "post": event["payload"],
+        }))
+
+    async def broadcast_profile_post_delete(self, event):
+        await self.send(text_data=json.dumps({
+            "type": "profile_post_deleted",
+            "post_id": event["payload"].get("id"),
+        }))
+
 
     async def receive(self, text_data=None, bytes_data=None):
         if not text_data:
