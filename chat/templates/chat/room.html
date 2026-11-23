@@ -2032,7 +2032,7 @@ html, body {
             function isSafeAssetUrl(url) {
                 if (!url || typeof url !== 'string') return false;
                 const trimmed = url.trim();
-                if (!trimmed || /["'()<>\]/.test(trimmed)) return false;
+                if (!trimmed || /["'()<>\\[\]]/.test(trimmed)) return false;
                 if (trimmed.startsWith('/') && !trimmed.startsWith('//')) return true;
                 if (/^https?:\/\//i.test(trimmed)) return true;
                 if (/^data:image\/(png|jpe?g|gif|webp|avif);base64,[a-z0-9+/=]+$/i.test(trimmed)) return true;
