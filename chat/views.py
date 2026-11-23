@@ -1020,6 +1020,10 @@ def api_update_profile(request):
         "profile": serialized_profile,
     })
 
+    if "username" in data and hasattr(profile, "display_name"):
+        new_disp = (data.get("username") or "").strip()[:50]
+        if new_disp:
+            profile.display_name = new_disp
 
 def _broadcast_feed_event(event_type, payload):
     channel_layer = get_channel_layer()
