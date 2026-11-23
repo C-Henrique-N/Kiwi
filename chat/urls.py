@@ -54,7 +54,11 @@ urlpatterns = [
 
     path('api/messages/send/', views.send_message, name='send_message'),
     path('api/messages/<int:message_id>/delete/', views.delete_message, name='delete_message'),
+    path('api/channels/<int:channel_id>/messages/', views.api_channel_messages, name='api_channel_messages'),
+    path('api/dm/send/', views.send_message, name='api_dm_send_compat'),
     path('api/dm/message/<int:message_id>/delete/', views.delete_dm_message, name='delete_dm_message'),
+    path('api/dm/<str:username>/history/', views.api_dm_history, name='api_dm_history_compat'),
+    path('api/dm/<str:username>/send/', views.api_send_dm, name='api_send_dm'),
     path('api/dm/<str:username>/', views.get_dm_history, name='dm_history'),
     path('api/upload-attachment/', views.upload_attachment, name='upload_attachment'),
 

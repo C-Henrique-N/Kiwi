@@ -898,10 +898,6 @@ def api_user_profile(request, username):
 @login_required
 @require_POST
 def api_update_profile(request):
-    user = request.user
-    profile = _get_or_create_profile(user)
-    is_admin = _is_kiwi_admin(user)
-
     if request.content_type and "multipart/form-data" in request.content_type:
         data = request.POST
     else:
@@ -909,6 +905,28 @@ def api_update_profile(request):
             data = json.loads(request.body.decode("utf-8") or "{}")
         except Exception:
             data = request.POST
+
+    target_user = request.user
+    raw_target_id = data.get("account_id") or data.get("user_id")
+    if raw_target_id not in (None, ""):
+        try:
+            target_id = int(raw_target_id)
+        except (TypeError, ValueError):
+            return JsonResponse({"ok": False, "error": "ID de conta inválido."}, status=400)
+
+        if target_id != request.user.id and not request.user.is_superuser:
+            return JsonResponse(
+                {"ok": False, "error": "Você só pode alterar o perfil da sua própria conta."},
+                status=403,
+            )
+
+        if target_id != request.user.id:
+            target_user = User.objects.filter(pk=target_id).first()
+            if not target_user:
+                return JsonResponse({"ok": False, "error": "Conta de destino não encontrada."}, status=404)
+
+    profile = _get_or_create_profile(target_user)
+    is_admin = _is_kiwi_admin(target_user) or request.user.is_superuser
 
     if "bio" in data:
         profile.bio = (data.get("bio") or "").strip()[:500]
@@ -983,29 +1001,24 @@ def api_update_profile(request):
         if saved:
             profile.music_cover_file.name = saved.replace(settings.MEDIA_URL, "", 1).lstrip("/")
 
-            # Dentro de api_update_profile, logo após obter `data` e antes de `profile.save()`:
-    raw_target_id = data.get("account_id") or data.get("user_id")
-    if raw_target_id not in (None, ""):
-        try:
-            target_id = int(raw_target_id)
-        except (TypeError, ValueError):
-            return JsonResponse({"ok": False, "error": "ID de conta inválido."}, status=400)
-        if target_id != user.id and not user.is_superuser:
-            return JsonResponse(
-                {"ok": False, "error": "Você só pode alterar o perfil da sua própria conta."},
-                status=403,
-            )
-
     profile.save()
-    serialized_profile = _serialize_profile(user, profile)
-    _broadcast_feed_event(
-        "profile_updated",
-        {
-            "username": user.username,
-            "profile": serialized_profile,
-        },
-    )
-    return JsonResponse({"ok": True, "status": "success", "profile": serialized_profile})
+    serialized_profile = _serialize_profile(target_user, profile)
+
+    if "_broadcast_feed_event" in globals() and callable(_broadcast_feed_event):
+        _broadcast_feed_event(
+            "profile_updated",
+            {
+                "username": target_user.username,
+                "profile": serialized_profile,
+            },
+        )
+
+    return JsonResponse({
+        "ok": True,
+        "status": "success",
+        "username": target_user.username,
+        "profile": serialized_profile,
+    })
 
 
 def _broadcast_feed_event(event_type, payload):
@@ -1022,28 +1035,6 @@ def _broadcast_feed_event(event_type, payload):
         )
     except Exception:
         pass
-
-
-    # No nível raiz do views.py (sem indentação):
-    def _broadcast_feed_event(event_type, payload):
-        channel_layer = get_channel_layer()
-        if not channel_layer:
-            return
-        try:
-            async_to_sync(channel_layer.group_send)(
-                "kiwi_feed",
-                {
-                    "type": event_type,
-                    "payload": payload,
-                },
-            )
-        except Exception:
-            pass
-
-    profile.save()
-    return JsonResponse({"ok": True, "status": "success", "profile": _serialize_profile(user, profile)})
-
-    
 
 
 @login_required
@@ -1518,17 +1509,71 @@ def send_message(request):
         payload = json.loads(request.body.decode("utf-8") or "{}")
     except Exception:
         payload = request.POST
+
     content = (payload.get("content") or payload.get("message") or payload.get("text") or "").strip()
     channel_id = payload.get("channel_id")
+    channel_name = (payload.get("channel_name") or "").strip()
+    server_id = payload.get("server_id")
     recipient_username = (payload.get("recipient") or payload.get("receiver") or payload.get("to_username") or "").strip()
-    if not content and not request.FILES.get("file") and not request.FILES.get("attachment"):
+    client_id = (payload.get("client_id") or "")[:100]
+    attachment_url = (payload.get("attachment_url") or "").strip()
+
+    uploaded = request.FILES.get("file") or request.FILES.get("attachment")
+    if not content and not uploaded and not attachment_url:
         return JsonResponse({"ok": False, "error": "Mensagem vazia."}, status=400)
+
     if recipient_username:
         recipient = get_object_or_404(User, username__iexact=recipient_username)
-        dm = DirectMessage.objects.create(sender=request.user, receiver=recipient, content=content[:2000])
+        dm = DirectMessage.objects.create(
+            sender=request.user,
+            receiver=recipient,
+            content=content[:2000],
+            client_id=client_id,
+        )
+        if uploaded:
+            dm.attachment = uploaded
+            dm.attachment_type = (uploaded.content_type or "file")[:20]
+            dm.save()
+        elif attachment_url.startswith("data:"):
+            saved_url = _save_base64_media(attachment_url, prefix="dm")
+            if saved_url:
+                dm.attachment.name = saved_url.replace(settings.MEDIA_URL, "", 1).lstrip("/")
+                dm.attachment_type = "image"
+                dm.save()
         return JsonResponse({"ok": True, "message": _serialize_dm(dm, current_user=request.user)})
-    channel = get_object_or_404(Channel, pk=channel_id)
-    msg = Message.objects.create(channel=channel, user=request.user, content=content[:2000])
+
+    channel = None
+    if channel_id not in (None, "", "null"):
+        channel = get_object_or_404(Channel, pk=channel_id)
+    elif channel_name:
+        qs = Channel.objects.filter(name__iexact=channel_name)
+        if server_id and str(server_id).isdigit():
+            qs = qs.filter(server_id=int(server_id))
+        channel = qs.first()
+        if not channel:
+            servers = _ensure_default_workspace(request.user)
+            channel = servers[0].channels.filter(name__iexact=channel_name).first() or servers[0].channels.order_by("id").first()
+    else:
+        servers = _ensure_default_workspace(request.user)
+        channel = servers[0].channels.order_by("id").first()
+
+    msg = Message.objects.create(
+        channel=channel,
+        user=request.user,
+        content=content[:2000],
+        client_id=client_id,
+    )
+    if uploaded:
+        msg.attachment = uploaded
+        msg.attachment_type = (uploaded.content_type or "file")[:20]
+        msg.save()
+    elif attachment_url.startswith("data:"):
+        saved_url = _save_base64_media(attachment_url, prefix="msg")
+        if saved_url:
+            msg.attachment.name = saved_url.replace(settings.MEDIA_URL, "", 1).lstrip("/")
+            msg.attachment_type = "image"
+            msg.save()
+
     return JsonResponse({"ok": True, "message": _serialize_message(msg, current_user=request.user)})
 
 
