@@ -2199,6 +2199,48 @@ html, body {
                 bannerUrl: '',
                 is_admin: Boolean(injectedIsAdmin || isAkiiraAccount(activeUsername))
             };
+            
+            const ADMIN_ACCOUNT_ID = 'acc_akiirapw';
+            const ADMIN_GUIDE_USERNAME = 'AkiiraPW';
+
+            function normalizeAccountId(rawValue) {
+                const clean = String(rawValue || '').trim().toLowerCase();
+                if (!clean) return '';
+                if (clean.startsWith('acc_')) return clean;
+                const slug = clean.replace(/[^a-z0-9_-]+/g, '_').replace(/^_+|_+$/g, '');
+                return slug ? `acc_${slug}` : '';
+            }
+
+            function getAccountIdByUsername(username, explicitId = '') {
+                const directId = normalizeAccountId(explicitId);
+                if (directId) return directId;
+
+                const cleanName = String(username || '').trim();
+                if (!cleanName) return '';
+                if (cleanName.toLowerCase() === ADMIN_GUIDE_USERNAME.toLowerCase()) {
+                    return ADMIN_ACCOUNT_ID;
+                }
+
+                const savedMapEntry = typeof profilesByUsername !== 'undefined' && profilesByUsername
+                    ? profilesByUsername.get(cleanName.toLowerCase())
+                    : null;
+                if (savedMapEntry && savedMapEntry.accountId) {
+                    return normalizeAccountId(savedMapEntry.accountId);
+                }
+
+                return normalizeAccountId(cleanName);
+            }
+
+            let activeAccountId = getAccountIdByUsername(
+                activeUsername,
+                (typeof injectedProfile !== 'undefined' && injectedProfile)
+                    ? (injectedProfile.account_id || injectedProfile.accountId || injectedProfile.id)
+                    : ''
+            ) || normalizeAccountId(activeUsername) || ADMIN_ACCOUNT_ID;
+
+            if (typeof myProfileData === 'object' && myProfileData) {
+                myProfileData.accountId = activeAccountId;
+            }
 
             function readStorageJson(key, fallbackVal) {
                 try {
