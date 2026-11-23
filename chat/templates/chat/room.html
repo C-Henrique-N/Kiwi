@@ -2152,14 +2152,14 @@ html, body {
             let savedUsername = '';
             try { savedUsername = (localStorage.getItem(USERNAME_STORAGE_KEY) || '').trim(); } catch (_) {}
 
-            const injectedProfileUsername = (injectedProfile && typeof injectedProfile.username === 'string') ? injectedProfile.username.trim() : '';
-            const explicitUser = (
-                (typeof injectedUser === 'string' && injectedUser.trim()) ||
-                injectedProfileUsername ||
-                savedUsername ||
-                ''
-            ).trim();
-            let activeUsername = explicitUser || 'AkiiraPW';
+            const serverUsername = (typeof injectedUser === 'string' && injectedUser.trim())
+                ? injectedUser.trim()
+                : ((injectedProfile && typeof injectedProfile.username === 'string') ? injectedProfile.username.trim() : '');
+
+            let activeUsername = serverUsername || savedUsername || 'AkiiraPW';
+            if (serverUsername) {
+                try { localStorage.setItem(USERNAME_STORAGE_KEY, serverUsername); } catch (_) {}
+            }
 
             const themesMap = {
                 '#7c3aed': { accent: '#7c3aed', main: '#0b0714', sidebar: '#160d29', darkest: '#120b21', input: '#1c1133', card: '#1c1133', soft: '#241642', textMain: '#f5f3ff', textMuted: '#a79bc4', border: 'rgba(167, 139, 250, 0.16)' },

@@ -996,6 +996,33 @@ def api_update_profile(request):
                 status=403,
             )
 
+    profile.save()
+    serialized_profile = _serialize_profile(user, profile)
+    _broadcast_feed_event(
+        "profile_updated",
+        {
+            "username": user.username,
+            "profile": serialized_profile,
+        },
+    )
+    return JsonResponse({"ok": True, "status": "success", "profile": serialized_profile})
+
+
+def _broadcast_feed_event(event_type, payload):
+    channel_layer = get_channel_layer()
+    if not channel_layer:
+        return
+    try:
+        async_to_sync(channel_layer.group_send)(
+            "kiwi_feed",
+            {
+                "type": event_type,
+                "payload": payload,
+            },
+        )
+    except Exception:
+        pass
+
 
     # No nível raiz do views.py (sem indentação):
     def _broadcast_feed_event(event_type, payload):
