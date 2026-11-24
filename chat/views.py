@@ -708,6 +708,25 @@ def api_channel_messages(request, channel_id):
         "messages": [_serialize_message(m, current_user=request.user) for m in ordered],
     })
 
+@login_required
+@require_GET
+def api_dm_history(request, username):
+    target_user = get_object_or_404(User, username__iexact=username)
+    if target_user.id == request.user.id:
+        return JsonResponse({"ok": False, "error": "Você não pode abrir DM consigo mesmo."}, status=400)
+
+    dms = (
+        DirectMessage.objects.filter(
+            Q(sender=request.user, receiver=target_user) | Q(sender=target_user, receiver=request.user)
+        )
+        .select_related("sender", "receiver")
+        .order_by("timestamp", "id")[:80]
+    )
+    return JsonResponse({
+        "ok": True,
+        "messages": [_serialize_dm(m, current_user=request.user) for m in dms],
+    })
+
 
 @login_required
 @require_GET
