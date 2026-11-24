@@ -689,26 +689,49 @@ def api_channel_messages(request, channel_id):
         "messages": [_serialize_message(m, current_user=request.user) for m in ordered],
     })
 
+@login_required
+@require_GET
+def api_channel_messages(request, channel_id):
+    channel = get_object_or_404(Channel, id=channel_id)
+    channel.server.members.add(request.user)
+    msgs = (
+        Message.objects.filter(channel=channel)
+        .select_related("user", "channel")
+        .prefetch_related("reactions", "reactions__user")
+        .order_by("-timestamp", "-id")[:60]
+    )
+    ordered = list(reversed(msgs))
+    return JsonResponse({
+        "ok": True,
+        "channel_id": channel.id,
+        "channel_name": channel.name,
+        "messages": [_serialize_message(m, current_user=request.user) for m in ordered],
+    })
+
 
 @login_required
 @require_GET
-def api_dm_history(request, username):
-    target_user = get_object_or_404(User, username__iexact=username)
-    if target_user.id == request.user.id:
-        return JsonResponse({"ok": False, "error": "Você não pode abrir DM consigo mesmo."}, status=400)
+def api_messages_history(request):
+    raw_channel = (request.GET.get("channel") or "").strip()
+    raw_server = (request.GET.get("server_id") or "").strip()
 
-    dms = (
-        DirectMessage.objects.filter(
-            Q(sender=request.user, receiver=target_user) | Q(sender=target_user, receiver=request.user)
-        )
-        .select_related("sender", "receiver")
-        .order_by("timestamp", "id")[:80]
-    )
-    return JsonResponse({
-        "ok": True,
-        "peer": target_user.username,
-        "messages": [_serialize_dm(m, current_user=request.user) for m in dms],
-    })
+    channel = None
+    if raw_channel.isdigit():
+        channel = get_object_or_404(Channel, id=int(raw_channel))
+    elif raw_channel:
+        qs = Channel.objects.filter(name__iexact=raw_channel)
+        if raw_server.isdigit():
+            qs = qs.filter(server_id=int(raw_server))
+        elif raw_server in ("", "home"):
+            _ensure_default_workspace(request.user)
+            qs = qs.filter(server__owner=request.user)
+        channel = qs.order_by("id").first()
+
+    if not channel:
+        return JsonResponse({"ok": True, "messages": []})
+
+    return api_channel_messages(request, channel.id)
+
 
 
 @login_required
