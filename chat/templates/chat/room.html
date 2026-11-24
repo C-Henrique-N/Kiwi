@@ -2277,14 +2277,10 @@ html, body {
                     headers['X-CSRFToken'] = csrf;
                 }
                 const res = await fetch(url, Object.assign({ credentials: 'same-origin' }, options, { headers }));
-                const responseText = await res.text();
-                let payload = {};
-                try { payload = responseText ? JSON.parse(responseText) : {}; } catch (_) {}
-                if (!res.ok || payload.ok === false) {
-                    const detail = payload.error || payload.detail || `HTTP ${res.status}`;
-                    throw new Error(detail);
+                if (!res.ok) {
+                    throw new Error(`HTTP ${res.status}`);
                 }
-                return payload;
+                return res.json().catch(() => ({}));
             }
 
             function sanitizeSavedLists() {
@@ -3628,20 +3624,93 @@ html, body {
                 openProfileSidePopover();
             }
 
+            let featuredAkiiraProfile = null;
+            let featuredAkiiraProfilePromise = null;
+
+            async function loadFeaturedAkiiraProfile(forceRefresh = false) {
+                if (featuredAkiiraProfile && !forceRefresh) return featuredAkiiraProfile;
+                if (featuredAkiiraProfilePromise && !forceRefresh) return featuredAkiiraProfilePromise;
+
+                featuredAkiiraProfilePromise = (async () => {
+                    try {
+                        const response = await fetch(`/api/profile/${encodeURIComponent(ADMIN_GUIDE_USERNAME)}/`, {
+                            method: 'GET',
+                            credentials: 'same-origin',
+                            headers: { 'Accept': 'application/json' }
+                        });
+                        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                        const payload = await response.json();
+                        const profile = payload && payload.profile;
+                        if (!payload.ok || !profile || !isAkiiraAccount(profile.username)) {
+                            throw new Error('Perfil público da AkiiraPW não encontrado.');
+                        }
+
+                        featuredAkiiraProfile = {
+                            ...profile,
+                            username: profile.username || ADMIN_GUIDE_USERNAME,
+                            handle: `@${String(profile.username || ADMIN_GUIDE_USERNAME).toLowerCase()}`,
+                            bubble: profile.bubble || profile.custom_status || '',
+                            bio: profile.bio || '',
+                            location: profile.location || '',
+                            bannerUrl: profile.banner_url || '',
+                            avatarUrl: profile.avatar_url || '',
+                            accentColor: profile.accent_color || '',
+                            is_admin: Boolean(profile.is_admin),
+                            isAdminFeatured: true
+                        };
+                        profilesByUsername.set(ADMIN_GUIDE_USERNAME.toLowerCase(), { ...featuredAkiiraProfile });
+                        return featuredAkiiraProfile;
+                    } catch (error) {
+                        console.warn('Não foi possível carregar o perfil público da AkiiraPW:', error);
+                        // Só usa dados locais se a conta conectada for a própria AkiiraPW.
+                        if (isAkiiraAccount(activeUsername)) {
+                            featuredAkiiraProfile = {
+                                ...myProfileData,
+                                username: ADMIN_GUIDE_USERNAME,
+                                handle: ADMIN_GUIDE_HANDLE,
+                                bannerUrl: myProfileData.bannerUrl || '',
+                                avatarUrl: myProfileData.avatarUrl || '',
+                                isAdminFeatured: true
+                            };
+                            return featuredAkiiraProfile;
+                        }
+                        return {
+                            username: ADMIN_GUIDE_USERNAME,
+                            handle: ADMIN_GUIDE_HANDLE,
+                            bubble: '',
+                            pronouns: '',
+                            bio: '',
+                            location: '',
+                            bannerUrl: '',
+                            avatarUrl: '',
+                            is_admin: false,
+                            isAdminFeatured: true
+                        };
+                    } finally {
+                        featuredAkiiraProfilePromise = null;
+                    }
+                })();
+                return featuredAkiiraProfilePromise;
+            }
+
             function buildAdminFeaturedAccount() {
+                const profile = featuredAkiiraProfile || (
+                    isAkiiraAccount(activeUsername) ? myProfileData : {}
+                );
                 const adminPosts = readStorageJson(USER_POSTS_KEY, []);
                 const safePosts = Array.isArray(adminPosts) ? adminPosts : [];
                 return {
+                    ...profile,
                     username: ADMIN_GUIDE_USERNAME,
                     handle: ADMIN_GUIDE_HANDLE,
-                    bubble: myProfileData.bubble || '👑 Admin Principal',
-                    pronouns: myProfileData.pronouns || 'ele/he • 🥝',
-                    bio: myProfileData.bio || 'Perfil estético ativo.',
-                    location: myProfileData.location || 'Brasil',
-                    joinedAt: myProfileData.joinedAt || '',
-                    bannerUrl: myProfileData.bannerUrl || '',
-                    avatarUrl: myProfileData.avatarUrl || '',
-                    is_admin: true,
+                    bubble: profile.bubble || profile.custom_status || '',
+                    pronouns: profile.pronouns || '',
+                    bio: profile.bio || '',
+                    location: profile.location || '',
+                    joinedAt: profile.joinedAt || '',
+                    bannerUrl: profile.bannerUrl || profile.banner_url || '',
+                    avatarUrl: profile.avatarUrl || profile.avatar_url || '',
+                    is_admin: Boolean(profile.is_admin),
                     isAdminFeatured: true,
                     posts: safePosts
                 };
@@ -5912,26 +5981,19 @@ html, body {
                     if (!postId || !txt) return;
 
                     let updatedPost = null;
-                    const isBackendPost = /^\d+$/.test(String(postId));
-                    if (isBackendPost) {
+                    if (/^\d+$/.test(String(postId))) {
                         try {
                             const data = await apiRequestJson(`/api/profile/posts/${encodeURIComponent(postId)}/reply/`, {
                                 method: 'POST',
-                                headers: { 'Content-Type': 'application/json' },
                                 body: JSON.stringify({ content: txt })
                             });
                             if (data && data.post) {
                                 updatedPost = normalizePostRecord(data.post, true);
-                            } else {
-                                throw new Error('O servidor não retornou a publicação atualizada.');
                             }
-                        } catch (err) {
-                            showKiwiToast(`Não foi possível enviar: ${err && err.message ? err.message : 'erro no servidor'}`);
-                            return;
-                        }
+                        } catch (_) {}
                     }
 
-                    if (!updatedPost && !isBackendPost) {
+                    if (!updatedPost) {
                         const existing = currentPostsById.get(String(postId)) || getUserPostsStore().find(p => String(p.id) === String(postId));
                         if (existing) {
                             const nextReplies = Array.isArray(existing.replies) ? existing.replies.slice() : [];
@@ -5954,13 +6016,8 @@ html, body {
                     if (updatedPost) {
                         currentPostsById.set(String(updatedPost.id), updatedPost);
                     }
-                    if (!updatedPost) {
-                        showKiwiToast('Não foi possível localizar a publicação para responder.');
-                        return;
-                    }
                     if (repInput) repInput.value = '';
                     openPostDetailTab(postId);
-                    showKiwiToast(isBackendPost ? 'Resposta enviada!' : 'Resposta salva neste navegador.');
                     if (currentView === 'inicio') await renderInicioTabSurface();
                     else if (currentView === 'perfil') await renderCleanUserPosts();
                 });
@@ -5971,40 +6028,33 @@ html, body {
                 showChatLogSurface(false);
                 if (!chatLog) return;
 
-                // O cartão da página inicial sempre representa a conta autenticada,
-                // sem reutilizar os cosméticos de uma conta administrativa/destaque.
-                const homeAccount = {
-                    username: activeUsername,
-                    handle: `@${String(activeUsername || '').toLowerCase()}`,
-                    bio: myProfileData.bio || 'Perfil sem biografia.',
-                    avatarUrl: myProfileData.avatarUrl || '',
-                    bannerUrl: myProfileData.bannerUrl || '',
-                    is_admin: Boolean(myProfileData.is_admin)
-                };
-                const resolvedBanner = resolveBannerUrlForUser(homeAccount.username, homeAccount.bannerUrl);
-                const resolvedAvatar = homeAccount.avatarUrl;
+                await loadFeaturedAkiiraProfile();
+                if (token !== feedRenderToken) return;
+                const adminAcc = buildAdminFeaturedAccount();
+                const resolvedBanner = resolveBannerUrlForUser(adminAcc.username, adminAcc.bannerUrl);
+                const resolvedAvatar = adminAcc.avatarUrl || myProfileData.avatarUrl || '';
                 chatLog.innerHTML = `
                     <div class="kiwi-home-profile-wrap">
                         <div class="kiwi-home-profile-card" id="kiwi-home-open-profile-card">
                             <div class="kiwi-home-profile-banner" style="${resolvedBanner ? `background-image:url('${escapeHtmlText(encodeURI(resolvedBanner))}');` : ''}"></div>
                             <div class="kiwi-home-profile-body">
                                 <div class="kiwi-home-profile-top">
-                                    <div class="kiwi-home-profile-avatar" id="kiwi-home-profile-avatar-el">${escapeHtmlText(homeAccount.username.charAt(0).toUpperCase())}</div>
-                                    ${homeAccount.is_admin ? '<span class="admin-gold-badge">👑 ADMIN</span>' : ''}
+                                    <div class="kiwi-home-profile-avatar" id="kiwi-home-profile-avatar-el">${escapeHtmlText(adminAcc.username.charAt(0).toUpperCase())}</div>
+                                    <span class="admin-gold-badge">👑 ADMIN</span>
                                 </div>
-                                <div style="font-size:16px;font-weight:900;">${escapeHtmlText(homeAccount.username)}</div>
-                                <div style="font-size:12px;color:var(--kiwi-text-muted);margin-bottom:6px;">${escapeHtmlText(homeAccount.handle)}</div>
-                                <div style="font-size:13px;color:var(--kiwi-text-secondary);">${escapeHtmlText(homeAccount.bio)}</div>
+                                <div style="font-size:16px;font-weight:900;">${escapeHtmlText(adminAcc.username)}</div>
+                                <div style="font-size:12px;color:var(--kiwi-text-muted);margin-bottom:6px;">${escapeHtmlText(adminAcc.handle)}</div>
+                                <div style="font-size:13px;color:var(--kiwi-text-secondary);">${escapeHtmlText(adminAcc.bio)}</div>
                             </div>
                         </div>
                         <div id="kiwi-home-feed-stream" style="display:flex;flex-direction:column;gap:10px;margin-top:12px;"></div>
                     </div>
                 `;
                 const avatarEl = document.getElementById('kiwi-home-profile-avatar-el');
-                if (avatarEl) setAvatarStyle(avatarEl, resolvedAvatar, homeAccount.username);
+                if (avatarEl) setAvatarStyle(avatarEl, resolvedAvatar, adminAcc.username);
 
                 const cardEl = document.getElementById('kiwi-home-open-profile-card');
-                if (cardEl) cardEl.onclick = () => openFullProfilePage(activeUsername);
+                if (cardEl) cardEl.onclick = () => openFullProfilePage(ADMIN_GUIDE_USERNAME);
 
                 const feedStream = document.getElementById('kiwi-home-feed-stream');
                 if (!feedStream) return;
