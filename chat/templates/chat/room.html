@@ -6569,31 +6569,9 @@ html, body {
 
             posts.forEach(post => {
                 xFeedList.appendChild(buildPostCardElement(post, renderCleanUserPosts));
+            
             });
         }
-            const isOwnerOrAdmin =
-    String(post.author || '').trim().toLowerCase() === String(activeUsername || '').trim().toLowerCase() ||
-    Boolean(myProfileData && myProfileData.is_admin);
-
-    if (isOwnerOrAdmin) {
-        const deleteBtn = document.createElement('button');
-        deleteBtn.type = 'button';
-        deleteBtn.className = 'kiwi-x-action-btn delete-post-btn';
-        deleteBtn.title = 'Excluir post';
-        deleteBtn.setAttribute('aria-label', 'Excluir post');
-        deleteBtn.textContent = '🗑️ Excluir';
-        deleteBtn.onclick = async (ev) => {
-            ev.stopPropagation();
-            deleteBtn.disabled = true;
-            try {
-                await deletePostById(post, onAfterMutation);
-            } finally {
-                deleteBtn.disabled = false;
-            }
-        };
-        actions.appendChild(deleteBtn);
-    }
-            
     </script>
 </body>
 </html>
