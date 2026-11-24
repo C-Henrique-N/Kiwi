@@ -4668,7 +4668,8 @@ html, body {
 
             if (editorNameStyleToggle) {
                 editorNameStyleToggle.addEventListener('click', () => {
-                    myProfileData.nameSpecialStyle = !myProfileData.nameSpecialStyle;\n                    myProfileData.nameStyle = myProfileData.nameSpecialStyle ? 'neon' : '';
+                    myProfileData.nameSpecialStyle = !myProfileData.nameSpecialStyle;
+                    myProfileData.nameStyle = myProfileData.nameSpecialStyle ? 'neon' : '';
                     editorNameStyleToggle.classList.toggle('active', myProfileData.nameSpecialStyle);
                     if (editorLiveNameSample) {
                         editorLiveNameSample.style.letterSpacing = myProfileData.nameSpecialStyle ? '0.08em' : '';
