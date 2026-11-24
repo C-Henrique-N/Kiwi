@@ -24,5 +24,6 @@
     "minimal-ui"
   ],
   "orientation": "any",
-  "prefer_related_applications": false
+  "prefer_related_applications": false,
+  "id": "/"
 }
