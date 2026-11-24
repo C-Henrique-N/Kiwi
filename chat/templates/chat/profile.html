@@ -520,7 +520,7 @@
 <script>
   if ("serviceWorker" in navigator) {
     window.addEventListener("load", () => {
-      navigator.serviceWorker.register("/static/service-worker.js").catch((error) =>
+      navigator.serviceWorker.register("/service-worker.js", { scope: "/" }).catch((error) =>
         console.error("Erro ao registrar o Service Worker do Kiwi:", error)
       );
     });
