@@ -754,6 +754,216 @@ html, body {
     background: rgba(239, 68, 68, 0.2);
     border-color: rgba(248, 113, 113, 0.4);
 }
+
+/* Ajustes mobile: barra inferior, conversa e rolagem */
+@media (max-width: 768px) {
+  :root { --m-bottom-h: 58px; }
+
+  .sidebar-left,
+  .chat-area,
+  #chat-log,
+  #kiwi-profile-timeline-view,
+  #kiwi-post-detail-scroll {
+    padding-bottom: calc(var(--m-bottom-h) + 28px + env(safe-area-inset-bottom));
+  }
+
+  .kiwi-mobile-bottom-pill {
+    left: 0;
+    right: 0;
+    bottom: 0;
+    height: var(--m-bottom-h);
+    border-radius: 0;
+    border-left: none;
+    border-right: none;
+    border-bottom: none;
+    padding: 0 6px env(safe-area-inset-bottom);
+    justify-content: space-around;
+    background: rgba(11, 7, 20, 0.96);
+    border-top: 1px solid var(--kiwi-border);
+    box-shadow: none;
+    overflow: visible;
+  }
+
+  .kiwi-mobile-bottom-pill button {
+    flex: 1 1 0;
+    flex-direction: column;
+    gap: 2px;
+    font-size: 10px;
+    font-weight: 600;
+    padding: 4px 2px;
+  }
+
+  .kiwi-mobile-bottom-pill button + button { border-left: none; }
+
+  .kiwi-mobile-bottom-pill .kiwi-mobile-fab-btn {
+    position: fixed;
+    right: 16px;
+    bottom: calc(var(--m-bottom-h) + 14px + env(safe-area-inset-bottom));
+    width: 50px;
+    height: 50px;
+    flex: none;
+    border-radius: 999px;
+    background: var(--kiwi-accent-purple);
+    color: #ffffff;
+    font-size: 24px;
+    font-weight: 700;
+    box-shadow: 0 8px 22px rgba(0, 0, 0, 0.55);
+    z-index: 46;
+  }
+
+  .kiwi-dm-split-shell { height: 100%; overflow: hidden; }
+  .kiwi-dm-left-pane { max-height: none; flex: 1 1 auto; border-bottom: none; }
+  body.dm-thread-selected .kiwi-dm-left-pane { display: none; }
+  body:not(.dm-thread-selected) .kiwi-dm-right-pane { display: none; }
+  body.dm-thread-selected .kiwi-dm-right-pane {
+    display: flex;
+    flex: 1 1 auto;
+    height: 100%;
+    min-height: 0;
+  }
+}
+
+
+/* Ajustes finais do layout mobile */
+@media (max-width: 768px) {
+  :root { --m-bottom-h: 58px; }
+  .sidebar-left, .chat-area, #chat-log, #kiwi-profile-timeline-view,
+  #kiwi-post-detail-scroll, #kiwi-dm-split-view {
+    min-width: 0; max-width: 100%; overflow-x: hidden;
+  }
+  #chat-log, #kiwi-profile-timeline-view, #kiwi-post-detail-scroll {
+    overflow-y: auto; -webkit-overflow-scrolling: touch;
+    padding-bottom: calc(var(--m-bottom-h) + 28px + env(safe-area-inset-bottom));
+  }
+  .kiwi-mobile-bottom-pill {
+    left: 0; right: 0; bottom: 0; height: var(--m-bottom-h);
+    border-radius: 0; border-left: 0; border-right: 0; border-bottom: 0;
+    padding: 0 6px env(safe-area-inset-bottom); justify-content: space-around;
+    background: rgba(11, 7, 20, .96); border-top: 1px solid var(--kiwi-border);
+    box-shadow: none; overflow: visible;
+  }
+  .kiwi-mobile-bottom-pill button {
+    flex: 1 1 0; min-width: 0; height: 100%; flex-direction: column;
+    gap: 2px; font-size: 10px; font-weight: 600; padding: 4px 2px;
+    border: 0; border-radius: 0;
+  }
+  .kiwi-mobile-bottom-pill button + button { border-left: 0; }
+  .kiwi-mobile-bottom-pill .kiwi-mobile-fab-btn {
+    position: fixed; right: 16px; bottom: calc(var(--m-bottom-h) + 14px + env(safe-area-inset-bottom));
+    width: 50px; height: 50px; flex: none; border-radius: 999px;
+    background: var(--kiwi-accent-purple); color: #fff; font-size: 24px;
+    font-weight: 700; box-shadow: 0 8px 22px rgba(0,0,0,.55); z-index: 46;
+  }
+  .kiwi-dm-split-shell { height: 100%; min-height: 0; overflow: hidden; }
+  .kiwi-dm-left-pane { max-height: none; flex: 1 1 auto; min-height: 0; border-bottom: 0; }
+  .kiwi-dm-left-pane, #kiwi-dm-conversations-list { overflow-y: auto; -webkit-overflow-scrolling: touch; }
+  body.dm-thread-selected .kiwi-dm-left-pane { display: none; }
+  body:not(.dm-thread-selected) .kiwi-dm-right-pane { display: none; }
+  body.dm-thread-selected .kiwi-dm-right-pane {
+    display: flex; flex: 1 1 auto; height: 100%; min-height: 0; width: 100%;
+  }
+  #kiwi-dm-right-messages { min-height: 0; overflow-y: auto; }
+  #kiwi-dm-right-input-bar { flex-shrink: 0; padding-bottom: calc(10px + env(safe-area-inset-bottom)); }
+  .kiwi-dm-mobile-back { display: inline-flex !important; }
+}
+@media (min-width: 769px) { .kiwi-dm-mobile-back { display: none !important; } }
+
+
+.kiwi-account-action-menu { display:none; position:fixed; left:16px; bottom:82px; width:min(310px, calc(100vw - 32px)); padding:14px; background:var(--kiwi-bg-panel, #160d29); border:1px solid var(--kiwi-border, rgba(167,139,250,.2)); border-radius:16px; box-shadow:0 16px 42px rgba(0,0,0,.55); z-index:90; color:var(--kiwi-text-primary,#f5f3ff); }
+.kiwi-account-action-menu.open { display:block; }
+.kiwi-account-menu-head { display:flex; align-items:center; gap:10px; min-width:0; }
+.kiwi-account-menu-avatar { width:46px; height:46px; flex:0 0 46px; border-radius:50%; background:#39215f center/cover no-repeat; display:grid; place-items:center; overflow:hidden; }
+.kiwi-account-menu-identity { min-width:0; display:flex; flex-direction:column; gap:3px; }
+.kiwi-account-menu-identity strong { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.kiwi-account-menu-identity span { color:var(--kiwi-text-muted,#a79bc4); font-size:12px; }
+.kiwi-account-menu-stats { display:flex; justify-content:space-between; gap:5px; padding:12px 0; margin:10px 0 6px; border-top:1px solid var(--kiwi-border); border-bottom:1px solid var(--kiwi-border); font-size:10px; color:var(--kiwi-text-muted); }
+.kiwi-account-menu-stats b { color:var(--kiwi-text-primary); font-size:12px; }
+.kiwi-account-menu-action { display:flex; align-items:center; gap:10px; width:100%; padding:10px; border:0; border-radius:9px; background:transparent; color:inherit; text-align:left; font-size:13px; cursor:pointer; }
+.kiwi-account-menu-action:hover { background:rgba(124,58,237,.18); }
+@media (max-width:768px) { .kiwi-account-action-menu { left:12px; bottom:calc(var(--m-bottom-h,58px) + 12px + env(safe-area-inset-bottom)); } }
+
+
+.kiwi-dm-attach-wrap { position:relative; flex:0 0 auto; }
+.kiwi-dm-attach-menu { display:none; position:absolute; left:0; bottom:calc(100% + 10px); min-width:155px; padding:6px; border:1px solid var(--kiwi-border); border-radius:12px; background:var(--kiwi-bg-panel); box-shadow:0 10px 28px rgba(0,0,0,.45); z-index:80; }
+.kiwi-dm-attach-menu.open { display:flex; flex-direction:column; gap:3px; }
+.kiwi-dm-attach-menu button { border:0; border-radius:8px; padding:9px 10px; background:transparent; color:var(--kiwi-text-primary); text-align:left; font-size:12px; white-space:nowrap; }
+.kiwi-dm-attach-menu button:hover { background:rgba(124,58,237,.2); }
+
+
+
+@media (max-width: 768px) {
+  .kiwi-avatar-drawer-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.62);
+    z-index: 60;
+    display: none;
+  }
+  .kiwi-avatar-drawer-backdrop.open { display: block; }
+  .kiwi-avatar-drawer {
+    position: fixed;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    width: min(82vw, 310px);
+    background: var(--kiwi-bg-elevated, #140e24);
+    border-right: 1px solid var(--kiwi-border, rgba(255,255,255,.1));
+    z-index: 61;
+    transform: translateX(-100%);
+    transition: transform .2s ease;
+    display: flex;
+    flex-direction: column;
+    padding: calc(16px + env(safe-area-inset-top)) 14px calc(20px + env(safe-area-inset-bottom));
+    gap: 12px;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+  }
+  .kiwi-avatar-drawer.open { transform: translateX(0); }
+  .kiwi-avatar-drawer-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--kiwi-border, rgba(255,255,255,.1));
+  }
+  .kiwi-avatar-drawer-user { display:flex; align-items:center; gap:10px; min-width:0; }
+  .kiwi-avatar-drawer-user .kiwi-avatar-drawer-avatar {
+    width:44px; height:44px; border-radius:999px; object-fit:cover; flex-shrink:0;
+    display:flex; align-items:center; justify-content:center; overflow:hidden;
+  }
+  .kiwi-avatar-drawer-name {
+    font-size:14px; font-weight:700; color:var(--kiwi-text-primary,#fff);
+    white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+  }
+  .kiwi-avatar-drawer-sub {
+    font-size:12px; color:var(--kiwi-text-muted,#9e96b8);
+    white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+  }
+  .kiwi-avatar-drawer-stats {
+    display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:6px;
+    padding:9px 0 12px; border-bottom:1px solid var(--kiwi-border,rgba(255,255,255,.1));
+  }
+  .kiwi-avatar-drawer-stats span { text-align:center; color:var(--kiwi-text-muted); font-size:10px; }
+  .kiwi-avatar-drawer-stats b { display:block; color:var(--kiwi-text-primary); font-size:13px; }
+  .kiwi-avatar-drawer-close {
+    width:32px; height:32px; border-radius:999px;
+    border:1px solid var(--kiwi-border,rgba(255,255,255,.12));
+    background:transparent; color:var(--kiwi-text-primary,#fff);
+    font-size:16px; cursor:pointer; flex-shrink:0;
+  }
+  .kiwi-avatar-drawer-list { display:flex; flex-direction:column; gap:4px; }
+  .kiwi-avatar-drawer-item {
+    display:flex; align-items:center; gap:10px; width:100%; padding:10px 12px;
+    border-radius:10px; border:0; background:transparent;
+    color:var(--kiwi-text-primary,#fff); font-size:13px; font-weight:600;
+    text-align:left; cursor:pointer;
+  }
+  .kiwi-avatar-drawer-item:hover,
+  .kiwi-avatar-drawer-item:active { background:rgba(255,255,255,.06); }
+  .kiwi-avatar-drawer-item.danger { color:#ff6b81; margin-top:8px; }
+}
+
 </style>
 </head>
 <body>
@@ -1414,6 +1624,7 @@ html, body {
                     </div>
                     <div class="kiwi-dm-right-pane">
                         <div class="kiwi-dm-right-header">
+                            <button type="button" class="kiwi-x-circle-btn kiwi-dm-mobile-back" id="kiwi-dm-mobile-back-btn" title="Voltar à lista" aria-label="Voltar à lista" style="display:none;">←</button>
                             <div style="display:flex;align-items:center;gap:10px;min-width:0;">
                                 <div id="kiwi-dm-active-avatar" class="social-avatar">K</div>
                                 <div style="min-width:0;">
@@ -1436,6 +1647,15 @@ html, body {
                             </div>
                         </div>
                         <div id="kiwi-dm-right-input-bar" style="display:none;padding:10px 14px;border-top:1px solid var(--kiwi-border);background:var(--kiwi-bg-panel);gap:8px;align-items:center;">
+                            <div class="kiwi-dm-attach-wrap">
+                                <button type="button" id="kiwi-dm-attach-btn" class="kiwi-dm-btn-secondary" title="Anexar foto, arquivo ou áudio" aria-label="Anexar">+</button>
+                                <div id="kiwi-dm-attach-menu" class="kiwi-dm-attach-menu" role="menu">
+                                    <button type="button" data-dm-pick="photo">🖼️ Foto / GIF</button>
+                                    <button type="button" data-dm-pick="doc">📄 Arquivo</button>
+                                    <button type="button" data-dm-pick="audio">🎵 Áudio</button>
+                                </div>
+                            </div>
+                            <span id="kiwi-dm-attachment-name" style="display:none;max-width:72px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:10px;color:var(--kiwi-text-muted);"></span>
                             <input type="text" id="kiwi-dm-right-input" placeholder="Enviar mensagem no bate-papo..." style="flex:1;padding:9px 14px;border-radius:999px;border:1px solid var(--kiwi-border);background:var(--kiwi-bg-card);color:var(--kiwi-text-primary);font-size:13px;outline:none;">
                             <button type="button" id="kiwi-dm-right-send-btn" class="kiwi-dm-btn-primary">Enviar</button>
                         </div>
@@ -3844,7 +4064,228 @@ html, body {
                 });
             });
 
-            if (openTrigger) openTrigger.addEventListener('click', () => openUserProfile(activeUsername));
+            if (openTrigger) openTrigger.addEventListener('click', (event) => {
+                event.stopPropagation();
+                const menu = document.getElementById('kiwi-account-action-menu');
+                if (menu) menu.classList.toggle('open');
+            });
+            function createKiwiAccountActionMenu() {
+                if (document.getElementById('kiwi-account-action-menu')) return;
+                const menu = document.createElement('div');
+                menu.id = 'kiwi-account-action-menu';
+                menu.className = 'kiwi-account-action-menu';
+                menu.setAttribute('role', 'dialog');
+                menu.setAttribute('aria-label', 'Opções da conta Kiwi');
+                const avatar = document.createElement('div');
+                avatar.className = 'kiwi-account-menu-avatar';
+                avatar.id = 'kiwi-account-menu-avatar';
+                const identity = document.createElement('div');
+                identity.className = 'kiwi-account-menu-identity';
+                identity.innerHTML = `<strong id="kiwi-account-menu-name"></strong><span id="kiwi-account-menu-handle"></span>`;
+                const stats = document.createElement('div');
+                stats.className = 'kiwi-account-menu-stats';
+                stats.innerHTML = `<span><b id="kiwi-account-friends-count">0</b> Amigos</span><span><b id="kiwi-account-following-count">0</b> Seguindo</span><span><b id="kiwi-account-followers-count">0</b> Seguidores</span>`;
+                const head = document.createElement('div');
+                head.className = 'kiwi-account-menu-head';
+                head.append(avatar, identity);
+                menu.append(head, stats);
+                const actions = [
+                    ['👤', 'Perfil', () => activateNavTab('perfil')],
+                    ['👥', 'Amizades', () => { window.switchToGeral(); window.closeMobileChatView(); const tab = document.querySelector('.social-tab[data-tab="amigos"]'); if (tab) tab.click(); }],
+                    ['#️⃣', 'Canais / Salas', () => { window.switchToGeral(); window.closeMobileChatView(); }],
+                    ['🛍️', 'Loja', () => { window.location.href = '/loja/'; }],
+                    ['⚙️', 'Definições', () => { if (settingsColorsModal) { syncAdminVisualRestrictions(); openModalAnimated(settingsColorsModal); } }],
+                    ['↪', 'Sair', () => { const form = document.getElementById('logout-form'); if (form) form.requestSubmit(); }]
+                ];
+                actions.forEach(([icon, label, action]) => {
+                    const btn = document.createElement('button');
+                    btn.type = 'button';
+                    btn.className = 'kiwi-account-menu-action';
+                    btn.innerHTML = `<span>${icon}</span><span>${label}</span>`;
+                    btn.addEventListener('click', () => { menu.classList.remove('open'); action(); });
+                    menu.appendChild(btn);
+                });
+                document.body.appendChild(menu);
+                const refresh = () => {
+                    const profile = myProfileData || {};
+                    const name = profile.displayName || profile.name || activeUsername;
+                    const av = document.getElementById('kiwi-account-menu-avatar');
+                    if (av) setAvatarStyle(av, profile.avatarUrl || profile.avatar_url || '', activeUsername);
+                    const nm = document.getElementById('kiwi-account-menu-name');
+                    const handle = document.getElementById('kiwi-account-menu-handle');
+                    if (nm) nm.textContent = name;
+                    if (handle) handle.textContent = `@${String(activeUsername || '').toLowerCase()}`;
+                    const f = document.getElementById('kiwi-account-friends-count');
+                    const g = document.getElementById('kiwi-account-following-count');
+                    const r = document.getElementById('kiwi-account-followers-count');
+                    if (f) f.textContent = String((friendsList || []).length);
+                    if (g) g.textContent = String((followingList || []).length);
+                    if (r) r.textContent = String((followersList || []).length);
+                };
+                refresh();
+                openTrigger.addEventListener('click', refresh);
+                document.addEventListener('click', (event) => {
+                    if (!menu.contains(event.target) && !openTrigger.contains(event.target)) menu.classList.remove('open');
+                });
+            }
+            createKiwiAccountActionMenu();
+
+            // Gaveta mobile integrada aos dados e ações reais já existentes no Kiwi.
+            function initKiwiMobileAvatarDrawer() {
+                if (document.getElementById('kiwi-mobile-avatar-drawer')) return;
+
+                const backdrop = document.createElement('div');
+                backdrop.id = 'kiwi-mobile-avatar-drawer-backdrop';
+                backdrop.className = 'kiwi-avatar-drawer-backdrop';
+
+                const drawer = document.createElement('aside');
+                drawer.id = 'kiwi-mobile-avatar-drawer';
+                drawer.className = 'kiwi-avatar-drawer';
+                drawer.setAttribute('aria-label', 'Menu da conta');
+                drawer.setAttribute('aria-hidden', 'true');
+
+                const header = document.createElement('div');
+                header.className = 'kiwi-avatar-drawer-header';
+                const user = document.createElement('div');
+                user.className = 'kiwi-avatar-drawer-user';
+                const avatar = document.createElement('div');
+                avatar.className = 'kiwi-avatar-drawer-avatar';
+                avatar.id = 'kiwi-mobile-drawer-avatar';
+                const identity = document.createElement('div');
+                identity.style.minWidth = '0';
+                const name = document.createElement('div');
+                name.className = 'kiwi-avatar-drawer-name';
+                name.id = 'kiwi-mobile-drawer-name';
+                const handle = document.createElement('div');
+                handle.className = 'kiwi-avatar-drawer-sub';
+                handle.id = 'kiwi-mobile-drawer-handle';
+                identity.append(name, handle);
+                user.append(avatar, identity);
+
+                const close = document.createElement('button');
+                close.type = 'button';
+                close.className = 'kiwi-avatar-drawer-close';
+                close.setAttribute('aria-label', 'Fechar menu');
+                close.textContent = '✕';
+                header.append(user, close);
+
+                const stats = document.createElement('div');
+                stats.className = 'kiwi-avatar-drawer-stats';
+                stats.innerHTML = '<span><b id="kiwi-mobile-drawer-friends">0</b>Amigos</span><span><b id="kiwi-mobile-drawer-following">0</b>Seguindo</span><span><b id="kiwi-mobile-drawer-followers">0</b>Seguidores</span>';
+
+                const nav = document.createElement('nav');
+                nav.className = 'kiwi-avatar-drawer-list';
+                nav.setAttribute('aria-label', 'Ações da conta');
+                drawer.append(header, stats, nav);
+                document.body.append(backdrop, drawer);
+
+                const refresh = () => {
+                    const profile = myProfileData || {};
+                    const displayName = profile.displayName || profile.name || activeUsername || 'Conta Kiwi';
+                    const avatarUrl = profile.avatarUrl || profile.avatar_url || '';
+                    const avatarNode = document.getElementById('kiwi-mobile-drawer-avatar');
+                    if (avatarNode) {
+                        avatarNode.replaceChildren();
+                        if (avatarUrl) {
+                            const img = document.createElement('img');
+                            img.src = avatarUrl;
+                            img.alt = '';
+                            img.style.cssText = 'width:100%;height:100%;object-fit:cover;border-radius:inherit;';
+                            avatarNode.appendChild(img);
+                        } else {
+                            avatarNode.textContent = String(displayName).slice(0, 1).toUpperCase();
+                        }
+                    }
+                    document.getElementById('kiwi-mobile-drawer-name').textContent = displayName;
+                    document.getElementById('kiwi-mobile-drawer-handle').textContent = `@${String(activeUsername || '').toLowerCase()}`;
+                    document.getElementById('kiwi-mobile-drawer-friends').textContent = String((friendsList || []).length);
+                    document.getElementById('kiwi-mobile-drawer-following').textContent = String((followingList || []).length);
+                    document.getElementById('kiwi-mobile-drawer-followers').textContent = String((followersList || []).length);
+                };
+
+                const closeDrawer = () => {
+                    drawer.classList.remove('open');
+                    backdrop.classList.remove('open');
+                    drawer.setAttribute('aria-hidden', 'true');
+                    document.body.classList.remove('kiwi-avatar-drawer-open');
+                };
+                const openDrawer = () => {
+                    if (window.innerWidth > 768) return;
+                    refresh();
+                    drawer.classList.add('open');
+                    backdrop.classList.add('open');
+                    drawer.setAttribute('aria-hidden', 'false');
+                    document.body.classList.add('kiwi-avatar-drawer-open');
+                };
+
+                const actions = [
+                    ['◉', 'Meu Perfil', () => activateNavTab('perfil')],
+                    ['👥', 'Amizades', () => {
+                        window.switchToGeral();
+                        if (typeof window.closeMobileChatView === 'function') window.closeMobileChatView();
+                        const tab = document.querySelector('.social-tab[data-tab="amigos"]');
+                        if (tab) tab.click();
+                    }],
+                    ['#', 'Canais / Salas', () => {
+                        window.switchToGeral();
+                        if (typeof window.closeMobileChatView === 'function') window.closeMobileChatView();
+                    }],
+                    ['✉', 'Mensagens Diretas', () => {
+                        const dmTab = document.querySelector('[data-mobile-tab="mensagens"], #mobile-pill-mensagens-btn, #nav-dm-btn');
+                        if (dmTab) dmTab.click();
+                        else window.switchToGeral();
+                    }],
+                    ['◈', 'Loja', () => { window.location.href = '/loja/'; }],
+                    ['⚙', 'Definições', () => {
+                        if (settingsColorsModal) {
+                            syncAdminVisualRestrictions();
+                            openModalAnimated(settingsColorsModal);
+                        }
+                    }],
+                    ['⎋', 'Sair', () => {
+                        const form = document.getElementById('logout-form');
+                        if (form) form.requestSubmit();
+                    }]
+                ];
+
+                actions.forEach(([symbol, label, action]) => {
+                    const button = document.createElement('button');
+                    button.type = 'button';
+                    button.className = 'kiwi-avatar-drawer-item' + (label === 'Sair' ? ' danger' : '');
+                    const icon = document.createElement('span');
+                    icon.setAttribute('aria-hidden', 'true');
+                    icon.textContent = symbol;
+                    const text = document.createElement('span');
+                    text.textContent = label;
+                    button.append(icon, text);
+                    button.addEventListener('click', () => {
+                        closeDrawer();
+                        action();
+                    });
+                    nav.appendChild(button);
+                });
+
+                backdrop.addEventListener('click', closeDrawer);
+                close.addEventListener('click', closeDrawer);
+                document.addEventListener('keydown', event => {
+                    if (event.key === 'Escape') closeDrawer();
+                });
+
+                // Captura antes do handler antigo do cartão de perfil para abrir a gaveta no mobile.
+                document.addEventListener('click', event => {
+                    const trigger = event.target instanceof Element
+                        ? event.target.closest('#open-profile-trigger, #my-mini-avatar, [data-open-account-drawer]')
+                        : null;
+                    if (!trigger || window.innerWidth > 768) return;
+                    event.preventDefault();
+                    event.stopPropagation();
+                    event.stopImmediatePropagation();
+                    openDrawer();
+                }, true);
+            }
+            initKiwiMobileAvatarDrawer();
+
+
             if (settingsBtn && settingsColorsModal) {
                 settingsBtn.addEventListener('click', () => {
                     syncAdminVisualRestrictions();
@@ -4335,7 +4776,11 @@ html, body {
                 if (!inp) return;
                 inp.addEventListener('change', () => {
                     const f = inp.files && inp.files[0];
-                    if (f) setPendingAttachment(f);
+                    if (f) {
+                        setPendingAttachment(f);
+                        const dmName = document.getElementById('kiwi-dm-attachment-name');
+                        if (dmName) { dmName.textContent = f.name; dmName.style.display = 'inline-block'; }
+                    }
                 });
             });
 
@@ -4605,6 +5050,7 @@ html, body {
 
             function showDmSplitSurface() {
                 hideAllMainSurfaces();
+                document.body.classList.remove('dm-thread-selected');
                 if (dmSplitView) dmSplitView.style.display = 'flex';
                 renderDmSplitPane(dmSearchInp ? dmSearchInp.value : '');
             }
@@ -5301,7 +5747,16 @@ html, body {
                     const bubble = document.createElement('div');
                     const isMine = (m.sender || '').toLowerCase() === activeUsername.toLowerCase();
                     bubble.style.cssText = `max-width:78%;align-self:${isMine ? 'flex-end' : 'flex-start'};background:${isMine ? 'var(--kiwi-accent-purple)' : 'var(--kiwi-bg-card)'};border:1px solid var(--kiwi-border);padding:9px 13px;border-radius:14px;font-size:13px;`;
-                    bubble.innerHTML = `<div style="font-size:11px;font-weight:700;opacity:0.8;margin-bottom:2px;">${escapeHtmlText(m.sender)} • ${escapeHtmlText(m.time || '')}</div><div>${escapeHtmlText(m.text)}</div>`;
+                    bubble.innerHTML = `<div style="font-size:11px;font-weight:700;opacity:0.8;margin-bottom:2px;">${escapeHtmlText(m.sender)} • ${escapeHtmlText(m.time || '')}</div><div>${escapeHtmlText(m.text || '')}</div>`;
+                    if (m.attachmentUrl || m.attachment_url) {
+                        const url = m.attachmentUrl || m.attachment_url;
+                        const type = m.attachmentType || m.attachment_type || '';
+                        const link = document.createElement(type.startsWith('image/') ? 'img' : 'a');
+                        link.src = type.startsWith('image/') ? url : undefined;
+                        if (!type.startsWith('image/')) { link.href = url; link.target = '_blank'; link.rel = 'noopener noreferrer'; link.textContent = m.attachmentName || m.attachment_name || 'Abrir anexo'; }
+                        if (type.startsWith('image/')) { link.alt = m.attachmentName || 'Imagem anexada'; link.style.cssText = 'display:block;max-width:190px;max-height:190px;object-fit:contain;border-radius:10px;margin-top:7px;'; }
+                        bubble.appendChild(link);
+                    }
                     dmRightMessagesEl.appendChild(bubble);
                 });
                 dmRightMessagesEl.scrollTop = dmRightMessagesEl.scrollHeight;
@@ -5309,6 +5764,7 @@ html, body {
 
             function openDmPeerThread(peerUsername) {
                 if (!peerUsername || isRemovedFakeAccount(peerUsername)) return;
+                document.body.classList.add('dm-thread-selected');
                 selectedDmPeer = peerUsername;
                 currentDmUser = peerUsername;
                 if (!dmThreads[peerUsername]) dmThreads[peerUsername] = [];
@@ -5324,12 +5780,31 @@ html, body {
             async function sendDmFromRightPane() {
                 if (!selectedDmPeer || !dmRightInputEl) return;
                 const txt = dmRightInputEl.value.trim();
-                if (!txt) return;
+                if (!txt && !pendingAttachmentFile) return;
                 if (!dmThreads[selectedDmPeer]) dmThreads[selectedDmPeer] = [];
                 const timeStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
                 const dmId = `dm-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
-                dmThreads[selectedDmPeer].push({ id: dmId, sender: activeUsername, text: txt, time: timeStr });
+                let attachmentUrl = '';
+                let attachmentName = '';
+                let attachmentType = '';
+                if (pendingAttachmentFile) {
+                    attachmentName = pendingAttachmentFile.name || 'anexo';
+                    attachmentType = pendingAttachmentFile.type || '';
+                    const uploaded = await uploadAttachmentToDjango(pendingAttachmentFile, { targetUser: selectedDmPeer });
+                    if (uploaded) { attachmentUrl = uploaded.url; attachmentName = uploaded.name || attachmentName; attachmentType = uploaded.type || attachmentType; }
+                    else if (pendingAttachmentFile.size <= 350000) {
+                        try { attachmentUrl = await readFileAsDataUrl(pendingAttachmentFile); } catch (_) {}
+                    }
+                    if (!attachmentUrl) {
+                        showKiwiToast('Não foi possível anexar o arquivo. Tente novamente.');
+                        return;
+                    }
+                }
+                dmThreads[selectedDmPeer].push({ id: dmId, sender: activeUsername, text: txt, time: timeStr, attachmentUrl, attachmentName, attachmentType });
                 dmRightInputEl.value = '';
+                if (pendingAttachmentFile) setPendingAttachment(null);
+                const dmAttachmentName = document.getElementById('kiwi-dm-attachment-name');
+                if (dmAttachmentName) { dmAttachmentName.textContent = ''; dmAttachmentName.style.display = 'none'; }
                 renderDmMessagesList(selectedDmPeer);
                 renderDmSplitPane(dmSearchInp ? dmSearchInp.value : '');
                 const sentViaWs = roomCtxManager.sendToContext({ type: 'dm', targetUser: selectedDmPeer }, {
@@ -5337,13 +5812,16 @@ html, body {
                     id: dmId,
                     recipient: selectedDmPeer,
                     message: txt,
-                    username: activeUsername
+                    username: activeUsername,
+                    attachment_url: attachmentUrl,
+                    attachment_name: attachmentName,
+                    attachment_type: attachmentType
                 });
                 if (!sentViaWs) {
                     apiRequestJson('/api/dm/send/', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ recipient: selectedDmPeer, message: txt })
+                        body: JSON.stringify({ recipient: selectedDmPeer, message: txt, attachment_url: attachmentUrl, attachment_name: attachmentName, attachment_type: attachmentType })
                     }).catch(() => {});
                 }
             }
@@ -5393,6 +5871,22 @@ html, body {
             }
 
             if (dmSearchInp) dmSearchInp.addEventListener('input', () => renderDmSplitPane(dmSearchInp.value));
+            const dmAttachBtn = document.getElementById('kiwi-dm-attach-btn');
+            const dmAttachMenu = document.getElementById('kiwi-dm-attach-menu');
+            if (dmAttachBtn && dmAttachMenu) {
+                dmAttachBtn.addEventListener('click', (event) => { event.stopPropagation(); dmAttachMenu.classList.toggle('open'); });
+                dmAttachMenu.querySelectorAll('[data-dm-pick]').forEach((option) => {
+                    option.addEventListener('click', () => {
+                        dmAttachMenu.classList.remove('open');
+                        const type = option.getAttribute('data-dm-pick');
+                        const picker = document.getElementById(type === 'photo' ? 'file-photo-input' : type === 'audio' ? 'file-audio-input' : 'file-doc-input');
+                        if (picker) picker.click();
+                    });
+                });
+                document.addEventListener('click', (event) => {
+                    if (!dmAttachMenu.contains(event.target) && event.target !== dmAttachBtn) dmAttachMenu.classList.remove('open');
+                });
+            }
             if (dmRightSendBtn) dmRightSendBtn.addEventListener('click', sendDmFromRightPane);
             if (dmRightInputEl) dmRightInputEl.addEventListener('keydown', (e) => { if (e.key === 'Enter') sendDmFromRightPane(); });
             if (dmRightCallBtn) dmRightCallBtn.addEventListener('click', () => { if (selectedDmPeer) startVoiceCall(selectedDmPeer); });
@@ -6306,9 +6800,11 @@ html, body {
 
             function activateNavTab(tabName) {
                 mainNavItems.forEach(item => item.classList.toggle('active', item.getAttribute('data-nav-tab') === tabName));
+                document.querySelectorAll('#kiwi-mobile-bottom-pill [data-nav-tab]').forEach(item => item.classList.toggle('active', item.getAttribute('data-nav-tab') === tabName));
                 if (tabName === 'perfil') {
                     window.openFullProfilePage(activeUsername);
                 } else if (tabName === 'mensagens') {
+                    document.body.classList.remove('dm-thread-selected');
                     currentView = 'dm';
                     if (headerMainTitle) headerMainTitle.textContent = '✉️ Mensagens';
                     if (headerSubLabel) headerSubLabel.textContent = '| Bate-papo direto';
@@ -6457,34 +6953,48 @@ html, body {
                 bar.className = 'kiwi-mobile-bottom-pill';
                 bar.setAttribute('aria-label', 'Navegação inferior Kiwi');
 
-                const btnChat = document.createElement('button');
-                btnChat.type = 'button';
-                btnChat.id = 'mobile-pill-chat-btn';
-                btnChat.innerHTML = '<span>💬</span><span>Chat</span>';
-
-                const btnPerfil = document.createElement('button');
-                btnPerfil.type = 'button';
-                btnPerfil.id = 'mobile-pill-perfil-btn';
-                btnPerfil.innerHTML = '<span>👤</span><span>Perfil</span>';
-
-                btnChat.addEventListener('click', () => {
-                    btnChat.classList.add('active');
-                    btnPerfil.classList.remove('active');
-                    window.switchToGeral();
+                const tabs = [
+                    { id: 'inicio', icon: '🏠', label: 'Início' },
+                    { id: 'explorar', icon: '🔍', label: 'Explorar' },
+                    { id: 'mensagens', icon: '✉️', label: 'Mensagens' },
+                    { id: 'perfil', icon: '👤', label: 'Perfil' },
+                    { id: 'mais', icon: '•••', label: 'Mais' }
+                ];
+                tabs.forEach((tab) => {
+                    const btn = document.createElement('button');
+                    btn.type = 'button';
+                    btn.id = `mobile-pill-${tab.id}-btn`;
+                    btn.dataset.navTab = tab.id;
+                    btn.innerHTML = `<span aria-hidden="true">${tab.icon}</span><span>${tab.label}</span>`;
+                    btn.addEventListener('click', () => {
+                        bar.querySelectorAll('button[data-nav-tab]').forEach(el => el.classList.toggle('active', el === btn));
+                        activateNavTab(tab.id);
+                    });
+                    bar.appendChild(btn);
                 });
 
-                btnPerfil.addEventListener('click', () => {
-                    btnPerfil.classList.add('active');
-                    btnChat.classList.remove('active');
-                    window.openFullProfilePage(activeUsername);
+                const fab = document.createElement('button');
+                fab.type = 'button';
+                fab.id = 'kiwi-mobile-fab-btn';
+                fab.className = 'kiwi-mobile-fab-btn';
+                fab.setAttribute('aria-label', 'Criar postagem');
+                fab.title = 'Criar postagem';
+                fab.textContent = '+';
+                fab.addEventListener('click', () => {
+                    const modal = document.getElementById('create-post-modal');
+                    if (modal) openModalAnimated(modal);
+                    else showKiwiToast('A opção de postagem não está disponível nesta tela.');
                 });
-
-                bar.appendChild(btnChat);
-                bar.appendChild(btnPerfil);
+                bar.appendChild(fab);
                 document.body.appendChild(bar);
             }
 
             createMobileBottomPillBar();
+            const mobileDmBackBtn = document.getElementById('kiwi-dm-mobile-back-btn');
+            if (mobileDmBackBtn) mobileDmBackBtn.addEventListener('click', () => {
+                document.body.classList.remove('dm-thread-selected');
+                renderDmSplitPane(dmSearchInp ? dmSearchInp.value : '');
+            });
             fetchOnlineUsers();
             renderSidebarSavedFriends();
             renderDmTabs();
