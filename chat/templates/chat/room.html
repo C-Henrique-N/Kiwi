@@ -5367,7 +5367,8 @@ html, body {
 
                     card.appendChild(bannerDiv);
                     card.appendChild(bodyDiv);
-                    card.addEventListener('click', () => window.openUserProfile(akiiraName));
+                    card.style.cursor = 'pointer';
+                    card.addEventListener('click', () => window.openFullProfilePage(akiiraName));
 
                     wrap.appendChild(card);
                     xFeedList.appendChild(wrap);
@@ -5429,7 +5430,7 @@ html, body {
                             const adminTag = acc.isAdminFeatured || isAdminIdentity(acc.username, acc.is_admin) ? ' <span class="admin-gold-badge">👑 ADMIN</span>' : '';
                             row.innerHTML = `<div><div style="font-weight:800;font-size:13px;color:var(--kiwi-text-primary);">${escapeHtmlText(acc.username)}${adminTag}</div><div style="font-size:11px;color:var(--kiwi-text-muted);">${escapeHtmlText(acc.handle || '@' + acc.username.toLowerCase())}</div></div><span style="font-size:11px;color:#c084fc;font-weight:700;">Ver perfil →</span>`;
                             row.onclick = () => {
-                                window.openUserProfile(acc.username);
+                                window.openFullProfilePage(acc.username);
                             };
                             dropdown.appendChild(row);
                         });
