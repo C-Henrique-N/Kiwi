@@ -689,24 +689,6 @@ def api_channel_messages(request, channel_id):
         "messages": [_serialize_message(m, current_user=request.user) for m in ordered],
     })
 
-@login_required
-@require_GET
-def api_channel_messages(request, channel_id):
-    channel = get_object_or_404(Channel, id=channel_id)
-    channel.server.members.add(request.user)
-    msgs = (
-        Message.objects.filter(channel=channel)
-        .select_related("user", "channel")
-        .prefetch_related("reactions", "reactions__user")
-        .order_by("-timestamp", "-id")[:60]
-    )
-    ordered = list(reversed(msgs))
-    return JsonResponse({
-        "ok": True,
-        "channel_id": channel.id,
-        "channel_name": channel.name,
-        "messages": [_serialize_message(m, current_user=request.user) for m in ordered],
-    })
 
 @login_required
 @require_GET
@@ -726,6 +708,7 @@ def api_dm_history(request, username):
         "ok": True,
         "messages": [_serialize_dm(m, current_user=request.user) for m in dms],
     })
+
 
 if "api_dm_history" in globals():
     get_dm_history = api_dm_history
@@ -753,7 +736,6 @@ def api_messages_history(request):
         return JsonResponse({"ok": True, "messages": []})
 
     return api_channel_messages(request, channel.id)
-
 
 
 @login_required
@@ -973,8 +955,6 @@ def api_update_profile(request):
     profile = _get_or_create_profile(target_user)
     is_admin = _is_kiwi_admin(target_user) or request.user.is_superuser
 
-    
-
     if "bio" in data:
         profile.bio = (data.get("bio") or "").strip()[:500]
     if "pronouns" in data:
@@ -1048,11 +1028,6 @@ def api_update_profile(request):
         if saved:
             profile.music_cover_file.name = saved.replace(settings.MEDIA_URL, "", 1).lstrip("/")
 
-    if "username" in data and hasattr(profile, "display_name"):
-        new_disp = (data.get("username") or "").strip()[:50]
-        if new_disp:
-            profile.display_name = new_disp
-            
     profile.save()
     serialized_profile = _serialize_profile(target_user, profile)
 
@@ -1071,6 +1046,7 @@ def api_update_profile(request):
         "username": target_user.username,
         "profile": serialized_profile,
     })
+
 
 def _broadcast_feed_event(event_type, payload):
     channel_layer = get_channel_layer()
@@ -1318,7 +1294,10 @@ def create_profile_post(request):
             post.image.name = saved.replace(settings.MEDIA_URL, "", 1).lstrip("/")
             post.save()
 
-    return JsonResponse({"ok": True, "post": post.to_dict(current_user=request.user)})
+    item = post.to_dict(current_user=request.user)
+    author_prof = _get_or_create_profile(request.user)
+    item["author_avatar"] = _safe_media_url(author_prof.avatar)
+    return JsonResponse({"ok": True, "post": item})
 
 
 @login_required
@@ -1331,11 +1310,14 @@ def toggle_like_profile_post(request, post_id):
     else:
         post.liked_by.add(request.user)
         liked = True
+    item = post.to_dict(current_user=request.user)
+    author_prof = _get_or_create_profile(post.author)
+    item["author_avatar"] = _safe_media_url(author_prof.avatar)
     return JsonResponse({
         "ok": True,
         "liked": liked,
         "likes": post.liked_by.count(),
-        "post": post.to_dict(current_user=request.user),
+        "post": item,
     })
 
 
@@ -1357,6 +1339,9 @@ def add_profile_post_reply(request, post_id):
         author=request.user,
         content=content[:1000],
     )
+    item = post.to_dict(current_user=request.user)
+    author_prof = _get_or_create_profile(post.author)
+    item["author_avatar"] = _safe_media_url(author_prof.avatar)
     return JsonResponse({
         "ok": True,
         "reply": {
@@ -1365,7 +1350,7 @@ def add_profile_post_reply(request, post_id):
             "text": reply.content,
             "created_at": reply.created_at.isoformat(),
         },
-        "post": post.to_dict(current_user=request.user),
+        "post": item,
     })
 
 
