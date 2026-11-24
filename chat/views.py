@@ -1789,3 +1789,15 @@ def api_shop_unequip(request):
         "slot": slot or "all",
         "profile": _serialize_profile(request.user, profile),
     })
+
+update_profile = api_update_profile
+get_user_profile = api_user_profile
+create_server = api_create_server
+create_channel = api_create_channel
+send_friend_request = api_friend_request
+accept_friend_request = api_respond_friend_request
+reject_friend_request = api_respond_friend_request
+remove_friend = api_remove_friend
+delete_message = api_delete_message
+get_dm_history = api_dm_history
+upload_attachment = api_upload_attachment
