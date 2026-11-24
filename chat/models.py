@@ -62,6 +62,7 @@ class UserProfile(models.Model):
     spotify_artist = models.CharField(max_length=150, blank=True, default='Lala Sadii')
     accent_color = models.CharField(max_length=50, default='#ff9de2')
     frame_effect = models.CharField(max_length=50, blank=True, default='none')
+    card_effect = models.CharField(max_length=50, blank=True, default='none')
     profile_glow = models.BooleanField(default=False)
     avatar_pulse = models.BooleanField(default=False)
     name_style = models.CharField(max_length=50, blank=True, default='')

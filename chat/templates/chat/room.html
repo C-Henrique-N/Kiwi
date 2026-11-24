@@ -964,6 +964,30 @@ html, body {
   .kiwi-avatar-drawer-item.danger { color:#ff6b81; margin-top:8px; }
 }
 
+
+  /* Efeitos persistentes da Loja aplicados também no perfil principal */
+  #kiwi-x-display-name.name-style-neon,
+  .name-style-neon {
+    color: #9ffcff !important;
+    text-shadow: 0 0 7px rgba(34,211,238,.85), 0 0 16px rgba(59,130,246,.55);
+    letter-spacing: .035em;
+  }
+  #kiwi-x-avatar.shop-frame-crepusculo_berilo,
+  #kiwi-x-avatar.shop-frame-ondas_lavanda,
+  #kiwi-x-avatar.shop-frame-miragem_rosa,
+  #kiwi-x-avatar.shop-frame-gold_glow_frame {
+    outline: 3px solid rgba(212,175,55,.95);
+    outline-offset: 2px;
+    box-shadow: 0 0 12px rgba(139,92,246,.65);
+  }
+  #kiwi-x-avatar.shop-avatar-pulse { animation: kiwiShopAvatarPulse 1.8s ease-in-out infinite; }
+  @keyframes kiwiShopAvatarPulse {
+    0%,100% { box-shadow: 0 0 0 0 rgba(34,197,94,.15); }
+    50% { box-shadow: 0 0 0 7px rgba(34,197,94,.22); }
+  }
+  #kiwi-profile-timeline-view.shop-card-sakura .kiwi-x-profile-body { box-shadow: inset 0 0 24px rgba(244,114,182,.13); }
+  #kiwi-profile-timeline-view.shop-card-chamas .kiwi-x-profile-body { box-shadow: inset 0 0 24px rgba(249,115,22,.15); }
+  #kiwi-profile-timeline-view.shop-card-brilho .kiwi-x-profile-body { box-shadow: inset 0 0 24px rgba(250,204,21,.15); }
 </style>
 </head>
 <body>
@@ -1013,6 +1037,11 @@ html, body {
                         avatarUrl: (src.avatarUrl ?? src.avatar_url ?? fallback.avatarUrl ?? '').toString(),
                         bannerUrl: (src.bannerUrl ?? src.banner_url ?? fallback.bannerUrl ?? '').toString(),
                         accentColor: (src.accentColor ?? src.accent_color ?? fallback.accentColor ?? '#7c3aed').toString(),
+                        frameEffect: (src.frame_effect ?? src.frameEffect ?? fallback.frameEffect ?? 'none').toString(),
+                        cardEffect: (src.card_effect ?? src.cardEffect ?? fallback.cardEffect ?? 'none').toString(),
+                        nameStyle: (src.name_style ?? src.nameStyle ?? fallback.nameStyle ?? '').toString(),
+                        profileGlow: Boolean(src.profile_glow ?? src.profileGlow ?? fallback.profileGlow ?? false),
+                        avatarPulse: Boolean(src.avatar_pulse ?? src.avatarPulse ?? fallback.avatarPulse ?? false),
                         is_admin: Boolean(src.is_admin ?? fallback.is_admin ?? false)
                     };
                 },
@@ -3038,9 +3067,13 @@ html, body {
                 const showAdmin = isAdminIdentity(username, isAdminFlag);
                 if (cardEl) {
                     cardEl.classList.toggle('akiira-profile-gold-glow', Boolean(isAkiiraAdminIdentity(username, isAdminFlag) && profileObj && profileObj.profileGlow));
+                    cardEl.classList.toggle('shop-card-sakura', Boolean(profileObj && profileObj.cardEffect === 'sakura_encantada'));
+                    cardEl.classList.toggle('shop-card-chamas', Boolean(profileObj && profileObj.cardEffect === 'chamas_negras'));
+                    cardEl.classList.toggle('shop-card-brilho', Boolean(profileObj && profileObj.cardEffect === 'brilho_estelar'));
                 }
                 if (upAvatar) {
                     upAvatar.classList.toggle('akiira-gold-frame', Boolean(isAkiiraAdminIdentity(username, isAdminFlag) && profileObj && profileObj.goldGlowFrame));
+                    upAvatar.classList.toggle('shop-avatar-pulse', Boolean(profileObj && profileObj.avatarPulse));
                 }
                 if (badgeEl) badgeEl.style.display = showAdmin ? 'inline-flex' : 'none';
             }
@@ -3557,6 +3590,13 @@ html, body {
                         musicUrl: normalizedInit.musicUrl ?? myProfileData.musicUrl,
                         audioSrc: normalizedInit.audioSrc ?? myProfileData.audioSrc,
                         coverUrl: normalizedInit.coverUrl ?? myProfileData.coverUrl,
+                        frameEffect: normalizedInit.frameEffect || myProfileData.frameEffect || 'none',
+                        cardEffect: normalizedInit.cardEffect || myProfileData.cardEffect || 'none',
+                        nameStyle: normalizedInit.nameStyle || myProfileData.nameStyle || '',
+                        profileGlow: Boolean(normalizedInit.profileGlow),
+                        avatarPulse: Boolean(normalizedInit.avatarPulse),
+                        nameSpecialStyle: Boolean(normalizedInit.nameStyle && normalizedInit.nameStyle !== 'none'),
+                        goldGlowFrame: Boolean(normalizedInit.frameEffect && normalizedInit.frameEffect !== 'none'),
                         avatarUrl: normalizedInit.avatarUrl || myProfileData.avatarUrl,
                         bannerUrl: normalizedInit.bannerUrl || myProfileData.bannerUrl,
                         is_admin: resolvedAdmin,
@@ -4628,7 +4668,7 @@ html, body {
 
             if (editorNameStyleToggle) {
                 editorNameStyleToggle.addEventListener('click', () => {
-                    myProfileData.nameSpecialStyle = !myProfileData.nameSpecialStyle;
+                    myProfileData.nameSpecialStyle = !myProfileData.nameSpecialStyle;\n                    myProfileData.nameStyle = myProfileData.nameSpecialStyle ? 'neon' : '';
                     editorNameStyleToggle.classList.toggle('active', myProfileData.nameSpecialStyle);
                     if (editorLiveNameSample) {
                         editorLiveNameSample.style.letterSpacing = myProfileData.nameSpecialStyle ? '0.08em' : '';
@@ -4673,8 +4713,22 @@ html, body {
                     if (window.KiwiClient && typeof window.KiwiClient.submitProfileUpdate === 'function') {
                         const fd = new FormData(editProfileForm);
                         fd.set('location', myProfileData.location);
+                        fd.set('frame_effect', myProfileData.frameEffect && typeof myProfileData.frameEffect === 'string'
+                            ? myProfileData.frameEffect
+                            : (myProfileData.goldGlowFrame ? 'gold_glow_frame' : (myProfileData.frameEffect || 'none')));
+                        fd.set('card_effect', myProfileData.cardEffect || 'none');
+                        fd.set('profile_glow', String(Boolean(myProfileData.profileGlow)));
+                        fd.set('avatar_pulse', String(Boolean(myProfileData.avatarPulse)));
+                        fd.set('name_style', myProfileData.nameStyle || (myProfileData.nameSpecialStyle ? 'neon' : ''));
+                        if (editLocalAudioUrl && editLocalAudioUrl.value.trim()) fd.set('music_audio_url', editLocalAudioUrl.value.trim());
+                        if (editMusicCoverUrl && editMusicCoverUrl.value.trim()) fd.set('music_cover_url', editMusicCoverUrl.value.trim());
                         const serverResp = await window.KiwiClient.submitProfileUpdate(fd);
                         const normResp = window.KiwiClient.normalizeProfilePayload(serverResp, myProfileData);
+                        myProfileData.frameEffect = normResp.frameEffect;
+                        myProfileData.cardEffect = normResp.cardEffect;
+                        myProfileData.nameStyle = normResp.nameStyle;
+                        myProfileData.profileGlow = normResp.profileGlow;
+                        myProfileData.avatarPulse = normResp.avatarPulse;
                         if (normResp.avatarUrl) {
                             myProfileData.avatarUrl = normResp.avatarUrl;
                             tempEditorAvatarUrl = '';
@@ -4691,8 +4745,14 @@ html, body {
                             myProfileData.coverUrl = normResp.coverUrl;
                             tempEditorCoverUrl = '';
                         }
+                    } else {
+                        throw new Error('Módulo de salvamento do perfil indisponível.');
                     }
-                } catch (_) {}
+                } catch (saveError) {
+                    console.error('Falha ao salvar perfil:', saveError);
+                    showKiwiToast(`Não foi possível salvar: ${saveError.message || 'erro no servidor'}`);
+                    return;
+                }
 
                 myProfileData.song = editSong.value.trim();
                 myProfileData.artist = editArtist.value.trim();
@@ -5946,8 +6006,12 @@ html, body {
                 if (topNameEl) topNameEl.textContent = displayName;
                 if (dispNameEl) {
                     const showAdminBadge = isAdminIdentity(displayName, prof.is_admin);
+                    dispNameEl.classList.toggle('name-style-neon', prof.nameStyle === 'neon');
                     dispNameEl.innerHTML = `<span>${escapeHtmlText(displayName)}</span><span style="color:#a855f7;font-size:15px;">✔</span>${showAdminBadge ? '<span class="admin-gold-badge">👑 ADMIN</span>' : ''}`;
                 }
+                profileTimelineView.classList.toggle('shop-card-sakura', prof.cardEffect === 'sakura_encantada');
+                profileTimelineView.classList.toggle('shop-card-chamas', prof.cardEffect === 'chamas_negras');
+                profileTimelineView.classList.toggle('shop-card-brilho', prof.cardEffect === 'brilho_estelar');
                 if (adminBadgeEl) {
                     adminBadgeEl.style.display = isAdminIdentity(displayName, prof.is_admin) ? 'inline-flex' : 'none';
                 }
@@ -5969,6 +6033,8 @@ html, body {
                 if (avatarEl) {
                     setAvatarStyle(avatarEl, prof.avatarUrl, displayName);
                     avatarEl.classList.toggle('akiira-gold-frame', Boolean(isAkiiraAdminIdentity(displayName, prof.is_admin) && prof.goldGlowFrame));
+                    ['crepusculo_berilo','ondas_lavanda','miragem_rosa','gold_glow_frame'].forEach(effect => avatarEl.classList.toggle(`shop-frame-${effect}`, prof.frameEffect === effect));
+                    avatarEl.classList.toggle('shop-avatar-pulse', Boolean(prof.avatarPulse));
                 }
 
                 if (xEditProfileBtn) xEditProfileBtn.style.display = isOwn ? 'inline-flex' : 'none';
@@ -7102,6 +7168,13 @@ html, body {
                             musicUrl: norm.musicUrl || myProfileData.musicUrl,
                             audioSrc: norm.audioSrc || myProfileData.audioSrc,
                             coverUrl: norm.coverUrl || myProfileData.coverUrl,
+                            frameEffect: norm.frameEffect || myProfileData.frameEffect || 'none',
+                            cardEffect: norm.cardEffect || myProfileData.cardEffect || 'none',
+                            nameStyle: norm.nameStyle || myProfileData.nameStyle || '',
+                            profileGlow: Boolean(norm.profileGlow),
+                            avatarPulse: Boolean(norm.avatarPulse),
+                            nameSpecialStyle: Boolean(norm.nameStyle && norm.nameStyle !== 'none'),
+                            goldGlowFrame: Boolean(norm.frameEffect && norm.frameEffect !== 'none'),
                             avatarUrl: norm.avatarUrl || myProfileData.avatarUrl,
                             bannerUrl: norm.bannerUrl || myProfileData.bannerUrl,
                             is_admin: resolvedAdmin,

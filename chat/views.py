@@ -302,7 +302,8 @@ def _serialize_profile(user, profile):
         "music_artist": getattr(profile, "spotify_artist", "") or "",
         "spotify_song": getattr(profile, "spotify_song", "") or "",
         "spotify_artist": getattr(profile, "spotify_artist", "") or "",
-        "music_url": music_url,
+        "music_url": getattr(profile, "music_url", "") or "",
+        "music_audio_url": _safe_media_url(getattr(profile, "music_audio_file", None)) or getattr(profile, "music_audio_url", "") or "",
         "music_cover_url": music_cover_url,
         "is_admin": is_admin,
     }
@@ -967,9 +968,30 @@ def api_update_profile(request):
     if "accent_color" in data:
         profile.accent_color = _sanitize_accent_color(data.get("accent_color"), is_admin=is_admin)
     if "frame_effect" in data:
-        profile.frame_effect = (data.get("frame_effect") or "none").strip()[:50]
+        requested_frame = (data.get("frame_effect") or "none").strip()[:50]
+        allowed_frames = {item["value"] for item in SHOP_CATALOG.values() if item["slot"] == "frame_effect"}
+        if requested_frame == "gold_glow_frame" and is_admin:
+            profile.frame_effect = requested_frame
+        elif requested_frame == "none":
+            profile.frame_effect = "none"
+        elif requested_frame in allowed_frames and _can_use_exclusive_shop_item(
+            target_user, next(item for item in SHOP_CATALOG.values() if item["value"] == requested_frame and item["slot"] == "frame_effect")
+        ):
+            profile.frame_effect = requested_frame
+    if "card_effect" in data:
+        requested_card = (data.get("card_effect") or "none").strip()[:50]
+        allowed_cards = [item for item in SHOP_CATALOG.values() if item["slot"] == "card_effect" and item["value"] == requested_card]
+        if requested_card == "none":
+            profile.card_effect = "none"
+        elif allowed_cards and _can_use_exclusive_shop_item(target_user, allowed_cards[0]):
+            profile.card_effect = requested_card
     if "name_style" in data:
-        profile.name_style = (data.get("name_style") or "").strip()[:50]
+        requested_name_style = (data.get("name_style") or "").strip()[:50]
+        allowed_names = [item for item in SHOP_CATALOG.values() if item["slot"] == "name_style" and item["value"] == requested_name_style]
+        if not requested_name_style:
+            profile.name_style = ""
+        elif allowed_names and _can_use_exclusive_shop_item(target_user, allowed_names[0]):
+            profile.name_style = requested_name_style
     if "profile_glow" in data:
         profile.profile_glow = str(data.get("profile_glow")).lower() in ("true", "1", "on")
     if "avatar_pulse" in data:
@@ -987,7 +1009,7 @@ def api_update_profile(request):
     if "music_url" in data:
         profile.music_url = (data.get("music_url") or "").strip()[:200]
     if "music_audio_url" in data and hasattr(profile, "music_audio_url"):
-        profile.music_audio_url = (data.get("music_audio_url") or "").strip()[:300]
+        profile.music_audio_url = (data.get("music_audio_url") or "").strip()[:1000]
     if "music_cover_url" in data and hasattr(profile, "music_cover_url"):
         profile.music_cover_url = (data.get("music_cover_url") or "").strip()[:300]
 
@@ -1012,6 +1034,9 @@ def api_update_profile(request):
     )
     if f_audio:
         profile.music_audio_file = f_audio
+        profile.music_audio_url = ""
+    elif "music_audio_url" in data and data.get("music_audio_url"):
+        profile.music_audio_file = None
     elif isinstance(data.get("music_url"), str) and data.get("music_url").startswith("data:"):
         saved = _save_base64_media(data.get("music_url"), prefix="music")
         if saved:
@@ -1023,6 +1048,9 @@ def api_update_profile(request):
     )
     if f_cover:
         profile.music_cover_file = f_cover
+        profile.music_cover_url = ""
+    elif "music_cover_url" in data and data.get("music_cover_url"):
+        profile.music_cover_file = None
     elif isinstance(data.get("music_cover_url"), str) and data.get("music_cover_url").startswith("data:"):
         saved = _save_base64_media(data.get("music_cover_url"), prefix="cover")
         if saved:
