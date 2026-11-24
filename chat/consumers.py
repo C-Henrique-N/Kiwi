@@ -249,6 +249,19 @@ class ChatConsumer(AsyncWebsocketConsumer):
                 },
             )
 
+        async def disconnect(self, close_code):
+        for grp in ("room_group_name", "personal_group_name", "feed_group_name"):
+            if hasattr(self, grp):
+                await self.channel_layer.group_discard(getattr(self, grp), self.channel_name)
+
+        async def profile_updated(self, event): 
+        payload = event.get("payload") or event.get("data") or event.get("profile") or {}
+        await self.send(text_data=json.dumps({
+            "type": "profile_updated",
+            "profile": payload,
+            "data": payload,
+             }))
+
     async def broadcast_chat_message(self, event):
         payload = dict(event["payload"])
         payload["type"] = "chat_message"
