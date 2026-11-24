@@ -130,17 +130,17 @@ class ChatConsumer(AsyncWebsocketConsumer):
             return
 
         kwargs = self.scope.get("url_route", {}).get("kwargs", {})
+        raw_server = kwargs.get("server_id")
         raw_channel = kwargs.get("channel_id") or kwargs.get("channel_name") or 1
-        self.channel_id = await self._resolve_channel_id(raw_channel)
+        self.channel_id = await self._resolve_channel_id(raw_channel, raw_server)
 
         self.room_group_name = f"kiwi_chat_{self.channel_id}"
         self.personal_group_name = build_user_personal_group_name(self.user.username)
-
         self.feed_group_name = "kiwi_feed"
-        await self.channel_layer.group_add(self.feed_group_name, self.channel_name)
 
         await self.channel_layer.group_add(self.room_group_name, self.channel_name)
         await self.channel_layer.group_add(self.personal_group_name, self.channel_name)
+        await self.channel_layer.group_add(self.feed_group_name, self.channel_name)
         await self.accept()
 
         history = await self._get_recent_messages(self.channel_id)
@@ -151,7 +151,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
         }))
 
     async def disconnect(self, close_code):
-        for grp in ("room_group_name", "personal_group_name"):
+        for grp in ("room_group_name", "personal_group_name", "feed_group_name"):
             if hasattr(self, grp):
                 await self.channel_layer.group_discard(getattr(self, grp), self.channel_name)
 
@@ -172,7 +172,6 @@ class ChatConsumer(AsyncWebsocketConsumer):
             "type": "profile_post_deleted",
             "post_id": event["payload"].get("id"),
         }))
-
 
     async def receive(self, text_data=None, bytes_data=None):
         if not text_data:
@@ -249,11 +248,6 @@ class ChatConsumer(AsyncWebsocketConsumer):
                 },
             )
 
-    async def disconnect(self, close_code):
-        for grp in ("room_group_name", "personal_group_name", "feed_group_name"):
-            if hasattr(self, grp):
-                await self.channel_layer.group_discard(getattr(self, grp), self.channel_name)
-
     async def profile_updated(self, event):
         payload = event.get("payload") or event.get("data") or event.get("profile") or {}
         await self.send(text_data=json.dumps({
@@ -284,17 +278,49 @@ class ChatConsumer(AsyncWebsocketConsumer):
             return
         await self.send(text_data=json.dumps(event["data"]))
 
+    async def broadcast_dm_message(self, event):
+        payload = dict(event.get("payload") or {})
+        payload["type"] = "dm_message"
+        await self.send(text_data=json.dumps(payload))
+
+    async def broadcast_dm_signal(self, event):
+        if event.get("sender") == self.user.username:
+            return
+        data = dict(event.get("data") or {})
+        data.setdefault("type", data.get("action") or "dm_signal")
+        await self.send(text_data=json.dumps(data))
+
     @database_sync_to_async
-    def _resolve_channel_id(self, raw_channel):
+    def _resolve_channel_id(self, raw_channel, raw_server=None):
+        server_id = None
+        try:
+            if raw_server is not None:
+                server_id = int(raw_server)
+        except (TypeError, ValueError):
+            server_id = None
+
         try:
             cid = int(raw_channel)
-            if Channel.objects.filter(id=cid).exists():
+            qs = Channel.objects.filter(id=cid)
+            if server_id is not None:
+                srv_qs = qs.filter(server_id=server_id)
+                if srv_qs.exists():
+                    return srv_qs.first().id
+            if qs.exists():
                 return cid
         except (TypeError, ValueError):
             pass
-        ch = Channel.objects.filter(name__iexact=str(raw_channel).strip()).first()
+
+        qs = Channel.objects.filter(name__iexact=str(raw_channel).strip())
+        if server_id is not None:
+            srv_qs = qs.filter(server_id=server_id)
+            if srv_qs.exists():
+                return srv_qs.first().id
+
+        ch = qs.first()
         if ch:
             return ch.id
+
         first_ch = Channel.objects.order_by("id").first()
         return first_ch.id if first_ch else 1
 
