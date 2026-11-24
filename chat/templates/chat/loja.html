@@ -205,7 +205,6 @@
             gap: 16px;
         }
 
-        /* === CARD DO ITEM NA LOJA === */
         .item-card {
             background: var(--bg-card);
             border: 1px solid var(--border-subtle);
@@ -219,11 +218,27 @@
             height: 124px;
             border-radius: 10px;
             background: #12141a;
+            border: 1px solid var(--border-subtle);
             display: flex;
             align-items: center;
             justify-content: center;
             position: relative;
             overflow: hidden;
+            padding: 12px;
+        }
+        .item-stage-sample-card {
+            width: 100%;
+            height: 100%;
+            border-radius: 8px;
+            background: #1b1e26;
+            border: 1px solid var(--border-subtle);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
+            font-size: 13px;
+            font-weight: 800;
         }
         .item-title { font-size: 14px; font-weight: 800; }
         .item-meta { font-size: 11px; color: var(--text-muted); }
@@ -239,7 +254,8 @@
             background: var(--accent);
             color: #fff;
         }
-        .btn-shop:hover { background: var(--accent-hover); }
+        .btn-shop:hover:not(:disabled) { background: var(--accent-hover); }
+        .btn-shop:disabled { opacity: 0.65; cursor: not-allowed; }
         .btn-shop.equipped { background: #1f7a4c; }
         .btn-unequip {
             border: 1px solid var(--border-subtle);
@@ -251,9 +267,8 @@
             background: var(--bg-soft);
             color: var(--text-main);
         }
+        .btn-unequip:disabled { opacity: 0.65; cursor: not-allowed; }
 
-        /* === EFEITOS VISUAIS INICIAIS (CSS / PLACEHOLDERS) === */
-        /* Ponto de extensão: quando tiver a arte oficial, basta usar background-image: var(--frame-art-url) */
         .avatar-frame-wrap {
             position: relative;
             width: 74px;
@@ -283,7 +298,6 @@
             box-shadow: 0 0 15px rgba(244, 114, 182, 0.85);
         }
 
-        /* Efeitos de Cartão (CSS inicial; trocável por camada/imagem quando tiver arte oficial) */
         .card-effect-sakura_encantada {
             box-shadow: 0 0 22px rgba(244, 114, 182, 0.35);
             border-color: rgba(244, 114, 182, 0.55) !important;
@@ -297,7 +311,6 @@
             border-color: rgba(165, 180, 252, 0.55) !important;
         }
 
-        /* Estilo do Nome */
         .name-style-neon {
             color: #e879f9;
             text-shadow: 0 0 10px rgba(232, 121, 249, 0.75);
@@ -376,6 +389,12 @@
             font-size: 12px;
             font-weight: 700;
             text-decoration: none;
+        }
+        .shop-feedback {
+            font-size: 12px;
+            color: #fca5a5;
+            margin-top: 8px;
+            min-height: 16px;
         }
 
         @media (max-width: 900px) {
@@ -472,6 +491,7 @@
                     <button type="button" id="btn-unequip-all" class="btn-unequip" style="width: 100%; margin-top: 12px;">
                         Remover Efeitos Ativos
                     </button>
+                    <div class="shop-feedback" id="shop-feedback" role="status" aria-live="polite"></div>
                 </div>
             </aside>
         </div>
@@ -479,8 +499,26 @@
 
     {{ profile_json|json_script:"kiwi-profile-json" }}
     <script>
-        const IS_EXCLUSIVE_TESTER = {{ is_exclusive_tester|yesno:"true,false" }};
-        const initialProfile = JSON.parse(document.getElementById("kiwi-profile-json").textContent || "{}");
+        const IS_EXCLUSIVE_TESTER = {{ is_exclusive_tester|default:False|yesno:"true,false" }};
+        function parseInitialProfile() {
+            const el = document.getElementById("kiwi-profile-json");
+            if (!el) return {};
+            try {
+                const raw = (el.textContent || "").trim();
+                if (!raw) return {};
+                const parsed = JSON.parse(raw);
+                return parsed && typeof parsed === "object" ? parsed : {};
+            } catch (_) {
+                return {};
+            }
+        }
+
+        const initialProfile = parseInitialProfile();
+        const FALLBACK_USERNAME = "{{ request.user.username|escapejs }}";
+        const FALLBACK_AVATAR_URL = "{% if profile.avatar %}{{ profile.avatar.url|escapejs }}{% endif %}";
+
+        const activeUsername = initialProfile.username || FALLBACK_USERNAME || "Kiwi";
+        const activeAvatarUrl = initialProfile.avatar_url || FALLBACK_AVATAR_URL || "";
 
         const ITEMS = [
             { id: "crepusculo_berilo", name: "Crepúsculo (Berilo)", category: "frame", slot: "frame_effect", value: "crepusculo_berilo", badge: "Moldura" },
@@ -493,15 +531,43 @@
         ];
 
         let activeFilter = "all";
+        let isBusy = false;
         let state = {
             frame_effect: initialProfile.frame_effect || "none",
             card_effect: initialProfile.card_effect || (initialProfile.profile_glow ? "brilho_estelar" : "none"),
             name_style: initialProfile.name_style || "none",
         };
 
+        function setFeedback(msg) {
+            const el = document.getElementById("shop-feedback");
+            if (el) el.textContent = msg || "";
+        }
+
         function getCsrfToken() {
             const match = document.cookie.match(/(?:^|; )csrftoken=([^;]*)/);
             return match ? decodeURIComponent(match[1]) : "";
+        }
+
+        async function postShopAction(url, payload) {
+            setFeedback("");
+            const res = await fetch(url, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-CSRFToken": getCsrfToken(),
+                },
+                body: JSON.stringify(payload),
+            });
+            let data = null;
+            try {
+                data = await res.json();
+            } catch (_) {
+                data = null;
+            }
+            if (!res.ok || !data || !data.ok) {
+                throw new Error((data && data.error) || `Falha na operação (${res.status}).`);
+            }
+            return data;
         }
 
         function renderPreview() {
@@ -533,6 +599,43 @@
             document.getElementById("slot-name-label").textContent = nameItem ? nameItem.name : "Padrão";
         }
 
+        function renderItemStage(item) {
+            const initial = activeUsername.slice(0, 1).toUpperCase() || "K";
+            const avatarStyle = activeAvatarUrl
+                ? `background-image:url('${encodeURI(activeAvatarUrl)}');font-size:0;`
+                : "";
+
+            if (item.slot === "frame_effect") {
+                return `
+                    <div class="avatar-frame-wrap frame-${item.value}" style="width:56px;height:56px;">
+                        <div class="preview-avatar" style="width:52px;height:52px;font-size:18px;${avatarStyle}">
+                            ${initial}
+                        </div>
+                    </div>`;
+            }
+
+            if (item.slot === "card_effect") {
+                return `
+                    <div class="item-stage-sample-card card-effect-${item.value}">
+                        <span>${activeUsername}</span>
+                        <span style="font-size:11px;font-weight:600;color:var(--text-muted);">Prévia do Cartão</span>
+                    </div>`;
+            }
+
+            return `
+                <div class="item-stage-sample-card">
+                    <span class="name-style-${item.value}" style="font-size:16px;">${activeUsername}</span>
+                    <span style="font-size:11px;font-weight:600;color:var(--text-muted);">Estilo de Nome</span>
+                </div>`;
+        }
+
+        function setControlsDisabled(disabled) {
+            isBusy = disabled;
+            document.querySelectorAll("[data-equip-id], [data-unequip-slot], #btn-unequip-all").forEach(el => {
+                el.disabled = disabled;
+            });
+        }
+
         function renderGrid() {
             const grid = document.getElementById("shop-items-grid");
             if (!IS_EXCLUSIVE_TESTER) {
@@ -550,75 +653,73 @@
             const filtered = activeFilter === "all" ? ITEMS : ITEMS.filter(i => i.category === activeFilter);
             grid.innerHTML = filtered.map(item => {
                 const isEquipped = state[item.slot] === item.value;
-                const miniFrameClass = item.slot === "frame_effect" ? `frame-${item.value}` : "";
                 return `
                     <div class="item-card">
                         <div class="item-stage">
-                            <div class="avatar-frame-wrap ${miniFrameClass}" style="width:56px;height:56px;">
-                                <div class="preview-avatar" style="width:52px;height:52px;font-size:18px;${initialProfile.avatar_url ? `background-image:url('${initialProfile.avatar_url}');font-size:0;` : ""}">
-                                    ${(initialProfile.username || "A").slice(0, 1).toUpperCase()}
-                                </div>
-                            </div>
+                            ${renderItemStage(item)}
                         </div>
                         <div>
                             <div class="item-title">${item.name}</div>
                             <div class="item-meta">${item.badge} • Teste exclusivo</div>
                         </div>
                         <div class="item-actions">
-                            <button type="button" class="btn-shop ${isEquipped ? "equipped" : ""}" data-equip-id="${item.id}">
+                            <button type="button" class="btn-shop ${isEquipped ? "equipped" : ""}" data-equip-id="${item.id}" ${isBusy ? "disabled" : ""}>
                                 ${isEquipped ? "Equipado ✓" : "Equipar"}
                             </button>
-                            ${isEquipped ? `<button type="button" class="btn-unequip" data-unequip-slot="${item.slot}">Tirar</button>` : ""}
+                            ${isEquipped ? `<button type="button" class="btn-unequip" data-unequip-slot="${item.slot}" ${isBusy ? "disabled" : ""}>Tirar</button>` : ""}
                         </div>
                     </div>`;
             }).join("");
 
             grid.querySelectorAll("[data-equip-id]").forEach(btn => {
                 btn.addEventListener("click", async () => {
-                    const res = await fetch("/api/shop/equip/", {
-                        method: "POST",
-                        headers: { "Content-Type": "application/json", "X-CSRFToken": getCsrfToken() },
-                        body: JSON.stringify({ item_id: btn.dataset.equipId }),
-                    });
-                    const data = await res.json();
-                    if (data.ok) {
+                    if (isBusy) return;
+                    setControlsDisabled(true);
+                    try {
+                        await postShopAction("/api/shop/equip/", { item_id: btn.dataset.equipId });
                         const item = ITEMS.find(i => i.id === btn.dataset.equipId);
                         if (item) state[item.slot] = item.value;
                         renderPreview();
                         renderGrid();
+                    } catch (err) {
+                        setFeedback(err.message || "Erro ao equipar item.");
+                    } finally {
+                        setControlsDisabled(false);
                     }
                 });
             });
 
             grid.querySelectorAll("[data-unequip-slot]").forEach(btn => {
                 btn.addEventListener("click", async () => {
+                    if (isBusy) return;
+                    setControlsDisabled(true);
                     const slot = btn.dataset.unequipSlot;
-                    const res = await fetch("/api/shop/unequip/", {
-                        method: "POST",
-                        headers: { "Content-Type": "application/json", "X-CSRFToken": getCsrfToken() },
-                        body: JSON.stringify({ slot }),
-                    });
-                    const data = await res.json();
-                    if (data.ok) {
+                    try {
+                        await postShopAction("/api/shop/unequip/", { slot });
                         state[slot] = "none";
                         renderPreview();
                         renderGrid();
+                    } catch (err) {
+                        setFeedback(err.message || "Erro ao remover efeito.");
+                    } finally {
+                        setControlsDisabled(false);
                     }
                 });
             });
         }
 
         document.getElementById("btn-unequip-all").addEventListener("click", async () => {
-            const res = await fetch("/api/shop/unequip/", {
-                method: "POST",
-                headers: { "Content-Type": "application/json", "X-CSRFToken": getCsrfToken() },
-                body: JSON.stringify({ slot: "all" }),
-            });
-            const data = await res.json();
-            if (data.ok) {
+            if (isBusy) return;
+            setControlsDisabled(true);
+            try {
+                await postShopAction("/api/shop/unequip/", { slot: "all" });
                 state = { frame_effect: "none", card_effect: "none", name_style: "none" };
                 renderPreview();
                 renderGrid();
+            } catch (err) {
+                setFeedback(err.message || "Erro ao remover efeitos.");
+            } finally {
+                setControlsDisabled(false);
             }
         });
 
