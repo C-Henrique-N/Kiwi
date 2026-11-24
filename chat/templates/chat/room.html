@@ -5610,28 +5610,26 @@ html, body {
             }
 
                     const newPost = {
-                        id: postId,
-                        author: activeUsername,
-                        handle: `@${activeUsername.toLowerCase()}`,
-                        text: txt,
-                        imageUrl: isSafeAssetUrl(imgUrl) ? imgUrl : '',
-                        time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-                        likes: 0,
-                        liked: false,
-                        replies: []
-                    };
-                    const posts = getUserPostsStore();
-                    posts.unshift(newPost);
-                    saveUserPostsStore(posts);
+                id: postId,
+                author: activeUsername,
+                handle: `@${activeUsername.toLowerCase()}`,
+                text: txt,
+                imageUrl: isSafeAssetUrl(imgUrl) ? imgUrl : '',
+                time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+                likes: 0,
+                liked: false,
+                replies: []
+            };
+            const posts = getUserPostsStore();
+            posts.unshift(newPost);
+            saveUserPostsStore(posts);
 
-                    if (textInput) textInput.value = '';
-                    if (imgInput) imgInput.value = '';
-                    closeModalAnimated(createPostModal);
-                    activateNavTab('perfil');
-                    renderCleanUserPosts();
-                    showKiwiToast('Post publicado no perfil!');
-                });
-            }
+            if (textInput) textInput.value = '';
+            if (imgInput) imgInput.value = '';
+            closeModalAnimated(createPostModal);
+            activateNavTab('perfil');
+            renderCleanUserPosts();
+            showKiwiToast('Post publicado no perfil!');
 
             function openPostDetailTab(postId) {
                 const posts = getUserPostsStore();
