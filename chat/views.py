@@ -1297,6 +1297,8 @@ def create_profile_post(request):
     item = post.to_dict(current_user=request.user)
     author_prof = _get_or_create_profile(request.user)
     item["author_avatar"] = _safe_media_url(author_prof.avatar)
+
+    _broadcast_feed_event("broadcast_profile_post", item)
     return JsonResponse({"ok": True, "post": item})
 
 
@@ -1313,6 +1315,7 @@ def toggle_like_profile_post(request, post_id):
     item = post.to_dict(current_user=request.user)
     author_prof = _get_or_create_profile(post.author)
     item["author_avatar"] = _safe_media_url(author_prof.avatar)
+    _broadcast_feed_event("broadcast_profile_post_update", item)
     return JsonResponse({
         "ok": True,
         "liked": liked,
@@ -1342,6 +1345,7 @@ def add_profile_post_reply(request, post_id):
     item = post.to_dict(current_user=request.user)
     author_prof = _get_or_create_profile(post.author)
     item["author_avatar"] = _safe_media_url(author_prof.avatar)
+    _broadcast_feed_event("broadcast_profile_post_update", item)
     return JsonResponse({
         "ok": True,
         "reply": {
@@ -1361,21 +1365,8 @@ def delete_profile_post(request, post_id):
     if post.author_id != request.user.id and not _is_kiwi_admin(request.user):
         return JsonResponse({"ok": False, "error": "Sem permissão para excluir esta postagem."}, status=403)
     post.delete()
+    _broadcast_feed_event("broadcast_profile_post_delete", {"id": post_id})
     return JsonResponse({"ok": True, "deleted_id": post_id})
-
-
-# === ALIASES DE COMPATIBILIDADE COM chat/urls.py ===
-update_profile = api_update_profile
-get_user_profile = api_user_profile
-create_server = api_create_server
-create_channel = api_create_channel
-send_friend_request = api_friend_request
-accept_friend_request = api_respond_friend_request
-reject_friend_request = api_respond_friend_request
-remove_friend = api_remove_friend
-delete_message = api_delete_message
-get_dm_history = api_dm_history
-upload_attachment = api_upload_attachment
 
 
 @login_required
