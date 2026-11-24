@@ -5345,6 +5345,10 @@ html, body {
             function closeFollowersPanelAndShowFeed() {
                 if (xFollowersPanel) xFollowersPanel.style.display = 'none';
                 if (xFeedList) xFeedList.style.display = 'flex';
+                xSubtabs.forEach(btn => {
+                    const sub = btn.getAttribute('data-x-subtab') || 'posts';
+                    btn.classList.toggle('active', sub === activeXSubtab);
+                });
             }
 
             function syncXProfileHeader() {
@@ -5461,6 +5465,7 @@ html, body {
 
             function renderFollowListPanel(mode) {
                 if (!xFollowersPanel || !xFeedList) return;
+                xSubtabs.forEach(btn => btn.classList.remove('active'));
                 xFeedList.style.display = 'none';
                 xFollowersPanel.style.display = 'block';
                 const isFollowers = mode === 'followers';
@@ -5656,11 +5661,15 @@ html, body {
                 });
             }
 
-            function renderCleanUserPosts() {
+            async function renderCleanUserPosts() {
                 if (!xFeedList) return;
                 const prof = getActiveTimelineProfile();
-                const ownerName = (prof.username || activeUsername).toLowerCase();
-                let posts = getUserPostsStore().filter(p => (p.author || activeUsername).toLowerCase() === ownerName);
+                const ownerUsername = prof.username || activeUsername;
+                const ownerName = ownerUsername.toLowerCase();
+
+                const localPosts = getUserPostsStore().filter(p => (p.author || activeUsername).toLowerCase() === ownerName);
+                const backendPosts = await fetchBackendPostsForFeed(ownerUsername);
+                let posts = mergePostsById(backendPosts, localPosts);
 
                 if (activeXSubtab === 'respostas') {
                     posts = posts.filter(p => Array.isArray(p.replies) && p.replies.length > 0);
@@ -5690,7 +5699,7 @@ html, body {
 
                     const av = document.createElement('div');
                     av.className = 'kiwi-x-post-avatar';
-                    setAvatarStyle(av, prof.avatarUrl || '', post.author || activeUsername);
+                    setAvatarStyle(av, post.avatarUrl || prof.avatarUrl || '', post.author || activeUsername);
 
                     const body = document.createElement('div');
                     body.className = 'kiwi-x-post-body';
@@ -5735,15 +5744,28 @@ html, body {
                     likeBtn.className = 'kiwi-x-action-btn' + (post.liked ? ' liked' : '');
                     const likesCount = Number(post.likes || 0);
                     likeBtn.textContent = `${post.liked ? '❤️' : '🤍'} ${likesCount}`;
-                    likeBtn.onclick = (ev) => {
+                    likeBtn.onclick = async (ev) => {
                         ev.stopPropagation();
+                        if (post.fromBackend && post.id) {
+                            try {
+                                const resp = await fetch(`/api/profile/posts/${encodeURIComponent(post.id)}/like/`, {
+                                    method: 'POST',
+                                    headers: { 'X-CSRFToken': getCsrfToken() },
+                                    credentials: 'same-origin'
+                                });
+                                if (resp.ok) {
+                                    await renderCleanUserPosts();
+                                    return;
+                                }
+                            } catch (_) {}
+                        }
                         const allPosts = getUserPostsStore();
                         const found = allPosts.find(item => String(item.id) === String(post.id));
                         if (found) {
                             found.liked = !found.liked;
                             found.likes = Math.max(0, Number(found.likes || 0) + (found.liked ? 1 : -1));
                             saveUserPostsStore(allPosts);
-                            renderCleanUserPosts();
+                            await renderCleanUserPosts();
                         }
                     };
 
@@ -5821,18 +5843,58 @@ html, body {
                 if (searchInp) searchInp.addEventListener('input', () => drawAccounts(searchInp.value));
             }
 
-            function renderInicioTabSurface() {
+            async function fetchBackendPostsForFeed(username = '') {
+                try {
+                    const qs = new URLSearchParams();
+                    if (username) qs.set('username', username);
+                    const url = `/api/profile/posts/${qs.toString() ? '?' + qs.toString() : ''}`;
+                    const resp = await fetch(url, { credentials: 'same-origin' });
+                    if (!resp.ok) return [];
+                    const data = await resp.json();
+                    const list = Array.isArray(data.posts) ? data.posts : [];
+                    return list
+                        .filter(p => p && !isRemovedFakeAccount(p.author))
+                        .map(p => ({
+                            id: p.id,
+                            author: p.author || activeUsername,
+                            handle: p.handle || `@${String(p.author || activeUsername).toLowerCase()}`,
+                            avatarUrl: p.author_avatar || p.avatar_url || '',
+                            text: p.content || p.text || '',
+                            imageUrl: p.image_url || p.image || '',
+                            likes: Number(p.likes_count ?? p.likes ?? 0),
+                            liked: Boolean(p.liked ?? p.is_liked ?? false),
+                            replies: Array.isArray(p.replies) ? p.replies : [],
+                            time: p.created_at_label || p.time || '',
+                            fromBackend: true
+                        }));
+                } catch (_) {
+                    return [];
+                }
+            }
+
+            function mergePostsById(primaryList, secondaryList) {
+                const map = new Map();
+                [...(Array.isArray(primaryList) ? primaryList : []), ...(Array.isArray(secondaryList) ? secondaryList : [])].forEach(item => {
+                    if (!item || isRemovedFakeAccount(item.author)) return;
+                    const key = String(item.id || `${item.author}:${item.text}:${item.time}`);
+                    if (!map.has(key)) map.set(key, item);
+                });
+                return Array.from(map.values());
+            }
+
+            async function renderInicioTabSurface() {
                 showChatLogSurface(false);
                 if (!chatLog) return;
                 const adminAcc = buildAdminFeaturedAccount();
                 const resolvedBanner = resolveBannerUrlForUser(adminAcc.username, adminAcc.bannerUrl);
+                const resolvedAvatar = adminAcc.avatarUrl || myProfileData.avatarUrl || '';
                 chatLog.innerHTML = `
                     <div class="kiwi-home-profile-wrap">
                         <div class="kiwi-home-profile-card" id="kiwi-home-open-profile-card">
                             <div class="kiwi-home-profile-banner" style="${resolvedBanner ? `background-image:url('${escapeHtmlText(encodeURI(resolvedBanner))}');` : ''}"></div>
                             <div class="kiwi-home-profile-body">
                                 <div class="kiwi-home-profile-top">
-                                    <div class="kiwi-home-profile-avatar">${escapeHtmlText(adminAcc.username.charAt(0).toUpperCase())}</div>
+                                    <div class="kiwi-home-profile-avatar" id="kiwi-home-profile-avatar-el">${escapeHtmlText(adminAcc.username.charAt(0).toUpperCase())}</div>
                                     <span class="admin-gold-badge">👑 ADMIN</span>
                                 </div>
                                 <div style="font-size:16px;font-weight:900;">${escapeHtmlText(adminAcc.username)}</div>
@@ -5840,25 +5902,111 @@ html, body {
                                 <div style="font-size:13px;color:var(--kiwi-text-secondary);">${escapeHtmlText(adminAcc.bio)}</div>
                             </div>
                         </div>
-
-                        <div class="kiwi-admin-guide-card">
-                            <div class="kiwi-admin-guide-header">
-                                <span style="font-size:14px;font-weight:800;">Guia rápido do Kiwi Chat</span>
-                                <span class="kiwi-admin-guide-badge">🥝 Central</span>
-                            </div>
-                            <div class="kiwi-admin-guide-steps">
-                                <div class="kiwi-admin-guide-step"><strong>1. Perfil &amp; Card</strong>Personalize avatar, banner, bio e música.</div>
-                                <div class="kiwi-admin-guide-step"><strong>2. Canais &amp; Servidores</strong>Converse em canais de texto ou áudio.</div>
-                                <div class="kiwi-admin-guide-step"><strong>3. Bate-papo &amp; Call</strong>Envie mensagens diretas e chamadas de voz.</div>
-                            </div>
-                            <button type="button" class="kiwi-admin-guide-cta" id="kiwi-home-go-admin-btn">Abrir perfil de ${escapeHtmlText(ADMIN_GUIDE_USERNAME)} →</button>
-                        </div>
+                        <div id="kiwi-home-feed-stream" style="display:flex;flex-direction:column;gap:10px;margin-top:12px;"></div>
                     </div>
                 `;
+                const avatarEl = document.getElementById('kiwi-home-profile-avatar-el');
+                if (avatarEl) setAvatarStyle(avatarEl, resolvedAvatar, adminAcc.username);
+
                 const cardEl = document.getElementById('kiwi-home-open-profile-card');
-                const goAdminBtn = document.getElementById('kiwi-home-go-admin-btn');
                 if (cardEl) cardEl.onclick = () => openFullProfilePage(ADMIN_GUIDE_USERNAME);
-                if (goAdminBtn) goAdminBtn.onclick = () => openAdminProfileGuideDestination();
+
+                const feedStream = document.getElementById('kiwi-home-feed-stream');
+                if (!feedStream) return;
+
+                const localPosts = getUserPostsStore();
+                const backendPosts = await fetchBackendPostsForFeed('');
+                const feedPosts = mergePostsById(backendPosts, localPosts);
+
+                if (!feedPosts.length) {
+                    feedStream.innerHTML = `<div style="padding:20px;text-align:center;color:var(--kiwi-text-muted);font-size:13px;">Nenhuma postagem no feed ainda.</div>`;
+                    return;
+                }
+
+                feedPosts.forEach(post => {
+                    const card = document.createElement('article');
+                    card.className = 'kiwi-x-post-card';
+
+                    const av = document.createElement('div');
+                    av.className = 'kiwi-x-post-avatar';
+                    setAvatarStyle(av, post.avatarUrl || '', post.author || activeUsername);
+
+                    const body = document.createElement('div');
+                    body.className = 'kiwi-x-post-body';
+
+                    const header = document.createElement('div');
+                    header.className = 'kiwi-x-post-header';
+                    header.innerHTML = `<span class="kiwi-x-post-author">${escapeHtmlText(post.author || activeUsername)}</span><span class="kiwi-x-post-handle">${escapeHtmlText(post.handle || `@${String(post.author || activeUsername).toLowerCase()}`)} • ${escapeHtmlText(post.time || '')}</span>`;
+
+                    const textEl = document.createElement('div');
+                    textEl.className = 'kiwi-x-post-text';
+                    textEl.textContent = post.text || '';
+
+                    body.appendChild(header);
+                    body.appendChild(textEl);
+
+                    if (post.imageUrl && isSafeAssetUrl(post.imageUrl)) {
+                        const imgEl = document.createElement('img');
+                        imgEl.className = 'kiwi-x-post-media';
+                        imgEl.src = post.imageUrl;
+                        imgEl.alt = 'Imagem da postagem';
+                        imgEl.onclick = (ev) => {
+                            ev.stopPropagation();
+                            openImageLightbox(post.imageUrl, 'Imagem da postagem');
+                        };
+                        body.appendChild(imgEl);
+                    }
+
+                    const actions = document.createElement('div');
+                    actions.className = 'kiwi-x-post-actions';
+
+                    const replyBtn = document.createElement('button');
+                    replyBtn.type = 'button';
+                    replyBtn.className = 'kiwi-x-action-btn';
+                    replyBtn.textContent = `💬 ${(Array.isArray(post.replies) ? post.replies.length : 0)}`;
+                    replyBtn.onclick = (ev) => {
+                        ev.stopPropagation();
+                        openPostDetailTab(post.id);
+                    };
+
+                    const likeBtn = document.createElement('button');
+                    likeBtn.type = 'button';
+                    likeBtn.className = 'kiwi-x-action-btn' + (post.liked ? ' liked' : '');
+                    likeBtn.textContent = `${post.liked ? '❤️' : '🤍'} ${Number(post.likes || 0)}`;
+                    likeBtn.onclick = async (ev) => {
+                        ev.stopPropagation();
+                        if (post.fromBackend && post.id) {
+                            try {
+                                const resp = await fetch(`/api/profile/posts/${encodeURIComponent(post.id)}/like/`, {
+                                    method: 'POST',
+                                    headers: { 'X-CSRFToken': getCsrfToken() },
+                                    credentials: 'same-origin'
+                                });
+                                if (resp.ok) {
+                                    await renderInicioTabSurface();
+                                    return;
+                                }
+                            } catch (_) {}
+                        }
+                        const allPosts = getUserPostsStore();
+                        const found = allPosts.find(p => String(p.id) === String(post.id));
+                        if (found) {
+                            found.liked = !found.liked;
+                            found.likes = Math.max(0, Number(found.likes || 0) + (found.liked ? 1 : -1));
+                            saveUserPostsStore(allPosts);
+                            await renderInicioTabSurface();
+                        }
+                    };
+
+                    actions.appendChild(replyBtn);
+                    actions.appendChild(likeBtn);
+                    body.appendChild(actions);
+
+                    card.appendChild(av);
+                    card.appendChild(body);
+                    card.onclick = () => openPostDetailTab(post.id);
+                    feedStream.appendChild(card);
+                });
             }
 
             function renderNotificacoesTabSurface() {
