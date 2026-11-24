@@ -6397,6 +6397,69 @@ html, body {
                 activateNavTab('perfil');
             }
         });
+
+        const KIWI_API_ROUTES = {
+        // Amigos e seguidores
+        friendAdd: '/api/friends/add/',
+        friendRequestsList: '/api/friend-requests/list/',
+        friendRequestAccept: '/api/friend-request/accept/',
+        friendRemove: '/api/friends/remove/',
+        followToggle: '/api/follow/toggle/',
+
+        // Posts e respostas
+        postCreate: '/api/posts/create/',
+        postLike: (postId) => `/api/profile/posts/${encodeURIComponent(postId)}/like/`,
+        postReply: (postId) => `/api/profile/posts/${encodeURIComponent(postId)}/replies/`,
+        postDelete: (postId) => `/api/profile/posts/${encodeURIComponent(postId)}/delete/`,
+
+        // DMs
+        dmSendByUser: (username) => `/api/dm/send/${encodeURIComponent(username)}/`,
+        dmDelete: (messageId) => `/api/dm/messages/${encodeURIComponent(messageId)}/delete/`,
+        };
+
+        function resolveCsrfToken() {
+        if (window.KiwiClient && typeof window.KiwiClient.getCsrfToken === 'function') {
+            return window.KiwiClient.getCsrfToken();
+        }
+        const match = document.cookie.match(/(?:^|;\s*)csrftoken=([^;]+)/);
+        return match ? decodeURIComponent(match[1]) : '';
+        }
+
+        async function kiwiApiFetch(url, { method = 'POST', body = null } = {}) {
+        const headers = {
+            'X-Requested-With': 'XMLHttpRequest',
+        };
+
+        if (method !== 'GET' && method !== 'HEAD') {
+            headers['X-CSRFToken'] = resolveCsrfToken();
+        }
+
+        let payload = body;
+        if (body && !(body instanceof FormData) && typeof body === 'object') {
+            headers['Content-Type'] = 'application/json';
+            payload = JSON.stringify(body);
+        }
+
+        const response = await fetch(url, {
+            method,
+            headers,
+            body: payload,
+            credentials: 'same-origin',
+        });
+
+        let data = null;
+        try {
+            data = await response.json();
+        } catch (_) {
+            data = null;
+        }
+
+        if (!response.ok) {
+            throw new Error((data && (data.error || data.detail)) || `HTTP ${response.status}`);
+        }
+
+        return data;
+        }
     </script>
 </body>
 </html>
