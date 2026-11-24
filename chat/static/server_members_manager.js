@@ -1,3 +1,8 @@
+O que mudou:
+* Ajustado o endpoint de remoção de membro de `/members/${userId}/remove/` para `/members/${userId}/kick/`, alinhado com o `urls.py`[cite: 19].
+* Adicionada verificação de `res.ok` e `data.ok` nas ações de `kick` e `role`, além de recarregar a lista quando houver atualização no servidor[cite: 19].
+
+```javascript
 (function () {
   const panel = document.getElementById('kiwiMembersPanel');
   if (!panel) return;
@@ -57,10 +62,14 @@
 
   function openAddModal() {
     if (!modal) return;
-    feedbackEl.textContent = '';
-    usernameInput.value = '';
-    modal.hidden = false;
-    setTimeout(() => usernameInput.focus(), 40);
+    if (feedbackEl) feedbackEl.textContent = '';
+    if (usernameInput) {
+      usernameInput.value = '';
+      modal.hidden = false;
+      setTimeout(() => usernameInput.focus(), 40);
+    } else {
+      modal.hidden = false;
+    }
   }
 
   function closeAddModal() {
@@ -174,11 +183,11 @@
   if (addForm) {
     addForm.addEventListener('submit', async (e) => {
       e.preventDefault();
-      if (!state.serverId) return;
+      if (!state.serverId || !usernameInput) return;
       const username = usernameInput.value.trim();
       if (!username) return;
 
-      feedbackEl.textContent = '';
+      if (feedbackEl) feedbackEl.textContent = '';
       try {
         const res = await fetch(`/api/servers/${state.serverId}/members/add/`, {
           method: 'POST',
@@ -190,13 +199,13 @@
         });
         const data = await res.json();
         if (!res.ok || !data.ok) {
-          feedbackEl.textContent = data.error || 'Não foi possível adicionar.';
+          if (feedbackEl) feedbackEl.textContent = data.error || 'Não foi possível adicionar.';
           return;
         }
         closeAddModal();
         await loadServerMembers(state.serverId);
       } catch (err) {
-        feedbackEl.textContent = 'Erro de conexão ao adicionar membro.';
+        if (feedbackEl) feedbackEl.textContent = 'Erro de conexão ao adicionar membro.';
       }
     });
   }
@@ -213,15 +222,18 @@
       const username = btn.dataset.username || 'este membro';
       if (!confirm(`Remover @${username} do servidor?`)) return;
 
-      const res = await fetch(`/api/servers/${state.serverId}/members/${userId}/remove/`, {
+      const res = await fetch(`/api/servers/${state.serverId}/members/${userId}/kick/`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'X-CSRFToken': getCsrfToken(),
         },
       });
-      if (res.ok) {
+      const data = await res.json().catch(() => ({}));
+      if (res.ok && (data.ok === undefined || data.ok)) {
         await loadServerMembers(state.serverId);
+      } else {
+        alert(data.error || 'Não foi possível remover o membro.');
       }
     } else if (action === 'role') {
       const nextRole = btn.dataset.nextRole;
@@ -233,13 +245,15 @@
         },
         body: JSON.stringify({ role: nextRole }),
       });
-      if (res.ok) {
+      const data = await res.json().catch(() => ({}));
+      if (res.ok && (data.ok === undefined || data.ok)) {
         await loadServerMembers(state.serverId);
+      } else {
+        alert(data.error || 'Não foi possível atualizar o cargo.');
       }
     }
   });
 
-  // Exponha funções globais para integrar com a troca de servidor e o WebSocket existente
   window.KiwiServerMembers = {
     load: loadServerMembers,
     handleWsEvent(data) {

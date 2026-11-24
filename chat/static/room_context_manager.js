@@ -23,12 +23,6 @@ class RoomContextManager {
     this.manualDisconnects = new Set();
   }
 
-  /**
-   * Gera uma chave única para canal de servidor ou DM.
-   * Exemplos:
-   * - Servidor + canal: "srv:home:ch:geral"
-   * - DM: "dm:hollow"
-   */
   static buildContextKey({ type, serverId = 'home', channelName = 'geral', targetUser = '' }) {
     if (type === 'dm') {
       const normalizedUser = String(targetUser || '').trim().toLowerCase();
@@ -41,7 +35,6 @@ class RoomContextManager {
 
   _sanitizeSnapshotHtml(html) {
     if (!html || typeof html !== 'string') return '';
-    // Evita persistir data URIs gigantes no localStorage
     if (html.length > 250000) return '';
     return html;
   }
@@ -91,9 +84,7 @@ class RoomContextManager {
         };
       });
       window.localStorage.setItem(this.storageKey, JSON.stringify(compact));
-    } catch (_) {
-      // Ignora falhas de quota/privacidade do navegador
-    }
+    } catch (_) {}
   }
 
   getContext(meta) {
@@ -117,9 +108,6 @@ class RoomContextManager {
     this._saveToStorage();
   }
 
-  /**
-   * Garante que o registro do contexto exista e retorna o objeto.
-   */
   ensureContext(meta = {}) {
     const key = RoomContextManager.buildContextKey(meta);
     if (!this.contexts[key]) {
@@ -143,9 +131,6 @@ class RoomContextManager {
     return this.contexts[key];
   }
 
-  /**
-   * Salva o estado atual do DOM/mensagens antes de sair do contexto ativo.
-   */
   saveCurrentContext() {
     if (!this.activeContextKey || !this.contexts[this.activeContextKey]) return;
     const ctx = this.contexts[this.activeContextKey];
@@ -156,10 +141,6 @@ class RoomContextManager {
     this._saveToStorage();
   }
 
-  /**
-   * Alterna para um novo contexto (servidor/canal ou DM), restaura o histórico isolado
-   * e ajusta o socket ativo sem misturar mensagens de outras salas.
-   */
   switchContext(meta, { renderFn = null, connectSocket = true } = {}) {
     if (this.activeContextKey && this.activeContextKey !== RoomContextManager.buildContextKey(meta)) {
       this.saveCurrentContext();
@@ -198,17 +179,31 @@ class RoomContextManager {
     return ctx;
   }
 
-  /**
-   * Registra uma mensagem no contexto alvo.
-   * Só renderiza diretamente no chatLog se o contexto da mensagem for o contexto ativo.
-   */
+  _isDuplicateMessage(ctx, messagePayload, entryId) {
+    const incomingAuthor = String(messagePayload.author || messagePayload.sender || messagePayload.username || '').trim().toLowerCase();
+    const incomingText = String(messagePayload.text || messagePayload.message || '').trim();
+    const incomingAttach = String(messagePayload.attachmentName || messagePayload.attachment_name || messagePayload.attachmentUrl || messagePayload.attachment_url || '').trim();
+
+    return ctx.messages.some((m) => {
+      if (!m) return false;
+      if (entryId && m.id && String(m.id) === String(entryId)) return true;
+      if (messagePayload.client_id && m.raw && m.raw.client_id && String(m.raw.client_id) === String(messagePayload.client_id)) {
+        return true;
+      }
+      const sameAuthor = String(m.author || '').trim().toLowerCase() === incomingAuthor;
+      const sameText = String(m.text || '').trim() === incomingText;
+      const sameAttach = String(m.attachmentName || m.attachmentUrl || '').trim() === incomingAttach;
+      return sameAuthor && sameText && sameAttach && (incomingText || incomingAttach);
+    });
+  }
+
   pushMessage(meta, messagePayload = {}, { renderSingleMessageFn = null } = {}) {
     const ctx = this.ensureContext(meta);
-    const entryId = messagePayload.id || `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+    const entryId = messagePayload.id || messagePayload.client_id || `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
 
-    const duplicate = ctx.messages.some((m) => String(m.id) === String(entryId));
-    if (duplicate) {
-      return { entry: ctx.messages.find((m) => String(m.id) === String(entryId)), ctx, isActive: this.activeContextKey === ctx.key, duplicate: true };
+    if (this._isDuplicateMessage(ctx, messagePayload, entryId)) {
+      const existing = ctx.messages.find((m) => m && String(m.id) === String(entryId)) || null;
+      return { entry: existing, ctx, isActive: this.activeContextKey === ctx.key, duplicate: true };
     }
 
     const entry = {
@@ -249,9 +244,6 @@ class RoomContextManager {
     return { entry, ctx, isActive, duplicate: false };
   }
 
-  /**
-   * Remove uma mensagem específica de um contexto pelo ID.
-   */
   removeMessage(meta, messageId) {
     const key = RoomContextManager.buildContextKey(meta);
     const ctx = this.contexts[key];
@@ -265,9 +257,6 @@ class RoomContextManager {
     return ctx.messages.length !== beforeLen;
   }
 
-  /**
-   * Limpa o histórico apenas de um contexto específico.
-   */
   clearContext(meta) {
     const key = RoomContextManager.buildContextKey(meta);
     if (!this.contexts[key]) return;
@@ -283,16 +272,14 @@ class RoomContextManager {
     }
   }
 
-  /**
-   * Envia payload JSON pelo socket do contexto ativo (ou de um contexto específico).
-   */
   sendPayload(payload, meta = null) {
     const targetKey = meta ? RoomContextManager.buildContextKey(meta) : this.activeContextKey;
     if (!targetKey) return false;
-    const sock = this.sockets.get(targetKey);
-    if (!sock || sock.readyState !== WebSocket.OPEN) return false;
+    const entry = this.sockets.get(targetKey);
+    const rawSocket = entry && entry.socket ? entry.socket : entry;
+    if (!rawSocket || rawSocket.readyState !== WebSocket.OPEN) return false;
     try {
-      sock.send(typeof payload === 'string' ? payload : JSON.stringify(payload));
+      rawSocket.send(typeof payload === 'string' ? payload : JSON.stringify(payload));
       return true;
     } catch (_) {
       return false;
@@ -343,29 +330,94 @@ class RoomContextManager {
       this.manualDisconnects.add(key);
     }
     this._clearReconnectTimer(key);
-    const sock = this.sockets.get(key);
+    const entry = this.sockets.get(key);
+    const sock = entry && entry.socket ? entry.socket : entry;
     if (sock) {
       sock.onopen = null;
       sock.onmessage = null;
       sock.onerror = null;
       sock.onclose = null;
-      if (typeof sock.close === 'function') {
-        try {
-          sock.close();
-        } catch (_) {}
+      if (entry && typeof entry.close === 'function') {
+        try { entry.close(); } catch (_) {}
+      } else if (typeof sock.close === 'function') {
+        try { sock.close(); } catch (_) {}
       }
       this.sockets.delete(key);
     }
   }
 
-  /**
-   * Conecta ou reutiliza o WebSocket correspondente ao contexto e filtra eventos
-   * para que mensagens de outras salas não invadam a tela atual.
-   */
-  _connectContextSocket(ctx, { isReconnect = false } = {}) {
-    if (!this.client || !ctx) return;
+  _handleIncomingData(ctx, rawData) {
+    let data = null;
+    try {
+      data = typeof rawData === 'string' ? JSON.parse(rawData) : rawData;
+    } catch (_) {
+      data = { text: String(rawData || '') };
+    }
 
-    // Fecha socket anterior se for diferente do contexto atual
+    if (!data || typeof data !== 'object') return;
+
+    const incomingType = data.type === 'dm' || data.type === 'dm_message' || ctx.type === 'dm' ? 'dm' : 'channel';
+    const incomingMeta = {
+      type: incomingType,
+      serverId: data.server_id || data.serverId || ctx.serverId,
+      channelName: data.channel || data.channel_name || data.channelName || ctx.channelName,
+      targetUser: data.target_user || data.targetUser || data.sender || ctx.targetUser
+    };
+
+    const targetKey = RoomContextManager.buildContextKey(incomingMeta);
+    const effectiveMeta = this.contexts[targetKey]
+      ? incomingMeta
+      : {
+          type: ctx.type,
+          serverId: ctx.serverId,
+          channelName: ctx.channelName,
+          targetUser: ctx.targetUser
+        };
+
+    const authorName = data.author || data.sender || data.username || 'Usuário';
+    const textVal = data.text || data.message || '';
+    const attUrl = data.attachmentUrl || data.attachment_url || '';
+    const attName = data.attachmentName || data.attachment_name || '';
+    const attType = data.attachmentType || data.attachment_type || '';
+
+    if (!textVal && !attUrl && !data.id) {
+      if (typeof this.onIncomingMessage === 'function') {
+        this.onIncomingMessage(data, { entry: null, ctx: this.ensureContext(effectiveMeta), isActive: this.activeContextKey === targetKey });
+      }
+      return;
+    }
+
+    const result = this.pushMessage(effectiveMeta, {
+      id: data.id,
+      client_id: data.client_id,
+      author: authorName,
+      text: textVal,
+      timestamp: data.timestamp || new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+      avatarUrl: data.avatarUrl || data.avatar_url || '',
+      attachmentUrl: attUrl,
+      attachmentName: attName,
+      attachmentType: attType,
+      canDelete: Boolean(data.canDelete),
+      raw: data
+    });
+
+    if (typeof this.onIncomingMessage === 'function') {
+      this.onIncomingMessage(data, result);
+    }
+  }
+
+  _buildFallbackSocket(ctx) {
+    if (typeof this.client?.buildWsUrl !== 'function') return null;
+    if (ctx.type === 'dm') {
+      return new WebSocket(this.client.buildWsUrl(`/ws/dm/${encodeURIComponent(ctx.targetUser)}/`));
+    }
+    const params = new URLSearchParams({ server: String(ctx.serverId || 'home'), channel: String(ctx.channelName || 'geral') });
+    return new WebSocket(this.client.buildWsUrl(`/ws/chat/${encodeURIComponent(ctx.channelName || 'geral')}/?${params.toString()}`));
+  }
+
+  _connectContextSocket(ctx, { isReconnect = false } = {}) {
+    if (!ctx) return;
+
     if (this.activeSocketKey && this.activeSocketKey !== ctx.key) {
       this._closeSocketByKey(this.activeSocketKey, { manual: true });
     }
@@ -374,35 +426,47 @@ class RoomContextManager {
     this.activeSocketKey = ctx.key;
 
     const existing = this.sockets.get(ctx.key);
-    if (existing && (existing.readyState === WebSocket.OPEN || existing.readyState === WebSocket.CONNECTING) && !isReconnect) {
+    const existingWs = existing && existing.socket ? existing.socket : existing;
+    if (existingWs && (existingWs.readyState === WebSocket.OPEN || existingWs.readyState === WebSocket.CONNECTING) && !isReconnect) {
       return;
     }
 
     this._closeSocketByKey(ctx.key, { manual: false });
 
-    let socket = null;
+    let wrapperOrSocket = null;
     try {
-      if (ctx.type === 'dm' && typeof this.client.createDmSocket === 'function') {
-        socket = this.client.createDmSocket(ctx.targetUser);
-      } else if (typeof this.client.createChatSocket === 'function') {
-        socket = this.client.createChatSocket(ctx.channelName, ctx.serverId);
+      if (ctx.type === 'dm' && typeof this.client?.createDmSocket === 'function') {
+        wrapperOrSocket = this.client.createDmSocket({
+          username: ctx.targetUser,
+          onEvent: (ev) => this._handleIncomingData(ctx, ev)
+        });
+      } else if (typeof this.client?.createChatSocket === 'function') {
+        wrapperOrSocket = this.client.createChatSocket({
+          roomSlug: ctx.channelName,
+          server: ctx.serverId,
+          channel: ctx.channelName,
+          onEvent: (ev) => this._handleIncomingData(ctx, ev)
+        });
+      } else {
+        wrapperOrSocket = this._buildFallbackSocket(ctx);
       }
     } catch (_) {
-      socket = null;
+      wrapperOrSocket = this._buildFallbackSocket(ctx);
     }
 
-    if (!socket) {
+    const rawSocket = wrapperOrSocket && wrapperOrSocket.socket ? wrapperOrSocket.socket : wrapperOrSocket;
+    if (!rawSocket) {
       this._scheduleReconnect(ctx);
       return;
     }
 
-    this.sockets.set(ctx.key, socket);
+    this.sockets.set(ctx.key, wrapperOrSocket);
 
     if (typeof this.onConnectionStateChange === 'function') {
       this.onConnectionStateChange(isReconnect ? 'reconnecting' : 'connecting', ctx);
     }
 
-    socket.onopen = () => {
+    rawSocket.onopen = () => {
       if (this.activeContextKey !== ctx.key) return;
       this.reconnectAttempts.set(ctx.key, 0);
       if (typeof this.onConnectionStateChange === 'function') {
@@ -410,73 +474,18 @@ class RoomContextManager {
       }
     };
 
-    socket.onmessage = (event) => {
-      let data = null;
-      try {
-        data = typeof event.data === 'string' ? JSON.parse(event.data) : event.data;
-      } catch (_) {
-        data = { text: String(event.data || '') };
-      }
-
-      if (!data || typeof data !== 'object') return;
-
-      const incomingType = data.type === 'dm' || ctx.type === 'dm' ? 'dm' : 'channel';
-      const incomingMeta = {
-        type: incomingType,
-        serverId: data.server_id || data.serverId || ctx.serverId,
-        channelName: data.channel || data.channel_name || data.channelName || ctx.channelName,
-        targetUser: data.target_user || data.targetUser || data.sender || ctx.targetUser
-      };
-
-      const targetKey = RoomContextManager.buildContextKey(incomingMeta);
-      const effectiveMeta = this.contexts[targetKey]
-        ? incomingMeta
-        : {
-            type: ctx.type,
-            serverId: ctx.serverId,
-            channelName: ctx.channelName,
-            targetUser: ctx.targetUser
-          };
-
-      const authorName = data.author || data.sender || data.username || 'Usuário';
-      const textVal = data.text || data.message || '';
-      const attUrl = data.attachmentUrl || data.attachment_url || '';
-      const attName = data.attachmentName || data.attachment_name || '';
-      const attType = data.attachmentType || data.attachment_type || '';
-
-      if (!textVal && !attUrl && !data.id) {
-        if (typeof this.onIncomingMessage === 'function') {
-          this.onIncomingMessage(data, { entry: null, ctx: this.ensureContext(effectiveMeta), isActive: this.activeContextKey === targetKey });
-        }
-        return;
-      }
-
-      const result = this.pushMessage(effectiveMeta, {
-        id: data.id,
-        author: authorName,
-        text: textVal,
-        timestamp: data.timestamp || new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-        avatarUrl: data.avatarUrl || data.avatar_url || '',
-        attachmentUrl: attUrl,
-        attachmentName: attName,
-        attachmentType: attType,
-        canDelete: Boolean(data.canDelete),
-        raw: data
-      });
-
-      if (typeof this.onIncomingMessage === 'function') {
-        this.onIncomingMessage(data, result);
-      }
+    rawSocket.onmessage = (event) => {
+      this._handleIncomingData(ctx, event.data);
     };
 
-    socket.onerror = () => {
+    rawSocket.onerror = () => {
       if (this.activeContextKey !== ctx.key) return;
       if (typeof this.onConnectionStateChange === 'function') {
         this.onConnectionStateChange('error', ctx);
       }
     };
 
-    socket.onclose = () => {
+    rawSocket.onclose = () => {
       this.sockets.delete(ctx.key);
       if (this.activeContextKey === ctx.key && !this.manualDisconnects.has(ctx.key)) {
         this._scheduleReconnect(ctx);
