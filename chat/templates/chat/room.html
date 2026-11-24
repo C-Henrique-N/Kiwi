@@ -6436,6 +6436,10 @@ html, body {
                     throw new Error((data && (data.error || data.detail)) || `HTTP ${response.status}`);
                 }
 
+                if (typeof syncBackendStateOnStartup === "function") {
+                syncBackendStateOnStartup();
+                }
+
                 return data;
             }
 
@@ -6919,28 +6923,38 @@ html, body {
                 });
             }
 
-            const isOwnerOrAdmin =
-    String(post.author || '').trim().toLowerCase() === String(activeUsername || '').trim().toLowerCase() ||
-    Boolean(myProfileData && myProfileData.is_admin);
+            const currentUser = String(window.__KIWI_USER__ || "").trim().toLowerCase();
+            const postAuthor = String(post.author_username || post.author || "").trim().toLowerCase();
+            const isOwnerOrAdmin = Boolean(currentUser && (currentUser === postAuthor || currentUser === "akiirapw"));
 
-    if (isOwnerOrAdmin) {
-        const deleteBtn = document.createElement('button');
-        deleteBtn.type = 'button';
-        deleteBtn.className = 'kiwi-x-action-btn delete-post-btn';
-        deleteBtn.title = 'Excluir post';
-        deleteBtn.setAttribute('aria-label', 'Excluir post');
-        deleteBtn.textContent = '🗑️ Excluir';
-        deleteBtn.onclick = async (ev) => {
-            ev.stopPropagation();
-            deleteBtn.disabled = true;
-            try {
-                await deletePostById(post, onAfterMutation);
-            } finally {
-                deleteBtn.disabled = false;
+            if (isOwnerOrAdmin && post.id) {
+            const deleteBtn = document.createElement("button");
+            deleteBtn.type = "button";
+            deleteBtn.className = "post-action-btn post-delete-btn";
+            deleteBtn.title = "Excluir post";
+            deleteBtn.setAttribute("aria-label", "Excluir post");
+            deleteBtn.innerHTML = `<i class="fa-regular fa-trash-can"></i><span>Excluir</span>`;
+            deleteBtn.addEventListener("click", async (event) => {
+                event.preventDefault();
+                event.stopPropagation();
+                const ok = window.confirm("Tem certeza que deseja excluir este post?");
+                if (!ok) return;
+
+                try {
+                const resp = await kiwiApiFetch(`/api/posts/${encodeURIComponent(String(post.id))}/delete/`, {
+                    method: "POST",
+                });
+                if (!resp.ok) {
+                    throw new Error(`HTTP ${resp.status}`);
+                }
+                card.remove();
+                } catch (err) {
+                console.error("[Kiwi] Falha ao excluir post:", err);
+                alert("Não foi possível excluir o post agora.");
+                }
+            });
+            actions.appendChild(deleteBtn);
             }
-        };
-        actions.appendChild(deleteBtn);
-    }
             
     </script>
 </body>
