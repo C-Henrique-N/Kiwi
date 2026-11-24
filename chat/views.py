@@ -727,6 +727,9 @@ def api_dm_history(request, username):
         "messages": [_serialize_dm(m, current_user=request.user) for m in dms],
     })
 
+if "api_dm_history" in globals():
+    get_dm_history = api_dm_history
+
 
 @login_required
 @require_GET
@@ -969,6 +972,8 @@ def api_update_profile(request):
 
     profile = _get_or_create_profile(target_user)
     is_admin = _is_kiwi_admin(target_user) or request.user.is_superuser
+
+    
 
     if "bio" in data:
         profile.bio = (data.get("bio") or "").strip()[:500]
