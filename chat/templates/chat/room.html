@@ -2277,10 +2277,14 @@ html, body {
                     headers['X-CSRFToken'] = csrf;
                 }
                 const res = await fetch(url, Object.assign({ credentials: 'same-origin' }, options, { headers }));
-                if (!res.ok) {
-                    throw new Error(`HTTP ${res.status}`);
+                const responseText = await res.text();
+                let payload = {};
+                try { payload = responseText ? JSON.parse(responseText) : {}; } catch (_) {}
+                if (!res.ok || payload.ok === false) {
+                    const detail = payload.error || payload.detail || `HTTP ${res.status}`;
+                    throw new Error(detail);
                 }
-                return res.json().catch(() => ({}));
+                return payload;
             }
 
             function sanitizeSavedLists() {
@@ -5908,19 +5912,26 @@ html, body {
                     if (!postId || !txt) return;
 
                     let updatedPost = null;
-                    if (/^\d+$/.test(String(postId))) {
+                    const isBackendPost = /^\d+$/.test(String(postId));
+                    if (isBackendPost) {
                         try {
                             const data = await apiRequestJson(`/api/profile/posts/${encodeURIComponent(postId)}/reply/`, {
                                 method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
                                 body: JSON.stringify({ content: txt })
                             });
                             if (data && data.post) {
                                 updatedPost = normalizePostRecord(data.post, true);
+                            } else {
+                                throw new Error('O servidor não retornou a publicação atualizada.');
                             }
-                        } catch (_) {}
+                        } catch (err) {
+                            showKiwiToast(`Não foi possível enviar: ${err && err.message ? err.message : 'erro no servidor'}`);
+                            return;
+                        }
                     }
 
-                    if (!updatedPost) {
+                    if (!updatedPost && !isBackendPost) {
                         const existing = currentPostsById.get(String(postId)) || getUserPostsStore().find(p => String(p.id) === String(postId));
                         if (existing) {
                             const nextReplies = Array.isArray(existing.replies) ? existing.replies.slice() : [];
@@ -5943,8 +5954,13 @@ html, body {
                     if (updatedPost) {
                         currentPostsById.set(String(updatedPost.id), updatedPost);
                     }
+                    if (!updatedPost) {
+                        showKiwiToast('Não foi possível localizar a publicação para responder.');
+                        return;
+                    }
                     if (repInput) repInput.value = '';
                     openPostDetailTab(postId);
+                    showKiwiToast(isBackendPost ? 'Resposta enviada!' : 'Resposta salva neste navegador.');
                     if (currentView === 'inicio') await renderInicioTabSurface();
                     else if (currentView === 'perfil') await renderCleanUserPosts();
                 });
@@ -5955,31 +5971,40 @@ html, body {
                 showChatLogSurface(false);
                 if (!chatLog) return;
 
-                const adminAcc = buildAdminFeaturedAccount();
-                const resolvedBanner = resolveBannerUrlForUser(adminAcc.username, adminAcc.bannerUrl);
-                const resolvedAvatar = adminAcc.avatarUrl || myProfileData.avatarUrl || '';
+                // O cartão da página inicial sempre representa a conta autenticada,
+                // sem reutilizar os cosméticos de uma conta administrativa/destaque.
+                const homeAccount = {
+                    username: activeUsername,
+                    handle: `@${String(activeUsername || '').toLowerCase()}`,
+                    bio: myProfileData.bio || 'Perfil sem biografia.',
+                    avatarUrl: myProfileData.avatarUrl || '',
+                    bannerUrl: myProfileData.bannerUrl || '',
+                    is_admin: Boolean(myProfileData.is_admin)
+                };
+                const resolvedBanner = resolveBannerUrlForUser(homeAccount.username, homeAccount.bannerUrl);
+                const resolvedAvatar = homeAccount.avatarUrl;
                 chatLog.innerHTML = `
                     <div class="kiwi-home-profile-wrap">
                         <div class="kiwi-home-profile-card" id="kiwi-home-open-profile-card">
                             <div class="kiwi-home-profile-banner" style="${resolvedBanner ? `background-image:url('${escapeHtmlText(encodeURI(resolvedBanner))}');` : ''}"></div>
                             <div class="kiwi-home-profile-body">
                                 <div class="kiwi-home-profile-top">
-                                    <div class="kiwi-home-profile-avatar" id="kiwi-home-profile-avatar-el">${escapeHtmlText(adminAcc.username.charAt(0).toUpperCase())}</div>
-                                    <span class="admin-gold-badge">👑 ADMIN</span>
+                                    <div class="kiwi-home-profile-avatar" id="kiwi-home-profile-avatar-el">${escapeHtmlText(homeAccount.username.charAt(0).toUpperCase())}</div>
+                                    ${homeAccount.is_admin ? '<span class="admin-gold-badge">👑 ADMIN</span>' : ''}
                                 </div>
-                                <div style="font-size:16px;font-weight:900;">${escapeHtmlText(adminAcc.username)}</div>
-                                <div style="font-size:12px;color:var(--kiwi-text-muted);margin-bottom:6px;">${escapeHtmlText(adminAcc.handle)}</div>
-                                <div style="font-size:13px;color:var(--kiwi-text-secondary);">${escapeHtmlText(adminAcc.bio)}</div>
+                                <div style="font-size:16px;font-weight:900;">${escapeHtmlText(homeAccount.username)}</div>
+                                <div style="font-size:12px;color:var(--kiwi-text-muted);margin-bottom:6px;">${escapeHtmlText(homeAccount.handle)}</div>
+                                <div style="font-size:13px;color:var(--kiwi-text-secondary);">${escapeHtmlText(homeAccount.bio)}</div>
                             </div>
                         </div>
                         <div id="kiwi-home-feed-stream" style="display:flex;flex-direction:column;gap:10px;margin-top:12px;"></div>
                     </div>
                 `;
                 const avatarEl = document.getElementById('kiwi-home-profile-avatar-el');
-                if (avatarEl) setAvatarStyle(avatarEl, resolvedAvatar, adminAcc.username);
+                if (avatarEl) setAvatarStyle(avatarEl, resolvedAvatar, homeAccount.username);
 
                 const cardEl = document.getElementById('kiwi-home-open-profile-card');
-                if (cardEl) cardEl.onclick = () => openFullProfilePage(ADMIN_GUIDE_USERNAME);
+                if (cardEl) cardEl.onclick = () => openFullProfilePage(activeUsername);
 
                 const feedStream = document.getElementById('kiwi-home-feed-stream');
                 if (!feedStream) return;
