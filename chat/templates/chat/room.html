@@ -5624,7 +5624,11 @@ html, body {
                 const imageUrl = String(raw.image_url ?? raw.imageUrl ?? raw.image ?? '').trim();
                 if (!text && !imageUrl) return null;
 
-                const rawReplies = Array.isArray(raw.replies) ? raw.replies : [];
+                // A API retorna os comentários em `reply_items`; `replies` fica
+                // como compatibilidade com posts locais/antigos.
+                const rawReplies = Array.isArray(raw.reply_items)
+                    ? raw.reply_items
+                    : (Array.isArray(raw.replies) ? raw.replies : []);
                 const replies = rawReplies.map((r, idx) => ({
                     id: r.id || `rep-${idx}`,
                     author: r.author || r.username || 'Usuário',
@@ -5633,7 +5637,8 @@ html, body {
                 })).filter(r => r.text);
 
                 return {
-                    id: String(raw.id || raw.post_id || `local-${author}-${text.slice(0, 16)}`),
+                    // O id visual do backend é "post-123", mas a API espera db_id (123).
+                    id: String((fromBackend && raw.db_id != null) ? raw.db_id : (raw.id || raw.post_id || `local-${author}-${text.slice(0, 16)}`)).replace(/^post-/, ''),
                     author,
                     handle: raw.handle || `@${author.toLowerCase()}`,
                     avatarUrl: raw.author_avatar || raw.avatar_url || raw.avatarUrl || '',
@@ -5704,10 +5709,8 @@ html, body {
                             method: 'POST'
                         });
                     } catch (err) {
-                        if (!String(err && err.message || '').includes('404')) {
-                            showKiwiToast('Não foi possível excluir o post no servidor.');
-                            return;
-                        }
+                        showKiwiToast((err && err.message) || 'Não foi possível excluir o post no servidor.');
+                        return;
                     }
                 }
 
@@ -5938,8 +5941,20 @@ html, body {
                             method: 'POST',
                             body: JSON.stringify({ content: txt, image_url: imgUrl })
                         });
-                        if (apiRes && (apiRes.id || apiRes.post_id)) {
-                            postId = String(apiRes.id || apiRes.post_id);
+                        if (apiRes && apiRes.post) {
+                            const savedPost = normalizePostRecord(apiRes.post, true);
+                            if (savedPost) {
+                                const posts = getUserPostsStore();
+                                posts.unshift(savedPost);
+                                saveUserPostsStore(posts);
+                                if (textInput) textInput.value = '';
+                                if (imgInput) imgInput.value = '';
+                                closeModalAnimated(createPostModal);
+                                activateNavTab('perfil');
+                                await renderCleanUserPosts();
+                                showKiwiToast('Post publicado no perfil!');
+                                return;
+                            }
                         }
                     } catch (_) {}
 
