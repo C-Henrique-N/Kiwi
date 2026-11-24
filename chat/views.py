@@ -1368,6 +1368,35 @@ def delete_profile_post(request, post_id):
     _broadcast_feed_event("broadcast_profile_post_delete", {"id": post_id})
     return JsonResponse({"ok": True, "deleted_id": post_id})
 
+@login_required
+@require_GET
+def api_profile_me(request):
+    profile = _get_or_create_profile(request.user)
+    return JsonResponse({
+        "ok": True,
+        "username": request.user.username,
+        "profile": _serialize_profile(request.user, profile),
+    })
+
+
+@login_required
+@require_GET
+def api_servers_list(request):
+    servers = _ensure_default_workspace(request.user)
+    data = [
+        {
+            "id": srv.id,
+            "name": srv.name,
+            "icon_url": _safe_media_url(getattr(srv, "icon", None)),
+            "channels": [
+                {"id": ch.id, "name": ch.name, "server_id": srv.id, "channel_type": ch.channel_type}
+                for ch in srv.channels.order_by("position", "id")
+            ],
+        }
+        for srv in servers
+    ]
+    return JsonResponse({"ok": True, "servers": data})
+
 
 @login_required
 def update_server(request, server_id):
