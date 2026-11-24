@@ -5537,6 +5537,18 @@ html, body {
                 writeStorageJson(USER_POSTS_KEY, posts);
             }
 
+            function getUserPostsStore() {
+                const posts = readStorageJson(USER_POSTS_KEY, []);
+                return Array.isArray(posts) ? posts.filter(p => p && !isRemovedFakeAccount(p.author)) : [];
+            }
+
+            function saveUserPostsStore(posts) {
+                writeStorageJson(USER_POSTS_KEY, posts);
+            }
+
+            window.getUserPostsStore = getUserPostsStore;
+            window.saveUserPostsStore = saveUserPostsStore;
+
             const createPostModal = document.getElementById('create-post-modal');
             const openPostModalBtn = document.getElementById('nav-open-post-modal-btn');
             const closeCreatePostBtn = document.getElementById('close-create-post-btn');
