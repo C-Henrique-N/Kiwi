@@ -5563,17 +5563,51 @@ html, body {
                     const imgUrl = (imgInput && imgInput.value.trim()) || '';
                     if (!txt && !imgUrl) return;
 
-                    let postId = 'post-' + Date.now().toString(36);
+                    let createdPost = null;
                     try {
                         const apiRes = await apiRequestJson('/api/posts/create/', {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json' },
                             body: JSON.stringify({ content: txt, image_url: imgUrl })
                         });
-                        if (apiRes && (apiRes.id || apiRes.post_id)) {
-                            postId = String(apiRes.id || apiRes.post_id);
+                        if (apiRes && apiRes.post) {
+                            createdPost = apiRes.post;
                         }
                     } catch (_) {}
+
+                    // Só salva localmente se a API falhar (modo offline); se salvou no banco, usa direto do backend
+                    if (!createdPost) {
+                        const fallbackPost = {
+                            id: 'local-' + Date.now().toString(36),
+                            author: activeUsername,
+                            handle: `@${activeUsername.toLowerCase()}`,
+                            text: txt,
+                            imageUrl: isSafeAssetUrl(imgUrl) ? imgUrl : '',
+                            time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+                            likes: 0,
+                            liked: false,
+                            replies: []
+                        };
+                        const posts = getUserPostsStore();
+                        posts.unshift(fallbackPost);
+                        saveUserPostsStore(posts);
+                    } else {
+                        // Remove eventuais cópias antigas sem db_id do localStorage para não duplicar
+                        const cleanedLocal = getUserPostsStore().filter(p => !String(p.id || '').startsWith('post-'));
+                        saveUserPostsStore(cleanedLocal);
+                    }
+
+                    if (textInput) textInput.value = '';
+                    if (imgInput) imgInput.value = '';
+                    closeModalAnimated(createPostModal);
+                    activateNavTab('perfil');
+                    await renderCleanUserPosts();
+                    if (typeof renderInicioTabSurface === 'function') {
+                        await renderInicioTabSurface();
+                    }
+                    showKiwiToast('Post publicado no perfil!');
+                });
+            }
 
                     const newPost = {
                         id: postId,
@@ -6518,6 +6552,20 @@ html, body {
                 } catch (_) {
                     return [];
                 }
+
+                .map(p => ({
+                            id: p.db_id || String(p.id || '').replace(/^post-/, ''),
+                            author: p.author || activeUsername,
+                            handle: p.handle || `@${String(p.author || activeUsername).toLowerCase()}`,
+                            avatarUrl: p.author_avatar || p.avatar_url || '',
+                            text: p.content || p.text || '',
+                            imageUrl: p.image_url || p.image || '',
+                            likes: Number(p.likes_count ?? p.likes ?? 0),
+                            liked: Boolean(p.liked ?? p.is_liked ?? false),
+                            replies: Array.isArray(p.reply_items || p.replies) ? (p.reply_items || p.replies) : [],
+                            time: p.created_at_label || p.time || '',
+                            fromBackend: true
+                        }));
             }
 
             function mergePostsById(primaryList, secondaryList) {
