@@ -353,6 +353,16 @@ html, body {
 .kiwi-x-action-btn:hover {
     color: var(--kiwi-text-primary);
 }
+.kiwi-x-action-btn.delete-post-btn {
+    margin-left: auto;
+    color: #f87171;
+    padding: 4px 10px;
+}
+
+.kiwi-x-action-btn.delete-post-btn:hover {
+    color: #ef4444;
+    background: rgba(239, 68, 68, 0.12);
+}
 
 .kiwi-x-action-btn.liked {
     color: #f43f5e;
@@ -6542,6 +6552,62 @@ html, body {
                 });
             }
 
+            async function deletePostById(post, onAfterMutation) {
+                if (!post || post.id === undefined) return;
+                const targetId = String(post.id);
+
+                if (post.fromBackend && /^\d+$/.test(targetId)) {
+                    try {
+                        const resp = await fetch(`/api/profile/posts/${encodeURIComponent(targetId)}/delete/`, {
+                            method: 'POST',
+                            headers: {
+                                'X-Requested-With': 'XMLHttpRequest',
+                                'X-CSRFToken': resolveCsrfToken()
+                            },
+                            credentials: 'same-origin'
+                        });
+                        if (!resp.ok) {
+                            const errData = await resp.json().catch(() => ({}));
+                            if (resp.status !== 404) {
+                                throw new Error((errData && (errData.error || errData.detail)) || `HTTP ${resp.status}`);
+                            }
+                        }
+                    } catch (err) {
+                        if (!String(err && err.message || '').includes('404')) {
+                            showKiwiToast('Não foi possível excluir o post no servidor.');
+                            return;
+                        }
+                    }
+                }
+
+                const allPosts = getUserPostsStore();
+                const filtered = allPosts.filter(item => {
+                    if (String(item.id) === targetId) return false;
+                    if (
+                        !item.fromBackend &&
+                        post.text &&
+                        item.text === post.text &&
+                        String(item.author || '').toLowerCase() === String(post.author || '').toLowerCase()
+                    ) {
+                        return false;
+                    }
+                    return true;
+                });
+                saveUserPostsStore(filtered);
+                currentPostsById.delete(targetId);
+
+                const pdTab = document.getElementById('kiwi-post-detail-tab');
+                const pdForm = document.getElementById('post-detail-reply-form');
+                if (pdTab && pdTab.style.display !== 'none' && pdForm && pdForm.getAttribute('data-post-id') === targetId) {
+                    showProfileTimelineSurface();
+                }
+
+                if (typeof onAfterMutation === 'function') {
+                    await onAfterMutation();
+                }
+                showKiwiToast('Post excluído!');
+            }
+
             function buildPostCardElement(post, onAfterMutation) {
                 const card = document.createElement('article');
                 card.className = 'kiwi-x-post-card';
@@ -6840,6 +6906,29 @@ html, body {
                     xFeedList.appendChild(buildPostCardElement(post, renderCleanUserPosts));
                 });
             }
+
+            const isOwnerOrAdmin =
+    String(post.author || '').trim().toLowerCase() === String(activeUsername || '').trim().toLowerCase() ||
+    Boolean(myProfileData && myProfileData.is_admin);
+
+    if (isOwnerOrAdmin) {
+        const deleteBtn = document.createElement('button');
+        deleteBtn.type = 'button';
+        deleteBtn.className = 'kiwi-x-action-btn delete-post-btn';
+        deleteBtn.title = 'Excluir post';
+        deleteBtn.setAttribute('aria-label', 'Excluir post');
+        deleteBtn.textContent = '🗑️ Excluir';
+        deleteBtn.onclick = async (ev) => {
+            ev.stopPropagation();
+            deleteBtn.disabled = true;
+            try {
+                await deletePostById(post, onAfterMutation);
+            } finally {
+                deleteBtn.disabled = false;
+            }
+        };
+        actions.appendChild(deleteBtn);
+    }
             
     </script>
 </body>
