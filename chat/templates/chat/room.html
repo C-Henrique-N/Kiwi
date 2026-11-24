@@ -6017,9 +6017,11 @@ html, body {
                         currentPostsById.set(String(updatedPost.id), updatedPost);
                     }
                     if (repInput) repInput.value = '';
+
+                    // Atualiza somente a aba de comentários. Não renderize o feed
+                    // aqui, pois isso esconderia a publicação e voltaria para Início.
                     openPostDetailTab(postId);
-                    if (currentView === 'inicio') await renderInicioTabSurface();
-                    else if (currentView === 'perfil') await renderCleanUserPosts();
+                    showKiwiToast('Comentário enviado!');
                 });
             }
 
