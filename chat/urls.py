@@ -1,7 +1,15 @@
+from django.http import HttpResponse
+from django.templatetags.static import static
 from django.urls import path
+from django.views.generic import RedirectView
 from . import views
 
 urlpatterns = [
+    # Ícone da aba (evita erro 404 em /favicon.ico)
+    path('favicon.ico', RedirectView.as_view(url=static('img/favicon.ico'), permanent=True)),
+    # Alternativa caso queira apenas silenciar o 404 sem redirecionar:
+    # path('favicon.ico', lambda request: HttpResponse(status=204)),
+
     # Páginas principais
     path('', views.room_view, name='room_home'),
     path('chat/<str:room_name>/', views.room_view, name='room_chat'),

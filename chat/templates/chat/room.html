@@ -6366,69 +6366,6 @@ html, body {
                 } catch (_) {}
             }
 
-            async function syncBackendStateOnStartup() {
-                try {
-                    const profResp = await apiRequestJson('/api/profile/me/');
-                    const norm = window.KiwiClient ? window.KiwiClient.normalizeProfilePayload(profResp, myProfileData) : null;
-                    if (norm && norm.username) {
-                        activeUsername = norm.username;
-                        try { localStorage.setItem(USERNAME_STORAGE_KEY, activeUsername); } catch (_) {}
-                        const resolvedAdmin = isAdminIdentity(activeUsername, norm.is_admin ?? myProfileData.is_admin);
-                        myProfileData = {
-                            ...myProfileData,
-                            username: activeUsername,
-                            bubble: norm.bubble || myProfileData.bubble,
-                            pronouns: norm.pronouns || myProfileData.pronouns,
-                            bio: norm.bio || myProfileData.bio,
-                            location: norm.location || myProfileData.location,
-                            song: norm.song || myProfileData.song,
-                            artist: norm.artist || myProfileData.artist,
-                            musicUrl: norm.musicUrl || myProfileData.musicUrl,
-                            audioSrc: norm.audioSrc || myProfileData.audioSrc,
-                            coverUrl: norm.coverUrl || myProfileData.coverUrl,
-                            avatarUrl: norm.avatarUrl || myProfileData.avatarUrl,
-                            bannerUrl: norm.bannerUrl || myProfileData.bannerUrl,
-                            is_admin: resolvedAdmin,
-                            accentColor: sanitizeThemeForUser(norm.accentColor || myProfileData.accentColor, activeUsername, resolvedAdmin)
-                        };
-                        saveUserMusicToLocalCache(activeUsername, myProfileData);
-                        updateMySidebarUI();
-                        syncXProfileHeader();
-                        fetchOnlineUsers();
-                    }
-                } catch (_) {}
-
-                try {
-                    const srvResp = await apiRequestJson('/api/servers/list/');
-                    const srvList = Array.isArray(srvResp.servers) ? srvResp.servers : (Array.isArray(srvResp) ? srvResp : []);
-                    if (srvList.length && serverRailEl && openCreateServerBtn) {
-                        srvList.forEach((srv) => {
-                            const sId = String(srv.id || srv.server_id || '');
-                            const sName = srv.name || 'Servidor';
-                            if (!sId || sId === 'home') return;
-                            const chs = Array.isArray(srv.channels) && srv.channels.length
-                                ? srv.channels.map(c => typeof c === 'string'
-                                    ? { name: c, type: c.includes('música') ? 'audio' : 'text' }
-                                    : { name: c.name || 'geral', type: c.channel_type || c.type || 'text' })
-                                : [{ name: 'geral', type: 'text' }, { name: 'música', type: 'audio' }];
-                            serverChannelsStore[sId] = chs;
-                            if (!serverRailEl.querySelector(`.server-rail-btn[data-server-id="${CSS.escape(sId)}"]`)) {
-                                const btn = document.createElement('button');
-                                btn.type = 'button';
-                                btn.className = 'server-rail-btn';
-                                btn.setAttribute('data-server-id', sId);
-                                btn.title = sName;
-                                btn.textContent = sName.slice(0, 2).toUpperCase();
-                                btn.addEventListener('click', () => selectServerInRail(sId, sName, serverChannelsStore[sId]));
-                                serverRailEl.insertBefore(btn, openCreateServerBtn);
-                            }
-                        });
-                    }
-                } catch (_) {}
-
-                await fetchFriendsList();
-            }
-
             syncBackendStateOnStartup();
 
             if (window.innerWidth <= 768) {
@@ -6440,26 +6377,69 @@ html, body {
             } else {
                 activateNavTab('perfil');
             }
-        });
 
-        const KIWI_API_ROUTES = {
-        // Amigos e seguidores
-        friendAdd: '/api/friends/add/',
-        friendRequestsList: '/api/friend-requests/list/',
-        friendRequestAccept: '/api/friend-request/accept/',
-        friendRemove: '/api/friends/remove/',
-        followToggle: '/api/follow/toggle/',
+            const KIWI_API_ROUTES = {
+                // Amigos e seguidores
+                friendAdd: '/api/friends/add/',
+                friendRequestsList: '/api/friend-requests/list/',
+                friendRequestAccept: '/api/friend-request/accept/',
+                friendRemove: '/api/friends/remove/',
+                followToggle: '/api/follow/',
 
-        // Posts e respostas
-        postCreate: '/api/posts/create/',
-        postLike: (postId) => `/api/profile/posts/${encodeURIComponent(postId)}/like/`,
-        postReply: (postId) => `/api/profile/posts/${encodeURIComponent(postId)}/replies/`,
-        postDelete: (postId) => `/api/profile/posts/${encodeURIComponent(postId)}/delete/`,
+                // Posts e respostas
+                postCreate: '/api/posts/create/',
+                postLike: (postId) => `/api/profile/posts/${encodeURIComponent(postId)}/like/`,
+                postReply: (postId) => `/api/profile/posts/${encodeURIComponent(postId)}/reply/`,
+                postDelete: (postId) => `/api/profile/posts/${encodeURIComponent(postId)}/delete/`,
 
-        // DMs
-        dmSendByUser: (username) => `/api/dm/send/${encodeURIComponent(username)}/`,
-        dmDelete: (messageId) => `/api/dm/messages/${encodeURIComponent(messageId)}/delete/`,
-        };
+                // DMs
+                dmSendByUser: (username) => `/api/dm/${encodeURIComponent(username)}/send/`,
+                dmDelete: (messageId) => `/api/dm/message/${encodeURIComponent(messageId)}/delete/`,
+            };
+
+            function resolveCsrfToken() {
+                if (window.KiwiClient && typeof window.KiwiClient.getCsrfToken === 'function') {
+                    return window.KiwiClient.getCsrfToken();
+                }
+                const match = document.cookie.match(/(?:^|;\s*)csrftoken=([^;]+)/);
+                return match ? decodeURIComponent(match[1]) : '';
+            }
+
+            async function kiwiApiFetch(url, { method = 'POST', body = null } = {}) {
+                const headers = {
+                    'X-Requested-With': 'XMLHttpRequest',
+                };
+
+                if (method !== 'GET' && method !== 'HEAD') {
+                    headers['X-CSRFToken'] = resolveCsrfToken();
+                }
+
+                let payload = body;
+                if (body && !(body instanceof FormData) && typeof body === 'object') {
+                    headers['Content-Type'] = 'application/json';
+                    payload = JSON.stringify(body);
+                }
+
+                const response = await fetch(url, {
+                    method,
+                    headers,
+                    body: payload,
+                    credentials: 'same-origin',
+                });
+
+                let data = null;
+                try {
+                    data = await response.json();
+                } catch (_) {
+                    data = null;
+                }
+
+                if (!response.ok) {
+                    throw new Error((data && (data.error || data.detail)) || `HTTP ${response.status}`);
+                }
+
+                return data;
+            }
 
         function resolveCsrfToken() {
         if (window.KiwiClient && typeof window.KiwiClient.getCsrfToken === 'function') {
@@ -6552,20 +6532,6 @@ html, body {
                 } catch (_) {
                     return [];
                 }
-
-                .map(p => ({
-                            id: p.db_id || String(p.id || '').replace(/^post-/, ''),
-                            author: p.author || activeUsername,
-                            handle: p.handle || `@${String(p.author || activeUsername).toLowerCase()}`,
-                            avatarUrl: p.author_avatar || p.avatar_url || '',
-                            text: p.content || p.text || '',
-                            imageUrl: p.image_url || p.image || '',
-                            likes: Number(p.likes_count ?? p.likes ?? 0),
-                            liked: Boolean(p.liked ?? p.is_liked ?? false),
-                            replies: Array.isArray(p.reply_items || p.replies) ? (p.reply_items || p.replies) : [],
-                            time: p.created_at_label || p.time || '',
-                            fromBackend: true
-                        }));
             }
 
             function mergePostsById(primaryList, secondaryList) {
