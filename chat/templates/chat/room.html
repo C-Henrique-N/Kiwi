@@ -6929,7 +6929,33 @@ html, body {
         };
         actions.appendChild(deleteBtn);
     }
-            
+         
+    function attachDeletePostButton(actions, post, onAfterMutation) {
+        if (!actions || !post) return;
+
+        const isOwnerOrAdmin =
+            String(post.author || '').trim().toLowerCase() === String(typeof activeUsername !== 'undefined' ? activeUsername : '').trim().toLowerCase() ||
+            Boolean(typeof myProfileData !== 'undefined' && myProfileData && myProfileData.is_admin);
+
+        if (isOwnerOrAdmin) {
+            const deleteBtn = document.createElement('button');
+            deleteBtn.type = 'button';
+            deleteBtn.className = 'kiwi-x-action-btn delete-post-btn';
+            deleteBtn.title = 'Excluir post';
+            deleteBtn.setAttribute('aria-label', 'Excluir post');
+            deleteBtn.textContent = '🗑️ Excluir';
+            deleteBtn.onclick = async (ev) => {
+                ev.stopPropagation();
+                deleteBtn.disabled = true;
+                try {
+                    await deletePostById(post, onAfterMutation);
+                } finally {
+                    deleteBtn.disabled = false;
+                }
+            };
+            actions.appendChild(deleteBtn);
+        }
+    }
     </script>
 </body>
 </html>
