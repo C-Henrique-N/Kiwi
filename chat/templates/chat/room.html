@@ -6531,7 +6531,7 @@ html, body {
             });
         }
 
-        async function renderCleanUserPosts() {
+       async function renderCleanUserPosts() {
             const token = ++feedRenderToken;
             if (!xFeedList) return;
             const prof = getActiveTimelineProfile();
@@ -6571,7 +6571,6 @@ html, body {
                 xFeedList.appendChild(buildPostCardElement(post, renderCleanUserPosts));
             });
         }
-
             const isOwnerOrAdmin =
     String(post.author || '').trim().toLowerCase() === String(activeUsername || '').trim().toLowerCase() ||
     Boolean(myProfileData && myProfileData.is_admin);
