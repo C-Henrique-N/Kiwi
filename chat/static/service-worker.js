@@ -1,6 +1,6 @@
 const CACHE_NAME = "kiwi-chat-v1";
 const ASSETS_TO_CACHE = [
-  "/static/css/style.css",
+  "/static/css/mobile.css",
   "/static/manifest.json"
 ];
 
