@@ -6770,35 +6770,35 @@ html, body {
                 triggerChatAreaTransition();
             }
 
-            const pdReplyForm = document.getElementById('post-detail-reply-form');
-            if (pdReplyForm) {
-                pdReplyForm.addEventListener('submit', async (e) => {
-                    e.preventDefault();
-                    const postId = pdReplyForm.getAttribute('data-post-id');
-                    const repInput = document.getElementById('post-detail-reply-input');
-                    const txt = (repInput && repInput.value.trim()) || '';
-                    if (!postId || !txt) return;
+            const pdReplyFormEl = document.getElementById('post-detail-reply-form');
+                if (pdReplyFormEl) {
+                    pdReplyFormEl.addEventListener('submit', async (e) => {
+                        e.preventDefault();
+                        const postId = pdReplyFormEl.getAttribute('data-post-id');
+                        const repInput = document.getElementById('post-detail-reply-input');
+                        const txt = (repInput && repInput.value.trim()) || '';
+                        if (!postId || !txt) return;
 
-                    let updatedPost = null;
-                    if (/^\d+$/.test(String(postId))) {
-                        try {
-                            const resp = await fetch(`/api/profile/posts/${encodeURIComponent(postId)}/reply/`, {
-                                method: 'POST',
-                                headers: {
-                                    'Content-Type': 'application/json',
-                                    'X-CSRFToken': resolveCsrfToken()
-                                },
-                                credentials: 'same-origin',
-                                body: JSON.stringify({ content: txt })
-                            });
-                            if (resp.ok) {
-                                const data = await resp.json().catch(() => ({}));
-                                if (data.post) {
-                                    updatedPost = normalizePostRecord(data.post, true);
+                        let updatedPost = null;
+                        if (/^\d+$/.test(String(postId))) {
+                            try {
+                                const resp = await fetch(`/api/profile/posts/${encodeURIComponent(postId)}/reply/`, {
+                                    method: 'POST',
+                                    headers: {
+                                        'Content-Type': 'application/json',
+                                        'X-CSRFToken': resolveCsrfToken()
+                                    },
+                                    credentials: 'same-origin',
+                                    body: JSON.stringify({ content: txt })
+                                });
+                                if (resp.ok) {
+                                    const data = await resp.json().catch(() => ({}));
+                                    if (data.post) {
+                                        updatedPost = normalizePostRecord(data.post, true);
+                                    }
                                 }
-                            }
-                        } catch (_) {}
-                    }
+                            } catch (_) {}
+                        }
 
                     if (!updatedPost) {
                         const existing = currentPostsById.get(String(postId)) || getUserPostsStore().find(p => String(p.id) === String(postId));
