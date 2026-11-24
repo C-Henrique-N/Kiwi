@@ -6770,7 +6770,7 @@ html, body {
                 triggerChatAreaTransition();
             }
 
-            const pdReplyFormEl = document.getElementById('post-detail-reply-form');
+           const pdReplyFormEl = document.getElementById('post-detail-reply-form');
                 if (pdReplyFormEl) {
                     pdReplyFormEl.addEventListener('submit', async (e) => {
                         e.preventDefault();
@@ -6800,162 +6800,128 @@ html, body {
                             } catch (_) {}
                         }
 
-                    if (!updatedPost) {
-                        const existing = currentPostsById.get(String(postId)) || getUserPostsStore().find(p => String(p.id) === String(postId));
-                        if (existing) {
-                            const nextReplies = Array.isArray(existing.replies) ? existing.replies.slice() : [];
-                            nextReplies.push({
-                                author: activeUsername,
-                                text: txt,
-                                time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-                            });
-                            updatedPost = Object.assign({}, existing, { replies: nextReplies });
+                        if (!updatedPost) {
+                            const existing = currentPostsById.get(String(postId)) || getUserPostsStore().find(p => String(p.id) === String(postId));
+                            if (existing) {
+                                const nextReplies = Array.isArray(existing.replies) ? existing.replies.slice() : [];
+                                nextReplies.push({
+                                    author: activeUsername,
+                                    text: txt,
+                                    time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+                                });
+                                updatedPost = Object.assign({}, existing, { replies: nextReplies });
 
-                            const allPosts = getUserPostsStore();
-                            const idx = allPosts.findIndex(p => String(p.id) === String(postId));
-                            if (idx >= 0) {
-                                allPosts[idx] = updatedPost;
-                                saveUserPostsStore(allPosts);
+                                const allPosts = getUserPostsStore();
+                                const idx = allPosts.findIndex(p => String(p.id) === String(postId));
+                                if (idx >= 0) {
+                                    allPosts[idx] = updatedPost;
+                                    saveUserPostsStore(allPosts);
+                                }
                             }
                         }
-                    }
 
-                    if (updatedPost) {
-                        currentPostsById.set(String(updatedPost.id), updatedPost);
-                    }
-                    if (repInput) repInput.value = '';
-                    openPostDetailTab(postId);
-                    if (currentView === 'inicio') await renderInicioTabSurface();
-                    else if (currentView === 'perfil') await renderCleanUserPosts();
-                });
-            }
+                        if (updatedPost) {
+                            currentPostsById.set(String(updatedPost.id), updatedPost);
+                        }
+                        if (repInput) repInput.value = '';
+                        openPostDetailTab(postId);
+                        if (currentView === 'inicio') await renderInicioTabSurface();
+                        else if (currentView === 'perfil') await renderCleanUserPosts();
+                    });
+                }
 
-            async function renderInicioTabSurface() {
-                const token = ++feedRenderToken;
-                showChatLogSurface(false);
-                if (!chatLog) return;
+                async function renderInicioTabSurface() {
+                    const token = ++feedRenderToken;
+                    showChatLogSurface(false);
+                    if (!chatLog) return;
 
-                const adminAcc = buildAdminFeaturedAccount();
-                const resolvedBanner = resolveBannerUrlForUser(adminAcc.username, adminAcc.bannerUrl);
-                const resolvedAvatar = adminAcc.avatarUrl || myProfileData.avatarUrl || '';
-                chatLog.innerHTML = `
-                    <div class="kiwi-home-profile-wrap">
-                        <div class="kiwi-home-profile-card" id="kiwi-home-open-profile-card">
-                            <div class="kiwi-home-profile-banner" style="${resolvedBanner ? `background-image:url('${escapeHtmlText(encodeURI(resolvedBanner))}');` : ''}"></div>
-                            <div class="kiwi-home-profile-body">
-                                <div class="kiwi-home-profile-top">
-                                    <div class="kiwi-home-profile-avatar" id="kiwi-home-profile-avatar-el">${escapeHtmlText(adminAcc.username.charAt(0).toUpperCase())}</div>
-                                    <span class="admin-gold-badge">👑 ADMIN</span>
+                    const adminAcc = buildAdminFeaturedAccount();
+                    const resolvedBanner = resolveBannerUrlForUser(adminAcc.username, adminAcc.bannerUrl);
+                    const resolvedAvatar = adminAcc.avatarUrl || myProfileData.avatarUrl || '';
+                    chatLog.innerHTML = `
+                        <div class="kiwi-home-profile-wrap">
+                            <div class="kiwi-home-profile-card" id="kiwi-home-open-profile-card">
+                                <div class="kiwi-home-profile-banner" style="${resolvedBanner ? `background-image:url('${escapeHtmlText(encodeURI(resolvedBanner))}');` : ''}"></div>
+                                <div class="kiwi-home-profile-body">
+                                    <div class="kiwi-home-profile-top">
+                                        <div class="kiwi-home-profile-avatar" id="kiwi-home-profile-avatar-el">${escapeHtmlText(adminAcc.username.charAt(0).toUpperCase())}</div>
+                                        <span class="admin-gold-badge">👑 ADMIN</span>
+                                    </div>
+                                    <div style="font-size:16px;font-weight:900;">${escapeHtmlText(adminAcc.username)}</div>
+                                    <div style="font-size:12px;color:var(--kiwi-text-muted);margin-bottom:6px;">${escapeHtmlText(adminAcc.handle)}</div>
+                                    <div style="font-size:13px;color:var(--kiwi-text-secondary);">${escapeHtmlText(adminAcc.bio)}</div>
                                 </div>
-                                <div style="font-size:16px;font-weight:900;">${escapeHtmlText(adminAcc.username)}</div>
-                                <div style="font-size:12px;color:var(--kiwi-text-muted);margin-bottom:6px;">${escapeHtmlText(adminAcc.handle)}</div>
-                                <div style="font-size:13px;color:var(--kiwi-text-secondary);">${escapeHtmlText(adminAcc.bio)}</div>
                             </div>
+                            <div id="kiwi-home-feed-stream" style="display:flex;flex-direction:column;gap:10px;margin-top:12px;"></div>
                         </div>
-                        <div id="kiwi-home-feed-stream" style="display:flex;flex-direction:column;gap:10px;margin-top:12px;"></div>
-                    </div>
-                `;
-                const avatarEl = document.getElementById('kiwi-home-profile-avatar-el');
-                if (avatarEl) setAvatarStyle(avatarEl, resolvedAvatar, adminAcc.username);
+                    `;
+                    const avatarEl = document.getElementById('kiwi-home-profile-avatar-el');
+                    if (avatarEl) setAvatarStyle(avatarEl, resolvedAvatar, adminAcc.username);
 
-                const cardEl = document.getElementById('kiwi-home-open-profile-card');
-                if (cardEl) cardEl.onclick = () => openFullProfilePage(ADMIN_GUIDE_USERNAME);
+                    const cardEl = document.getElementById('kiwi-home-open-profile-card');
+                    if (cardEl) cardEl.onclick = () => openFullProfilePage(ADMIN_GUIDE_USERNAME);
 
-                const feedStream = document.getElementById('kiwi-home-feed-stream');
-                if (!feedStream) return;
+                    const feedStream = document.getElementById('kiwi-home-feed-stream');
+                    if (!feedStream) return;
 
-                const localPosts = getUserPostsStore();
-                const backendPosts = await fetchBackendPostsForFeed('');
-                if (token !== feedRenderToken) return;
+                    const localPosts = getUserPostsStore();
+                    const backendPosts = await fetchBackendPostsForFeed('');
+                    if (token !== feedRenderToken) return;
 
-                const feedPosts = mergePostsById(backendPosts, localPosts);
-                registerRenderedPosts(feedPosts);
+                    const feedPosts = mergePostsById(backendPosts, localPosts);
+                    registerRenderedPosts(feedPosts);
 
-                feedStream.innerHTML = '';
-                if (!feedPosts.length) {
-                    feedStream.innerHTML = `<div style="padding:20px;text-align:center;color:var(--kiwi-text-muted);font-size:13px;">Nenhuma postagem no feed ainda.</div>`;
-                    return;
+                    feedStream.innerHTML = '';
+                    if (!feedPosts.length) {
+                        feedStream.innerHTML = `<div style="padding:20px;text-align:center;color:var(--kiwi-text-muted);font-size:13px;">Nenhuma postagem no feed ainda.</div>`;
+                        return;
+                    }
+
+                    feedPosts.forEach(post => {
+                        feedStream.appendChild(buildPostCardElement(post, renderInicioTabSurface));
+                    });
                 }
 
-                feedPosts.forEach(post => {
-                    feedStream.appendChild(buildPostCardElement(post, renderInicioTabSurface));
-                });
-            }
+                async function renderCleanUserPosts() {
+                    const token = ++feedRenderToken;
+                    if (!xFeedList) return;
+                    const prof = getActiveTimelineProfile();
+                    const ownerUsername = prof.username || activeUsername;
+                    const ownerName = ownerUsername.toLowerCase();
 
-            async function renderCleanUserPosts() {
-                const token = ++feedRenderToken;
-                if (!xFeedList) return;
-                const prof = getActiveTimelineProfile();
-                const ownerUsername = prof.username || activeUsername;
-                const ownerName = ownerUsername.toLowerCase();
+                    const localPosts = getUserPostsStore().filter(p => (p.author || activeUsername).toLowerCase() === ownerName);
+                    const backendPosts = await fetchBackendPostsForFeed(ownerUsername);
+                    if (token !== feedRenderToken) return;
 
-                const localPosts = getUserPostsStore().filter(p => (p.author || activeUsername).toLowerCase() === ownerName);
-                const backendPosts = await fetchBackendPostsForFeed(ownerUsername);
-                if (token !== feedRenderToken) return;
+                    let posts = mergePostsById(backendPosts, localPosts);
+                    registerRenderedPosts(posts);
 
-                let posts = mergePostsById(backendPosts, localPosts);
-                registerRenderedPosts(posts);
+                    if (activeXSubtab === 'respostas') {
+                        posts = posts.filter(p => Array.isArray(p.replies) && p.replies.length > 0);
+                    } else if (activeXSubtab === 'midia') {
+                        posts = posts.filter(p => Boolean(p.imageUrl));
+                    } else if (activeXSubtab === 'curtidas') {
+                        posts = posts.filter(p => Boolean(p.liked));
+                    }
 
-                if (activeXSubtab === 'respostas') {
-                    posts = posts.filter(p => Array.isArray(p.replies) && p.replies.length > 0);
-                } else if (activeXSubtab === 'midia') {
-                    posts = posts.filter(p => Boolean(p.imageUrl));
-                } else if (activeXSubtab === 'curtidas') {
-                    posts = posts.filter(p => Boolean(p.liked));
+                    const countEl = document.getElementById('kiwi-x-top-posts-count');
+                    if (countEl) countEl.textContent = `${posts.length} ${posts.length === 1 ? 'post' : 'posts'}`;
+
+                    xFeedList.innerHTML = '';
+                    if (!posts.length) {
+                        const emptyBox = document.createElement('div');
+                        emptyBox.style.cssText = 'padding:32px 20px;text-align:center;color:var(--kiwi-text-muted);font-size:13px;';
+                        emptyBox.textContent = activeXSubtab === 'posts'
+                            ? 'Nenhuma postagem ainda. Clique em "Postar" para publicar algo no seu perfil!'
+                            : `Nenhum item em "${activeXSubtab}" no momento.`;
+                        xFeedList.appendChild(emptyBox);
+                        return;
+                    }
+
+                    posts.forEach(post => {
+                        xFeedList.appendChild(buildPostCardElement(post, renderCleanUserPosts));
+                    });
                 }
-
-                const countEl = document.getElementById('kiwi-x-top-posts-count');
-                if (countEl) countEl.textContent = `${posts.length} ${posts.length === 1 ? 'post' : 'posts'}`;
-
-                xFeedList.innerHTML = '';
-                if (!posts.length) {
-                    const emptyBox = document.createElement('div');
-                    emptyBox.style.cssText = 'padding:32px 20px;text-align:center;color:var(--kiwi-text-muted);font-size:13px;';
-                    emptyBox.textContent = activeXSubtab === 'posts'
-                        ? 'Nenhuma postagem ainda. Clique em "Postar" para publicar algo no seu perfil!'
-                        : `Nenhum item em "${activeXSubtab}" no momento.`;
-                    xFeedList.appendChild(emptyBox);
-                    return;
-                }
-
-                posts.forEach(post => {
-                    xFeedList.appendChild(buildPostCardElement(post, renderCleanUserPosts));
-                });
-            }
-
-            const currentUser = String(window.__KIWI_USER__ || "").trim().toLowerCase();
-            const postAuthor = String(post.author_username || post.author || "").trim().toLowerCase();
-            const isOwnerOrAdmin = Boolean(currentUser && (currentUser === postAuthor || currentUser === "akiirapw"));
-
-            if (isOwnerOrAdmin && post.id) {
-            const deleteBtn = document.createElement("button");
-            deleteBtn.type = "button";
-            deleteBtn.className = "post-action-btn post-delete-btn";
-            deleteBtn.title = "Excluir post";
-            deleteBtn.setAttribute("aria-label", "Excluir post");
-            deleteBtn.innerHTML = `<i class="fa-regular fa-trash-can"></i><span>Excluir</span>`;
-            deleteBtn.addEventListener("click", async (event) => {
-                event.preventDefault();
-                event.stopPropagation();
-                const ok = window.confirm("Tem certeza que deseja excluir este post?");
-                if (!ok) return;
-
-                try {
-                const resp = await kiwiApiFetch(`/api/posts/${encodeURIComponent(String(post.id))}/delete/`, {
-                    method: "POST",
-                });
-                if (!resp.ok) {
-                    throw new Error(`HTTP ${resp.status}`);
-                }
-                card.remove();
-                } catch (err) {
-                console.error("[Kiwi] Falha ao excluir post:", err);
-                alert("Não foi possível excluir o post agora.");
-                }
-            });
-            actions.appendChild(deleteBtn);
-            }
-            
     </script>
 </body>
 </html>
