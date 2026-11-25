@@ -1,1 +1,116 @@
-digite algo
+:root {
+    --profile-bg: #0c262c;
+    --profile-card: #122931;
+    --profile-soft: #1a3740;
+    --profile-border: rgba(165, 224, 232, 0.14);
+    --profile-text: #eef8fa;
+    --profile-muted: #8ea9b0;
+    --profile-accent: #4cc9d8;
+}
+
+.profile-page {
+    min-height: 100vh;
+    padding: 24px;
+    background:
+        radial-gradient(ellipse at 20% 0%, rgba(16, 130, 138, 0.28), transparent 45%),
+        linear-gradient(120deg, #071e24 0%, #0d2a31 55%, #122d35 100%);
+    color: var(--profile-text);
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+}
+
+.profile-card {
+    width: 100%;
+    max-width: 720px;
+    background: var(--profile-card);
+    border: 1px solid var(--profile-border);
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.28);
+}
+
+.profile-banner {
+    height: 150px;
+    background: linear-gradient(120deg, #0d5861, #2b6cb0 60%, #4c51bf);
+    background-size: cover;
+    background-position: center;
+}
+
+.profile-content {
+    padding: 0 24px 24px;
+    margin-top: -42px;
+}
+
+.profile-header {
+    display: flex;
+    align-items: flex-end;
+    gap: 16px;
+    flex-wrap: wrap;
+}
+
+.profile-avatar {
+    width: 84px;
+    height: 84px;
+    border-radius: 50%;
+    border: 3px solid var(--profile-card);
+    background: #2b6cb0;
+    background-size: cover;
+    background-position: center;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 28px;
+    font-weight: 800;
+    flex-shrink: 0;
+}
+
+.profile-name {
+    font-size: 22px;
+    font-weight: 800;
+    line-height: 1.2;
+}
+
+.profile-bio {
+    margin-top: 4px;
+    font-size: 13px;
+    color: var(--profile-muted);
+}
+
+.profile-sections {
+    margin-top: 20px;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 12px;
+}
+
+.profile-box {
+    background: var(--profile-soft);
+    border: 1px solid var(--profile-border);
+    border-radius: 8px;
+    padding: 14px;
+}
+
+.profile-box-title {
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.7px;
+    text-transform: uppercase;
+    color: var(--profile-muted);
+    margin-bottom: 6px;
+}
+
+.profile-box-value {
+    font-size: 14px;
+    font-weight: 700;
+}
+
+@media (max-width: 600px) {
+    .profile-page {
+        padding: 14px;
+    }
+
+    .profile-content {
+        padding: 0 16px 18px;
+    }
+}
