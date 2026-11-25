@@ -3,8 +3,8 @@
 <html lang="pt">
 <head>
     <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <meta name="theme-color" content="#111318">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="theme-color" content="#0b252b">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -17,7 +17,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700;900&family=Fredoka:wght@600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="{% static 'css/loja.css' %}">
 </head>
-<body>
+<body class="steam-shop-body">
     <nav class="server-rail">
         <a href="{% url 'room_home' %}" class="rail-btn" title="Início / Chat">🥝</a>
         <div class="rail-divider"></div>
@@ -49,60 +49,161 @@
     </aside>
 
     <main class="shop-main">
+        <!-- Barra superior no estilo Steam -->
         <header class="shop-topbar">
-            <div class="shop-tabs">
-                <button type="button" class="shop-tab-btn active" data-filter="all">✨ Destaques</button>
-                <button type="button" class="shop-tab-btn" data-filter="frame">🖼️ Molduras de Avatar</button>
-                <button type="button" class="shop-tab-btn" data-filter="card_effect">🃏 Efeitos de Cartão</button>
-                <button type="button" class="shop-tab-btn" data-filter="name_style">🔤 Estilos de Nome</button>
+            <div class="topbar-left">
+                <a href="{% url 'room_home' %}" class="topbar-brand">🥝 KIWI STORE</a>
+                <nav class="shop-tabs" aria-label="Categorias da Loja">
+                    <button type="button" class="shop-tab-btn active" data-filter="all">✨ Destaques</button>
+                    <button type="button" class="shop-tab-btn" data-filter="frame">🖼️ Molduras de Avatar</button>
+                    <button type="button" class="shop-tab-btn" data-filter="card_effect">🃏 Efeitos de Cartão</button>
+                    <button type="button" class="shop-tab-btn" data-filter="name_style">🔤 Estilos de Nome</button>
+                </nav>
             </div>
-            <a href="{% url 'room_home' %}" class="btn-back-chat">← Voltar ao Chat</a>
+            <div class="topbar-right">
+                {% if is_exclusive_tester %}
+                    <span class="test-pill">🧪 Modo Teste • Exclusivo AkiiraPW</span>
+                {% endif %}
+                <a href="{% url 'room_home' %}" class="btn-back-chat">← Voltar ao Chat</a>
+            </div>
         </header>
 
-        <section class="shop-hero">
-            <div>
-                <h1>Bem-vindo à Loja Kiwi</h1>
-                <p>Personalize seu perfil com molduras, efeitos de cartão e estilos de nome. Escolha um item para visualizar e equipar.</p>
-            </div>
-            {% if is_exclusive_tester %}
-                <span class="test-pill">🧪 Modo Teste • Exclusivo AkiiraPW</span>
-            {% endif %}
-        </section>
-
-        <div class="shop-workspace">
-            <div class="shop-grid" id="shop-items-grid"></div>
-
-            <aside class="preview-card" id="live-preview-card">
-                <div class="preview-banner" {% if profile.banner %}style="background-image: url('{{ profile.banner.url }}');"{% endif %}></div>
-                <div class="preview-body">
-                    <div class="avatar-frame-wrap" id="preview-frame-wrap">
-                        <div class="preview-avatar" {% if profile.avatar %}style="background-image: url('{{ profile.avatar.url }}'); font-size: 0;"{% endif %}>
-                            {{ request.user.username|slice:":1"|upper }}
-                        </div>
-                    </div>
-                    <div id="preview-username" style="font-size: 17px; font-weight: 800; margin-top: 8px;">{{ request.user.username }}</div>
-                    <div style="font-size: 12px; color: var(--text-muted); margin-top: 2px;">{{ profile.bubble|default:"Online" }}</div>
-
-                    <div class="preview-slot-list">
-                        <div class="preview-slot">
-                            <span style="color: var(--text-muted);">Moldura</span>
-                            <strong id="slot-frame-label">Nenhuma</strong>
-                        </div>
-                        <div class="preview-slot">
-                            <span style="color: var(--text-muted);">Efeito do Cartão</span>
-                            <strong id="slot-card-label">Padrão</strong>
-                        </div>
-                        <div class="preview-slot">
-                            <span style="color: var(--text-muted);">Estilo do Nome</span>
-                            <strong id="slot-name-label">Padrão</strong>
-                        </div>
+        <!-- Layout principal: coluna central + painel lateral direito -->
+        <div class="steam-layout-shell">
+            <div class="steam-center-col">
+                <!-- Cabeçalho com saudação à esquerda e estatísticas à direita -->
+                <section class="steam-header-row">
+                    <div class="steam-greeting-block">
+                        <span class="steam-eyebrow">Bem-vindo à Loja Kiwi</span>
+                        <h1>{{ request.user.username }}</h1>
                     </div>
 
-                    <button type="button" id="btn-unequip-all" class="btn-unequip" style="width: 100%; margin-top: 12px;">
-                        Remover Efeitos Ativos
-                    </button>
-                    <div class="shop-feedback" id="shop-feedback" role="status" aria-live="polite"></div>
+                    <div class="steam-stats-block" aria-label="Resumo de Itens e Equipados">
+                        <div class="steam-stat">
+                            <span class="stat-label">ITENS</span>
+                            <strong class="stat-value" id="stat-total-items">7</strong>
+                        </div>
+                        <div class="steam-stat">
+                            <span class="stat-label">MOLDURA</span>
+                            <strong class="stat-value stat-accent-cyan" id="stat-frame-short">Padrão</strong>
+                        </div>
+                        <div class="steam-stat">
+                            <span class="stat-label">CARTÃO</span>
+                            <strong class="stat-value stat-accent-pink" id="stat-card-short">Padrão</strong>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Barra segmentada colorida -->
+                <div class="steam-spectrum-bar" aria-hidden="true">
+                    <span class="seg-1"></span>
+                    <span class="seg-2"></span>
+                    <span class="seg-3"></span>
+                    <span class="seg-4"></span>
+                    <span class="seg-5"></span>
+                    <span class="seg-6"></span>
+                    <span class="seg-7"></span>
+                    <span class="seg-8"></span>
                 </div>
+
+                <p class="steam-sub-caption">
+                    Personalize seu perfil com molduras, efeitos de cartão e estilos de nome. Escolha um item para visualizar e equipar.
+                </p>
+
+                <!-- Banner largo horizontal com a imagem da Maomao e controle para definir banner -->
+                <section
+                    class="shop-hero steam-featured-banner"
+                    id="steam-hero-banner"
+                    data-default-banner="{% static 'img/maomao_banner.jpg' %}"
+                    style="background-image: linear-gradient(90deg, rgba(6, 28, 34, 0.92) 0%, rgba(8, 38, 46, 0.62) 44%, rgba(8, 38, 46, 0.14) 100%), url('{% static 'img/maomao_banner.jpg' %}');"
+                >
+                    <div class="banner-controls-top">
+                        <button type="button" id="btn-open-banner-picker" class="btn-banner-config" title="Definir imagem do banner">
+                            🖼️ Alterar Banner
+                        </button>
+                        <button type="button" id="btn-reset-banner" class="btn-banner-reset" title="Voltar ao banner padrão" style="display: none;">
+                            ↺ Padrão
+                        </button>
+                        <input type="file" id="banner-file-input" accept="image/*" hidden>
+                    </div>
+
+                    <div class="featured-banner-info">
+                        <span class="featured-tag">DESTAQUE ATIVO</span>
+                        <h2 id="featured-item-title">Crepúsculo (Berilo)</h2>
+                        <p id="featured-item-desc">Moldura • Prévia em destaque no painel da loja.</p>
+                        <div class="featured-actions">
+                            <button type="button" id="btn-featured-equip" class="btn-featured-primary">▶ Equipar Destaque</button>
+                            <button type="button" id="btn-unequip-all" class="btn-unequip">Remover Efeitos Ativos</button>
+                        </div>
+                    </div>
+
+                    <div class="featured-banner-visual" id="featured-banner-visual"></div>
+                </section>
+
+                <!-- Seção de cartões logo abaixo do banner principal -->
+                <section class="steam-section-block">
+                    <div class="steam-section-head">
+                        <h2 class="steam-section-title">CATÁLOGO DA LOJA</h2>
+                    </div>
+                    <div class="shop-grid" id="shop-items-grid"></div>
+                </section>
+
+                <div class="shop-feedback" id="shop-feedback" role="status" aria-live="polite"></div>
+            </div>
+
+            <!-- Coluna lateral direita: Filtros + Cartão de Prévia do Perfil -->
+            <aside class="steam-right-rail">
+                <div class="rail-filter-box">
+                    <div class="rail-filter-header">FILTROS RÁPIDOS</div>
+                    <button type="button" class="rail-category-item active" data-filter="all">
+                        <span>+ Todos os Itens</span>
+                        <span class="rail-count" id="count-all">7</span>
+                    </button>
+                    <button type="button" class="rail-category-item" data-filter="frame">
+                        <span>+ Molduras de Avatar</span>
+                        <span class="rail-count" id="count-frame">3</span>
+                    </button>
+                    <button type="button" class="rail-category-item" data-filter="card_effect">
+                        <span>+ Efeitos de Cartão</span>
+                        <span class="rail-count" id="count-card">3</span>
+                    </button>
+                    <button type="button" class="rail-category-item" data-filter="name_style">
+                        <span>+ Estilos de Nome</span>
+                        <span class="rail-count" id="count-name">1</span>
+                    </button>
+                </div>
+
+                <aside class="preview-card" id="live-preview-card">
+                    <div
+                        class="preview-banner"
+                        id="live-preview-banner"
+                        style="background-image: url('{% if profile.banner %}{{ profile.banner.url }}{% else %}{% static 'img/maomao_banner.jpg' %}{% endif %}');"
+                    ></div>
+                    <div class="preview-body">
+                        <div class="avatar-frame-wrap" id="preview-frame-wrap">
+                            <div class="preview-avatar" {% if profile.avatar %}style="background-image: url('{{ profile.avatar.url }}'); font-size: 0;"{% endif %}>
+                                {{ request.user.username|slice:":1"|upper }}
+                            </div>
+                        </div>
+                        <div id="preview-username" style="font-size: 17px; font-weight: 800; margin-top: 8px;">{{ request.user.username }}</div>
+                        <div style="font-size: 12px; color: var(--text-muted); margin-top: 2px;">{{ profile.bubble|default:"Online" }}</div>
+
+                        <div class="preview-slot-list">
+                            <div class="preview-slot">
+                                <span style="color: var(--text-muted);">Moldura</span>
+                                <strong id="slot-frame-label">Nenhuma</strong>
+                            </div>
+                            <div class="preview-slot">
+                                <span style="color: var(--text-muted);">Efeito do Cartão</span>
+                                <strong id="slot-card-label">Padrão</strong>
+                            </div>
+                            <div class="preview-slot">
+                                <span style="color: var(--text-muted);">Estilo do Nome</span>
+                                <strong id="slot-name-label">Padrão</strong>
+                            </div>
+                        </div>
+                    </div>
+                </aside>
             </aside>
         </div>
     </main>
@@ -141,12 +242,76 @@
         ];
 
         let activeFilter = "all";
+        let featuredItemId = ITEMS[0].id;
         let isBusy = false;
         let state = {
             frame_effect: initialProfile.frame_effect || "none",
             card_effect: initialProfile.card_effect || (initialProfile.profile_glow ? "brilho_estelar" : "none"),
             name_style: initialProfile.name_style || "none",
         };
+
+        /* Gerenciamento do Banner Personalizado */
+        const BANNER_STORAGE_KEY = `kiwi_store_banner_${activeUsername}`;
+        const heroBannerEl = document.getElementById("steam-hero-banner");
+        const previewBannerEl = document.getElementById("live-preview-banner");
+        const bannerFileInput = document.getElementById("banner-file-input");
+        const btnOpenBannerPicker = document.getElementById("btn-open-banner-picker");
+        const btnResetBanner = document.getElementById("btn-reset-banner");
+
+        function applyCustomBanner(imageUrl, isCustom = false) {
+            if (!heroBannerEl || !imageUrl) return;
+            heroBannerEl.style.backgroundImage =
+                `linear-gradient(90deg, rgba(6, 28, 34, 0.92) 0%, rgba(8, 38, 46, 0.62) 44%, rgba(8, 38, 46, 0.14) 100%), url("${imageUrl}")`;
+            if (previewBannerEl) {
+                previewBannerEl.style.backgroundImage = `url("${imageUrl}")`;
+            }
+            if (btnResetBanner) {
+                btnResetBanner.style.display = isCustom ? "inline-flex" : "none";
+            }
+        }
+
+        function initBanner() {
+            const defaultUrl = heroBannerEl ? heroBannerEl.dataset.defaultBanner : "";
+            const savedBanner = localStorage.getItem(BANNER_STORAGE_KEY);
+            if (savedBanner) {
+                applyCustomBanner(savedBanner, true);
+            } else if (defaultUrl) {
+                applyCustomBanner(defaultUrl, false);
+            }
+        }
+
+        if (btnOpenBannerPicker && bannerFileInput) {
+            btnOpenBannerPicker.addEventListener("click", () => {
+                bannerFileInput.click();
+            });
+
+            bannerFileInput.addEventListener("change", (event) => {
+                const file = event.target.files && event.target.files[0];
+                if (!file) return;
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    const dataUrl = e.target && e.target.result;
+                    if (typeof dataUrl === "string") {
+                        try {
+                            localStorage.setItem(BANNER_STORAGE_KEY, dataUrl);
+                        } catch (_) {
+                            setFeedback("Imagem aplicada na sessão (muito grande para salvar no cache local).");
+                        }
+                        applyCustomBanner(dataUrl, true);
+                    }
+                };
+                reader.readAsDataURL(file);
+            });
+        }
+
+        if (btnResetBanner) {
+            btnResetBanner.addEventListener("click", () => {
+                localStorage.removeItem(BANNER_STORAGE_KEY);
+                const defaultUrl = heroBannerEl ? heroBannerEl.dataset.defaultBanner : "";
+                applyCustomBanner(defaultUrl, false);
+                if (bannerFileInput) bannerFileInput.value = "";
+            });
+        }
 
         function setFeedback(msg) {
             const el = document.getElementById("shop-feedback");
@@ -180,6 +345,45 @@
             return data;
         }
 
+        function updateCategoryCounts() {
+            const total = ITEMS.length;
+            const frames = ITEMS.filter(i => i.category === "frame").length;
+            const cards = ITEMS.filter(i => i.category === "card_effect").length;
+            const names = ITEMS.filter(i => i.category === "name_style").length;
+
+            const setText = (id, val) => {
+                const el = document.getElementById(id);
+                if (el) el.textContent = String(val);
+            };
+            setText("stat-total-items", total);
+            setText("count-all", total);
+            setText("count-frame", frames);
+            setText("count-card", cards);
+            setText("count-name", names);
+        }
+
+        function renderFeaturedBanner() {
+            const item = ITEMS.find(i => i.id === featuredItemId) || ITEMS[0];
+            if (!item) return;
+
+            const titleEl = document.getElementById("featured-item-title");
+            const descEl = document.getElementById("featured-item-desc");
+            const btnEl = document.getElementById("btn-featured-equip");
+            const visualEl = document.getElementById("featured-banner-visual");
+
+            if (titleEl) titleEl.textContent = item.name;
+            if (descEl) descEl.textContent = `${item.badge} • Prévia em destaque no painel da loja.`;
+            if (btnEl) {
+                const isEquipped = state[item.slot] === item.value;
+                btnEl.textContent = isEquipped ? "✓ Equipado" : "▶ Equipar Destaque";
+                btnEl.classList.toggle("is-equipped", isEquipped);
+                btnEl.dataset.equipId = item.id;
+            }
+            if (visualEl) {
+                visualEl.innerHTML = renderItemStage(item);
+            }
+        }
+
         function renderPreview() {
             const frameWrap = document.getElementById("preview-frame-wrap");
             const cardEl = document.getElementById("live-preview-card");
@@ -207,6 +411,13 @@
             document.getElementById("slot-frame-label").textContent = frameItem ? frameItem.name : "Nenhuma";
             document.getElementById("slot-card-label").textContent = cardItem ? cardItem.name : "Padrão";
             document.getElementById("slot-name-label").textContent = nameItem ? nameItem.name : "Padrão";
+
+            const frameShort = document.getElementById("stat-frame-short");
+            const cardShort = document.getElementById("stat-card-short");
+            if (frameShort) frameShort.textContent = frameItem ? frameItem.name.split(" ")[0] : "Padrão";
+            if (cardShort) cardShort.textContent = cardItem ? cardItem.name.split(" ")[0] : "Padrão";
+
+            renderFeaturedBanner();
         }
 
         function renderItemStage(item) {
@@ -241,9 +452,37 @@
 
         function setControlsDisabled(disabled) {
             isBusy = disabled;
-            document.querySelectorAll("[data-equip-id], [data-unequip-slot], #btn-unequip-all").forEach(el => {
+            document.querySelectorAll("[data-equip-id], [data-unequip-slot], #btn-unequip-all, #btn-featured-equip").forEach(el => {
                 el.disabled = disabled;
             });
+        }
+
+        function syncFilterUI() {
+            document.querySelectorAll(".shop-tab-btn").forEach(b => {
+                b.classList.toggle("active", b.dataset.filter === activeFilter);
+            });
+            document.querySelectorAll(".rail-category-item").forEach(b => {
+                b.classList.toggle("active", b.dataset.filter === activeFilter);
+            });
+        }
+
+        async function handleEquipById(itemId) {
+            if (isBusy || !itemId) return;
+            setControlsDisabled(true);
+            try {
+                await postShopAction("/api/shop/equip/", { item_id: itemId });
+                const item = ITEMS.find(i => i.id === itemId);
+                if (item) {
+                    state[item.slot] = item.value;
+                    featuredItemId = item.id;
+                }
+                renderPreview();
+                renderGrid();
+            } catch (err) {
+                setFeedback(err.message || "Erro ao equipar item.");
+            } finally {
+                setControlsDisabled(false);
+            }
         }
 
         function renderGrid() {
@@ -264,7 +503,7 @@
             grid.innerHTML = filtered.map(item => {
                 const isEquipped = state[item.slot] === item.value;
                 return `
-                    <div class="item-card">
+                    <div class="item-card" data-select-featured="${item.id}">
                         <div class="item-stage">
                             ${renderItemStage(item)}
                         </div>
@@ -281,26 +520,24 @@
                     </div>`;
             }).join("");
 
+            grid.querySelectorAll("[data-select-featured]").forEach(card => {
+                card.addEventListener("click", (e) => {
+                    if (e.target.closest("button")) return;
+                    featuredItemId = card.dataset.selectFeatured;
+                    renderFeaturedBanner();
+                });
+            });
+
             grid.querySelectorAll("[data-equip-id]").forEach(btn => {
-                btn.addEventListener("click", async () => {
-                    if (isBusy) return;
-                    setControlsDisabled(true);
-                    try {
-                        await postShopAction("/api/shop/equip/", { item_id: btn.dataset.equipId });
-                        const item = ITEMS.find(i => i.id === btn.dataset.equipId);
-                        if (item) state[item.slot] = item.value;
-                        renderPreview();
-                        renderGrid();
-                    } catch (err) {
-                        setFeedback(err.message || "Erro ao equipar item.");
-                    } finally {
-                        setControlsDisabled(false);
-                    }
+                btn.addEventListener("click", async (e) => {
+                    e.stopPropagation();
+                    await handleEquipById(btn.dataset.equipId);
                 });
             });
 
             grid.querySelectorAll("[data-unequip-slot]").forEach(btn => {
-                btn.addEventListener("click", async () => {
+                btn.addEventListener("click", async (e) => {
+                    e.stopPropagation();
                     if (isBusy) return;
                     setControlsDisabled(true);
                     const slot = btn.dataset.unequipSlot;
@@ -318,6 +555,10 @@
             });
         }
 
+        document.getElementById("btn-featured-equip").addEventListener("click", async function () {
+            await handleEquipById(this.dataset.equipId || featuredItemId);
+        });
+
         document.getElementById("btn-unequip-all").addEventListener("click", async () => {
             if (isBusy) return;
             setControlsDisabled(true);
@@ -333,27 +574,29 @@
             }
         });
 
-        document.querySelectorAll(".shop-tab-btn").forEach(btn => {
+        document.querySelectorAll(".shop-tab-btn, .rail-category-item").forEach(btn => {
             btn.addEventListener("click", () => {
-                document.querySelectorAll(".shop-tab-btn").forEach(b => b.classList.remove("active"));
-                btn.classList.add("active");
                 activeFilter = btn.dataset.filter;
+                syncFilterUI();
                 renderGrid();
             });
         });
 
+        initBanner();
+        updateCategoryCounts();
+        syncFilterUI();
         renderPreview();
         renderGrid();
     </script>
 
-<script>
-  if ("serviceWorker" in navigator) {
-    window.addEventListener("load", () => {
-      navigator.serviceWorker.register("/service-worker.js", { scope: "/" }).catch((error) =>
-        console.error("Erro ao registrar o Service Worker do Kiwi:", error)
-      );
-    });
-  }
-</script>
+    <script>
+      if ("serviceWorker" in navigator) {
+        window.addEventListener("load", () => {
+          navigator.serviceWorker.register("/service-worker.js", { scope: "/" }).catch((error) =>
+            console.error("Erro ao registrar o Service Worker do Kiwi:", error)
+          );
+        });
+      }
+    </script>
 </body>
 </html>
