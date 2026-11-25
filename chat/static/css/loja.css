@@ -33,7 +33,6 @@ body.steam-shop-body {
         linear-gradient(120deg, #071e24 0%, #0d2a31 55%, #122d35 100%);
 }
 
-/* Mantém estrutura base oculta no layout Steam */
 .server-rail,
 .sidebar-left {
     display: none !important;
@@ -51,9 +50,9 @@ body.steam-shop-body {
 
 /* Topbar superior estilo Steam */
 .shop-topbar {
-    min-height: 52px;
-    padding: 8px 24px;
-    background: rgba(6, 22, 27, 0.92);
+    min-height: 48px;
+    padding: 6px 24px;
+    background: rgba(6, 22, 27, 0.94);
     border-bottom: 1px solid var(--border-subtle);
     backdrop-filter: blur(12px);
     display: flex;
@@ -93,7 +92,7 @@ body.steam-shop-body {
     border: 1px solid transparent;
     color: var(--text-muted);
     padding: 6px 12px;
-    border-radius: 6px;
+    border-radius: 999px;
     font-size: 12px;
     font-weight: 700;
     cursor: pointer;
@@ -107,9 +106,8 @@ body.steam-shop-body {
 }
 
 .shop-tab-btn.active {
-    background: rgba(76, 201, 216, 0.2);
-    color: #ffffff;
-    border-color: rgba(109, 218, 232, 0.45);
+    background: linear-gradient(90deg, #56c2d6, #7cb4e8);
+    color: #062128;
 }
 
 .topbar-right {
@@ -152,23 +150,23 @@ body.steam-shop-body {
 /* Grade principal: coluna esquerda larga + rail lateral direito */
 .steam-layout-shell {
     width: 100%;
-    max-width: 1520px;
+    max-width: 1560px;
     margin: 0 auto;
-    padding: 20px 24px 38px;
+    padding: 18px 24px 36px;
     display: grid;
     grid-template-columns: minmax(0, 1fr) 275px;
-    gap: 22px;
+    gap: 20px;
     align-items: start;
 }
 
 .steam-center-col {
     display: flex;
     flex-direction: column;
-    gap: 16px;
+    gap: 10px;
     min-width: 0;
 }
 
-/* Cabeçalho superior da coluna principal (título à esquerda, métricas à direita) */
+/* Cabeçalho superior da coluna principal */
 .steam-header-row {
     display: flex;
     align-items: flex-end;
@@ -185,24 +183,22 @@ body.steam-shop-body {
 }
 
 .steam-greeting-block h1 {
-    font-size: clamp(26px, 3vw, 36px);
+    font-size: clamp(28px, 3vw, 38px);
     font-weight: 800;
-    line-height: 1.1;
+    line-height: 1.08;
     color: #ffffff;
 }
 
-.steam-greeting-block p {
-    margin-top: 6px;
-    font-size: 12.5px;
+.steam-sub-caption {
+    font-size: 12px;
     color: var(--text-muted);
-    max-width: 620px;
-    line-height: 1.45;
+    margin-bottom: 4px;
 }
 
 .steam-stats-block {
     display: flex;
     align-items: flex-end;
-    gap: 22px;
+    gap: 24px;
 }
 
 .steam-stat {
@@ -222,7 +218,7 @@ body.steam-shop-body {
     font-size: 22px;
     font-weight: 800;
     color: #ffffff;
-    line-height: 1.2;
+    line-height: 1.18;
 }
 
 .stat-accent-cyan {
@@ -233,7 +229,7 @@ body.steam-shop-body {
     color: #f472b6;
 }
 
-/* Barra segmentada colorida abaixo do cabeçalho */
+/* Barra segmentada colorida */
 .steam-spectrum-bar {
     height: 6px;
     width: 100%;
@@ -257,27 +253,62 @@ body.steam-shop-body {
 .seg-7 { flex: 1.1; background: #a78bfa; }
 .seg-8 { flex: 0.9; background: #38bdf8; }
 
-/* Banner horizontal largo em destaque */
+/* Banner horizontal largo com a imagem da Maomao e seletor */
 .steam-featured-banner {
-    min-height: 220px;
-    padding: 24px 28px;
-    border-radius: 4px;
-    background:
-        linear-gradient(90deg, rgba(6, 26, 32, 0.95) 0%, rgba(10, 42, 50, 0.85) 55%, rgba(17, 63, 75, 0.75) 100%),
-        radial-gradient(circle at 80% 40%, rgba(76, 201, 216, 0.24), transparent 55%);
-    border: 1px solid rgba(110, 218, 232, 0.28);
-    box-shadow: 0 12px 28px rgba(0, 0, 0, 0.32);
+    position: relative;
+    min-height: 240px;
+    padding: 26px 28px;
+    border-radius: 10px;
+    background-color: #09262e;
+    background-size: cover;
+    background-position: 75% center;
+    background-repeat: no-repeat;
+    border: 1px solid rgba(110, 218, 232, 0.3);
+    box-shadow: 0 14px 32px rgba(0, 0, 0, 0.35);
     display: flex;
     align-items: center;
     justify-content: space-between;
     gap: 24px;
+    overflow: hidden;
+}
+
+.banner-controls-top {
+    position: absolute;
+    top: 12px;
+    right: 14px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    z-index: 3;
+}
+
+.btn-banner-config,
+.btn-banner-reset {
+    background: rgba(6, 22, 28, 0.78);
+    color: #e6f7f9;
+    border: 1px solid rgba(145, 224, 234, 0.35);
+    border-radius: 6px;
+    padding: 5px 10px;
+    font-size: 11px;
+    font-weight: 700;
+    cursor: pointer;
+    backdrop-filter: blur(8px);
+    transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+.btn-banner-config:hover,
+.btn-banner-reset:hover {
+    background: rgba(16, 52, 64, 0.92);
+    border-color: #67e8f9;
 }
 
 .featured-banner-info {
+    position: relative;
+    z-index: 2;
     display: flex;
     flex-direction: column;
     gap: 8px;
-    max-width: 540px;
+    max-width: 520px;
 }
 
 .featured-tag {
@@ -288,15 +319,17 @@ body.steam-shop-body {
 }
 
 .featured-banner-info h2 {
-    font-size: 24px;
+    font-size: 26px;
     font-weight: 800;
     color: #ffffff;
+    text-shadow: 0 2px 12px rgba(0, 0, 0, 0.65);
 }
 
 .featured-banner-info p {
     font-size: 13px;
-    color: #b7cfd6;
+    color: #d0e5eb;
     line-height: 1.45;
+    text-shadow: 0 1px 8px rgba(0, 0, 0, 0.6);
 }
 
 .featured-actions {
@@ -309,13 +342,14 @@ body.steam-shop-body {
 
 .btn-featured-primary {
     border: none;
-    border-radius: 3px;
+    border-radius: 6px;
     padding: 9px 18px;
     font-size: 13px;
     font-weight: 700;
     cursor: pointer;
     color: #072229;
     background: linear-gradient(90deg, #6ee7b7 0%, #38bdf8 100%);
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.3);
     transition: filter 0.15s ease;
 }
 
@@ -329,19 +363,24 @@ body.steam-shop-body {
 }
 
 .featured-banner-visual {
-    min-width: 190px;
-    height: 140px;
-    border-radius: 4px;
-    background: rgba(7, 22, 27, 0.65);
-    border: 1px solid rgba(165, 224, 232, 0.18);
+    position: relative;
+    z-index: 2;
+    min-width: 150px;
+    height: 130px;
+    border-radius: 8px;
+    background: rgba(7, 22, 27, 0.62);
+    border: 1px solid rgba(165, 224, 232, 0.25);
+    backdrop-filter: blur(8px);
     display: flex;
     align-items: center;
     justify-content: center;
     padding: 12px;
+    margin-top: 18px;
 }
 
-/* Seção de cartões logo abaixo do banner */
+/* Seção de cartões logo abaixo do banner principal */
 .steam-section-block {
+    margin-top: 6px;
     display: flex;
     flex-direction: column;
     gap: 10px;
@@ -369,7 +408,7 @@ body.steam-shop-body {
 .item-card {
     background: var(--bg-card);
     border: 1px solid var(--border-subtle);
-    border-radius: 4px;
+    border-radius: 6px;
     padding: 10px;
     display: flex;
     flex-direction: column;
@@ -384,8 +423,8 @@ body.steam-shop-body {
 }
 
 .item-stage {
-    height: 112px;
-    border-radius: 3px;
+    height: 118px;
+    border-radius: 4px;
     background: #0b1d23;
     border: 1px solid rgba(165, 224, 232, 0.1);
     display: flex;
@@ -398,7 +437,7 @@ body.steam-shop-body {
 .item-stage-sample-card {
     width: 100%;
     height: 100%;
-    border-radius: 3px;
+    border-radius: 4px;
     background: #132c34;
     border: 1px solid var(--border-subtle);
     display: flex;
@@ -430,7 +469,7 @@ body.steam-shop-body {
 .btn-shop {
     flex: 1;
     border: none;
-    border-radius: 3px;
+    border-radius: 4px;
     padding: 6px 8px;
     font-size: 11.5px;
     font-weight: 700;
@@ -454,13 +493,14 @@ body.steam-shop-body {
 
 .btn-unequip {
     border: 1px solid var(--border-subtle);
-    border-radius: 3px;
-    padding: 6px 10px;
-    font-size: 11.5px;
+    border-radius: 6px;
+    padding: 7px 12px;
+    font-size: 12px;
     font-weight: 700;
     cursor: pointer;
-    background: var(--bg-soft);
+    background: rgba(10, 29, 35, 0.8);
     color: var(--text-main);
+    backdrop-filter: blur(6px);
 }
 
 .btn-unequip:disabled {
@@ -474,13 +514,13 @@ body.steam-shop-body {
     flex-direction: column;
     gap: 14px;
     position: sticky;
-    top: 68px;
+    top: 64px;
 }
 
 .rail-filter-box {
-    background: rgba(10, 29, 35, 0.85);
+    background: rgba(10, 29, 35, 0.88);
     border: 1px solid var(--border-subtle);
-    border-radius: 4px;
+    border-radius: 6px;
     padding: 10px;
     display: flex;
     flex-direction: column;
@@ -499,7 +539,7 @@ body.steam-shop-body {
     width: 100%;
     background: transparent;
     border: 1px solid transparent;
-    border-radius: 3px;
+    border-radius: 4px;
     padding: 6px 8px;
     color: #b7cfd6;
     font-size: 12px;
@@ -602,7 +642,7 @@ body.steam-shop-body {
 }
 
 .preview-banner {
-    height: 84px;
+    height: 88px;
     background: linear-gradient(120deg, #0d5861, #2b6cb0 60%, #4c51bf);
     background-size: cover;
     background-position: center;
@@ -668,6 +708,7 @@ body.steam-shop-body {
 
     .featured-banner-visual {
         width: 100%;
+        margin-top: 6px;
     }
 }
 

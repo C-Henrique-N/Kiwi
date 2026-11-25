@@ -49,7 +49,7 @@
     </aside>
 
     <main class="shop-main">
-        <!-- Barra superior no estilo da imagem -->
+        <!-- Barra superior no estilo Steam -->
         <header class="shop-topbar">
             <div class="topbar-left">
                 <a href="{% url 'room_home' %}" class="topbar-brand">🥝 KIWI STORE</a>
@@ -68,15 +68,14 @@
             </div>
         </header>
 
-        <!-- Área principal dividida em coluna central + painel lateral direito (como na imagem) -->
+        <!-- Layout principal: coluna central + painel lateral direito -->
         <div class="steam-layout-shell">
             <div class="steam-center-col">
-                <!-- Cabeçalho com saudação/título à esquerda e estatísticas/slots à direita -->
+                <!-- Cabeçalho com saudação à esquerda e estatísticas à direita -->
                 <section class="steam-header-row">
                     <div class="steam-greeting-block">
                         <span class="steam-eyebrow">Bem-vindo à Loja Kiwi</span>
                         <h1>{{ request.user.username }}</h1>
-                        <p>Personalize seu perfil com molduras, efeitos de cartão e estilos de nome. Escolha um item para visualizar e equipar.</p>
                     </div>
 
                     <div class="steam-stats-block" aria-label="Resumo de Itens e Equipados">
@@ -95,7 +94,7 @@
                     </div>
                 </section>
 
-                <!-- Barra segmentada colorida abaixo do cabeçalho -->
+                <!-- Barra segmentada colorida -->
                 <div class="steam-spectrum-bar" aria-hidden="true">
                     <span class="seg-1"></span>
                     <span class="seg-2"></span>
@@ -107,21 +106,41 @@
                     <span class="seg-8"></span>
                 </div>
 
-                <!-- Banner largo horizontal em destaque (equivalente ao banner central da imagem) -->
-                <section class="shop-hero steam-featured-banner">
+                <p class="steam-sub-caption">
+                    Personalize seu perfil com molduras, efeitos de cartão e estilos de nome. Escolha um item para visualizar e equipar.
+                </p>
+
+                <!-- Banner largo horizontal com a imagem da Maomao e controle para definir banner -->
+                <section
+                    class="shop-hero steam-featured-banner"
+                    id="steam-hero-banner"
+                    data-default-banner="{% static 'img/maomao_banner.jpg' %}"
+                    style="background-image: linear-gradient(90deg, rgba(6, 28, 34, 0.92) 0%, rgba(8, 38, 46, 0.62) 44%, rgba(8, 38, 46, 0.14) 100%), url('{% static 'img/maomao_banner.jpg' %}');"
+                >
+                    <div class="banner-controls-top">
+                        <button type="button" id="btn-open-banner-picker" class="btn-banner-config" title="Definir imagem do banner">
+                            🖼️ Alterar Banner
+                        </button>
+                        <button type="button" id="btn-reset-banner" class="btn-banner-reset" title="Voltar ao banner padrão" style="display: none;">
+                            ↺ Padrão
+                        </button>
+                        <input type="file" id="banner-file-input" accept="image/*" hidden>
+                    </div>
+
                     <div class="featured-banner-info">
                         <span class="featured-tag">DESTAQUE ATIVO</span>
                         <h2 id="featured-item-title">Crepúsculo (Berilo)</h2>
-                        <p id="featured-item-desc">Visualize e equipe instantaneamente no seu cartão de perfil ao lado.</p>
+                        <p id="featured-item-desc">Moldura • Prévia em destaque no painel da loja.</p>
                         <div class="featured-actions">
                             <button type="button" id="btn-featured-equip" class="btn-featured-primary">▶ Equipar Destaque</button>
                             <button type="button" id="btn-unequip-all" class="btn-unequip">Remover Efeitos Ativos</button>
                         </div>
                     </div>
+
                     <div class="featured-banner-visual" id="featured-banner-visual"></div>
                 </section>
 
-                <!-- Grade horizontal de cartões logo abaixo do banner principal -->
+                <!-- Seção de cartões logo abaixo do banner principal -->
                 <section class="steam-section-block">
                     <div class="steam-section-head">
                         <h2 class="steam-section-title">CATÁLOGO DA LOJA</h2>
@@ -132,7 +151,7 @@
                 <div class="shop-feedback" id="shop-feedback" role="status" aria-live="polite"></div>
             </div>
 
-            <!-- Coluna lateral direita: Prévia do Perfil + Filtros/Categorias (como a coluna direita da imagem) -->
+            <!-- Coluna lateral direita: Filtros + Cartão de Prévia do Perfil -->
             <aside class="steam-right-rail">
                 <div class="rail-filter-box">
                     <div class="rail-filter-header">FILTROS RÁPIDOS</div>
@@ -155,7 +174,11 @@
                 </div>
 
                 <aside class="preview-card" id="live-preview-card">
-                    <div class="preview-banner" {% if profile.banner %}style="background-image: url('{{ profile.banner.url }}');"{% endif %}></div>
+                    <div
+                        class="preview-banner"
+                        id="live-preview-banner"
+                        style="background-image: url('{% if profile.banner %}{{ profile.banner.url }}{% else %}{% static 'img/maomao_banner.jpg' %}{% endif %}');"
+                    ></div>
                     <div class="preview-body">
                         <div class="avatar-frame-wrap" id="preview-frame-wrap">
                             <div class="preview-avatar" {% if profile.avatar %}style="background-image: url('{{ profile.avatar.url }}'); font-size: 0;"{% endif %}>
@@ -226,6 +249,69 @@
             card_effect: initialProfile.card_effect || (initialProfile.profile_glow ? "brilho_estelar" : "none"),
             name_style: initialProfile.name_style || "none",
         };
+
+        /* Gerenciamento do Banner Personalizado */
+        const BANNER_STORAGE_KEY = `kiwi_store_banner_${activeUsername}`;
+        const heroBannerEl = document.getElementById("steam-hero-banner");
+        const previewBannerEl = document.getElementById("live-preview-banner");
+        const bannerFileInput = document.getElementById("banner-file-input");
+        const btnOpenBannerPicker = document.getElementById("btn-open-banner-picker");
+        const btnResetBanner = document.getElementById("btn-reset-banner");
+
+        function applyCustomBanner(imageUrl, isCustom = false) {
+            if (!heroBannerEl || !imageUrl) return;
+            heroBannerEl.style.backgroundImage =
+                `linear-gradient(90deg, rgba(6, 28, 34, 0.92) 0%, rgba(8, 38, 46, 0.62) 44%, rgba(8, 38, 46, 0.14) 100%), url("${imageUrl}")`;
+            if (previewBannerEl) {
+                previewBannerEl.style.backgroundImage = `url("${imageUrl}")`;
+            }
+            if (btnResetBanner) {
+                btnResetBanner.style.display = isCustom ? "inline-flex" : "none";
+            }
+        }
+
+        function initBanner() {
+            const defaultUrl = heroBannerEl ? heroBannerEl.dataset.defaultBanner : "";
+            const savedBanner = localStorage.getItem(BANNER_STORAGE_KEY);
+            if (savedBanner) {
+                applyCustomBanner(savedBanner, true);
+            } else if (defaultUrl) {
+                applyCustomBanner(defaultUrl, false);
+            }
+        }
+
+        if (btnOpenBannerPicker && bannerFileInput) {
+            btnOpenBannerPicker.addEventListener("click", () => {
+                bannerFileInput.click();
+            });
+
+            bannerFileInput.addEventListener("change", (event) => {
+                const file = event.target.files && event.target.files[0];
+                if (!file) return;
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    const dataUrl = e.target && e.target.result;
+                    if (typeof dataUrl === "string") {
+                        try {
+                            localStorage.setItem(BANNER_STORAGE_KEY, dataUrl);
+                        } catch (_) {
+                            setFeedback("Imagem aplicada na sessão (muito grande para salvar no cache local).");
+                        }
+                        applyCustomBanner(dataUrl, true);
+                    }
+                };
+                reader.readAsDataURL(file);
+            });
+        }
+
+        if (btnResetBanner) {
+            btnResetBanner.addEventListener("click", () => {
+                localStorage.removeItem(BANNER_STORAGE_KEY);
+                const defaultUrl = heroBannerEl ? heroBannerEl.dataset.defaultBanner : "";
+                applyCustomBanner(defaultUrl, false);
+                if (bannerFileInput) bannerFileInput.value = "";
+            });
+        }
 
         function setFeedback(msg) {
             const el = document.getElementById("shop-feedback");
@@ -496,6 +582,7 @@
             });
         });
 
+        initBanner();
         updateCategoryCounts();
         syncFilterUI();
         renderPreview();
