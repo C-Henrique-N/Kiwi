@@ -73,6 +73,10 @@
       profileGlow: pickBool(["profileGlow", "profile_glow"], Boolean(prev.profileGlow)),
       avatarPulse: pickBool(["avatarPulse", "avatar_pulse"], Boolean(prev.avatarPulse)),
       nameStyle: pickStr(["nameStyle", "name_style"], prev.nameStyle || ""),
+      cardEffect: pickStr(["card_effect", "cardEffect"], prev.cardEffect || "none"),
+      frameEffect: pickStr(["frame_effect", "frameEffect"], prev.frameEffect || "none"),
+      profileGlow: pickBool(["profile_glow", "profileGlow"], Boolean(prev.profileGlow)),
+      avatarPulse: pickBool(["avatar_pulse", "avatarPulse"], Boolean(prev.avatarPulse)),
       isAdmin: pickBool(["is_admin", "isAdmin"], Boolean(prev.isAdmin)),
       isAkiiraAdmin: pickBool(["is_akiira_admin", "isAkiiraAdmin"], Boolean(prev.isAkiiraAdmin)),
     };
